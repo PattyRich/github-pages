@@ -48,7 +48,7 @@ function looter(rolls, data) {
 			let item_per = random_generator(itemWeights,0)
 
 			let cnt = 0
-			for (let j=0; j<rolls; j++) {	
+			for (let j=0; j<data.items.length; j++) {	
 				cnt += data.items[j].rate
 				if (cnt >= item_per) {
 					rewards.push({

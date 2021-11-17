@@ -7,9 +7,13 @@ class Osrs extends React.Component {
     super();
     this.state = {
       mode: 'cox',
-      rewards: null
+      rewards: null,
+      rolls: 'f',
+      error: false,
+      nothingCounter: 0
     };
     this.onChangeValue = this.onChangeValue.bind(this);
+    this.onChangeValueInput = this.onChangeValueInput.bind(this);
 		this.go = this.go.bind(this);
   }
 
@@ -17,9 +21,27 @@ class Osrs extends React.Component {
   	this.setState({'mode': event.target.value})
   }
 
+  onChangeValueInput(event){
+  	this.setState({'rolls': event.target.value})
+  }
+
   async go(){
-  	let rewards = await (loot('f', this.state.mode))
-  	this.setState({'rewards': rewards})
+  	let num = Number(this.state.rolls)
+  	let rewards = []
+  	if (num) {
+  		rewards = await (loot(num, this.state.mode))
+  		this.setState({'rewards': rewards})
+  	} else {
+  		rewards = await (loot('f', this.state.mode))
+  		this.setState({'rewards': rewards})
+  	}
+
+  	if (rewards && rewards.length == 0) {
+  		this.setState({'nothingCounter': this.state.nothingCounter + 1})
+  	} else {
+  		this.setState({'nothingCounter': 0})
+  	}
+
   	console.log(this.state.rewards)
   }
 
@@ -34,6 +56,9 @@ class Osrs extends React.Component {
 	        <input type="radio" value="tob" name="" checked={this.state.mode === 'tob'} onChange={this.onChangeValue} /> Tob
 	        <input type="radio" value="cg" name="" checked={this.state.mode === 'cg'} onChange={this.onChangeValue} /> Corrupted Gauntlet
 	      </div>
+	      <label>Number of rolls (f or nothing for completion)</label>
+  			<input type="text" onChange={this.onChangeValueInput} id="fname" name="fname"/>
+	      <br/>
 	      <button onClick={this.go}> Go! </button>
 	      <div className="items">
 	      	{this.state.rewards ? this.state.rewards.map(item => {
@@ -44,6 +69,7 @@ class Osrs extends React.Component {
 	       			</div>
 	       		)
 	      	}) : null}
+	      	{this.state.rewards && this.state.rewards.length === 0 ? 'Nothing x' + this.state.nothingCounter : null}
 	      </div>
       </div>
     );

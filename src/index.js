@@ -4,17 +4,26 @@ import './index.css';
 import App from './App';
 import Osrs from './routes/osrs';
 import reportWebVitals from './reportWebVitals';
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { HashRouter, Routes, Route } from "react-router-dom";
 
 
 ReactDOM.render(
   <React.StrictMode>
-  	<BrowserRouter>
+  	<HashRouter>
   		<Routes>
   			<Route path="/" element={<App />} />
   			<Route path="/osrs" element={<Osrs />} />
+  			<Route path="/github-pages/osrs" element={<Osrs />} />
+  			<Route
+		      path="*"
+		      element={
+		        <main style={{ padding: "1rem" }}>
+		          <p>There's nothing here!</p>
+		        </main>
+		      }
+    		/>
   		</Routes>
-		</BrowserRouter>
+		</HashRouter>
   </React.StrictMode>,
   document.getElementById('root')
 );
