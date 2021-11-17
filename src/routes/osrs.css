@@ -3,10 +3,30 @@
 	flex-wrap: wrap;
 }
 
+.day{
+	display: flex;
+	flex-direction: column;
+}
+
 .item {
 	display: flex;
 	justify-content: center;
 	align-items: center;
 	flex-direction: column;
 	padding: 3px;
+}
+
+.box{
+	border: solid black 1px;
+	padding: 10px;
+	margin:  5px;
+}
+
+.flexCol{
+	display: flex;
+	flex-direction: column;
+}
+
+hr {
+	width:  95%;
 }
