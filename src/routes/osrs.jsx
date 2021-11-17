@@ -29,7 +29,6 @@ class Osrs extends React.Component {
 
   onChangeValueInput(state, event){
   	this.setState({[state]: event.target.value})
-  	console.log(this.state)
   }
 
   simulate(){
@@ -46,7 +45,6 @@ class Osrs extends React.Component {
 	
 	  		this.setState({'rewardList': [rewards, ...this.state.rewardList], 'rewardCount': this.state.rewardCount + this.state.rewardCountConst })
 	  	} 
-	  	console.log(this.state)
   	}, 2000)
   }
 
