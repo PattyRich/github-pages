@@ -132,7 +132,7 @@ class Osrs extends React.Component {
 							       		return (
 							       			<div className="item">
 							       				<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.gif`} alt={item.name}></img>
-							       				{item.kc}
+							       				{item.kc} ({(this.state.rewardList.length * (this.state.rewardCountConst - index)) - (this.state.rewardCountConst - item.kc)})
 							       			</div>
 							       		)
 							      	}) : null}
