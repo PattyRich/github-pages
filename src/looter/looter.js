@@ -30,7 +30,7 @@ function looter(rolls, data) {
 	}
 
 	let itemWeights = 0
-	data.items.map(item => {
+	data.items.forEach(item => {
 		itemWeights += item.rate
 		checkList.push(0)
 	})
