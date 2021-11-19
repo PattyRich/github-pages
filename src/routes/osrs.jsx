@@ -23,8 +23,10 @@ class Osrs extends React.Component {
 		this.interval = null;
   }
 
-  onChangeValue(event) {
+  async onChangeValue(event) {
   	this.setState({'mode': event.target.value})
+		let completion = await (loot(null, event.target.value, this.state.points, true))
+		this.setState({'completion': completion})
   }
 
   onChangeValueInput(state, event){
@@ -32,11 +34,13 @@ class Osrs extends React.Component {
   }
 
   simulate(){
-  	if (this.interval)
+  	if (this.interval){
   		clearInterval(this.interval)
+  	}
 	  let num = Number(this.state.rolls)
-		if (num>100)
+		if (num>100){
 			num = 100
+		}
   	this.setState({'rewardList': [], 'rewardCount': 0, 'rewardCountConst': num})
   	this.interval = setInterval(async ()=>{
   		let rewards = null
@@ -87,6 +91,7 @@ class Osrs extends React.Component {
 		        <input type="radio" value="cox" name="" checked={this.state.mode === 'cox'} onChange={this.onChangeValue} /> Cox
 		        <input type="radio" value="tob" name="" checked={this.state.mode === 'tob'} onChange={this.onChangeValue} /> Tob
 		        <input type="radio" value="cg" name="" checked={this.state.mode === 'cg'} onChange={this.onChangeValue} /> Corrupted Gauntlet
+			      <input type="radio" value="corp" name="" checked={this.state.mode === 'corp'} onChange={this.onChangeValue} /> Corp
 		      </div>
 		      <label>Number of rolls (f or nothing for completion) </label>
 	  			<input type="text" value={this.state.rolls} onChange={(e) => this.onChangeValueInput('rolls', e)}/>
@@ -103,6 +108,9 @@ class Osrs extends React.Component {
 		      <button style={{margin: "10px"}} onClick={() => this.simulate()}> Simulate daily raids. (must be rolls &lt;= 100) </button>
 		      {	this.state.rewardList.length ? 
 		      	<button style={{background: '#c90c1c'}} onClick={this.stopInterval}> Stop </button>
+		      : null }
+		      {	this.state.completion ? 
+		      	<span> Average completion without pet is: {this.state.completion} kc </span>
 		      : null }
 		      <div className="items">
 		      	{this.state.rewards ? this.state.rewards.map(item => {

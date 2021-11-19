@@ -1,9 +1,14 @@
-export function loot(rolls, place, points=30000) {
+import {coupon} from './completion'
+
+export function loot(rolls, place, points=30000, runCompleteion = false) {
 	return new Promise((resolve, reject) => {
 		import('./' + place)
 			.then((data) => {
 				if (data.data.name === 'cox') {
 					data.data.chance = (points / 8678)
+				}
+				if (runCompleteion){
+					resolve(coupon(data.data))
 				}
 				resolve(looter(rolls, data.data))
 			})
@@ -63,8 +68,9 @@ function looter(rolls, data) {
 
 		rollPet(i)
 		if (finish) {
-			if (!checkList.some(item => item <= 0))
+			if (!checkList.some(item => item <= 0)){
 				break
+			}
 		}
 	}
 

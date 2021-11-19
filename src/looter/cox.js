@@ -23,10 +23,6 @@ export let data = {
 			rate: 4.35
 		},
 		{
-			name: 'Dexterous prayer scroll',
-			rate: 4.35
-		},
-		{
 			name: 'Ancestral hat',
 			rate: 4.35
 		},
