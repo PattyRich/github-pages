@@ -14,7 +14,8 @@ class Osrs extends React.Component {
       rewardList:[],
       rewardCount: 0,
       rewardCountConst: 0,
-      points: 30000
+      points: 30000,
+      pets: true
     };
     this.onChangeValue = this.onChangeValue.bind(this);
     this.onChangeValueInput = this.onChangeValueInput.bind(this);
@@ -25,7 +26,7 @@ class Osrs extends React.Component {
 
   async onChangeValue(event) {
   	this.setState({'mode': event.target.value})
-		let completion = await (loot(null, event.target.value, this.state.points, true))
+		let completion = await (loot(null, event.target.value, {points: this.state.points, runCompletion: true, pets: this.state.pets}))
 		this.setState({'completion': completion})
   }
 
@@ -45,7 +46,7 @@ class Osrs extends React.Component {
   	this.interval = setInterval(async ()=>{
   		let rewards = null
   		if (this.state.rewardCountConst) {
-	  		rewards = await (loot(num, this.state.mode, this.state.points))
+	  		rewards = await (loot(num, this.state.mode, {points: this.state.points, pets: this.state.pets}))
 	
 	  		this.setState({'rewardList': [rewards, ...this.state.rewardList], 'rewardCount': this.state.rewardCount + this.state.rewardCountConst })
 	  	} 
@@ -56,10 +57,10 @@ class Osrs extends React.Component {
   	let num = Number(this.state.rolls)
   	let rewards = []
   	if (num) {
-  		rewards = await (loot(num, this.state.mode, this.state.points))
+  		rewards = await (loot(num, this.state.mode, {points: this.state.points, pets: this.state.pets}))
   		this.setState({'rewards': rewards})
   	} else {
-  		rewards = await (loot('f', this.state.mode, this.state.points))
+  		rewards = await (loot('f', this.state.mode, {points: this.state.points, pets: this.state.pets}))
   		this.setState({'rewards': rewards})
   	}
 
@@ -70,7 +71,9 @@ class Osrs extends React.Component {
   	}
   }
 
-  componentDidMount(){
+  async componentDidMount(){
+  	let completion = await (loot(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets}))
+		this.setState({'completion': completion})
   }
 
   stopInterval(){
@@ -95,6 +98,8 @@ class Osrs extends React.Component {
 		      </div>
 		      <label>Number of rolls (f or nothing for completion) </label>
 	  			<input type="text" value={this.state.rolls} onChange={(e) => this.onChangeValueInput('rolls', e)}/>
+		      <br/>
+		      Include pet for completion? <input type="checkbox" onChange={()=> this.setState({pets: !this.state.pets})} checked={this.state.pets}/> 
 		      <br/>
 		      { this.state.mode === 'cox' ?
 			      <span>
