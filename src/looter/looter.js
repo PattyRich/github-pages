@@ -1,14 +1,22 @@
-import {coupon} from './completion'
+import {completion} from './completion'
 
-export function loot(rolls, place, points=30000, runCompleteion = false) {
+export function loot(rolls, place, options = {points: 30000, runCompletion: false, pets: true}) {
 	return new Promise((resolve, reject) => {
 		import('./' + place)
-			.then((data) => {
+			.then((datax) => {
+				//need a completely fresh copy since deleteing the pet perm deletes it from the file as well
+				//that happens since its a .js file and not json
+				let data = JSON.parse(JSON.stringify(datax))
 				if (data.data.name === 'cox') {
-					data.data.chance = (points / 8678)
+					data.data.chance = (options.points / 8678)
 				}
-				if (runCompleteion){
-					resolve(coupon(data.data))
+				if (!options.pets){
+					data.data.pet.getPet = false
+				} else {
+					data.data.pet.getPet = true
+				}
+				if (options.runCompletion){
+					resolve(completion(data.data))
 				}
 				resolve(looter(rolls, data.data))
 			})
@@ -39,11 +47,14 @@ function looter(rolls, data) {
 		itemWeights += item.rate
 		checkList.push(0)
 	})
-	checkList.push(0)
 
-	if(data.name === 'cg') {
-		checkList[2] -= 1
+	if (data.pet.getPet){
+		checkList.push(0)
 	}
+
+	// if(data.name === 'cg') {
+	// 	checkList[2] -= 1
+	// }
 
 	for (let i=0; i<rolls; i++) {
 		let rng = Math.random() * 100
@@ -85,14 +96,16 @@ function looter(rolls, data) {
 						kc: kc+1,
 						name: data.pet.name
 					})		
-					checkList[checkList.length-1] +=1
+					if (data.pet.getPet)
+						checkList[checkList.length-1] +=1
 				} 
 			} else {
 				rewards.push({
 					kc: kc+1,
 					name: data.pet.name
 				})	
-				checkList[checkList.length-1] +=1				
+				if (data.pet.getPet)
+					checkList[checkList.length-1] +=1				
 			}
 		}
 	}

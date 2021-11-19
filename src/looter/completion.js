@@ -1,105 +1,103 @@
-export function coupon(data, withPet = false){
-	class TreeNode {
-	  constructor(item, possibleChildren, parent=null) {
-	    this.item = item;
-	    this.descendants = [];
-	    this.parent = parent;
-	    this.possibleChildren = possibleChildren
+const getAllSubsets = 
+      theArray => theArray.reduce(
+        (subsets, value) => subsets.concat(
+         subsets.map(set => [value,...set])
+        ),
+        [[]]
+      );
 
-	    this.newTotalWeight = null
-	    this.cumulativeRate = null
-	    if(parent && parent.newTotalWeight && parent.cumulativeRate) {
-	    	this.newTotalWeight = parent.newTotalWeight - this.item.rate
-	    	this.cumulativeRate = (this.item.rate / parent.newTotalWeight) * this.parent.cumulativeRate
-	    } else {
-	    	if (this.item) {
-	    		this.newTotalWeight = totalRate - this.item.rate
-	    		this.cumlativeRate = this.item.rate/totalRate
-	    	} else {
-	    		this.newTotalWeight = totalRate
-	    		this.cumulativeRate = 1
-	    	}
-	    }
-		}
 
-	  addDecendant(node){
-	  	this.descendants.push(node)
-	  }	
-	}
+const pascalRow = (num) => {
+   const res = []
+   while (res.length <= num) {
+      res.unshift(1);
+      for(let i = 1; i < res.length - 1; i++) {
+         res[i] += res[i + 1];
+      };
+   };
+   return res
+};
 
-	let totalRate = 0;
+const reducer = (previousValue, currentValue) => previousValue + currentValue;
+
+
+export function completion(data) {
+	let x = []
+
+	let totalWeight = 0
 	data.items.forEach((item)=> {
-		totalRate += item.rate
+		totalWeight += item.rate
 	})
-	//this if factorial growth and explodes around here
-	if (data.items.length>10){
-		return null
+
+	data.items.forEach((item)=> {
+		x.push((item.rate/totalWeight) * (data.chance/100))
+	})
+
+	x.push(1-x.reduce(reducer))
+
+	//this function is factorial and gets too long around here
+	if (x.length > 20){
+		return []
 	}
-	let startNode = buildTree(totalRate)
-	let rolls = calculateRolls(startNode, 0)
-	return rolls
 
-	function calculateRolls(node, total){
-		if (node.descendants.length === 0){
-			return total
-		} else {
+	let subSets = getAllSubsets(x)
 
-			let chance = data.chance/100
-			if (!node.item) {
-				total += (1/chance)
-			} else {
-				total += (1/(chance * (node.newTotalWeight/totalRate)))* node.cumulativeRate
+	subSets.sort((item1, item2)=> {
+		return item1.length >= item2.length ? 1 : -1
+	})
+
+	let pascal = pascalRow(x.length)
+
+	let total = 0
+
+	for(let i=0; i<x.length; i++) {
+		let mult = Math.pow(-1,(x.length -1 - i))
+		for (let j=0; j<pascal[i]; j++) {
+			if (i === 0){
+				total += mult * 1
+				continue
 			}
-
-			for (let i=0; i<node.descendants.length; i++){
-				total = calculateRolls(node.descendants[i], total)
-			}
-			return total
+			let index = pascal.slice(pascal.length-i).reduce(reducer)
+			total += mult * (1/(1-(subSets[index+j].reduce(reducer))))
 		}
-	}
+	}	
 
-	function buildTree(totalRate){
-
-		let startNode = new TreeNode(null, data.items, null)
-
-		recursiveAddChildren(startNode)
-
-		//recursivePrintTree(startNode, 0)
-
-		return startNode;
-
-	}
-
-	function recursiveAddChildren(node){
-		if (node.possibleChildren.length === 0){
-			return 
-		} else {
-			console.log(node.item)
-			node.possibleChildren.forEach(child => {
-				let childrenCopy = [...node.possibleChildren]
-				let index = childrenCopy.findIndex(item => {
-					return item.name === child.name
-				})
-				let item = childrenCopy.splice(index,1)[0]
-				let newNode = new TreeNode(item, childrenCopy, node)
-				node.addDecendant(newNode)
-				recursiveAddChildren(newNode)
-			})
-		}
-	}
-
-	function recursivePrintTree(node, index){
-		index += 1
-		console.log('Tree depth: ' + index)
-		console.log('Item:' + JSON.stringify(node.item))
-		console.log('Cumulative rate: ' + node.cumulativeRate, node.newTotalWeight)
-		if (node.descendants.length === 0){
-			return
-		} else {
-			for (let i=0; i<node.descendants.length; i++){
-				recursivePrintTree(node.descendants[i], index)
-			}
-		}
-	}
-
+	return Math.round(total)
 }
+
+// let x = [1/1365, 1/1365, 1/4095]
+
+// function start() {
+//   startTime = new Date();
+// };
+
+// function end() {
+//   endTime = new Date();
+//   var timeDiff = endTime - startTime; //in ms
+//   // strip the ms
+//   timeDiff /= 1000;
+
+//   // get seconds 
+//   var seconds = timeDiff
+//   console.log(seconds + " seconds");
+// }
+
+// var startTime, endTime;
+
+// for (let i=0; i<30; i++) {
+// 	let y = [...x]
+// 	for (let j=0; j<i; j++){
+// 		y.push(1/1365)
+// 	}
+// 	y.push(1-y.reduce(reducer))
+
+// 	console.log('Size of data = ' + y.length)
+// 	start()
+// 	completion(y)
+// 	end()
+
+// }
+
+
+
+
