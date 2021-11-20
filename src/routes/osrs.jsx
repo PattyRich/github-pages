@@ -2,6 +2,8 @@ import React from 'react';
 //import { Link } from "react-router-dom";
 import './osrs.css';
 import { loot } from '../looter/looter'
+import Plotly from 'plotly.js-dist-min'
+
 class Osrs extends React.Component {
   constructor() {
     super();
@@ -15,12 +17,15 @@ class Osrs extends React.Component {
       rewardCount: 0,
       rewardCountConst: 0,
       points: 30000,
-      pets: true
+      pets: true,
+      histogramData: [],
+      simulations : 1000
     };
     this.onChangeValue = this.onChangeValue.bind(this);
     this.onChangeValueInput = this.onChangeValueInput.bind(this);
 		this.go = this.go.bind(this);
 		this.stopInterval = this.stopInterval.bind(this);
+		this.graphSimulation = this.graphSimulation.bind(this);
 		this.interval = null;
   }
 
@@ -71,6 +76,46 @@ class Osrs extends React.Component {
   	}
   }
 
+  async graphSimulation(){
+  	let arr = []
+		let items = []
+		for (let i=0; i<this.state.simulations; i++){
+			let x = await (loot('f', this.state.mode, {points: this.state.points, pets: this.state.pets}))
+			arr.push(x[x.length-1].kc)
+			items.push(x.length)
+		}
+
+		let trace = {
+			x: arr,
+			type: 'histogram'
+		}
+
+		let traceScatter = {
+			x: arr,
+			y: items,
+			mode: 'markers',
+			type: 'scatter'
+		}
+
+		let data = [trace]
+		let data2 = [traceScatter]
+		let layout = {
+			xaxis: {
+				title: {
+					text: 'KC'
+				}
+			},
+			yaxis: {
+				title: {
+					text: '# of people'
+				}
+			}
+		}
+		Plotly.newPlot('histogram', data, layout)		
+		layout.yaxis.title.text = '# of items received'
+		Plotly.newPlot('scatter', data2, layout)
+  }
+
   async componentDidMount(){
   	let completion = await (loot(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets}))
 		this.setState({'completion': completion})
@@ -117,6 +162,12 @@ class Osrs extends React.Component {
 		      {	this.state.completion ? 
 		      	<span> Average completion without pet is: {this.state.completion} kc </span>
 		      : null }
+		      <br/>
+		      <span>
+			     	<label> Plot results a # of simulations  </label>
+		  			<input type="text" value={this.state.simulations} onChange={(e) => this.onChangeValueInput('simulations', e)}/>
+	  			</span>
+	  			<button onClick={this.graphSimulation}> Plot. </button>
 		      <div className="items">
 		      	{this.state.rewards ? this.state.rewards.map(item => {
 		       		return (
@@ -157,6 +208,8 @@ class Osrs extends React.Component {
 			      </div>
 			    </div>
 			  : null }
+			  <div id="histogram"> </div>
+			  <div id="scatter"> </div>
       </div>
     );
   }
