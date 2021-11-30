@@ -88,18 +88,18 @@ export function coupon(data, withPet = false){
 		}
 	}
 
-	function recursivePrintTree(node, index){
-		index += 1
-		console.log('Tree depth: ' + index)
-		console.log('Item:' + JSON.stringify(node.item))
-		console.log('Cumulative rate: ' + node.cumulativeRate, node.newTotalWeight)
-		if (node.descendants.length === 0){
-			return
-		} else {
-			for (let i=0; i<node.descendants.length; i++){
-				recursivePrintTree(node.descendants[i], index)
-			}
-		}
-	}
+	// function recursivePrintTree(node, index){
+	// 	index += 1
+	// 	console.log('Tree depth: ' + index)
+	// 	console.log('Item:' + JSON.stringify(node.item))
+	// 	console.log('Cumulative rate: ' + node.cumulativeRate, node.newTotalWeight)
+	// 	if (node.descendants.length === 0){
+	// 		return
+	// 	} else {
+	// 		for (let i=0; i<node.descendants.length; i++){
+	// 			recursivePrintTree(node.descendants[i], index)
+	// 		}
+	// 	}
+	// }
 
 }

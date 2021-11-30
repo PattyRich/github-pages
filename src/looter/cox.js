@@ -1,6 +1,5 @@
 export let data = {
 	name: 'cox',
-	chance: 3.45781466113,
 	items: [
 		{
 			name: 'Dexterous prayer scroll',
