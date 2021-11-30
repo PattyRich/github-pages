@@ -19,24 +19,127 @@ class Osrs extends React.Component {
       points: 30000,
       pets: true,
       histogramData: [],
-      simulations : 1000
+      simulations : 1000,
+      icons: {},
+      createData: {
+      	numItems: 1,
+      	items: [{
+      		name: 'Saradomin godsword',
+      		rate: '1/100'
+      	}],
+      	pet: {
+      		name: 'Baby mole',
+      		rate: '1/5000'
+      	}
+      }
     };
     this.onChangeValue = this.onChangeValue.bind(this);
     this.onChangeValueInput = this.onChangeValueInput.bind(this);
 		this.go = this.go.bind(this);
 		this.stopInterval = this.stopInterval.bind(this);
 		this.graphSimulation = this.graphSimulation.bind(this);
+		this.lootFunction = this.lootFunction.bind(this);
+		this.completion = this.completion.bind(this);
 		this.interval = null;
   }
 
   async onChangeValue(event) {
   	this.setState({'mode': event.target.value})
-		let completion = await (loot(null, event.target.value, {points: this.state.points, runCompletion: true, pets: this.state.pets}))
-		this.setState({'completion': completion})
+  	this.completion(event.target.value)
+		this.addIcons(event.target.value)
   }
 
   onChangeValueInput(state, event){
   	this.setState({[state]: event.target.value})
+  }
+
+  changeCreateData(thing, data, index){
+  	let copy = {...this.state.createData}
+  	if (thing === 'num'){
+  		copy.numItems = data
+  		if (copy.items.length >= copy.numItems) {
+  			copy.items.pop()
+  		} else {
+  			copy.items.push({
+  				name: '',
+  				rate: '1/100'
+  			})
+  		}
+  		this.setState({'createData': copy})
+  	} else if(thing === 'name') {
+  		copy.items[index].name = nameFilter(data)
+  	}	else if (thing === 'rate') {
+  		copy.items[index].rate = rateFilter(data)
+  	} else if (thing === 'petRate') {
+  		copy.pet.rate = rateFilter(data)
+  	} else if (thing === 'petName') {
+  		copy.pet.name = nameFilter(data)
+  	}
+
+  	function nameFilter(name){
+  		return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+  	}
+
+  	function rateFilter(rate){
+  		return rate.replace(/[^0-9/.]/g, '')
+  	}
+
+  	this.setState({'createData': copy})
+  }
+
+  async addIcons(mode){
+		  let iconClone = {...this.state.icons}
+
+		  if (mode == 'create') {
+				let data = { ...this.state.createData }
+
+				let promiseArray = []
+		  	for(let i=0; i<data.items.length; i++){
+		  		promiseArray.push(getIcon(data.items[i].name))
+		  	}	
+
+		  	if (data.pet) {
+		  		promiseArray.push(getIcon(data.pet.name))
+		  	}
+
+				await Promise.all(promiseArray)
+	  		this.setState({'icons': iconClone})		
+	  		return  
+	  	}
+
+  		import('../looter/' + mode)
+			.then(async (datax) => {
+				let data = JSON.parse(JSON.stringify(datax)).data
+
+				let promiseArray = []
+		  	for(let i=0; i<data.items.length; i++){
+		  		promiseArray.push(getIcon(data.items[i].name))
+		  	}	
+
+		  	promiseArray.push(getIcon(data.pet.name))
+
+				await Promise.all(promiseArray)
+	  		this.setState({'icons': iconClone})
+			})
+
+	  	function getIcon(name){
+	  		return new Promise(async (resolve, reject) => {
+		  		if (!iconClone[name]){
+			  		try{
+			  				iconClone[name] = 'loading'
+			  				const response = await fetch(`https://api.osrsbox.com/items?where={ "name": "${name}", "duplicate": false }`);
+							  const data = await response.json();
+							  let icon = data._items[0].icon
+							  iconClone[name] = icon
+							  resolve()
+						} catch(err) {
+							console.log(err)
+							resolve()
+						}
+					}
+					resolve()
+	  		})
+	  	}
   }
 
   simulate(){
@@ -51,23 +154,19 @@ class Osrs extends React.Component {
   	this.interval = setInterval(async ()=>{
   		let rewards = null
   		if (this.state.rewardCountConst) {
-	  		rewards = await (loot(num, this.state.mode, {points: this.state.points, pets: this.state.pets}))
-	
+	  		rewards = await this.lootFunction(num, this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData})
+
 	  		this.setState({'rewardList': [rewards, ...this.state.rewardList], 'rewardCount': this.state.rewardCount + this.state.rewardCountConst })
 	  	} 
   	}, 2000)
   }
 
   async go(){
-  	let num = Number(this.state.rolls)
   	let rewards = []
-  	if (num) {
-  		rewards = await (loot(num, this.state.mode, {points: this.state.points, pets: this.state.pets}))
-  		this.setState({'rewards': rewards})
-  	} else {
-  		rewards = await (loot('f', this.state.mode, {points: this.state.points, pets: this.state.pets}))
-  		this.setState({'rewards': rewards})
-  	}
+
+		rewards = await this.lootFunction(this.state.rolls, this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData})
+		this.setState({'rewards': rewards})
+
 
   	if (rewards && rewards.length === 0) {
   		this.setState({'nothingCounter': this.state.nothingCounter + 1})
@@ -80,7 +179,7 @@ class Osrs extends React.Component {
   	let arr = []
 		let items = []
 		for (let i=0; i<this.state.simulations; i++){
-			let x = await (loot('f', this.state.mode, {points: this.state.points, pets: this.state.pets}))
+			let x = await this.lootFunction('f', this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData})
 			arr.push(x[x.length-1].kc)
 			items.push(x.length)
 		}
@@ -117,9 +216,35 @@ class Osrs extends React.Component {
   }
 
   async componentDidMount(){
-  	let completion = await (loot(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets}))
+  	let completion = await (this.lootFunction(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData}))
 		this.setState({'completion': completion})
+		this.addIcons(this.state.mode)
   }
+
+  lootFunction(rolls, place, options){
+  	let num = Number(rolls)
+
+  	if (this.state.mode === 'create') {
+  		//these have to be run late on create since we won't know them ahead of time
+  		this.addIcons(this.state.mode)
+  		this.completion()
+  	}
+
+  	if (num && rolls) {
+  		return loot(num, place, options)
+  	} else if (num === 0) {
+  		return loot('f', place, options)
+  	} else {
+  		return loot(rolls, place, options)
+  	}
+  }
+
+  async completion(mode) {
+  	//lootFunction will cause an infinite loop here
+		let completion = await loot(null, mode || this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData})
+		this.setState({'completion': completion})  
+	}
+
 
   stopInterval(){
 		if (this.interval)
@@ -140,7 +265,43 @@ class Osrs extends React.Component {
 		        <input type="radio" value="tob" name="" checked={this.state.mode === 'tob'} onChange={this.onChangeValue} /> Tob
 		        <input type="radio" value="cg" name="" checked={this.state.mode === 'cg'} onChange={this.onChangeValue} /> Corrupted Gauntlet
 			      <input type="radio" value="corp" name="" checked={this.state.mode === 'corp'} onChange={this.onChangeValue} /> Corp
+		      	<input type="radio" value="zulrah" name="" checked={this.state.mode === 'zulrah'} onChange={this.onChangeValue} /> Zulrah
+		  		  <input type="radio" value="vorkath" name="" checked={this.state.mode === 'vorkath'} onChange={this.onChangeValue} /> Vorkath
+		    		<input type="radio" value="arma" name="" checked={this.state.mode === 'arma'} onChange={this.onChangeValue} /> Arma
+		    		<input type="radio" value="bandos" name="" checked={this.state.mode === 'bandos'} onChange={this.onChangeValue} /> Bandos
+		    		<input type="radio" value="sara" name="" checked={this.state.mode === 'sara'} onChange={this.onChangeValue} /> Sara
+		    		<input type="radio" value="zammy" name="" checked={this.state.mode === 'zammy'} onChange={this.onChangeValue} /> Zammy
+		    		<input type="radio" value="create" name="" checked={this.state.mode === 'create'} onChange={this.onChangeValue} /> Create Your Own Boss
+
 		      </div>
+		      {this.state.mode == 'create' ? 
+			      <div style={{'margin': '30px'}}>
+			      	<div style={{'padding': '10px', 'margin': '10px 0px', 'border' : 'solid black 2px'}}>
+				      	Use fractions for rate or you will crash the webpage :)
+	  						<br/>  		
+	  						Item names must be spelled exactly how they are on the wiki				
+				     </div>
+				     	  Number of unique items you must obtain. &nbsp;
+								<button onClick={()=> this.changeCreateData('num', this.state.createData.numItems -1)}> - </button>
+				      	<span> {this.state.createData.numItems} </span>
+				      	<button onClick={()=> this.changeCreateData('num', this.state.createData.numItems +1)}> + </button>
+				      {this.state.createData.items.map((item, index) => {
+			       		return (
+			       			<div>
+			       				Item {index+1}: Name: <input type="text" value={this.state.createData.items[index].name} onChange={(e) => this.changeCreateData('name', e.target.value, index)}/>
+			       				&nbsp;
+			       				Rate: <input type="text" value={this.state.createData.items[index].rate} onChange={(e) => this.changeCreateData('rate', e.target.value, index)}/>
+			       			</div>
+			       		)
+					    })}
+					    { this.state.pets ?
+		       			<div>
+		       				Pet: Name: <input type="text" value={this.state.createData.pet.name} onChange={(e) => this.changeCreateData('petName', e.target.value)}/>
+		       				&nbsp;
+		       				Rate: <input type="text" value={this.state.createData.pet.rate} onChange={(e) => this.changeCreateData('petRate', e.target.value)}/>
+		       			</div> : null
+		       		}
+			    	</div> : null }
 		      <label>Number of rolls (f or nothing for completion) </label>
 	  			<input type="text" value={this.state.rolls} onChange={(e) => this.onChangeValueInput('rolls', e)}/>
 		      <br/>
@@ -162,6 +323,9 @@ class Osrs extends React.Component {
 		      {	this.state.completion ? 
 		      	<span> Average completion without pet is: {this.state.completion} kc </span>
 		      : null }
+		      {	this.state.mode == 'create' ?
+		      	<span> (This will be wrong if your rates are very common) </span>
+		      : null }
 		      <br/>
 		      <span>
 			     	<label> Plot results a # of simulations  </label>
@@ -172,7 +336,9 @@ class Osrs extends React.Component {
 		      	{this.state.rewards ? this.state.rewards.map(item => {
 		       		return (
 		       			<div className="item">
-		       				<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.gif`} alt={item.name}></img>
+		       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank'>
+		       					<img src={'data:image/png;base64,' + this.state.icons[item.name]} title={item.name} alt={item.name}></img>
+		       				</a>
 		       				{item.kc}
 		       			</div>
 		       		)
@@ -195,8 +361,11 @@ class Osrs extends React.Component {
 							      	{day.length ? day.map(item => {
 							       		return (
 							       			<div className="item">
-							       				<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.gif`} alt={item.name}></img>
-							       				{item.kc} ({(this.state.rewardCountConst * (this.state.rewardList.length - index)) - (this.state.rewardCountConst - item.kc)})
+							       			{/*<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.gif`} alt={item.name}></img>*/}
+							       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank'>
+							       					<img src={'data:image/png;base64,' + this.state.icons[item.name]} title={item.name} alt={item.name}></img>
+							       				</a>							       				
+		       									{item.kc} ({(this.state.rewardCountConst * (this.state.rewardList.length - index)) - (this.state.rewardCountConst - item.kc)})
 							       			</div>
 							       		)
 							      	}) : null}

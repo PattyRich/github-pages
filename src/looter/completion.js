@@ -62,6 +62,10 @@ export function completion(data) {
 		}
 	}	
 
+	//zulrah = double loots probably scews data a lil bit since pet is getting 2x rate it should whatever
+	if(data.name =='zulrah') {
+		return Math.round(total/2)
+	}
 	return Math.round(total)
 }
 

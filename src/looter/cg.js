@@ -1,18 +1,17 @@
 export let data = {
 	name: 'cg',
-	chance: 4.25,
 	items: [
 		{
 			name: 'Crystal weapon seed',
-			rate: 8
+			rate: 1/50
 		},
 		{
 			name: 'Crystal armour seed',
-			rate: 8
+			rate: 1/50
 		},
 		{
 			name: 'Enhanced crystal weapon seed',
-			rate: 1
+			rate: 1/400
 		},
 	],
 	pet:{
