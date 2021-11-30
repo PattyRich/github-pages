@@ -35,7 +35,7 @@ class Osrs extends React.Component {
       }
     };
 
-		if (localStorage.getItem('bosses') !== undefined && localStorage.getItem('bosses').length){
+		if (localStorage.getItem('bosses') !== undefined && localStorage.getItem('bosses') !== null && localStorage.getItem('bosses').length){
     	try {
     		this.state.bosses = JSON.parse(localStorage.getItem('bosses'))
     	} catch (err) {
