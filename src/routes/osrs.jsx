@@ -11,7 +11,6 @@ class Osrs extends React.Component {
       mode: 'cox',
       rewards: null,
       rolls: '',
-      error: false,
       nothingCounter: 0,
       rewardList:[],
       rewardCount: 0,
@@ -21,7 +20,9 @@ class Osrs extends React.Component {
       histogramData: [],
       simulations : 1000,
       icons: {},
+      bosses: [],
       createData: {
+      	bossName: 'Name me',
       	numItems: 1,
       	items: [{
       		name: 'Saradomin godsword',
@@ -33,12 +34,24 @@ class Osrs extends React.Component {
       	}
       }
     };
+
+		if (localStorage.getItem('bosses') !== undefined && localStorage.getItem('bosses').length){
+    	try {
+    		this.state.bosses = JSON.parse(localStorage.getItem('bosses'))
+    	} catch (err) {
+    		console.log(err, 'error parsing bosses from cache')
+    	}
+    }
+
     this.onChangeValue = this.onChangeValue.bind(this);
     this.onChangeValueInput = this.onChangeValueInput.bind(this);
 		this.go = this.go.bind(this);
 		this.stopInterval = this.stopInterval.bind(this);
 		this.graphSimulation = this.graphSimulation.bind(this);
 		this.lootFunction = this.lootFunction.bind(this);
+		this.saveBoss = this.saveBoss.bind(this);
+		this.selectBoss = this.selectBoss.bind(this);
+		this.deleteBoss = this.deleteBoss.bind(this);
 		this.completion = this.completion.bind(this);
 		this.interval = null;
   }
@@ -47,6 +60,33 @@ class Osrs extends React.Component {
   	this.setState({'mode': event.target.value})
   	this.completion(event.target.value)
 		this.addIcons(event.target.value)
+  }
+
+  saveBoss(){
+  	let index = this.state.bosses.findIndex(x => x.bossName === this.state.createData.bossName)
+  	if (index > -1) {
+  		return
+  	}
+  	let data = this.state.bosses
+  	data.push(this.state.createData)
+  	this.setState({'bosses': data})
+  	localStorage.setItem('bosses', JSON.stringify(data))
+  }
+
+  selectBoss(name){
+  	let index = this.state.bosses.findIndex(x => x.bossName === name)
+  	this.setState({'createData': this.state.bosses[index]})
+  }
+
+  deleteBoss(){
+  	let index = this.state.bosses.findIndex(x => x.bossName === this.state.createData.bossName)
+  	if (index < 0) {
+  		return
+  	}
+  	let data = this.state.bosses
+  	data.splice(index,1)
+  	this.setState({'bosses': data})
+  	localStorage.setItem('bosses', JSON.stringify(data))
   }
 
   onChangeValueInput(state, event){
@@ -74,6 +114,8 @@ class Osrs extends React.Component {
   		copy.pet.rate = rateFilter(data)
   	} else if (thing === 'petName') {
   		copy.pet.name = nameFilter(data)
+  	} else if (thing ==='bossName') {
+  		copy.bossName = data
   	}
 
   	function nameFilter(name){
@@ -90,7 +132,7 @@ class Osrs extends React.Component {
   async addIcons(mode){
 		  let iconClone = {...this.state.icons}
 
-		  if (mode == 'create') {
+		  if (mode === 'create') {
 				let data = { ...this.state.createData }
 
 				let promiseArray = []
@@ -274,13 +316,26 @@ class Osrs extends React.Component {
 		    		<input type="radio" value="create" name="" checked={this.state.mode === 'create'} onChange={this.onChangeValue} /> Create Your Own Boss
 
 		      </div>
-		      {this.state.mode == 'create' ? 
+		      {this.state.mode === 'create' ? 
 			      <div style={{'margin': '30px'}}>
 			      	<div style={{'padding': '10px', 'margin': '10px 0px', 'border' : 'solid black 2px'}}>
 				      	Use fractions for rate or you will crash the webpage :)
 	  						<br/>  		
-	  						Item names must be spelled exactly how they are on the wiki				
-				     </div>
+	  						Item names must be spelled exactly how they are on the wiki	
+	  						<br/>
+								<button style={{'margin': '3px'}} onClick={this.saveBoss}> Save boss </button>
+								<button style={{'margin': '3px'}} onClick={this.deleteBoss}> Delete boss </button>
+								&nbsp; Boss name: <input type="text" value={this.state.createData.bossName} onChange={(e) => this.changeCreateData('bossName', e.target.value)}></input>
+								&nbsp; Load previous boss.
+								<select value='' onChange={(e) => this.selectBoss(e.target.value)}>
+							    <option value=""></option> 
+							    {this.state.bosses.map((boss, index) => {
+					       		return (
+					       			<option value={boss.bossName}>{boss.bossName}</option>
+						       	)
+								  })}							
+								</select>
+							</div>
 				     	  Number of unique items you must obtain. &nbsp;
 								<button onClick={()=> this.changeCreateData('num', this.state.createData.numItems -1)}> - </button>
 				      	<span> {this.state.createData.numItems} </span>
@@ -323,7 +378,7 @@ class Osrs extends React.Component {
 		      {	this.state.completion ? 
 		      	<span> Average completion without pet is: {this.state.completion} kc </span>
 		      : null }
-		      {	this.state.mode == 'create' ?
+		      {	this.state.mode === 'create' ?
 		      	<span> (This will be wrong if your rates are very common) </span>
 		      : null }
 		      <br/>
@@ -336,7 +391,7 @@ class Osrs extends React.Component {
 		      	{this.state.rewards ? this.state.rewards.map(item => {
 		       		return (
 		       			<div className="item">
-		       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank'>
+		       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
 		       					<img src={'data:image/png;base64,' + this.state.icons[item.name]} title={item.name} alt={item.name}></img>
 		       				</a>
 		       				{item.kc}
@@ -362,7 +417,7 @@ class Osrs extends React.Component {
 							       		return (
 							       			<div className="item">
 							       			{/*<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.gif`} alt={item.name}></img>*/}
-							       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank'>
+							       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
 							       					<img src={'data:image/png;base64,' + this.state.icons[item.name]} title={item.name} alt={item.name}></img>
 							       				</a>							       				
 		       									{item.kc} ({(this.state.rewardCountConst * (this.state.rewardList.length - index)) - (this.state.rewardCountConst - item.kc)})

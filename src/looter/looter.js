@@ -5,7 +5,7 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 		
 		//sloppy fix but just a bypass so the import doesn't stop us. dont' want to scrape out all the logic that helps us
 		let create = false
-		if (place == 'create') {
+		if (place === 'create') {
 			place = 'cg'
 			create = true
 		}
@@ -109,7 +109,7 @@ function looter(rolls, data) {
 		rollItem(i)
 
 		//seperated this out so that we could run it multiple times for zulrah or multi drop bosses
-		if (data.name =='zulrah'){
+		if (data.name === 'zulrah'){
 			rollItem(i)
 		}
 
