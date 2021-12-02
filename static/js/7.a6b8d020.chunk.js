@@ -1,0 +1,2 @@
+(this["webpackJsonpgithub-pages"]=this["webpackJsonpgithub-pages"]||[]).push([[7],{31:function(a,e,t){"use strict";t.r(e),t.d(e,"data",(function(){return n}));var n={name:"sara",items:[{name:"Saradomin's light",rate:1/254},{name:"Saradomin sword",rate:1/127},{name:"Saradomin hilt",rate:1/508},{name:"Armadyl crossbow",rate:1/508}],pet:{rate:5e3,name:"Pet zilyana"}}}}]);
+//# sourceMappingURL=7.a6b8d020.chunk.js.map
