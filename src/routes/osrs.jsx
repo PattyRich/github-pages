@@ -307,6 +307,7 @@ class Osrs extends React.Component {
 		        <input type="radio" value="tob" name="" checked={this.state.mode === 'tob'} onChange={this.onChangeValue} /> Tob
 		        <input type="radio" value="cg" name="" checked={this.state.mode === 'cg'} onChange={this.onChangeValue} /> Corrupted Gauntlet
 			      <input type="radio" value="corp" name="" checked={this.state.mode === 'corp'} onChange={this.onChangeValue} /> Corp
+		      	<input type="radio" value="pnm" name="" checked={this.state.mode === 'pnm'} onChange={this.onChangeValue} /> Phosani's Nightmare
 		      	<input type="radio" value="zulrah" name="" checked={this.state.mode === 'zulrah'} onChange={this.onChangeValue} /> Zulrah
 		  		  <input type="radio" value="vorkath" name="" checked={this.state.mode === 'vorkath'} onChange={this.onChangeValue} /> Vorkath
 		    		<input type="radio" value="arma" name="" checked={this.state.mode === 'arma'} onChange={this.onChangeValue} /> Arma
