@@ -10,7 +10,7 @@ class Magerun extends React.Component {
     super();
     this.state = {
     	widthAmt: 17,
-    	heightAmt: 10,
+    	heightAmt: 6,
     	headDirection: 'olm-center',
     	xpDrops: []
     }
@@ -45,17 +45,22 @@ class Magerun extends React.Component {
 		let ratio = viewport_width/viewport_height
 		let height, width;
 
-		if (ratio > 1.7){
+		if (ratio > 2.83333333333){
 			height = viewport_height
-			width = height*1.7
+			width = height*2.83333333333
 		} else {
 			width = viewport_width
-			height = width/1.7
+			height = width/2.83333333333
 		}
 
 		if (height < 300){
 			height = 300
-			width = height*1.7
+			width = height*2.83333333333
+		}
+
+		if (height + this.offset > viewport_height){
+			height = viewport_height - this.offset
+			width = height * 2.83333333333
 		}
 
 		this.tileSize = height/this.state.heightAmt
@@ -149,6 +154,10 @@ class Magerun extends React.Component {
 		if (tile_y <0) {
 			tile_y = 0
 		} 
+
+		if (tile_x >16){
+			tile_x = 16
+		}
 		if (tile_y > this.state.heightAmt){
 			tile_y = this.state.heightAmt-1
 		}
