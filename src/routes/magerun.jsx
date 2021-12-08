@@ -383,7 +383,7 @@ class Magerun extends React.Component {
 						{this.state.xpDrops.map(() => {
 		       		return (
 	    	  			<div style={{'color': 'white'}} className='fade-out child2'>
-	    	  				<img className='' src={`${process.env.PUBLIC_URL}/assets/magic.png`} height={20}/>
+	    	  				<img className='' src={`${process.env.PUBLIC_URL}/assets/magic-icon.png`} height={20}/>
 			       			123
 			       		</div>
 			       	)
