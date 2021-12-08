@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom';
 import './index.css';
 import App from './App';
 import Osrs from './routes/osrs';
+import Magerun from './routes/magerun'
 import reportWebVitals from './reportWebVitals';
 import { HashRouter, Routes, Route } from "react-router-dom";
 
@@ -14,6 +15,8 @@ ReactDOM.render(
   			<Route path="/" element={<App />} />
   			<Route path="/osrs" element={<Osrs />} />
   			<Route path="/github-pages/osrs" element={<Osrs />} />
+   			<Route path="/mage-run" element={<Magerun />} />
+  			<Route path="/github-pages/mage-run" element={<Magerun />} />
   			<Route
 		      path="*"
 		      element={

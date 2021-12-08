@@ -16,6 +16,9 @@ class App extends React.Component {
                 <Link to="/osrs">osrs</Link>
                 </li>
                 <li>
+                <Link to="/mage-run">Mage run</Link>
+                </li>            
+                <li>
                 <a href="https://github.com/PattyRich/github-pages"> repo this comes from </a>
               	</li>
               </ul>
