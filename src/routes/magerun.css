@@ -31,6 +31,31 @@
      
 }
 
+.child2{
+	position: absolute;
+	top: 130px;
+	left:  75%;
+}
+
+.fade-out {
+  animation: fadeOut ease 3s;
+  -webkit-animation: fadeOut ease 3s;
+  -moz-animation: fadeOut ease 3s;
+  -o-animation: fadeOut ease 3s;
+  -ms-animation: fadeOut ease 3s;
+  opacity: 0;
+}
+@keyframes fadeOut {
+  0% {
+    opacity:1;
+  }
+  100% {
+    opacity:0;
+    top: 0px;
+  }
+}
+
+
 #projectiles{
 	position: absolute;
 	top: 0px;

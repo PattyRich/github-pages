@@ -11,7 +11,8 @@ class Magerun extends React.Component {
     this.state = {
     	widthAmt: 17,
     	heightAmt: 10,
-    	headDirection: 'olm-center'
+    	headDirection: 'olm-center',
+    	xpDrops: []
     }
 	  this.resize = this.resize.bind(this);
 	  this.canvas = React.createRef();
@@ -33,6 +34,7 @@ class Magerun extends React.Component {
 		this.resize = this.resize.bind(this);
 		this.drawTiles = this.drawTiles.bind(this);
   	this.getTile = this.getTile.bind(this);
+  	this.attackWillHit = false;
   }
 
 
@@ -73,6 +75,14 @@ class Magerun extends React.Component {
     this.drawChar()
     this.drawDesination()
     this.drawClaw()
+    if (this.drawStar){
+    	this.drawStar = false;
+    	if (this.attackWillHit){
+    		drawStar(170,200,20,30,25,this.ctx,'red')
+    	} else {
+				drawStar(170,200,20,30,25,this.ctx,'blue')
+    	}
+    }
   }
 
   drawClaw(){
@@ -120,22 +130,22 @@ class Magerun extends React.Component {
  	}
 
  	getTile(e){
- 		if ((e.offsetX > 25 && e.offsetX <325) && (e.offsetY> 75 && e.offsetY < 275)){
- 			if (this.playerAttackcd <= 0){
- 				let coords = this.playerCords()
- 				this.playerAttack = {x: coords.x, y: coords.y}
- 				this.playerAttackcd = 4
- 				this.playerAttackQueued = true;
- 				return
- 			} 
- 		}
- 		// } else {
- 		// 	this.playerAttack = {x: -10000, y: -10000};
- 		// }
  		let x = e.offsetX
  		let y = e.offsetY - this.offset
  		let tile_x = Math.floor(x / this.tileSize);
 		let tile_y = Math.floor(y / this.tileSize);	
+
+ 		if ((e.offsetX > 25 && e.offsetX <325) && (e.offsetY> 75 && e.offsetY < 275)){
+ 			this.attackLoop = true;
+ 			if (this.player.x >=13) {
+ 				return this.player.x%2 == 0 ? {x: 12, y:this.player.y} : {x: 11, y:this.player.y}
+ 			} else {
+ 				return { x: this.player.x, y: this.player.y };	
+ 			}
+ 		} else {
+ 			this.attackLoop = false
+ 		}
+
 		if (tile_y <0) {
 			tile_y = 0
 		} 
@@ -153,34 +163,6 @@ class Magerun extends React.Component {
  	}
 
  	moveChar(){
- 		if (this.oneTickBlock){
- 			this.oneTickBlock = false
- 			return;
- 		}
-
- 		if (!this.destination){
- 			if (!this.playerAttack ){
- 				return
- 			} else{
- 				if (this.playerAttack.x < 0) {
- 					return
- 				}
- 				if (this.player.x > 12){
- 					this.destination = {x: this.player.x%2 == 0 ? 12 : 11, y: this.player.y }
- 				}
- 				if (this.player.x <= 12 && this.player.x > 0  && this.playerAttackcd == 4) {
- 					this.oneTickBlock = true
- 				}
- 			}
- 		}
-
- 		if (this.destination && this.playerAttack){
- 			if (this.player.x <= 12 && this.player.x > 0 && this.playerAttack.x > 0 && this.playerAttackcd == 4) {
- 				this.oneTickBlock = true
- 				this.destination = null;
- 			}
- 		}
-
  		if (!this.destination) {
  			return
  		}
@@ -229,6 +211,7 @@ class Magerun extends React.Component {
  					newx +=1
  				}
  			}
+ 			
  			this.player = {x: this.player.x + newx, y: this.player.y + newy}
  			if (xdiff==0 && ydiff == 0) {
  				this.destination = null;
@@ -244,9 +227,15 @@ class Magerun extends React.Component {
  				if (this.player.x <= 1){
  					//olm attacks you
  					this.olmAttack = {x: this.canvas.current.width/2 , y: this.offset -150}
- 				}	else if (this.player.x > 1 && this.player.x <=12){
- 					this.setState({headDirection: 'olm-center'})
- 				} else {
+ 				}	else if (this.player.x > 1 && this.player.x <=8){
+ 					if (Math.floor(Math.random() * 2) == 1){
+						this.setState({headDirection: 'olm-center'})
+					} else {
+ 						this.olmAttack = {x: this.canvas.current.width/2 , y: this.offset -150}
+					} 
+ 				} else if(this.player.x >= 9 && this.player.x <=12){
+					this.setState({headDirection: 'olm-center'})
+				} else {
  					this.setState({headDirection: 'olm-right'})
  				}
  			} else if (this.state.headDirection == 'olm-center') {
@@ -263,51 +252,97 @@ class Magerun extends React.Component {
 					//olm attacks you
 					this.olmAttack = {x: this.canvas.current.width/2 , y: this.offset-150}
 				}	else if (this.player.x > 1 && this.player.x <=12){
-					this.setState({headDirection: 'olm-center'})
+					if (this.player.x <=6){
+						if (this.attackWillHit) {
+							this.setState({headDirection: 'olm-left'})
+						} else {
+							this.setState({headDirection: 'olm-center'})
+ 						}
+					} else {
+						if (Math.floor(Math.random() * 2) == 1){
+							this.setState({headDirection: 'olm-center'})
+						} else {
+							this.olmAttack = {x: this.canvas.current.width/2 , y: this.offset-150}
+						}
+					}
 				} else {
 					this.setState({headDirection: 'olm-left'})
 				}
  			}
+ 			this.attackWillHit = false;
  		}
  	}
 
- 	playerAction(){
- 		this.playerAttackcd -=1
+ 	playerAttackFunc(){
+ 		if (this.attackLoop && this.player.x <=12 && this.playerAttackcd <=0){
+ 			let audio = new Audio(`${process.env.PUBLIC_URL}/assets/trident.mp3`)
+ 				audio.addEventListener('loadeddata', () => {
+ 				audio.play()
+ 			})
+ 			let coords = this.playerCords()
+ 			if (Math.floor(Math.random() * 5) == 4){
+ 				this.attackWillHit = false;
+ 			} else {
+ 				this.attackWillHit = true;
+ 				this.procXp()
+ 			}
+ 			this.playerAttack = {x: coords.x, y: coords.y}
+ 			this.playerAttackcd = 4
+ 		}
+ 	}
+
+ 	procXp(){
+ 		let xpDrops = [...this.state.xpDrops]
+ 		xpDrops.push('sdafijadsfjsal')
+ 		this.setState({xpDrops: xpDrops})
+ 		setTimeout(()=>{
+ 			let copy = [...this.state.xpDrops]
+ 			copy.shift()
+ 			this.setState({xpDrops: copy})
+ 		},4000)
  	}
 
  	gameTick(){
- 		this.playerAttackQueued = false;
+ 		this.playerAttackcd -=1
  		this.olmAction()
  		this.moveChar()
- 		this.playerAction()
+ 		this.playerAttackFunc()
  		this.drawBoard()
  	}
 
  	animate(){
  		this.ctx2.clearRect(0,0,this.canvas2.current.width, this.canvas2.current.height)
  		requestAnimationFrame(()=> this.animate())
- 		if (this.olmAttack){
- 			this.ctx2.beginPath()
- 			this.olmAttack = approachTarget(this.olmAttack, this.playerCords())
- 			this.ctx2.arc(this.olmAttack.x, this.olmAttack.y, 10, 0, Math.PI*2, false )
- 			this.ctx2.fillStyle = 'green'
- 			this.ctx2.fill()
-	 	}	
- 		if (this.playerAttack && !this.playerAttackQueued){
- 			if (this.player.x>=13 && this.playerAttack.x > 0){
- 				let coords = this.playerCords()
- 				this.playerAttack = {x: coords.x, y: coords.y}
- 				return
+ 		try{
+  		if (this.olmAttack){
+	 			this.ctx2.beginPath()
+	 			this.olmAttack = approachTarget(this.olmAttack, this.playerCords())
+	 			this.ctx2.arc(this.olmAttack.x, this.olmAttack.y, 10, 0, Math.PI*2, false )
+	 			this.ctx2.fillStyle = 'green'
+	 			this.ctx2.fill()
  			}
- 			this.ctx2.beginPath()
- 			this.playerAttack = approachTarget(this.playerAttack, {x: 175, y: 200})
- 			this.ctx2.arc(this.playerAttack.x, this.playerAttack.y, 10, 0, Math.PI*2, false )
- 			this.ctx2.fillStyle = 'blue'
- 			this.ctx2.fill()
-	 	}	 	
+ 		}	catch (err) {
+ 		}	
+
+ 		try {
+			this.ctx2.beginPath()
+			this.playerAttack = approachTarget(this.playerAttack, {x: 175, y: 200})
+			if(this.playerAttack == null) {
+				this.drawStar = true;
+				if (this.attackWillHit){
+					drawStar(170,200,20,30,25,this.ctx,'red')
+				} else {
+					drawStar(170,200,20,30,25,this.ctx,'blue')
+				}
+			}
+			this.ctx2.arc(this.playerAttack.x, this.playerAttack.y, 10, 0, Math.PI*2, false )
+			this.ctx2.fillStyle = 'blue'
+			this.ctx2.fill()
+ 		} catch (err) {
+ 		}
 	 }
 
- 	playerCords(dest){
+ 	playerCords(){
  		return ({x: this.player.x * this.tileSize + this.tileSize/2, y: this.offset + this.player.y * this.tileSize + this.tileSize/2})
  	}
 
@@ -345,6 +380,14 @@ class Magerun extends React.Component {
     	<div id="background">
 	    	<div className="parent">
 	    	  <img className={`olm ${this.state.headDirection} child`} src={`${process.env.PUBLIC_URL}/assets/olm.png`} height={this.offset-20}/>
+						{this.state.xpDrops.map(() => {
+		       		return (
+	    	  			<div style={{'color': 'white'}} className='fade-out child2'>
+	    	  				<img className='' src={`${process.env.PUBLIC_URL}/assets/magic.png`} height={20}/>
+			       			123
+			       		</div>
+			       	)
+						})}		
 	    	</div>
     		<canvas id='olm-room' ref={this.canvas} />    		
     		<canvas id='projectiles' ref={this.canvas2} />
@@ -364,7 +407,7 @@ function approachTarget(object, target){
 	}
 
 	if (xdiff <30 && ydiff <30){
-		return {x: -10000, y:-10000}
+		return null
 	}
 
 	let ratiox = xdiff / ydiff
@@ -394,4 +437,33 @@ function approachTarget(object, target){
 
 
 	return object
+}
+
+function drawStar(cx, cy, spikes, outerRadius, innerRadius, ctx, color) {
+    var rot = Math.PI / 2 * 3;
+    var x = cx;
+    var y = cy;
+    var step = Math.PI / spikes;
+
+    ctx.strokeSyle = "#000";
+    ctx.beginPath();
+    ctx.moveTo(cx, cy - outerRadius)
+    for (let i = 0; i < spikes; i++) {
+        x = cx + Math.cos(rot) * outerRadius;
+        y = cy + Math.sin(rot) * outerRadius;
+        ctx.lineTo(x, y)
+        rot += step
+
+        x = cx + Math.cos(rot) * innerRadius;
+        y = cy + Math.sin(rot) * innerRadius;
+        ctx.lineTo(x, y)
+        rot += step
+    }
+    ctx.lineTo(cx, cy - outerRadius)
+    ctx.closePath();
+    ctx.strokeStyle=color;
+    ctx.stroke();
+    ctx.fillStyle=color;
+    ctx.fill();
+
 }
