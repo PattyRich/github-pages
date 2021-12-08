@@ -1,0 +1,64 @@
+#background {
+	background: #3A3B3C;
+	height: 100vh;
+}
+
+.parent{
+	position: relative;
+	width: 100vw;
+}
+
+.olm{
+	transition: transform 1.2s;
+}
+
+.olm-left{
+	transform: rotate(30deg) translate(-50%, 25%);
+}
+
+.olm-center{
+	transform: translate(-50%, 0%); 
+}
+
+.olm-right{
+	transform: rotate(-30deg) translate(-50%, -50%);
+}
+
+.child{
+  position: absolute;
+  top: 50%;  /* position the top  edge of the element at the middle of the parent */
+  left: 50%; /* position the left edge of the element at the middle of the parent */
+     
+}
+
+.child2{
+	position: absolute;
+	top: 130px;
+	left:  75%;
+}
+
+.fade-out {
+  animation: fadeOut ease 3s;
+  -webkit-animation: fadeOut ease 3s;
+  -moz-animation: fadeOut ease 3s;
+  -o-animation: fadeOut ease 3s;
+  -ms-animation: fadeOut ease 3s;
+  opacity: 0;
+}
+@keyframes fadeOut {
+  0% {
+    opacity:1;
+  }
+  100% {
+    opacity:0;
+    top: 0px;
+  }
+}
+
+
+#projectiles{
+	position: absolute;
+	top: 0px;
+	left: 0px;
+	z-index: 2;
+}
