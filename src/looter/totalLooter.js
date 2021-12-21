@@ -17,7 +17,13 @@ function totalLoot(data, rolls){
 
 	let loot = []
 
-	console.log(data)
+	data.sort((a,b)=>{
+		if (a.rarity > b.rarity) {
+			return 1
+		} else {
+			return -1
+		}
+	})
 
 	for(let i=0; i<data.length; i++){
 		let amount = 0

@@ -1,7 +1,10 @@
-import React from 'react';
+import React, {useEffect} from 'react';
 
 const TotalLoot = (props) => {
-	//useEffect(()=> {})
+	useEffect(()=> {
+		console.log('rerender')
+	return () => console.log('tearing down')
+	}, [])
 	return (
 		<div className="items">
 			{props.loot ? props.loot.map(item => {
