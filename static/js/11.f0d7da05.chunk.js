@@ -1,2 +1,0 @@
-(this["webpackJsonpgithub-pages"]=this["webpackJsonpgithub-pages"]||[]).push([[11],{35:function(a,e,n){"use strict";n.r(e),n.d(e,"data",(function(){return t}));var t={name:"zulrah",items:[{name:"Tanzanite fang",rate:1/1024},{name:"Magic fang",rate:1/1024},{name:"Serpentine visage",rate:1/1024},{name:"Uncut onyx",rate:1/1024},{name:"Tanzanite mutagen",rate:1/13106},{name:"Magma mutagen",rate:1/13106}],pet:{rate:4e3,name:"Pet snakeling"}}}}]);
-//# sourceMappingURL=11.f0d7da05.chunk.js.map

@@ -1,2 +1,0 @@
-(this["webpackJsonpgithub-pages"]=this["webpackJsonpgithub-pages"]||[]).push([[1],{25:function(a,e,t){"use strict";t.r(e),t.d(e,"data",(function(){return s}));var s={name:"bandos",items:[{name:"Bandos chestplate",rate:1/381},{name:"Bandos boots",rate:1/381},{name:"Bandos tassets",rate:1/381},{name:"Bandos hilt",rate:1/508}],pet:{rate:5e3,name:"Pet general graardor"}}}}]);
-//# sourceMappingURL=1.e7483688.chunk.js.map

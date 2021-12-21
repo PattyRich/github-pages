@@ -1,2 +1,0 @@
-(this["webpackJsonpgithub-pages"]=this["webpackJsonpgithub-pages"]||[]).push([[0],{24:function(a,e,t){"use strict";t.r(e),t.d(e,"data",(function(){return r}));var r={name:"arma",items:[{name:"Armadyl helmet",rate:1/381},{name:"Armadyl chainskirt",rate:1/381},{name:"Armadyl chestplate",rate:1/381},{name:"Armadyl hilt",rate:1/508}],pet:{rate:5e3,name:"Pet kree'arra"}}}}]);
-//# sourceMappingURL=0.b5a9499b.chunk.js.map
