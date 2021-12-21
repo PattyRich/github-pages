@@ -61,7 +61,7 @@ class Osrs extends React.Component {
 		this.interval = null;
   }
 
-  clearData(){
+  clearData = () => {
   	let rewardList = []
   	let rewardCount = 0
   	let rewards = null
@@ -204,9 +204,6 @@ class Osrs extends React.Component {
 			  				iconClone[name] = 'loading'
 			  				const response = await fetch(`https://api.osrsbox.com/items?where={ "name": "${searchName}", "duplicate": false }`);
 							  const data = await response.json();
-							  if (data._items[0].name.includes('Anti')){
-							  	console.log(data)
-							  }
 							  let icon = data._items[0].icon
 							  iconClone[name] = icon
 							  resolve()
