@@ -2,6 +2,8 @@ import React from 'react';
 //import { Link } from "react-router-dom";
 import './osrs.css';
 import { loot } from '../looter/looter'
+import { totalLooter} from '../looter/totalLooter'
+import TotalLoot from '../components/TotalLoot'
 import Plotly from 'plotly.js-dist-min'
 
 class Osrs extends React.Component {
@@ -19,6 +21,8 @@ class Osrs extends React.Component {
       pets: true,
       histogramData: [],
       simulations : 1000,
+      fullRewards: false,
+      fullLootRewards: [],
       icons: {},
       bosses: [],
       createData: {
@@ -53,7 +57,16 @@ class Osrs extends React.Component {
 		this.selectBoss = this.selectBoss.bind(this);
 		this.deleteBoss = this.deleteBoss.bind(this);
 		this.completion = this.completion.bind(this);
+		this.clearData = this.clearData.bind(this);
 		this.interval = null;
+  }
+
+  clearData(){
+  	let rewardList = []
+  	let rewardCount = 0
+  	let rewards = null
+  	let fullLootRewards = []
+  	this.setState({ rewardList, rewardCount, rewards, fullLootRewards})
   }
 
   async onChangeValue(event) {
@@ -90,7 +103,13 @@ class Osrs extends React.Component {
   }
 
   onChangeValueInput(state, event){
-  	this.setState({[state]: event.target.value})
+  	this.setState({
+  		[state]: event.target.value
+  	}, ()=> {
+    	if (state == 'points'){
+  			this.completion()
+  		}		
+  	})
   }
 
   changeCreateData(thing, data, index){
@@ -129,8 +148,18 @@ class Osrs extends React.Component {
   	this.setState({'createData': copy})
   }
 
-  async addIcons(mode){
+  async addIcons(mode, loot=null){
 		  let iconClone = {...this.state.icons}
+
+		  if (loot){
+		  	let promiseArray = []
+		  	for(let i=0; i< loot.length; i++){
+		  		promiseArray.push(getIcon(loot[i].name))
+		  	}		
+		  	await Promise.all(promiseArray)
+	  		this.setState({'icons': iconClone})		
+	  		return 
+		  }
 
 		  if (mode === 'create') {
 				let data = { ...this.state.createData }
@@ -165,12 +194,19 @@ class Osrs extends React.Component {
 			})
 
 	  	function getIcon(name){
+	  		let searchName = name
+	  		if(name.includes('+')){
+	  			searchName = name.replaceAll('+', '%2B')
+	  		}
 	  		return new Promise(async (resolve, reject) => {
 		  		if (!iconClone[name]){
 			  		try{
 			  				iconClone[name] = 'loading'
-			  				const response = await fetch(`https://api.osrsbox.com/items?where={ "name": "${name}", "duplicate": false }`);
+			  				const response = await fetch(`https://api.osrsbox.com/items?where={ "name": "${searchName}", "duplicate": false }`);
 							  const data = await response.json();
+							  if (data._items[0].name.includes('Anti')){
+							  	console.log(data)
+							  }
 							  let icon = data._items[0].icon
 							  iconClone[name] = icon
 							  resolve()
@@ -206,9 +242,21 @@ class Osrs extends React.Component {
   async go(){
   	let rewards = []
 
-		rewards = await this.lootFunction(this.state.rolls, this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData})
-		this.setState({'rewards': rewards})
+  	if (this.state.fullRewards) {
+  		try {
+  			let bossName = bossHelper(this.state.mode)
+  			const response = await fetch(`https://api.osrsbox.com/monsters?where={ "name": "${bossName}", "duplicate": false }`);
+  			const data = await response.json();	
+  			this.addIcons(this.state.mode, data._items[0].drops)	
+  			let loot = totalLooter(data._items[0].drops || null, this.state.rolls)
+  			this.setState({'fullLootRewards': loot})
+  		} catch(err) {
 
+  		}	
+  	} else {
+  		rewards = await this.lootFunction(this.state.rolls, this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData})
+			this.setState({'rewards': rewards})		
+  	}
 
   	if (rewards && rewards.length === 0) {
   		this.setState({'nothingCounter': this.state.nothingCounter + 1})
@@ -361,7 +409,9 @@ class Osrs extends React.Component {
 		      <label>Number of rolls (f or nothing for completion) </label>
 	  			<input type="text" value={this.state.rolls} onChange={(e) => this.onChangeValueInput('rolls', e)}/>
 		      <br/>
-		      Include pet for completion? <input type="checkbox" onChange={()=> this.setState({pets: !this.state.pets})} checked={this.state.pets}/> 
+		      Include pet for completion? <input type="checkbox" onChange={()=>{ this.setState({pets: !this.state.pets}); this.clearData(); } } checked={this.state.pets}/> 
+		      <br/>
+		      Simulate total rewards instead of uniques? (note this won't work for raids yet && requires a roll amount) <input type="checkbox" onChange={()=> { this.setState({fullRewards: !this.state.fullRewards}); this.clearData();} } checked={this.state.fullRewards}/> 
 		      <br/>
 		      { this.state.mode === 'cox' ?
 			      <span>
@@ -384,7 +434,7 @@ class Osrs extends React.Component {
 		      : null }
 		      <br/>
 		      <span>
-			     	<label> Plot results a # of simulations  </label>
+			     	<label> Plot results of a # of simulations  </label>
 		  			<input type="text" value={this.state.simulations} onChange={(e) => this.onChangeValueInput('simulations', e)}/>
 	  			</span>
 	  			<button onClick={this.graphSimulation}> Plot. </button>
@@ -400,6 +450,7 @@ class Osrs extends React.Component {
 		       		)
 		      	}) : null}
 		      	{this.state.rewards && this.state.rewards.length === 0 ? 'Nothing x' + this.state.nothingCounter : null}
+		      	{this.state.fullRewards ? <TotalLoot icons={this.state.icons} loot={this.state.fullLootRewards}/> : null}
 		      </div>
 		    </div>
 		    { this.state.rewardList.length ? 
@@ -441,3 +492,35 @@ class Osrs extends React.Component {
 }
 
 export default Osrs
+
+
+function bossHelper(mode){
+	switch (mode) {
+	  case 'corp':
+	  	return 'Corporeal Beast';
+	    break;
+	  case 'pnm':
+	  	return 'Phosani\'s Nightmare';
+	  	break;
+	  case 'zulrah':
+		  return 'Zulrah';
+		  break;
+		case 'vorkath':
+			return 'Vorkath';
+			break;
+		case 'arma':
+			return 'Kree\'arra';
+			break;
+		case 'bandos':
+			return 'General Graardor';
+			break;
+		case 'zammy':
+			return 'K\'ril Tsutsaroth';
+			break;
+		case 'sara':
+			return 'Commander Zilyana';
+			break;
+	  default:
+	  	return null
+	}
+}
