@@ -14,7 +14,7 @@ const TotalLoot = (props) => {
      		return (
      			<span className="item">
      				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
-     					<img src={'data:image/png;base64,' + props.icons[item.name]} title={item.name} alt={item.name}></img>
+     					<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.png`} title={item.name} alt={item.name}></img>
      				</a>
      				{item.amount}
      			</span>
