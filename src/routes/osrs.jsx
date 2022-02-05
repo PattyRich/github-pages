@@ -72,7 +72,7 @@ class Osrs extends React.Component {
   async onChangeValue(event) {
   	this.setState({'mode': event.target.value})
   	this.completion(event.target.value)
-		this.addIcons(event.target.value)
+		//this.addIcons(event.target.value)
   }
 
   saveBoss(){
@@ -148,6 +148,11 @@ class Osrs extends React.Component {
   	this.setState({'createData': copy})
   }
 
+
+  //I USED AN API FOR THIS AT 1 POINT BUT IT WENT DOWN FREQUENTLY SO I DID LOCAL IMAGES
+  //uncomment this and let the getIcon call the python the python server to put images in the itemsToGet.json
+  //then run getImage.py to get those images
+  //create your own boss won't load the images unfortunatley :(
   async addIcons(mode, loot=null){
 		  let iconClone = {...this.state.icons}
 
@@ -208,6 +213,17 @@ class Osrs extends React.Component {
 							  iconClone[name] = icon
 							  resolve()
 						} catch(err) {
+							if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
+							    // dev code
+							    try{
+							    	  console.log(`localhost:8080/${encodeURI(name)}`)
+											const response = await fetch(`http://localhost:8080/${encodeURI(name)}`);
+											console.log(`Added item ${name} to public assets folder. (should see on refresh)`)					    	
+							    } catch {
+							    	console.log('Failed to add item to assets folder. Is the python server running????')
+							    }
+									
+							} 
 							console.log(err)
 							resolve()
 						}
@@ -244,7 +260,7 @@ class Osrs extends React.Component {
   			let bossName = bossHelper(this.state.mode)
   			const response = await fetch(`https://api.osrsbox.com/monsters?where={ "name": "${bossName}", "duplicate": false }`);
   			const data = await response.json();	
-  			this.addIcons(this.state.mode, data._items[0].drops)	
+  			//this.addIcons(this.state.mode, data._items[0].drops)	
   			let loot = totalLooter(data._items[0].drops || null, this.state.rolls)
   			this.setState({'fullLootRewards': loot})
   		} catch(err) {
@@ -305,7 +321,7 @@ class Osrs extends React.Component {
   async componentDidMount(){
   	let completion = await (this.lootFunction(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData}))
 		this.setState({'completion': completion})
-		this.addIcons(this.state.mode)
+		//this.addIcons(this.state.mode)
   }
 
   lootFunction(rolls, place, options){
@@ -313,7 +329,7 @@ class Osrs extends React.Component {
 
   	if (this.state.mode === 'create') {
   		//these have to be run late on create since we won't know them ahead of time
-  		this.addIcons(this.state.mode)
+  		//this.addIcons(this.state.mode)
   		this.completion()
   	}
 
@@ -408,8 +424,7 @@ class Osrs extends React.Component {
 		      <br/>
 		      Include pet for completion? <input type="checkbox" onChange={()=>{ this.setState({pets: !this.state.pets}); this.clearData(); } } checked={this.state.pets}/> 
 		      <br/>
-		      Simulate total rewards instead of uniques? (note this won't work for raids yet && requires a roll amount) <input type="checkbox" onChange={()=> { this.setState({fullRewards: !this.state.fullRewards}); this.clearData();} } checked={this.state.fullRewards}/> 
-		      <br/>
+		      {/*Simulate total rewards instead of uniques? (note this won't work for raids yet && requires a roll amount) <input type="checkbox" onChange={()=> { this.setState({fullRewards: !this.state.fullRewards}); this.clearData();} } checked={this.state.fullRewards}/>*/} 
 		      { this.state.mode === 'cox' ?
 			      <span>
 				     	<label>Number of cox points per raid </label>
@@ -440,7 +455,7 @@ class Osrs extends React.Component {
 		       		return (
 		       			<div className="item">
 		       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
-		       					<img src={'data:image/png;base64,' + this.state.icons[item.name]} title={item.name} alt={item.name}></img>
+		       					<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.png`} title={item.name} alt={item.name}></img>
 		       				</a>
 		       				{item.kc}
 		       			</div>
@@ -465,9 +480,9 @@ class Osrs extends React.Component {
 							      	{day.length ? day.map(item => {
 							       		return (
 							       			<div className="item">
-							       			{/*<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.gif`} alt={item.name}></img>*/}
+							       			{/*<img src={'data:image/png;base64,' + this.state.icons[item.name]} title={item.name} alt={item.name}></img>*/}
 							       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
-							       					<img src={'data:image/png;base64,' + this.state.icons[item.name]} title={item.name} alt={item.name}></img>
+							       					<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.png`} title={item.name} alt={item.name}></img>
 							       				</a>							       				
 		       									{item.kc} ({(this.state.rewardCountConst * (this.state.rewardList.length - index)) - (this.state.rewardCountConst - item.kc)})
 							       			</div>
