@@ -191,7 +191,7 @@ function looter(rolls, data) {
 		let x = getRandomInt(data.pet.rate)
 		if (x === data.pet.rate){
 			if (data.name === 'cox') {
-				if (rewards.length && rewards[rewards.length-1].kc === kc+1){
+				if (rewards.length && rewards[rewards.length-1].kc === kc+1 && !['Twisted ancestral colour kit', 'Metamorphic dust'].includes(rewards[rewards.length-1].name)){
 					rewards.push({
 						kc: kc+1,
 						name: data.pet.name
