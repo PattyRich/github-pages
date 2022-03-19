@@ -1,6 +1,6 @@
 import {completion} from './completion'
 
-export function loot(rolls, place, options = {points: 30000, runCompletion: false, pets: true}) {
+export function loot(rolls, place, options = {points: 30000, runCompletion: false, pets: true, cms: false}) {
 	return new Promise((resolve, reject) => {
 		
 		//sloppy fix but just a bypass so the import doesn't stop us. dont' want to scrape out all the logic that helps us
@@ -54,6 +54,9 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 
 				if (data.name === 'cox') {
 					data.chance = (options.points / 8678)
+					if (options.cms) {
+						data.rollCms = true
+					}
 				}
 				if (data.pet) {
 					if (!options.pets){
@@ -113,6 +116,11 @@ function looter(rolls, data) {
 			rollItem(i)
 		}
 
+		//previous check only adds if this is cox
+		if (data.rollCms){
+			rollItemAdHoc(i, data.cms)	
+		}
+
 		rollPet(i)
 		if (finish) {
 			if (!checkList.some(item => item <= 0)){
@@ -122,6 +130,37 @@ function looter(rolls, data) {
 	}
 
 	return rewards
+
+
+	function rollItemAdHoc(kc, items){
+		console.log(items)
+		let rng = Math.random()
+		//they got loot
+		let weight = 0
+
+		items.forEach(item => {
+			weight += item.rate
+		})	
+
+		weight *= 100
+
+		console.log(rng, weight)
+		if (rng < weight) {
+			let item_per = random_generator(weight,0)
+
+			let cnt = 0
+			for (let j=0; j<items.length; j++) {	
+				cnt += items[j].rate
+				if (cnt >= item_per) {
+					rewards.push({
+						kc: kc+1,
+						name: items[j].name
+					})
+					break
+				}
+			}
+		} 	
+	}
 
 	function rollItem(kcc){
 		let rng = Math.random() * 100
