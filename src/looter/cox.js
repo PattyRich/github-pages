@@ -53,6 +53,18 @@ export let data = {
 	pet:{
 		rate: 53,
 		name: "Olmlet"
-	} 
+	} ,
+	cms:
+		[
+			{
+				name: 'Twisted ancestral colour kit',
+				rate: 1/75
+			},
+			{
+				name: 'Metamorphic dust',
+				rate: 1/400
+			}
+		]
+	
 }
 

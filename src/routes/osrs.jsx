@@ -25,6 +25,7 @@ class Osrs extends React.Component {
       fullLootRewards: [],
       icons: {},
       bosses: [],
+      cms: false,
       createData: {
       	bossName: 'Name me',
       	numItems: 1,
@@ -245,7 +246,7 @@ class Osrs extends React.Component {
   	this.interval = setInterval(async ()=>{
   		let rewards = null
   		if (this.state.rewardCountConst) {
-	  		rewards = await this.lootFunction(num, this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData})
+	  		rewards = await this.lootFunction(num, this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData, cms: this.state.cms})
 
 	  		this.setState({'rewardList': [rewards, ...this.state.rewardList], 'rewardCount': this.state.rewardCount + this.state.rewardCountConst })
 	  	} 
@@ -267,7 +268,7 @@ class Osrs extends React.Component {
 
   		}	
   	} else {
-  		rewards = await this.lootFunction(this.state.rolls, this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData})
+  		rewards = await this.lootFunction(this.state.rolls, this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData, cms: this.state.cms})
 			this.setState({'rewards': rewards})		
   	}
 
@@ -319,9 +320,9 @@ class Osrs extends React.Component {
   }
 
   async componentDidMount(){
-  	let completion = await (this.lootFunction(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData}))
+  	let completion = await (this.lootFunction(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData, cms: this.state.cms}))
 		this.setState({'completion': completion})
-		//this.addIcons(this.state.mode)
+		this.addIcons(this.state.mode)
   }
 
   lootFunction(rolls, place, options){
@@ -429,6 +430,7 @@ class Osrs extends React.Component {
 			      <span>
 				     	<label>Number of cox points per raid </label>
 			  			<input type="text" value={this.state.points} onChange={(e) => this.onChangeValueInput('points', e)}/>
+		  				&nbsp; Challenge Mode? <input type="checkbox" onChange={()=>{ this.setState({cms: !this.state.cms}); } } checked={this.state.cms}/> 
 		  			</span>
 	  			: null }
 		      <br/>
