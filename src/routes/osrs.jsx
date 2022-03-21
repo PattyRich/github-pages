@@ -108,7 +108,7 @@ class Osrs extends React.Component {
   	this.setState({
   		[state]: event.target.value
   	}, ()=> {
-    	if (state == 'points'){
+    	if (state == 'points' || state == 'teamSize'){
   			this.completion()
   		}		
   	})
@@ -326,8 +326,9 @@ class Osrs extends React.Component {
   }
 
   async componentDidMount(){
-  	let completion = await (this.lootFunction(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData, cms: this.state.cms}))
-		this.setState({'completion': completion})
+	this.completion();
+  	// let completion = await (this.lootFunction(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData, cms: this.state.cms}))
+	// 	this.setState({'completion': completion})
 		//this.addIcons(this.state.mode)
   }
 
@@ -351,7 +352,7 @@ class Osrs extends React.Component {
 
   async completion(mode) {
   	//lootFunction will cause an infinite loop here
-		let completion = await loot(null, mode || this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData})
+		let completion = await loot(null, mode || this.state.mode, {runCompletion: true, ...this.state})
 		this.setState({'completion': completion})  
 	}
 

@@ -22,6 +22,7 @@ const reducer = (previousValue, currentValue) => previousValue + currentValue;
 
 
 export function completion(data) {
+	console.log(data)
 	let x = []
 
 	let totalWeight = 0
