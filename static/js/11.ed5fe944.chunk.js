@@ -1,0 +1,2 @@
+(this["webpackJsonpgithub-pages"]=this["webpackJsonpgithub-pages"]||[]).push([[11],{36:function(a,t,e){"use strict";e.r(t),e.d(t,"data",(function(){return r}));var r={name:"zammy",items:[{name:"Steam battlestaff",rate:1/127},{name:"Zamorakian spear",rate:1/127},{name:"Staff of the dead",rate:1/508},{name:"Zamorak hilt",rate:1/508}],pet:{rate:5e3,name:"Pet k'ril tsutsaroth"}}}}]);
+//# sourceMappingURL=11.ed5fe944.chunk.js.map
