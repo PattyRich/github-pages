@@ -144,7 +144,6 @@ function looter(rolls, data) {
 
 
 	function rollItemAdHoc(kc, items){
-		console.log(items)
 		let rng = Math.random()
 		//they got loot
 		let weight = 0
@@ -153,12 +152,9 @@ function looter(rolls, data) {
 			weight += item.rate
 		})	
 
-		weight *= 100
-
 		console.log(rng, weight)
 		if (rng < weight) {
 			let item_per = random_generator(weight,0)
-
 			let cnt = 0
 			for (let j=0; j<items.length; j++) {	
 				cnt += items[j].rate
