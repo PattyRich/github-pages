@@ -1,6 +1,8 @@
 import {completion} from './completion'
 
-export function loot(rolls, place, options = {points: 30000, runCompletion: false, pets: true, cms: false}) {
+const teamActivites = ['nex']
+
+export function loot(rolls, place, options = {points: 30000, runCompletion: false, pets: true, cms: false, teamSize: 1}) {
 	return new Promise((resolve, reject) => {
 		
 		//sloppy fix but just a bypass so the import doesn't stop us. dont' want to scrape out all the logic that helps us
@@ -38,6 +40,15 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 							}
 						}
 					})
+				}
+
+				//this is just nex atm && will probably only work for nex since it works differnetly
+				//rates will be changed due to extra people 
+				if (teamActivites.includes(data.name)){
+					data.items.forEach((item)=> {
+						item.rate /= options.teamSize
+					})				
+					data.pet.rate *= options.teamSize
 				}
 
 				//chance is the odds that you get a unique drop. 
@@ -133,7 +144,6 @@ function looter(rolls, data) {
 
 
 	function rollItemAdHoc(kc, items){
-		console.log(items)
 		let rng = Math.random()
 		//they got loot
 		let weight = 0
@@ -142,12 +152,8 @@ function looter(rolls, data) {
 			weight += item.rate
 		})	
 
-		weight *= 100
-
-		console.log(rng, weight)
 		if (rng < weight) {
 			let item_per = random_generator(weight,0)
-
 			let cnt = 0
 			for (let j=0; j<items.length; j++) {	
 				cnt += items[j].rate
