@@ -1,2 +1,0 @@
-(this["webpackJsonpgithub-pages"]=this["webpackJsonpgithub-pages"]||[]).push([[6],{31:function(a,e,t){"use strict";t.r(e),t.d(e,"data",(function(){return n}));var n={name:"nex",items:[{name:"Zaryte vambraces",rate:1/212},{name:"Nihil horn",rate:1/318},{name:"Torva full helm (damaged)",rate:1/318},{name:"Torva platebody (damaged)",rate:1/318},{name:"Torva platelegs (damaged)",rate:1/318},{name:"Ancient hilt",rate:1/636}],pet:{rate:500,name:"Nexling"}}}}]);
-//# sourceMappingURL=6.238b7c89.chunk.js.map
