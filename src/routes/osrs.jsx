@@ -26,6 +26,8 @@ class Osrs extends React.Component {
       icons: {},
       bosses: [],
       cms: false,
+      worstRewards: null,
+      bestRewards: null,
       createData: {
       	bossName: 'Name me',
       	numItems: 1,
@@ -111,6 +113,20 @@ class Osrs extends React.Component {
   			this.completion()
   		}		
   	})
+  }
+
+  showPlotData(type){
+  	if (type == 'best'){
+  		this.setState({rewards: this.state.bestRewards})
+  	} else {
+  		this.setState({rewards: this.state.worstRewards})
+  	}
+  }
+
+  clearPlots(){
+  	Plotly.deleteTraces('histogram', 0)
+  	Plotly.deleteTraces('scatter', 0)
+		this.setState({bestRewards: null, worstRewards: null})
   }
 
   changeCreateData(thing, data, index){
@@ -282,10 +298,17 @@ class Osrs extends React.Component {
   async graphSimulation(){
   	let arr = []
 		let items = []
+		this.setState({bestRewards: null, worstRewards: null})
 		for (let i=0; i<this.state.simulations; i++){
 			let x = await this.lootFunction('f', this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData})
 			arr.push(x[x.length-1].kc)
 			items.push(x.length)
+			if (!this.state.bestRewards || x[x.length-1].kc < this.state.bestRewards[this.state.bestRewards.length-1].kc) {
+				this.setState({bestRewards: x})
+			}
+			if (!this.state.worstRewards || x[x.length-1].kc > this.state.worstRewards[this.state.worstRewards.length-1].kc) {
+				this.setState({worstRewards: x})
+			}
 		}
 
 		let trace = {
@@ -498,6 +521,13 @@ class Osrs extends React.Component {
 			      </div>
 			    </div>
 			  : null }
+			  {this.state.bestRewards && 
+			  	<span>
+		  			<button style={{'margin': '5px'}} onClick={() => this.showPlotData('best')}> Show best simulation. </button>
+		  			<button style={{'margin': '5px'}} onClick={() => this.showPlotData('worst')}> Show worst simulation. </button>
+		  			<button style={{'margin': '5px'}} onClick={() => this.clearPlots()}> Clear </button>
+	  			</span>
+			  }
 			  <div id="histogram"> </div>
 			  <div id="scatter"> </div>
       </div>
