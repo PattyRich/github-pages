@@ -25,6 +25,7 @@ class Osrs extends React.Component {
       fullLootRewards: [],
       icons: {},
       bosses: [],
+	  teamSize: 4,
       cms: false,
       worstRewards: null,
       bestRewards: null,
@@ -109,7 +110,7 @@ class Osrs extends React.Component {
   	this.setState({
   		[state]: event.target.value
   	}, ()=> {
-    	if (state == 'points'){
+    	if (state == 'points' || state == 'teamSize'){
   			this.completion()
   		}		
   	})
@@ -167,7 +168,7 @@ class Osrs extends React.Component {
 
 
   //I USED AN API FOR THIS AT 1 POINT BUT IT WENT DOWN FREQUENTLY SO I DID LOCAL IMAGES
-  //uncomment this and let the getIcon call the python the python server to put images in the itemsToGet.json
+  //uncomment the addicons right below the go() function and let the getIcon call the python the python server to put images in the itemsToGet.json
   //then run getImage.py to get those images
   //create your own boss won't load the images unfortunatley :(
   async addIcons(mode, loot=null){
@@ -234,9 +235,12 @@ class Osrs extends React.Component {
 							    // dev code
 							    try{
 							    	  console.log(`localhost:8080/${encodeURI(name)}`)
-											const response = await fetch(`http://localhost:8080/${encodeURI(name)}`);
+											const response = await fetch(`http://localhost:8080/${encodeURI(name)}`, {
+												mode: 'no-cors' // 'cors' by default
+											  });
 											console.log(`Added item ${name} to public assets folder. (should see on refresh)`)					    	
-							    } catch {
+							    } catch (err) {
+									console.log(err)
 							    	console.log('Failed to add item to assets folder. Is the python server running????')
 							    }
 									
@@ -262,7 +266,7 @@ class Osrs extends React.Component {
   	this.interval = setInterval(async ()=>{
   		let rewards = null
   		if (this.state.rewardCountConst) {
-	  		rewards = await this.lootFunction(num, this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData, cms: this.state.cms})
+	  		rewards = await this.lootFunction(num, this.state.mode, this.state)
 
 	  		this.setState({'rewardList': [rewards, ...this.state.rewardList], 'rewardCount': this.state.rewardCount + this.state.rewardCountConst })
 	  	} 
@@ -271,6 +275,8 @@ class Osrs extends React.Component {
 
   async go(){
   	let rewards = []
+
+  	// this.addIcons(this.state.mode)
 
   	if (this.state.fullRewards) {
   		try {
@@ -284,7 +290,7 @@ class Osrs extends React.Component {
 
   		}	
   	} else {
-  		rewards = await this.lootFunction(this.state.rolls, this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData, cms: this.state.cms})
+  		rewards = await this.lootFunction(this.state.rolls, this.state.mode, this.state)
 			this.setState({'rewards': rewards})		
   	}
 
@@ -300,7 +306,7 @@ class Osrs extends React.Component {
 		let items = []
 		this.setState({bestRewards: null, worstRewards: null})
 		for (let i=0; i<this.state.simulations; i++){
-			let x = await this.lootFunction('f', this.state.mode, {points: this.state.points, pets: this.state.pets, createData: this.state.createData})
+			let x = await this.lootFunction('f', this.state.mode, this.state)
 			arr.push(x[x.length-1].kc)
 			items.push(x.length)
 			if (!this.state.bestRewards || x[x.length-1].kc < this.state.bestRewards[this.state.bestRewards.length-1].kc) {
@@ -343,9 +349,10 @@ class Osrs extends React.Component {
   }
 
   async componentDidMount(){
-  	let completion = await (this.lootFunction(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData, cms: this.state.cms}))
-		this.setState({'completion': completion})
-		this.addIcons(this.state.mode)
+	this.completion();
+  	// let completion = await (this.lootFunction(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData, cms: this.state.cms}))
+	// 	this.setState({'completion': completion})
+		//this.addIcons(this.state.mode)
   }
 
   lootFunction(rolls, place, options){
@@ -368,7 +375,7 @@ class Osrs extends React.Component {
 
   async completion(mode) {
   	//lootFunction will cause an infinite loop here
-		let completion = await loot(null, mode || this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData})
+		let completion = await loot(null, mode || this.state.mode, {runCompletion: true, ...this.state})
 		this.setState({'completion': completion})  
 	}
 
@@ -391,15 +398,16 @@ class Osrs extends React.Component {
 		        <input type="radio" value="cox" name="" checked={this.state.mode === 'cox'} onChange={this.onChangeValue} /> Cox
 		        <input type="radio" value="tob" name="" checked={this.state.mode === 'tob'} onChange={this.onChangeValue} /> Tob
 		        <input type="radio" value="cg" name="" checked={this.state.mode === 'cg'} onChange={this.onChangeValue} /> Corrupted Gauntlet
-			      <input type="radio" value="corp" name="" checked={this.state.mode === 'corp'} onChange={this.onChangeValue} /> Corp
+			    <input type="radio" value="corp" name="" checked={this.state.mode === 'corp'} onChange={this.onChangeValue} /> Corp
 		      	<input type="radio" value="pnm" name="" checked={this.state.mode === 'pnm'} onChange={this.onChangeValue} /> Phosani's Nightmare
+				<input type="radio" value="nex" name="" checked={this.state.mode === 'nex'} onChange={this.onChangeValue} /> Nex
 		      	<input type="radio" value="zulrah" name="" checked={this.state.mode === 'zulrah'} onChange={this.onChangeValue} /> Zulrah
-		  		  <input type="radio" value="vorkath" name="" checked={this.state.mode === 'vorkath'} onChange={this.onChangeValue} /> Vorkath
-		    		<input type="radio" value="arma" name="" checked={this.state.mode === 'arma'} onChange={this.onChangeValue} /> Arma
-		    		<input type="radio" value="bandos" name="" checked={this.state.mode === 'bandos'} onChange={this.onChangeValue} /> Bandos
-		    		<input type="radio" value="sara" name="" checked={this.state.mode === 'sara'} onChange={this.onChangeValue} /> Sara
-		    		<input type="radio" value="zammy" name="" checked={this.state.mode === 'zammy'} onChange={this.onChangeValue} /> Zammy
-		    		<input type="radio" value="create" name="" checked={this.state.mode === 'create'} onChange={this.onChangeValue} /> Create Your Own Boss
+		  		<input type="radio" value="vorkath" name="" checked={this.state.mode === 'vorkath'} onChange={this.onChangeValue} /> Vorkath
+		    	<input type="radio" value="arma" name="" checked={this.state.mode === 'arma'} onChange={this.onChangeValue} /> Arma
+		    	<input type="radio" value="bandos" name="" checked={this.state.mode === 'bandos'} onChange={this.onChangeValue} /> Bandos
+		    	<input type="radio" value="sara" name="" checked={this.state.mode === 'sara'} onChange={this.onChangeValue} /> Sara
+		    	<input type="radio" value="zammy" name="" checked={this.state.mode === 'zammy'} onChange={this.onChangeValue} /> Zammy
+		    	<input type="radio" value="create" name="" checked={this.state.mode === 'create'} onChange={this.onChangeValue} /> Create Your Own Boss
 
 		      </div>
 		      {this.state.mode === 'create' ? 
@@ -445,6 +453,12 @@ class Osrs extends React.Component {
 			    	</div> : null }
 		      <label>Number of rolls (f or nothing for completion) </label>
 	  			<input type="text" value={this.state.rolls} onChange={(e) => this.onChangeValueInput('rolls', e)}/>
+			 { this.state.mode == 'nex' && 
+				<span>
+			  		&nbsp; <label> Team size </label>
+	  				<input type="text" value={this.state.teamSize} onChange={(e) => this.onChangeValueInput('teamSize', e)}/>
+			 	</span>
+			 }
 		      <br/>
 		      Include pet for completion? <input type="checkbox" onChange={()=>{ this.setState({pets: !this.state.pets}); this.clearData(); } } checked={this.state.pets}/> 
 		      <br/>
