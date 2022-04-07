@@ -3,27 +3,27 @@ export let data = {
 	items: [
 		{
 			name: 'Zaryte vambraces',
-			rate: 1/212
+			rate: 1/172
 		},
 		{
 			name: 'Nihil horn',
-			rate: 1/318
+			rate: 1/258
 		},
 		{
 			name: 'Torva full helm (damaged)',
-			rate: 1/318
+			rate: 1/258
 		},
 		{
 			name: 'Torva platebody (damaged)',
-			rate: 1/318
+			rate: 1/258
 		},
 		{
 			name: 'Torva platelegs (damaged)',
-			rate: 1/318
+			rate: 1/258
 		},
 		{
 			name: 'Ancient hilt',
-			rate: 1/636 
+			rate: 1/516
 		}
 	],
 	pet:{
