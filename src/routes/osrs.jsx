@@ -1,5 +1,4 @@
 import React from 'react';
-import { flushSync } from 'react-dom'
 //import { Link } from "react-router-dom";
 import './osrs.css';
 import { loot } from '../looter/looter'
@@ -306,7 +305,8 @@ class Osrs extends React.Component {
   async graphSimulation(skipGraph = false){
   	let arr = []
 		let items = []
-
+		this.setState({progress: 0})
+		this.setState({bestRewards: null, worstRewards: null})
 		for (let i=0; i<this.state.simulations; i++){
 			if(i%(this.state.simulations/100) == 0){
 				let progress = Math.round((i/this.state.simulations) * 100)
@@ -327,7 +327,7 @@ class Osrs extends React.Component {
 			}
 		}
 
-		this.setState({progress: 0})
+		this.setState({progress: 100})
 
 		if (skipGraph){
 			return;
@@ -504,7 +504,7 @@ class Osrs extends React.Component {
 			     	<label> Plot results of a # of simulations  </label>
 		  			<input type="text" value={this.state.simulations} onChange={(e) => this.onChangeValueInput('simulations', e)}/>
 	  			</span>
-	  			<button onClick={this.graphSimulation}> Plot. </button>
+	  			<button onClick={() => this.graphSimulation()}> Plot. </button>
 	  			<button onClick={() => this.graphSimulation(true)}> Sim without graph. </button>
 		      <div className="items">
 		      	{this.state.rewards ? this.state.rewards.map(item => {
