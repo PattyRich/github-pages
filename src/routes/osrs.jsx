@@ -1,4 +1,5 @@
 import React from 'react';
+import { flushSync } from 'react-dom'
 //import { Link } from "react-router-dom";
 import './osrs.css';
 import { loot } from '../looter/looter'
@@ -25,7 +26,8 @@ class Osrs extends React.Component {
       fullLootRewards: [],
       icons: {},
       bosses: [],
-	  teamSize: 4,
+      progress: 0,
+	  	teamSize: 4,
       cms: false,
       worstRewards: null,
       bestRewards: null,
@@ -301,20 +303,34 @@ class Osrs extends React.Component {
   	}
   }
 
-  async graphSimulation(){
+  async graphSimulation(skipGraph = false){
   	let arr = []
 		let items = []
-		this.setState({bestRewards: null, worstRewards: null})
+
 		for (let i=0; i<this.state.simulations; i++){
+			if(i%(this.state.simulations/100) == 0){
+				let progress = Math.round((i/this.state.simulations) * 100)
+				this.setState({progress})
+				await pause()
+			}
 			let x = await this.lootFunction('f', this.state.mode, this.state)
-			arr.push(x[x.length-1].kc)
-			items.push(x.length)
+			if (!skipGraph){
+				arr.push(x[x.length-1].kc)
+				items.push(x.length)		
+			}
+
 			if (!this.state.bestRewards || x[x.length-1].kc < this.state.bestRewards[this.state.bestRewards.length-1].kc) {
 				this.setState({bestRewards: x})
 			}
 			if (!this.state.worstRewards || x[x.length-1].kc > this.state.worstRewards[this.state.worstRewards.length-1].kc) {
 				this.setState({worstRewards: x})
 			}
+		}
+
+		this.setState({progress: 0})
+
+		if (skipGraph){
+			return;
 		}
 
 		let trace = {
@@ -489,6 +505,7 @@ class Osrs extends React.Component {
 		  			<input type="text" value={this.state.simulations} onChange={(e) => this.onChangeValueInput('simulations', e)}/>
 	  			</span>
 	  			<button onClick={this.graphSimulation}> Plot. </button>
+	  			<button onClick={() => this.graphSimulation(true)}> Sim without graph. </button>
 		      <div className="items">
 		      	{this.state.rewards ? this.state.rewards.map(item => {
 		       		return (
@@ -537,6 +554,7 @@ class Osrs extends React.Component {
 			  : null }
 			  {this.state.bestRewards && 
 			  	<span>
+			  		 { this.state.progress > 0 && <div style= {{'margin-left': '20px'}}> {this.state.progress}% done </div> }
 		  			<button style={{'margin': '5px'}} onClick={() => this.showPlotData('best')}> Show best simulation. </button>
 		  			<button style={{'margin': '5px'}} onClick={() => this.showPlotData('worst')}> Show worst simulation. </button>
 		  			<button style={{'margin': '5px'}} onClick={() => this.clearPlots()}> Clear </button>
@@ -581,4 +599,8 @@ function bossHelper(mode){
 	  default:
 	  	return null
 	}
+}
+
+const pause = () => {
+  return new Promise(r => setTimeout(r, 0))
 }
