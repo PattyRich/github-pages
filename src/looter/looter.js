@@ -1,6 +1,6 @@
 import {completion} from './completion'
 
-const teamActivites = ['nex']
+const teamActivites = ['nex', 'tob']
 
 export function loot(rolls, place, options = {points: 30000, runCompletion: false, pets: true, cms: false, teamSize: 1}) {
 	return new Promise((resolve, reject) => {
@@ -42,13 +42,14 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 					})
 				}
 
-				//this is just nex atm && will probably only work for nex since it works differnetly
-				//rates will be changed due to extra people 
+				//rates will be changed due to extra people (tob and nex)
 				if (teamActivites.includes(data.name)){
 					data.items.forEach((item)=> {
 						item.rate /= options.teamSize
 					})				
-					data.pet.rate *= options.teamSize
+					//only nex pet rate scales with team size unlike tob
+					if (data.name === 'nex')
+						data.pet.rate *= options.teamSize
 				}
 
 				//chance is the odds that you get a unique drop. 

@@ -1,34 +1,33 @@
 export let data = {
 	name: 'tob',
-	chance: 2.75,
 	items: [
 		{
 			name: 'Scythe of vitur (uncharged)',
-			rate: .145
+			rate: (1/9.1)*(1/19)
 		},
 		{
 			name: 'Justiciar legguards',
-			rate: .29
+			rate: (1/9.1)*(2/19)
 		},
 		{
 			name: 'Justiciar chestguard',
-			rate: .29
+			rate: (1/9.1)*(2/19)
 		},
 		{
 			name: 'Justiciar faceguard',
-			rate: .29
+			rate: (1/9.1)*(2/19)
 		},
 		{
 			name: 'Sanguinesti staff (uncharged)',
-			rate: .29
+			rate: (1/9.1)*(2/19)
 		},
 		{
 			name: 'Ghrazi rapier',
-			rate: .29
+			rate: (1/9.1)*(2/19)
 		},
 		{
 			name: 'Avernic defender hilt',
-			rate: 1.16
+			rate: (1/9.1)*(8/19)
 		},
 	],
 	pet:{
