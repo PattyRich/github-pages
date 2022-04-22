@@ -469,7 +469,7 @@ class Osrs extends React.Component {
 			    	</div> : null }
 		      <label>Number of rolls (f or nothing for completion) </label>
 	  			<input type="text" value={this.state.rolls} onChange={(e) => this.onChangeValueInput('rolls', e)}/>
-			 { this.state.mode == 'nex' && 
+			 { ['nex', 'tob'].includes(this.state.mode) && 
 				<span>
 			  		&nbsp; <label> Team size </label>
 	  				<input type="text" value={this.state.teamSize} onChange={(e) => this.onChangeValueInput('teamSize', e)}/>
