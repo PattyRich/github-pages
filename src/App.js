@@ -2,6 +2,8 @@ import './App.css';
 import React from 'react';
 import { Link } from "react-router-dom";
 
+window.API = process.env.NODE_ENV ==='development' ? 'http://localhost:5001' : ''
+
 class App extends React.Component {
   render() {
       return (
@@ -18,6 +20,9 @@ class App extends React.Component {
                 <li>
                 <Link to="/mage-run">Mage run</Link>
                 </li>            
+                <li>
+                <Link to="/bingo">Bingo</Link>
+                </li>    
                 <li>
                 <a href="https://github.com/PattyRich/github-pages"> repo this comes from </a>
               	</li>

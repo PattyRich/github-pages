@@ -1,0 +1,66 @@
+.start-screen {
+    display: flex;
+    height: 100vh;
+    width: 100vw;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.start-menu {
+    height: 100vh;
+    width: 50vw;
+    justify-content: center;
+    align-items: center;
+    display: flex;
+    cursor: pointer;
+    background-color: white;
+    user-select: none;
+}
+
+.start-menu:hover {
+    filter: brightness(85%);
+}
+
+.start-menu:active {
+    filter: brightness(80%);
+}
+
+.create-menu {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+}
+
+.margin-15 {
+    margin: 15px
+}
+
+.margin-5 {
+    margin: 5px
+}
+
+.board-controls {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.board-controls button {
+    margin: 5px;
+
+}
+
+.flex {
+    display: flex;
+}
+
+.join-wrapper{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    flex-direction: column;
+}
+

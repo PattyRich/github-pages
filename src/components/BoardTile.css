@@ -1,0 +1,23 @@
+.box-border {
+  border-top: 1px black solid;
+  border-left: 1px black solid;
+  height: 40px;
+  width: 40px;
+}
+
+.br {
+  border-right: 1px black solid;
+}
+
+.bb {
+  border-bottom: 1px black solid;
+}
+
+.box-flex {
+  display: flex;
+  justify-content: space-between;
+}
+
+.box-flex .title {
+  overflow: hidden;
+}
