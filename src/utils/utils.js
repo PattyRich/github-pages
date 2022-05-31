@@ -48,11 +48,11 @@ async function fetchGet(url) {
 
 function pwUrlBuilder(state) {
   let pwData = {}
-  if (state.adminPassword) {
+  if (state.privilage == 'admin') {
     pwData.pw = state.adminPassword
     pwData.type = 'admin'
   } else {
-    pwData.pw = state.generalPassword
+    pwData.pw = state.generalPassword || state.adminPassword
     pwData.type = 'general'
   }
   return `${state.boardName}/${pwData.pw}/${pwData.type}`

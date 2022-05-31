@@ -11,6 +11,7 @@ import FormControl from "react-bootstrap/FormControl";
 import Dropdown from 'react-bootstrap/Dropdown'
 import DropdownButton from 'react-bootstrap/DropdownButton'
 import Alert from 'react-bootstrap/Alert'
+import Toast from '../components/BootStrap/Toast'
 import {fetchGet} from '../utils/utils'
 import { useNavigate } from "react-router-dom";
 
@@ -27,7 +28,6 @@ class Bingo extends React.Component {
 			boardName: '',
 			cameFromCreation: true,
 			privilage: 'admin',
-			editMode: true,
 			joinPwTitle: 'general',
 			joinPw: ''
     }
@@ -62,6 +62,7 @@ class Bingo extends React.Component {
 	continue() {
 		if (!this.state.generalPassword || !this.state.adminPassword || !this.state.boardName) {
 			this.alert('danger', 'Please fill out all fields.')
+			this.setState({showToast: true})
 			return;
 		}
 		this.setState({screen: 3, alert: ''})
@@ -95,12 +96,14 @@ class Bingo extends React.Component {
 			state.generalPassword = this.state.joinPw
 		} else {
 			state.adminPassword = this.state.joinPw
-			state.privilage = 'admin'
+			state.privilage = 'general'
+			state.canSwitchPriv = true
 		}
 		this.props.navigate('/bingo/' + this.state.boardName, { state });
 	}
 
   render() {
+		console.log(this.state)
   	return (
 			<>
 			  { this.state.alert && 
@@ -108,6 +111,9 @@ class Bingo extends React.Component {
             {this.state.alert}
           </Alert>   
         } 
+				{/* {	this.state.showToast && 
+					<Toast variant='danger' message={'uh ohohhh'} />
+				} */}
 				{this.state.screen === 1 && 
 					<div className='start-screen'>
 						<div className='start-menu' onClick={() => this.setState({screen: 2})}> 

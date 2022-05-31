@@ -7,16 +7,19 @@ import Button from './BootStrap/Button'
 import Alert from 'react-bootstrap/Alert'
 import { fetchPost, fetchGet, fetchPut, pwUrlBuilder }  from '../utils/utils.js'
 import { useLocation, useNavigate } from "react-router-dom";
+import Teams from './Teams'
+import Toast from './BootStrap/Toast'
+import EditTeams from './BootStrap/EditTeams'
 
 class BoardView extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       privilage : 'general',
-      editMode : false,
       isLoading : false,
       alert : '',
-      teams: 5
+      teams: 5,
+      showEditTeams: false
     }
 
     const {state} = this.props.location
@@ -56,30 +59,55 @@ class BoardView extends React.Component {
     this.updateBoard = this.updateBoard.bind(this)
     this.alert = this.alert.bind(this)
     this.switchPrivilage = this.switchPrivilage.bind(this)
+    this.changeTeam = this.changeTeam.bind(this)
+    this.toggleTeamEdit = this.toggleTeamEdit.bind(this)
+    this.updateTeams = this.updateTeams.bind(this)
+    this.refreshData = this.refreshData.bind(this)
     window.addEventListener('resize', this.handleResize)
   }
 
-  async componentDidMount() {
-    console.log('did mount')
+  componentDidMount() {
+    const tileHint = localStorage.getItem('tile-hint');
+    if (!tileHint) {
+      localStorage.setItem('tile-hint', true);
+      this.setState({showToast: true})
+    }
+    if (!this.state.cameFromCreation){
+      this.refreshData(true)
+    }
+    if (this.state.boardJustCreated) {
+      this.alert('success', 'Board Successfully Created!')
+      this.setState({boardJustCreated: null })
+    }
+  }
+
+  async refreshData(setTeam = false) {
     if(!this.state.adminPassword && !this.state.generalPassword) {
       this.alert('danger', 'No Password is set, return to main page and start again.', true)
     }
     let url = pwUrlBuilder(this.state)
-    if (!this.state.boardData) {
-      let [data, err] = await fetchGet(`getBoard/${url}`)
-      if (err) {
-        this.alert('danger', err.message)
-        return
+    let [data, err] = await fetchGet(`getBoard/${url}`)
+    if (err) {
+      this.alert('danger', err.message)
+      return
+    }
+    this.setState({
+      boardData: data.boardData, 
+      teams: data.teamData.length, 
+      teamData: data.teamData
+    }, () => {
+      if (setTeam) {
+        this.changeTeam(data.teamData[0].team)
+        //start users off on general mode if they come from creation
+        this.switchPrivilage()
+      } else {
+        this.changeTeam(this.state.activeTeamData.team)
       }
-      this.setState({boardData: data.boardData, teams: data.teamData.length})
-      this.rows = data.boardData[0].length
-      this.columns = data.boardData.length
-      console.log(data)
-    }
-    if (this.state.boardJustCreated) {
-      this.alert('success', 'Board Sucessfully Created!')
-      this.setState({boardJustCreated: null })
-    }
+    })
+
+    this.rows = data.boardData[0].length
+    this.columns = data.boardData.length
+    console.log(data)
   }
 
   alert(variant, message, skipTimeout=false) {
@@ -95,6 +123,10 @@ class BoardView extends React.Component {
         this.setState({alert: ''})
       },5000)
     }
+  }
+
+  toggleTeamEdit() {
+    this.setState({showEditTeams: !this.state.showEditTeams})
   }
 
   handleResize() {  
@@ -122,11 +154,15 @@ class BoardView extends React.Component {
 	}
 
   async changeBoardTileInfo(row, col, data) {
-    await this.updateBoard(row,col,data) 
-    console.log('did we wait')
-    let x = this.state.boardData;
-    x[row][col] = data
-    this.setState({boardData: x})
+    if (this.state.privilage === 'admin') {
+      if (!this.state.cameFromCreation) {
+        await this.updateBoard(row,col, data) 
+      }
+    } else {
+      data.teamId = this.state.activeTeamData.team
+      await this.updateBoard(row,col, data) 
+    }
+    this.refreshData()
   }
 
   async createBoard() {
@@ -149,6 +185,28 @@ class BoardView extends React.Component {
       this.setState({isLoading: false})
       return
     }
+  }
+
+  async updateTeams(info) {
+    this.alert('loading')
+    let url = pwUrlBuilder(this.state)
+    let [data, err] = await fetchPut(`updateTeams/${url}`, {info})
+    if (err) {
+      this.alert('danger', err.message)
+      this.setState({isLoading: false})
+      return
+    }
+    this.setState({isLoading: false})
+    this.refreshData()
+    this.alert("success", 'Teams Successfully Updated!') 
+  }
+
+  changeTeam(teamId) {
+    let activeTeamData = this.state.teamData.find((team)=> {
+      return team.team === teamId
+    })
+    console.log(activeTeamData)
+    this.setState({activeTeamData: activeTeamData})
   }
 
   switchPrivilage() {
@@ -175,20 +233,22 @@ class BoardView extends React.Component {
   render() {
     let height = document.documentElement.clientHeight
     let width = document.documentElement.clientWidth
-    let dem = width < height ? (width / this.rows)-30 : (height / this.columns)-30;
+    let dem = width < height ? (width / this.rows)-40 : (height / this.columns)-40;
     console.log(this.state, this.props)
     return (
       <div className='flex-wrapper-create'>
         <div className='top-bar'>
-          <EditableInput title='Board Name' stateKey='boardName' change={this.inputState} value={this.state.boardName} disabled={!this.state.cameFromCreation} />
-          <EditableInput value={this.state.teams} width={200} stateKey='teams' change={this.inputState} title='# of teams' disabled={!(this.state.privilage === 'admin') || !this.state.editMode} />
+          <EditableInput title='Board Name' width={350} stateKey='boardName' change={this.inputState} value={this.state.boardName} disabled={!this.state.cameFromCreation} />
           { this.state.cameFromCreation && 
             <Button disabled={this.state.isLoading} click={this.createBoard} text="Create Board" variant="success"/>
           } 
           {!this.state.cameFromCreation && 
-            <>
+            <div className='flex bingo-edit'>
             {(this.state.privilage === 'admin' || this.state.canSwitchPriv) &&
               <>
+                { this.state.privilage === 'admin' &&
+                  <Button click={this.toggleTeamEdit} text="Edit Teams" variant="primary"/>
+                }
                 { this.state.privilage === 'admin' ? 
                   <Button click={this.switchPrivilage} text="Admin Mode" variant="warning"/>
                   :
@@ -196,12 +256,7 @@ class BoardView extends React.Component {
                 }   
               </>    
             }
-            { this.state.editMode ? 
-              <Button click={() => this.setState({editMode: false})} text="Stop Editing" variant="danger"/>
-              :
-              <Button click={() => this.setState({editMode: true})} text="Edit Board? ✎" variant="warning"/>
-            }
-            </>
+            </div>
           }
         </div>
         { this.state.alert && 
@@ -209,6 +264,9 @@ class BoardView extends React.Component {
             {this.state.alert}
           </Alert>   
         }     
+        {(this.state.activeTeamData && !(this.state.privilage === 'admin')) && 
+          <h3 className='flex-center'> {this.state.activeTeamData.data.name} </h3>
+        }
         {this.state.boardData &&
           <div className='center-board'>
             {this.state.boardData.map((row,i) => (
@@ -218,11 +276,11 @@ class BoardView extends React.Component {
                       cord={[i,j]}
                       change={this.changeBoardTileInfo} 
                       info={this.state.boardData[i][j]} 
+                      teamInfo={(this.state.activeTeamData && this.state.privilage !== 'admin') ? this.state.activeTeamData.data.teamData[i][j] : null}
                       key={j} 
                       dem={dem} 
                       br={this.state.boardData[0].length === j+1} 
                       bb={this.state.boardData.length === i+1} 
-                      editMode={this.state.editMode}
                       privilage={this.state.privilage} 
                     />
                   )
@@ -232,6 +290,28 @@ class BoardView extends React.Component {
             )}
           </div>
         }
+        { (this.state.teamData && this.state.privilage === 'general') && 
+          <Teams 
+            changeTeam={this.changeTeam} 
+            teams={this.state.teamData}
+            activeTeam={this.state.activeTeamData}
+          />
+        }
+        { this.state.showEditTeams &&
+          <EditTeams
+            show={true}
+            handleClose={this.toggleTeamEdit}
+            teams={this.state.teamData}
+            handleSave={this.updateTeams}
+          />
+        }
+        {	this.state.showToast && 
+					<Toast 
+          onClose={()=> this.setState({showToast: false})} 
+          title="How to Use" position="middle-center" 
+          variant='info' 
+          message={'Click on the bingo tiles to edit them!'} />
+				}
       </div>
     )
   }

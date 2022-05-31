@@ -11,20 +11,24 @@ class BoardTile extends React.Component {
     this.state = {
 			showModal: false
     }
+		this.openModal = this.openModal.bind(this)
   }
+
+	openModal(){
+		if (!this.state.showModal) {
+			this.setState({showModal: true})
+		}
+	}
 
   render() {
 		let style = this.props.dem ? {height: this.props.dem, width: this.props.dem} : {}
   	return (
-			<div style={style} className={`box-flex box-border ${this.props.br ? 'br' : ""} ${this.props.bb ? 'bb' : ""}`}>
+			<div onClick={this.openModal} style={style} className={`box-flex box-border ${this.props.br ? 'br' : ""} ${this.props.bb ? 'bb' : ""}`}>
 				{!this.props.bare &&  
 					<>
 					<div className='margin-5 title'>
 						{this.props.info.title}
 					</div>
-					{this.props.editMode &&
-						<Button click={()=>this.setState({showModal: !this.state.showModal})} text="Edit" ></Button>
-					}
 					</>
 				}	
 				{ this.state.showModal && 
@@ -33,6 +37,7 @@ class BoardTile extends React.Component {
 						change={this.props.change} 
 						privilage={this.props.privilage} 
 						info={this.props.info} 
+						teamInfo={this.props.teamInfo}
 						show={true} 
 						handleClose={()=>this.setState({showModal: !this.state.showModal})}
 					/>

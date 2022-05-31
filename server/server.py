@@ -8,8 +8,22 @@ myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 db = myclient["bingo"]
 mycol = db['bingo']
 
-adminTileKeys = ['description', 'image', 'points', 'title']
+adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
+generalTileKeys = ['proof', 'checked', 'currPoints']
 boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams']
+
+def initEmptyTeamData(row, col):
+  teamData = []
+  for i in range(row):
+    teamData.append([])
+    for j in range(col):
+      teamObj = {
+        'checked': False,
+        'proof': [],
+        'currPoints': 0
+      }
+      teamData[i].append(teamObj)
+  return teamData
 
 
 def bad_request(message):
@@ -17,16 +31,24 @@ def bad_request(message):
   response.status_code = 400
   return response
 
-def auth(boardName, password, pwtype):
+def auth(boardName, password, pwtype, mustBeAdmin = False):
   if (pwtype == 'admin'):
     pwtype = 'adminPassword'
+  if (mustBeAdmin):
+    if (pwtype != 'adminPassword'):
+      return [None, bad_request('Must be an admin to make this call.')]  
   if (pwtype == 'general'):
     pwtype = 'generalPassword'
   cache = mycol.find_one({'boardName': boardName})
   if (not cache):
     return [None, bad_request('Board with that name does not exist.')]
-  if (password != cache[pwtype]):
-    return [None, bad_request('Your password was incorrect.')]
+  ##admins can do general and admin actions, so we accept a match on either
+  if (pwtype == 'generalPassword'):
+    if (password != cache['adminPassword'] and password != cache['generalPassword']):
+      return [None, bad_request('Your password was incorrect.')]
+  else:
+    if (password != cache[pwtype]):
+      return [None, bad_request('Your password was incorrect.')]
   return [cache, None]
 
 def clearBadData(data, acceptableKeys):
@@ -72,16 +94,11 @@ def createBoard():
 
   for i in range(data['teams']):
     team = 'team-' + str(i)
-    teamData = []
-    for i in range(len(data['boardData'])):
-      teamData.append([])
-      for j in range(len(data['boardData'][i])):
-        teamObj = {
-          'checked': False,
-          'proof': []
-        }
-        teamData[i].append(teamObj)
-    data[team] = teamData
+    teamData = initEmptyTeamData(len(data['boardData']), len(data['boardData'][0]))
+    data[team] = {
+      'name': team,
+      'teamData': teamData
+    }
 
   insert = mycol.insert_one(data)
   if (not insert):
@@ -115,14 +132,64 @@ def updateBoard(boardName, password, pwtype):
   data = json.loads(request.data)
   if (pwtype == 'admin'):
     data['info'] = clearBadData(data['info'], adminTileKeys)
-    print(data)
+
     boardData = cache['boardData']
     boardData[data['row']][data['col']] = { **boardData[data['row']][data['col']], **data['info']}
 
     newvalue = { "$set": {'boardData': boardData}}
     mycol.update_one({"boardName": boardName}, newvalue)
 
+  if (pwtype == 'general'):
+    teamKey = 'team-' + str(data['info']['teamId'])
+    data['info'] = clearBadData(data['info'], generalTileKeys)
+    
+    teamData = cache[teamKey]
+    teamData['teamData'][data['row']][data['col']] = { **teamData['teamData'][data['row']][data['col']], **data['info']}
+    newvalue = { "$set": {teamKey: teamData}}
+    update = mycol.update_one({"boardName": boardName}, newvalue)
+
   return jsonify(success=True)
+
+@app.route('/updateTeams/<boardName>/<password>/<pwtype>', methods=['PUT'])
+def updateTeams(boardName, password, pwtype):
+  cache, err = auth(boardName, password, pwtype, True)
+  if err:
+    return err
+
+  data = json.loads(request.data)
+  data = data['info']
+  size = len(data)
+
+  updateOlderTeams = data[:cache['teams']]
+  if (size) > cache['teams']:
+    for i in range(size - cache['teams']):
+      teamKey = 'team-' + str(cache['teams'] + i)
+      teamData = initEmptyTeamData(len(cache['boardData']), len(cache['boardData'][0]))
+      teamData = {
+        'name': data[cache['teams'] + i]['data']['name'],
+        'teamData': teamData
+      }
+      newvalue = { "$set": {teamKey: teamData}}
+      update = mycol.update_one({"boardName": boardName}, newvalue)
+  elif size < cache['teams']:
+    for i in range(cache['teams'] - size):
+      teamKey = 'team-' + str(cache['teams'] -1 -i)
+      newvalue = { "$unset": {teamKey: ''}}
+      update = mycol.update_one({"boardName": boardName}, newvalue)
+
+  overWrite = {}
+  for i in range(len(updateOlderTeams)):
+    teamKey = 'team-' + str(i)
+    overWrite[teamKey] = {
+      'name': updateOlderTeams[i]['data']['name'],
+      'teamData': updateOlderTeams[i]['data']['teamData']
+    }
+    ##spread object for all sets since it won't take a dict
+    newvalue = { "$set": { **overWrite, 'teams': size }}
+    update = mycol.update_one({"boardName": boardName}, newvalue)
+  
+  return jsonify(success=True)
+  
 
 @app.route('/auth/<boardName>/<password>/<pwtype>', methods=['GET'])
 def authMethod(boardName, password, pwtype):

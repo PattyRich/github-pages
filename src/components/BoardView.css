@@ -22,3 +22,16 @@
 .flex-wrapper-create h2 {
   margin: 10px;
 }
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+}
+
+.bingo-edit button {
+  margin-right: 10px;
+}
+
+.edit-teams button {
+  margin: 0px 10px 0px 10px;
+}
