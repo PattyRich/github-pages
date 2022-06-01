@@ -41,8 +41,9 @@ class BoardView extends React.Component {
             points: 0,
             title: '',
             description: '',
-            //checked: false,
-            image: null
+            image: null,
+            rowBingo: 0,
+            colBingo: 0
           })
         }     
       }
@@ -62,6 +63,7 @@ class BoardView extends React.Component {
     this.changeTeam = this.changeTeam.bind(this)
     this.toggleTeamEdit = this.toggleTeamEdit.bind(this)
     this.updateTeams = this.updateTeams.bind(this)
+    this.calculateTeamPoints = this.calculateTeamPoints.bind(this)
     this.refreshData = this.refreshData.bind(this)
     window.addEventListener('resize', this.handleResize)
   }
@@ -81,7 +83,7 @@ class BoardView extends React.Component {
     }
   }
 
-  async refreshData(setTeam = false) {
+  async refreshData(firstLoad = false) {
     if(!this.state.adminPassword && !this.state.generalPassword) {
       this.alert('danger', 'No Password is set, return to main page and start again.', true)
     }
@@ -96,10 +98,12 @@ class BoardView extends React.Component {
       teams: data.teamData.length, 
       teamData: data.teamData
     }, () => {
-      if (setTeam) {
+      this.calculateTeamPoints()
+      if (firstLoad) {
         this.changeTeam(data.teamData[0].team)
-        //start users off on general mode if they come from creation
-        this.switchPrivilage()
+        if (this.state.privilage === 'admin') {
+          this.switchPrivilage()
+        }
       } else {
         this.changeTeam(this.state.activeTeamData.team)
       }
@@ -107,7 +111,6 @@ class BoardView extends React.Component {
 
     this.rows = data.boardData[0].length
     this.columns = data.boardData.length
-    console.log(data)
   }
 
   alert(variant, message, skipTimeout=false) {
@@ -123,6 +126,37 @@ class BoardView extends React.Component {
         this.setState({alert: ''})
       },5000)
     }
+  }
+
+  calculateTeamPoints() {
+    if (!this.state.teamData)
+      return 
+    let x = this.state.teamData
+    x.forEach((team)=> {
+      let pointTotal = 0
+      team.data.teamData.forEach((row,i)=> {
+        let addBonusRow = true
+        let addBonusCol = true
+        row.forEach((tile,j)=> {
+          if (addBonusRow && !tile.checked) {
+            addBonusRow = false
+          }
+          if (addBonusCol && !team.data.teamData[j][i].checked){
+            addBonusCol = false
+          }
+          pointTotal += Number(tile.currPoints)
+          if (i === this.cols-1 || j === this.rows-1)
+            if (addBonusRow) {
+              pointTotal += Number(this.state.boardData[i][j].rowBingo)
+            }
+            if (addBonusCol) {
+              pointTotal += Number(this.state.boardData[j][i].colBingo)
+            }
+        })
+      })
+      team.pointTotal = pointTotal
+    })
+    this.setState({teamData: x})
   }
 
   toggleTeamEdit() {
@@ -265,7 +299,10 @@ class BoardView extends React.Component {
           </Alert>   
         }     
         {(this.state.activeTeamData && !(this.state.privilage === 'admin')) && 
-          <h3 className='flex-center'> {this.state.activeTeamData.data.name} </h3>
+          <div style={{'alignItems': 'center'}} className='flex-center'>
+            <h3 className='flex-center'> {this.state.activeTeamData.data.name}</h3>
+            <span style={{'marginBottom': '0.5rem', 'marginLeft': '10px'}}> (Points : {this.state.activeTeamData.pointTotal}) </span>
+          </div>
         }
         {this.state.boardData &&
           <div className='center-board'>
@@ -290,7 +327,7 @@ class BoardView extends React.Component {
             )}
           </div>
         }
-        { (this.state.teamData && this.state.privilage === 'general') && 
+        { (this.state.teamData && this.state.activeTeamData && this.state.privilage === 'general') && 
           <Teams 
             changeTeam={this.changeTeam} 
             teams={this.state.teamData}

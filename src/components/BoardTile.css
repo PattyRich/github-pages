@@ -16,8 +16,21 @@
 .box-flex {
   display: flex;
   justify-content: space-between;
+  position: relative;
 }
 
 .box-flex .title {
   overflow: hidden;
+}
+
+.bg-img {
+  opacity: 10%;
+  position: absolute;
+}
+
+.tile-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
