@@ -10,6 +10,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import Teams from './Teams'
 import Toast from './BootStrap/Toast'
 import EditTeams from './BootStrap/EditTeams'
+import SettingsModal from './BootStrap/SettingsModal';
 
 class BoardView extends React.Component {
   constructor(props) {
@@ -28,35 +29,10 @@ class BoardView extends React.Component {
       ...state
     }
 
-    //if we are coming from creation we have to set some inital stuff up since, we can't just fetch the json object
-    if (this.props.prevState) {
-      this.state = {...this.state, ...this.props.prevState}
-      //we can inherit the old alerts state we don't want
-      this.state.alert = ''
-      let boardData = []
-      for (let i=0; i<this.state.columns; i++) {
-        boardData.push([])
-        for (let j=0; j<this.state.rows; j++) {
-          boardData[i].push({
-            points: 0,
-            title: '',
-            description: '',
-            image: null,
-            rowBingo: 0,
-            colBingo: 0
-          })
-        }     
-      }
-      this.state.boardData = boardData;      
-      this.rows = boardData[0].length
-      this.columns = boardData.length
-    }
-
     this.alertTimeout = null;
     this.inputState = this.inputState.bind(this)
     this.handleResize = this.handleResize.bind(this)
     this.changeBoardTileInfo = this.changeBoardTileInfo.bind(this)
-    this.createBoard = this.createBoard.bind(this)
     this.updateBoard = this.updateBoard.bind(this)
     this.alert = this.alert.bind(this)
     this.switchPrivilage = this.switchPrivilage.bind(this)
@@ -65,6 +41,7 @@ class BoardView extends React.Component {
     this.updateTeams = this.updateTeams.bind(this)
     this.calculateTeamPoints = this.calculateTeamPoints.bind(this)
     this.refreshData = this.refreshData.bind(this)
+    this.clearAlert = this.clearAlert.bind(this)
     window.addEventListener('resize', this.handleResize)
   }
 
@@ -74,9 +51,7 @@ class BoardView extends React.Component {
       localStorage.setItem('tile-hint', true);
       this.setState({showToast: true})
     }
-    if (!this.state.cameFromCreation){
-      this.refreshData(true)
-    }
+    this.refreshData(true)
     if (this.state.boardJustCreated) {
       this.alert('success', 'Board Successfully Created!')
       this.setState({boardJustCreated: null })
@@ -96,21 +71,26 @@ class BoardView extends React.Component {
     this.setState({
       boardData: data.boardData, 
       teams: data.teamData.length, 
-      teamData: data.teamData
+      teamData: data.teamData,
+      activeTeamIndex: this.state.activeTeamIndex || 0
     }, () => {
       this.calculateTeamPoints()
       if (firstLoad) {
-        this.changeTeam(data.teamData[0].team)
         if (this.state.privilage === 'admin') {
           this.switchPrivilage()
         }
-      } else {
-        this.changeTeam(this.state.activeTeamData.team)
       }
     })
 
     this.rows = data.boardData[0].length
     this.columns = data.boardData.length
+  }
+
+  clearAlert() {
+    if (this.alertTimeout) {
+      clearTimeout(this.alertTimeout)
+    }
+    this.setState({alert: ''})
   }
 
   alert(variant, message, skipTimeout=false) {
@@ -131,30 +111,41 @@ class BoardView extends React.Component {
   calculateTeamPoints() {
     if (!this.state.teamData)
       return 
-    let x = this.state.teamData
+    let x = JSON.parse(JSON.stringify(this.state.teamData))
     x.forEach((team)=> {
       let pointTotal = 0
       team.data.teamData.forEach((row,i)=> {
         let addBonusRow = true
-        let addBonusCol = true
         row.forEach((tile,j)=> {
           if (addBonusRow && !tile.checked) {
             addBonusRow = false
           }
-          if (addBonusCol && !team.data.teamData[j][i].checked){
-            addBonusCol = false
-          }
           pointTotal += Number(tile.currPoints)
-          if (i === this.cols-1 || j === this.rows-1)
+          if (j === this.rows-1)
             if (addBonusRow) {
               pointTotal += Number(this.state.boardData[i][j].rowBingo)
-            }
-            if (addBonusCol) {
-              pointTotal += Number(this.state.boardData[j][i].colBingo)
             }
         })
       })
       team.pointTotal = pointTotal
+    })
+    x.forEach((team)=> {
+      let pointTotal = 0
+      transpose(team.data.teamData).forEach((row,i)=> {
+        let addBonusRow = true
+        row.forEach((tile,j)=> {
+          if (addBonusRow && !tile.checked) {
+            addBonusRow = false
+          }
+          //console.log(i,j,row, tile, addBonusRow, this.columns-1)
+          if (j === this.columns-1)
+            if (addBonusRow) {
+              console.log(this.state.boardData[j][i], 'adding')
+              pointTotal += Number(this.state.boardData[j][i].colBingo)
+            }
+        })
+      })
+      team.pointTotal += pointTotal
     })
     this.setState({teamData: x})
   }
@@ -188,37 +179,9 @@ class BoardView extends React.Component {
 	}
 
   async changeBoardTileInfo(row, col, data) {
-    if (this.state.privilage === 'admin') {
-      if (!this.state.cameFromCreation) {
-        await this.updateBoard(row,col, data) 
-      }
-    } else {
-      data.teamId = this.state.activeTeamData.team
-      await this.updateBoard(row,col, data) 
-    }
+    data.teamId = this.state.teamData[this.state.activeTeamIndex].team
+    await this.updateBoard(row,col, data)  
     this.refreshData()
-  }
-
-  async createBoard() {
-    this.alert('loading')
-    const [data, err] = await fetchPost('createBoard', this.state)
-    if (data) {
-      this.props.navigate('/bingo/' + this.state.boardName, { state: 
-        { 
-          adminPassword: this.state.adminPassword,
-          generalPassword: this.state.generalPassword,
-          teams: this.state.teams,
-          boardName: this.state.boardName,
-          privilage: 'admin',
-          boardJustCreated: true
-        }
-      });
-    }
-    if (err) {
-      this.alert('danger', err.message)
-      this.setState({isLoading: false})
-      return
-    }
   }
 
   async updateTeams(info) {
@@ -236,11 +199,7 @@ class BoardView extends React.Component {
   }
 
   changeTeam(teamId) {
-    let activeTeamData = this.state.teamData.find((team)=> {
-      return team.team === teamId
-    })
-    console.log(activeTeamData)
-    this.setState({activeTeamData: activeTeamData})
+    this.setState({activeTeamIndex: teamId})
   }
 
   switchPrivilage() {
@@ -272,36 +231,32 @@ class BoardView extends React.Component {
     return (
       <div className='flex-wrapper-create'>
         <div className='top-bar'>
-          <EditableInput title='Board Name' width={350} stateKey='boardName' change={this.inputState} value={this.state.boardName} disabled={!this.state.cameFromCreation} />
-          { this.state.cameFromCreation && 
-            <Button disabled={this.state.isLoading} click={this.createBoard} text="Create Board" variant="success"/>
-          } 
-          {!this.state.cameFromCreation && 
-            <div className='flex bingo-edit'>
-            {(this.state.privilage === 'admin' || this.state.canSwitchPriv) &&
-              <>
-                { this.state.privilage === 'admin' &&
-                  <Button click={this.toggleTeamEdit} text="Edit Teams" variant="primary"/>
-                }
-                { this.state.privilage === 'admin' ? 
-                  <Button click={this.switchPrivilage} text="Admin Mode" variant="warning"/>
-                  :
-                  <Button click={this.switchPrivilage} text="General Mode" variant="primary"/>
-                }   
-              </>    
-            }
-            </div>
+          <h2 style={{'marginTop': '0px'}}> {this.state.boardName} </h2>
+          <div className='flex bingo-edit'>
+          <Button click={()=> this.setState({showSettings: true})} text="Settings" variant="primary"/>
+          {(this.state.privilage === 'admin' || this.state.canSwitchPriv) &&
+            <>
+              { this.state.privilage === 'admin' &&
+                <Button click={this.toggleTeamEdit} text="Edit Teams" variant="primary"/>
+              }
+              { this.state.privilage === 'admin' ? 
+                <Button click={this.switchPrivilage} text="Admin Mode" variant="warning"/>
+                :
+                <Button click={this.switchPrivilage} text="General Mode" variant="primary"/>
+              }     
+            </>    
           }
+          </div>
         </div>
         { this.state.alert && 
-          <Alert variant={this.state.alertVariant}>
+          <Alert onClick={this.clearAlert} style={{'position' : 'absolute', 'width': '100%'}} className='' variant={this.state.alertVariant}>
             {this.state.alert}
           </Alert>   
         }     
-        {(this.state.activeTeamData && !(this.state.privilage === 'admin')) && 
+        {(this.state.teamData && !(this.state.privilage === 'admin')) && 
           <div style={{'alignItems': 'center'}} className='flex-center'>
-            <h3 className='flex-center'> {this.state.activeTeamData.data.name}</h3>
-            <span style={{'marginBottom': '0.5rem', 'marginLeft': '10px'}}> (Points : {this.state.activeTeamData.pointTotal}) </span>
+            <h3 className='flex-center'> {this.state.teamData[this.state.activeTeamIndex].data.name}</h3>
+            <span style={{'marginBottom': '0.5rem', 'marginLeft': '10px'}}> (Points : {this.state.teamData[this.state.activeTeamIndex].pointTotal}) </span>
           </div>
         }
         {this.state.boardData &&
@@ -313,7 +268,7 @@ class BoardView extends React.Component {
                       cord={[i,j]}
                       change={this.changeBoardTileInfo} 
                       info={this.state.boardData[i][j]} 
-                      teamInfo={(this.state.activeTeamData && this.state.privilage !== 'admin') ? this.state.activeTeamData.data.teamData[i][j] : null}
+                      teamInfo={(this.state.teamData && this.state.privilage !== 'admin') ? this.state.teamData[this.state.activeTeamIndex].data.teamData[i][j] : null}
                       key={j} 
                       dem={dem} 
                       br={this.state.boardData[0].length === j+1} 
@@ -327,11 +282,11 @@ class BoardView extends React.Component {
             )}
           </div>
         }
-        { (this.state.teamData && this.state.activeTeamData && this.state.privilage === 'general') && 
+        { (this.state.teamData && this.state.privilage === 'general') && 
           <Teams 
             changeTeam={this.changeTeam} 
             teams={this.state.teamData}
-            activeTeam={this.state.activeTeamData}
+            activeTeam={this.state.teamData[this.state.activeTeamIndex]}
           />
         }
         { this.state.showEditTeams &&
@@ -349,6 +304,9 @@ class BoardView extends React.Component {
           variant='info' 
           message={'Click on the bingo tiles to edit them!'} />
 				}
+        {	this.state.showSettings && 
+          <SettingsModal handleClose={()=> this.setState({showSettings: false})} />
+				}
       </div>
     )
   }
@@ -359,3 +317,7 @@ function withHooks(Component) {
 }
 
 export default withHooks(BoardView)
+
+function transpose(matrix) {
+  return matrix[0].map((col, i) => matrix.map(row => row[i]));
+}

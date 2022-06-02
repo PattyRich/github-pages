@@ -12,6 +12,13 @@ adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBing
 generalTileKeys = ['proof', 'checked', 'currPoints']
 boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams']
 
+indexes = mycol.index_information()
+
+if(len(indexes) != 1):
+  mycol.create_index([("boardName", 1)])
+  ## ttl of 2 months
+  mycol.create_index([("date", 1)], expireAfterSeconds=5260000)
+
 def initEmptyTeamData(row, col):
   teamData = []
   for i in range(row):
@@ -19,7 +26,7 @@ def initEmptyTeamData(row, col):
     for j in range(col):
       teamObj = {
         'checked': False,
-        'proof': [],
+        'proof': '',
         'currPoints': 0
       }
       teamData[i].append(teamObj)
@@ -100,6 +107,9 @@ def createBoard():
       'teamData': teamData
     }
 
+  ts = time.time()
+  isodate = datetime.datetime.fromtimestamp(ts, None)
+  data['date'] = isodate
   insert = mycol.insert_one(data)
   if (not insert):
     return bad_request('Failed to create bingo board in Mongo.')

@@ -3,6 +3,7 @@ import React from 'react';
 import './BoardTile.css';
 import Button from './BootStrap/Button'
 import Modal from './BootStrap/TileModal'
+import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
 
 class BoardTile extends React.Component {
@@ -21,10 +22,31 @@ class BoardTile extends React.Component {
 	}
 
   render() {
+		let checked = this.props.teamInfo && this.props.teamInfo.checked
+		let completeStyle = localStorage.getItem('completeStyle') === 'true'
+		let showPoints = localStorage.getItem('showPoints') === 'true'
 		let style = this.props.dem ? {height: this.props.dem, width: this.props.dem} : {}
   	return (
-			<span className='tile-wrapper'>
-				{ this.props.info.image &&
+			<OverlayTrigger
+				placement={'top'}
+				overlay={
+					this.props.info && this.props.info.title ?
+					<Tooltip>
+						{this.props.info.title}
+					</Tooltip>	
+					:
+					<></>
+				}
+			>
+			<span className={`tile-wrapper ${!completeStyle && checked ? 'green-bg' : ''}`}>
+				{checked && completeStyle && !this.props.bare &&
+					<img 
+						style={{'position': 'absolute', 'zIndex': '100'}} 
+						src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='red' stroke-width='3'/><path d='M0 0 L100 100 ' stroke='red' stroke-width='3'/></svg>"
+						onClick={this.openModal} 
+					/>
+				}
+				{ this.props.info && this.props.info.image &&
 					<img 
 						className='bg-img' 
 						style={{'opacity': this.props.info.image && this.props.info.image.opacity + '%', 'maxWidth': this.props.dem, 'maxHeight': this.props.dem}} 
@@ -34,20 +56,23 @@ class BoardTile extends React.Component {
 				<div 
 					onClick={this.openModal} 
 					style={{
-						// 'opacity': this.props.info.image && this.props.info.image.opacity + '%', 
-						// 'backgroundSize':'contain', 
-						// 'backgroundRepeat': 'no-repeat', 
-						// 'backgroundImage': `url("${this.props.info.image && this.props.info.image.url}")`,
 						...style
 					}} 
 					className={`box-flex box-border ${this.props.br ? 'br' : ""} ${this.props.bb ? 'bb' : ""}`}
 				>
 					{!this.props.bare &&  
-						<>
-						<div className='margin-5 title'>
-							{this.props.info.title}
+						<div style={{'width': '100%'}}>
+							{ this.props.info && this.props.teamInfo && showPoints &&
+								<div style={{'justifyContent': 'flex-end', 'display': 'flex', 'height': '100%', 'alignItems': 'flex-end'}}>
+									{this.props.teamInfo.currPoints} / {this.props.info.points}
+								</div>
+							}
+							{ this.props.privilage ==='admin' &&
+								<div style={{'justifyContent': 'flex-end', 'display': 'flex', 'height': '100%', 'alignItems': 'flex-end'}}>
+									{this.props.info.points}
+								</div>
+							}
 						</div>
-						</>
 					}	
 					{ this.state.showModal && 
 						<Modal 
@@ -64,6 +89,7 @@ class BoardTile extends React.Component {
 					}
 				</div>
 			</span>
+			</OverlayTrigger>
     )
   }
 }

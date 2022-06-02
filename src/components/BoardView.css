@@ -35,3 +35,15 @@
 .edit-teams button {
   margin: 0px 10px 0px 10px;
 }
+
+.green-bg {
+  background-color: #bbfc8a;
+}
+
+.form-check-label {
+  cursor: pointer;
+}
+
+.recent-boards {
+  display: flex;
+}

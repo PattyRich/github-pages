@@ -6,6 +6,7 @@ import { Tab, Tabs } from 'react-bootstrap'
 const Teams = (props) => {
   console.log(props)
   const [key, setKey] = useState(props.activeTeam.data.name);
+  const showTeamPoints = localStorage.getItem('showTeamPoints') === 'true';
   function selectTeam(teamName) {
     let teamId = props.teams.find((team)=> {
       return team.data.name === teamName
@@ -23,7 +24,7 @@ const Teams = (props) => {
       style={{'marginBottom': '5px'}}
     >
     { props.teams && props.teams.map((team, i)=> {
-        return <Tab key={i} eventKey={team.data.name} title={`${team.data.name}`} />
+        return <Tab key={i} eventKey={team.data.name} title={`${team.data.name} ${showTeamPoints? ': (' + team.pointTotal + ')' : ''}`} />
       })
     }
     </Tabs>

@@ -131,7 +131,13 @@ class TileModal extends React.Component {
         <Modal.Header closeButton>
           <Modal.Title id="contained-modal-title-vcenter">
             { !this.state.chooseImage ?
-              <EditableInput value={this.state.title} stateKey='title' change={this.inputState} title='Title' disabled={disabled}/>
+              <> 
+              { !disabled ?
+                <EditableInput value={this.state.title} stateKey='title' change={this.inputState} title='Title' disabled={disabled}/>
+                :
+                <h2>{this.state.title || 'Info'}</h2>
+              }
+              </>
               :
               <h3>Set Tile Background Image</h3>
             }
@@ -174,17 +180,28 @@ class TileModal extends React.Component {
               }
               <InputGroup className="mb-3" style={{'width': '240px'}}>
                 <InputGroup.Text id="basic-addon1">Points</InputGroup.Text> 
-                <FormControl placeholder={!disabled ? '0' : null} value={this.state.currPoints} disabled={!disabled} onChange={(e) => this.inputState(e,'currPoints')} />
+                <FormControl placeholder={!disabled ? '0' : null} value={this.state.currPoints} disabled={!disabled || this.state.checked} onChange={(e) => this.inputState(e,'currPoints')} />
                 <InputGroup.Text>/</InputGroup.Text>
                 <FormControl value={this.state.points} disabled={disabled} onChange={(e) => this.inputState(e,'points')} />
               </InputGroup>
               { !generalDisabled && 
-                <div className="form-check" style={{'marginTop': '15px'}}>
-                  <input className="form-check-input" disabled={generalDisabled} checked={this.state.checked} onChange={this.toggleCheck} type="checkbox" value="" id="flexCheckDefault"/>
-                  <label className="form-check-label" htmlFor="flexCheckDefault">
-                    Completed?
-                  </label>
+                <>
+                <div className='flex'>
+                  <EditableInput placeholder="Paste imgurs or any link and i'll provide clickable links " value={this.state.proof} textArea={true} stateKey='proof' change={this.inputState} title='Proof' />
+                  <div className='flex' style={{flexWrap: 'wrap'}}>
+                    { detectURLs(this.state.proof).map((url, i)=> {
+                        return <div style={{'margin': '5px'}}> <a target="_blank" href={url}> Link-{i} </a> </div>
+                      })
+                    }
+                  </div>
                 </div>
+                  <div className="form-check" style={{'marginTop': '15px'}}>
+                    <input className="form-check-input" disabled={generalDisabled} checked={this.state.checked} onChange={this.toggleCheck} type="checkbox" value="" id="flexCheckDefault"/>
+                    <label className="form-check-label" htmlFor="flexCheckDefault">
+                      Completed?
+                    </label>
+                  </div>
+                </>
               } 
             </>
             :
@@ -203,12 +220,12 @@ class TileModal extends React.Component {
             <hr/>
             <div>
               Click any image to set it OR
-              Type an item's name as close as possible and i'll try and find it for you.
+              Type ANY item's name as close as possible and i'll try and find it for you.
               Your text will be edited as you type to aid in searches. (go to wiki and use those names if you're stuck)
-              Examples : (Coins, Old school bond, Infernal cape)
+              Examples : (Coins, Old school bond, Infernal cape, Bucket of milk, Sigil of the menacing mage, Beaver)
             </div>
             <div style={{'display': 'flex'}}>
-              <EditableInput value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item" />
+              <EditableInput enterAction={this.getImage} value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item" />
               <Button style={{'height': '38px', 'marginLeft': '15px'}} variant="primary" onClick={this.getImage}>Search</Button>
             </div>
             { this.state.wikiSearchImg &&
@@ -239,4 +256,16 @@ function importAll(r) {
 
 function nameFilter(name){
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
+}
+
+function detectURLs(message) {
+  if(!message || message.length == 0) {
+    return []
+  }
+  var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g;
+  let res = message.match(urlRegex)
+  if(!res || res.length == 0) {
+    return []
+  }
+  return res
 }
