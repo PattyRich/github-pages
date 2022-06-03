@@ -4,6 +4,7 @@ import Modal from "react-bootstrap/Modal"
 import EditableInput from './EditableInput';
 import InputGroup from "react-bootstrap/InputGroup";
 import FormControl from "react-bootstrap/FormControl";
+import Alert from "react-bootstrap/Alert"
 
 const numInputs = ['points', 'currPoints', 'rowBingo', 'colBingo']
 
@@ -17,7 +18,6 @@ class TileModal extends React.Component {
     }
 
     this.listOfImages = []
-    console.log(props)
     this.inputState = this.inputState.bind(this)
     this.handleSave = this.handleSave.bind(this)
     this.handleClose = this.handleClose.bind(this)
@@ -85,9 +85,7 @@ class TileModal extends React.Component {
       } 
     }
     let x = this.state.image
-    console.log(e.target.value !== '', e.target.value)
     x.opacity = Number(e.target.value)
-    console.log(x)
     this.setState({image: x})
   }
 
@@ -117,7 +115,6 @@ class TileModal extends React.Component {
   }
 
   render() {
-    console.log(this.state)
     let disabled = this.props.privilage != 'admin'
     let generalDisabled = !disabled
     return (
@@ -190,7 +187,7 @@ class TileModal extends React.Component {
                   <EditableInput placeholder="Paste imgurs or any link and i'll provide clickable links " value={this.state.proof} textArea={true} stateKey='proof' change={this.inputState} title='Proof' />
                   <div className='flex' style={{flexWrap: 'wrap'}}>
                     { detectURLs(this.state.proof).map((url, i)=> {
-                        return <div style={{'margin': '5px'}}> <a target="_blank" href={url}> Link-{i} </a> </div>
+                        return <div key={url} style={{'margin': '5px'}}> <a target="_blank" href={url}> Link-{i} </a> </div>
                       })
                     }
                   </div>
@@ -218,12 +215,13 @@ class TileModal extends React.Component {
               })  
             }
             <hr/>
-            <div>
+            <Alert>
               Click any image to set it OR
               Type ANY item's name as close as possible and i'll try and find it for you.
-              Your text will be edited as you type to aid in searches. (go to wiki and use those names if you're stuck)
-              Examples : (Coins, Old school bond, Infernal cape, Bucket of milk, Sigil of the menacing mage, Beaver)
-            </div>
+              Your text will be edited as you type to aid in searches. (use osrs wiki names if you're stuck)
+              <br/>
+              Examples : (Coins, Infernal cape, Bucket of milk, Sigil of the menacing mage, Beaver, Plank)
+            </Alert>
             <div style={{'display': 'flex'}}>
               <EditableInput enterAction={this.getImage} value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item" />
               <Button style={{'height': '38px', 'marginLeft': '15px'}} variant="primary" onClick={this.getImage}>Search</Button>

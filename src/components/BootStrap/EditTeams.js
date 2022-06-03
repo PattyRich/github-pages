@@ -3,6 +3,7 @@ import Button from "react-bootstrap/Button";
 import BSButton from './Button';
 import Modal from "react-bootstrap/Modal"
 import EditableInput from './EditableInput';
+import Alert from "react-bootstrap/Alert"
 
 class EditTeams extends React.Component {
   constructor(props) {
@@ -53,7 +54,6 @@ class EditTeams extends React.Component {
   }
 
   render() {
-    console.log(this.state)
     return (
       <Modal
         show={this.props.show}
@@ -75,7 +75,7 @@ class EditTeams extends React.Component {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          ***NOTE removing teams will delete all their current data.
+          <Alert variant={'danger'}>***NOTE removing teams will delete all their current data.</Alert>
           <hr/>
           { this.state.teams.map((team, i) => {
             return <EditableInput key={i} change={(e) => this.editName(e, i)} value={team.data.name}/>

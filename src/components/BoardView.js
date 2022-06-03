@@ -43,6 +43,11 @@ class BoardView extends React.Component {
     this.refreshData = this.refreshData.bind(this)
     this.clearAlert = this.clearAlert.bind(this)
     window.addEventListener('resize', this.handleResize)
+    
+    //poll every 2 min for data
+    this.refreshInterval = setInterval(()=> {
+      this.refreshData()
+    }, 60000)
   }
 
   componentDidMount() {
@@ -57,6 +62,11 @@ class BoardView extends React.Component {
       this.setState({boardJustCreated: null })
     }
   }
+
+  componentWillUnmount(){
+    if (this.refreshInterval)
+      clearInterval(this.refreshInterval)
+    }
 
   async refreshData(firstLoad = false) {
     if(!this.state.adminPassword && !this.state.generalPassword) {
@@ -137,10 +147,8 @@ class BoardView extends React.Component {
           if (addBonusRow && !tile.checked) {
             addBonusRow = false
           }
-          //console.log(i,j,row, tile, addBonusRow, this.columns-1)
           if (j === this.columns-1)
             if (addBonusRow) {
-              console.log(this.state.boardData[j][i], 'adding')
               pointTotal += Number(this.state.boardData[j][i].colBingo)
             }
         })
@@ -160,7 +168,6 @@ class BoardView extends React.Component {
 
   inputState(e, target) {
 		let stateChange = {}
-    console.log(e.target.value)
     if (target === 'teams' && e.target.value !=='') {
       this.alert('warning', 'If you lower team size you could delete a team with data. Be CAREFUL')
       if (isNaN(e.target.value)) {
@@ -226,13 +233,17 @@ class BoardView extends React.Component {
   render() {
     let height = document.documentElement.clientHeight
     let width = document.documentElement.clientWidth
-    let dem = width < height ? (width / this.rows)-40 : (height / this.columns)-40;
-    console.log(this.state, this.props)
+    let maxWidth = (width / this.rows) - 40
+    let maxHeight = (height / this.columns) - 40
+    let dem = maxHeight < maxWidth ? maxHeight : maxWidth
+    console.log(maxHeight, maxWidth)
+    //let dem = width < height ? (width / this.rows)-40 : (height / this.columns)-40;
     return (
       <div className='flex-wrapper-create'>
         <div className='top-bar'>
           <h2 style={{'marginTop': '0px'}}> {this.state.boardName} </h2>
           <div className='flex bingo-edit'>
+          <Button click={()=> this.props.navigate('/')} text="Go Home" variant="primary"/>
           <Button click={()=> this.setState({showSettings: true})} text="Settings" variant="primary"/>
           {(this.state.privilage === 'admin' || this.state.canSwitchPriv) &&
             <>

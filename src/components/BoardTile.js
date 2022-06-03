@@ -27,6 +27,7 @@ class BoardTile extends React.Component {
 		let showPoints = localStorage.getItem('showPoints') === 'true'
 		let style = this.props.dem ? {height: this.props.dem, width: this.props.dem} : {}
   	return (
+			<>
 			<OverlayTrigger
 				placement={'top'}
 				overlay={
@@ -74,22 +75,23 @@ class BoardTile extends React.Component {
 							}
 						</div>
 					}	
-					{ this.state.showModal && 
-						<Modal 
-							cord={this.props.cord} 
-							change={this.props.change} 
-							privilage={this.props.privilage} 
-							info={this.props.info} 
-							teamInfo={this.props.teamInfo}
-							show={true} 
-							handleClose={()=>this.setState({showModal: !this.state.showModal})}
-							br = {this.props.br}
-							bb = {this.props.bb}
-						/>
-					}
 				</div>
 			</span>
 			</OverlayTrigger>
+				{ this.state.showModal && 
+					<Modal 
+						cord={this.props.cord} 
+						change={this.props.change} 
+						privilage={this.props.privilage} 
+						info={this.props.info} 
+						teamInfo={this.props.teamInfo}
+						show={true} 
+						handleClose={()=>this.setState({showModal: !this.state.showModal})}
+						br = {this.props.br}
+						bb = {this.props.bb}
+					/>
+				}
+			</>
     )
   }
 }

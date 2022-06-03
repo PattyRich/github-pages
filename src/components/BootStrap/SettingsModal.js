@@ -22,7 +22,6 @@ class SettingsModal extends React.Component {
   }
 
   toggleCheck(key){
-    console.log(key)
     let newVal = !this.state[key]
     let obj = {}
     obj[key] = newVal
@@ -39,7 +38,6 @@ class SettingsModal extends React.Component {
   }
 
   render() {
-    console.log(this.state)
     return (
       <Modal
         show={true}

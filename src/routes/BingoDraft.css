@@ -1,0 +1,31 @@
+.draft-wrap {
+  height: 100%;
+  position: relative;
+}
+
+.draft-edit-mode {
+  margin: 15px;
+  position: absolute;
+  right: 0px;
+  top: 0px;
+  display: flex;
+}
+
+.draft-title {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.draft-teams {
+  height: 60%;
+  display: flex;
+  justify-content: space-around;
+  width: 100%;
+  padding: 15px;
+}
+
+.draft-team {
+  width: 100%;
+  border: black solid 1px;
+}

@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { Tab, Tabs } from 'react-bootstrap'
 
 const Teams = (props) => {
-  console.log(props)
   const [key, setKey] = useState(props.activeTeam.data.name);
   const showTeamPoints = localStorage.getItem('showTeamPoints') === 'true';
   function selectTeam(teamName) {
@@ -14,14 +13,13 @@ const Teams = (props) => {
     props.changeTeam(teamId)
     setKey(teamName)
   }
-  console.log(props)
   return (
     <Tabs
       id="controlled-tab-example"
       activeKey={key}
       onSelect={(k) => selectTeam(k)}
       variant="pills"
-      style={{'marginBottom': '5px'}}
+      style={{'marginBottom': '5px', 'display': 'flex', 'justifyContent': 'center'}}
     >
     { props.teams && props.teams.map((team, i)=> {
         return <Tab key={i} eventKey={team.data.name} title={`${team.data.name} ${showTeamPoints? ': (' + team.pointTotal + ')' : ''}`} />

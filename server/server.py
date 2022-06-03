@@ -3,6 +3,17 @@ from flask_cors import CORS, cross_origin
 import requests, sys, json, os, threading, datetime
 import time
 import pymongo
+from flask_limiter import Limiter
+from flask_limiter.util import get_remote_address
+
+app = Flask(__name__, static_folder='build')
+CORS(app)
+
+limiter = Limiter(
+    app,
+    key_func=get_remote_address,
+    default_limits=["10000 per hour"]
+)
 
 myclient = pymongo.MongoClient("mongodb://localhost:27017/")
 db = myclient["bingo"]
@@ -64,10 +75,6 @@ def clearBadData(data, acceptableKeys):
       data.pop(key, None)
   return data
 
-
-app = Flask(__name__, static_folder='build')
-CORS(app)
-
 # Serve React App
 @app.route('/', defaults={'path': ''})
 @app.route('/<path:path>')
@@ -91,6 +98,7 @@ def test():
   # return jsonify(x)
 
 @app.route('/createBoard', methods=['POST'])
+@limiter.limit("5 per hour")
 def createBoard():
   data = json.loads(request.data)
   cache = mycol.find_one({'boardName': data['boardName']})
@@ -117,6 +125,7 @@ def createBoard():
   return jsonify(success=True)
 
 @app.route('/getBoard/<boardName>/<password>/<pwtype>', methods=['GET'])
+@limiter.limit("1000 per hour")
 def getBoard(boardName, password, pwtype):
   cache, err = auth(boardName, password, pwtype)
   if err:
@@ -161,6 +170,7 @@ def updateBoard(boardName, password, pwtype):
   return jsonify(success=True)
 
 @app.route('/updateTeams/<boardName>/<password>/<pwtype>', methods=['PUT'])
+@limiter.limit("1000 per hour")
 def updateTeams(boardName, password, pwtype):
   cache, err = auth(boardName, password, pwtype, True)
   if err:
@@ -202,6 +212,7 @@ def updateTeams(boardName, password, pwtype):
   
 
 @app.route('/auth/<boardName>/<password>/<pwtype>', methods=['GET'])
+@limiter.limit("200 per hour")
 def authMethod(boardName, password, pwtype):
   cache, err = auth(boardName, password, pwtype)
   if err:

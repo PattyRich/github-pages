@@ -7,6 +7,9 @@ async function fetchPost(url, body) {
     if (data.status === 400) {
       return [null, await data.json()]
     }
+    if (data.status === 429) {
+      return [null, new Error('Too many requests')]
+    }
     let dataJson = await data.json()
     return [dataJson, null]
   } catch (err) {
@@ -23,6 +26,9 @@ async function fetchPut(url, body) {
     });
     if (data.status === 400) {
       return [null, await data.json()]
+    } 
+    if (data.status === 429) {
+      return [null, new Error('Too many requests')]
     }
     let dataJson = await data.json()
     return [dataJson, null]
@@ -37,6 +43,9 @@ async function fetchGet(url) {
     let data = await fetch(`${window.API}/${url}`);
     if (data.status === 400) {
       return [null, await data.json()]
+    }
+    if (data.status === 429) {
+      return [null, new Error('Too many requests')]
     }
     let dataJson = await data.json()
     return [dataJson, null]

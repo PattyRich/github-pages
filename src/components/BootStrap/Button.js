@@ -12,7 +12,7 @@ class BSButton extends React.Component {
   render() {
   	return (
       <div>
-        <Button disabled={this.props.disabled} onClick={this.props.click} variant={this.props.variant || "outline-secondary"}>{this.props.text}</Button>{' '}
+        <Button style={this.props.style} disabled={this.props.disabled} onClick={this.props.click} variant={this.props.variant || "outline-secondary"}>{this.props.text}</Button>
       </div>
     )
   }
