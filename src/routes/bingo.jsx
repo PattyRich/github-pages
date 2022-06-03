@@ -80,7 +80,16 @@ class Bingo extends React.Component {
 		this.setState({recentBoards: x})
 		localStorage.setItem('recentBoards', JSON.stringify(x))
 	}
+
+	promisedSetState = (newState) => new Promise(resolve => this.setState(newState, resolve));
+
 	async continue() {
+		let trim = {
+			adminPassword: this.state.adminPassword.trim(),
+			generalPassword: this.state.generalPassword.trim(),
+			boardName: this.state.boardName.trim()
+		}
+		await this.promisedSetState(trim)
 		if (!this.state.generalPassword || !this.state.adminPassword || !this.state.boardName) {
 			this.alert('danger', 'Please fill out all fields.')
 			return;
@@ -105,7 +114,6 @@ class Bingo extends React.Component {
 				})
 			}   
 		}  
-
 		this.alert('loading')
 		const [data, err] = await fetchPost('createBoard', {...this.state, boardData})
 		if (data) {
