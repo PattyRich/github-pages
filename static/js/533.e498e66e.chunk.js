@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkgithub_pages=self.webpackChunkgithub_pages||[]).push([[533],{8533:function(a,e,t){t.r(e),t.d(e,{data:function(){return n}});var n={name:"bandos",items:[{name:"Bandos chestplate",rate:1/381},{name:"Bandos boots",rate:1/381},{name:"Bandos tassets",rate:1/381},{name:"Bandos hilt",rate:1/508}],pet:{rate:5e3,name:"Pet general graardor"}}}}]);
+//# sourceMappingURL=533.e498e66e.chunk.js.map

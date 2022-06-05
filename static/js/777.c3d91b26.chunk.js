@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkgithub_pages=self.webpackChunkgithub_pages||[]).push([[777],{2777:function(e,a,n){n.r(a),n.d(a,{data:function(){return t}});var t={name:"cg",items:[{name:"Crystal weapon seed",rate:.02},{name:"Crystal armour seed",rate:.02},{name:"Enhanced crystal weapon seed",rate:1/400}],pet:{rate:800,name:"Youngllef"}}}}]);
+//# sourceMappingURL=777.c3d91b26.chunk.js.map

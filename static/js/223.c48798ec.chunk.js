@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkgithub_pages=self.webpackChunkgithub_pages||[]).push([[223],{3223:function(a,e,t){t.r(e),t.d(e,{data:function(){return n}});var n={name:"sara",items:[{name:"Saradomin's light",rate:1/254},{name:"Saradomin sword",rate:1/127},{name:"Saradomin hilt",rate:1/508},{name:"Armadyl crossbow",rate:1/508}],pet:{rate:5e3,name:"Pet zilyana"}}}}]);
+//# sourceMappingURL=223.c48798ec.chunk.js.map
