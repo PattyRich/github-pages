@@ -388,7 +388,7 @@ class Magerun extends React.Component {
     return (
     	<div id="background">
 	    	<div className="parent">
-	    	  <img className={`olm ${this.state.headDirection} child`} src={`${process.env.PUBLIC_URL}/assets/olm.png`} height={this.offset-20}/>
+	    	  <img className={`olm ${this.state.headDirection} child`} src={`${process.env.PUBLIC_URL}/assets/olm.jpg`} height={this.offset-20}/>
 						{this.state.xpDrops.map(() => {
 		       		return (
 	    	  			<div style={{'color': 'white'}} className='fade-out child2'>

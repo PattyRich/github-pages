@@ -1,0 +1,49 @@
+.center-board {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+}
+
+.flex-wrapper-create {
+  display: flex;
+  flex-flow: column;
+  height: 100%;
+}
+
+.flex-wrapper-create .top-bar {
+  display: flex;
+  justify-content: space-between;
+  margin: 15px;
+  margin-bottom: 0px;
+}
+
+.flex-wrapper-create h2 {
+  margin: 10px;
+}
+
+.flex-center {
+  display: flex;
+  justify-content: center;
+}
+
+.bingo-edit button {
+  margin-right: 10px;
+}
+
+.edit-teams button {
+  margin: 0px 10px 0px 10px;
+}
+
+.green-bg {
+  background-color: #bbfc8a;
+}
+
+.form-check-label {
+  cursor: pointer;
+}
+
+.recent-boards {
+  display: flex;
+}

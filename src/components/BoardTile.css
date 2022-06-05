@@ -1,0 +1,37 @@
+.box-border {
+  border-top: 1px black solid;
+  border-left: 1px black solid;
+  height: 40px;
+  width: 40px;
+}
+
+.br {
+  border-right: 1px black solid;
+}
+
+.bb {
+  border-bottom: 1px black solid;
+}
+
+.box-flex {
+  display: flex;
+  justify-content: space-between;
+  position: relative;
+  cursor: pointer;
+}
+
+.box-flex .title {
+  overflow: hidden;
+}
+
+.bg-img {
+  opacity: 10%;
+  position: absolute;
+}
+
+.tile-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}

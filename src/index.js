@@ -1,15 +1,18 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import ReactDOM from 'react-dom/client';
 import './index.css';
 import App from './App';
 import Osrs from './routes/osrs';
 import Magerun from './routes/magerun'
+import Bingo from './routes/bingo'
+import BoardView from './components/BoardView'
 import reportWebVitals from './reportWebVitals';
+import BingoDraft from './routes/BingoDraft';
 import { HashRouter, Routes, Route } from "react-router-dom";
 
+const root = ReactDOM.createRoot(document.getElementById('root'));
 
-ReactDOM.render(
-  <React.StrictMode>
+root.render(
   	<HashRouter>
   		<Routes>
   			<Route path="/" element={<App />} />
@@ -17,6 +20,16 @@ ReactDOM.render(
   			<Route path="/github-pages/osrs" element={<Osrs />} />
    			<Route path="/mage-run" element={<Magerun />} />
   			<Route path="/github-pages/mage-run" element={<Magerun />} />
+				<Route path="/bingo/create" element={<Bingo key='create' screenSkip={2} />} />
+				<Route path="/github-pages/bingo/create" element={<Bingo key='create' screenSkip={2} />} />
+				<Route path="/bingo/join" element={<Bingo key='join' screenSkip={4} />} />
+				<Route path="/github-pages/bingo/join" element={<Bingo key='join' screenSkip={4} />} />
+				<Route path="/bingo" element={<Bingo />} />
+  			<Route path="/github-pages/bingo" element={<Bingo />} />
+				<Route path="/bingo/:boardName" element={<BoardView />} />
+  			<Route path="/github-pages/bingo/:boardName" element={<BoardView />} />
+				<Route path="/bingo-draft" element={<BingoDraft />} />
+  			<Route path="/github-pages/bingo-draft" element={<BingoDraft />} />				
   			<Route
 		      path="*"
 		      element={
@@ -27,9 +40,7 @@ ReactDOM.render(
     		/>
   		</Routes>
 		</HashRouter>
-  </React.StrictMode>,
-  document.getElementById('root')
-);
+  );
 
 // If you want to start measuring performance in your app, pass a function
 // to log results (for example: reportWebVitals(console.log))
