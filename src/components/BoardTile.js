@@ -63,7 +63,7 @@ class BoardTile extends React.Component {
 				>
 					{!this.props.bare &&  
 						<div style={{'width': '100%'}}>
-							{ this.props.info && this.props.teamInfo && showPoints &&
+							{ this.props.info && this.props.teamInfo && !showPoints &&
 								<div style={{'justifyContent': 'flex-end', 'display': 'flex', 'height': '100%', 'alignItems': 'flex-end'}}>
 									{this.props.teamInfo.currPoints} / {this.props.info.points}
 								</div>

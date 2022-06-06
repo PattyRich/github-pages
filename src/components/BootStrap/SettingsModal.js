@@ -61,13 +61,13 @@ class SettingsModal extends React.Component {
           <div className="form-check" style={{'marginTop': '15px'}}>
             <input className="form-check-input" checked={this.state.showPoints} onChange={() => this.toggleCheck('showPoints')} type="checkbox" id="flexCheckDefault2"/>
             <label className="form-check-label" htmlFor="flexCheckDefault2">
-              Show current points on bingo board?
+              Hide current points on bingo board?
             </label>
           </div>
           <div className="form-check" style={{'marginTop': '15px'}}>
             <input className="form-check-input" checked={this.state.showTeamPoints} onChange={() => this.toggleCheck('showTeamPoints')} type="checkbox" id="flexCheckDefault3"/>
             <label className="form-check-label" htmlFor="flexCheckDefault3">
-              Show team points on team tabs?
+              Hide team points on team tabs?
             </label>
           </div>
         </Modal.Body>

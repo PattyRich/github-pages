@@ -22,7 +22,7 @@ const Teams = (props) => {
       style={{'marginBottom': '5px', 'display': 'flex', 'justifyContent': 'center'}}
     >
     { props.teams && props.teams.map((team, i)=> {
-        return <Tab key={i} eventKey={team.data.name} title={`${team.data.name} ${showTeamPoints? ': (' + team.pointTotal + ')' : ''}`} />
+        return <Tab key={i} eventKey={team.data.name} title={`${team.data.name} ${!showTeamPoints? ': (' + team.pointTotal + ')' : ''}`} />
       })
     }
     </Tabs>
