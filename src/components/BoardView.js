@@ -56,7 +56,7 @@ class BoardView extends React.Component {
       localStorage.setItem('tile-hint', true);
       this.setState({showToast: true})
     }
-    this.refreshData(true)
+    this.refreshData(!this.state.cameFromCreate)
     if (this.state.boardJustCreated) {
       this.alert('success', 'Board Successfully Created!')
       this.setState({boardJustCreated: null })

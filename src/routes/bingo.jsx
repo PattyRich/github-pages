@@ -125,6 +125,7 @@ class Bingo extends React.Component {
 					teams: this.state.teams,
 					boardName: this.state.boardName,
 					privilage: 'admin',
+					cameFromCreate: true
 				}
 			});
 		}
