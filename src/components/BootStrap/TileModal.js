@@ -11,6 +11,10 @@ const numInputs = ['points', 'currPoints', 'rowBingo', 'colBingo']
 class TileModal extends React.Component {
   constructor(props) {
     super(props);
+
+    //spreading props like this is probably bad, it works here because they are all strings or bools, but
+    //if there were objects or array with deeper elements changing our new state here would affect parent data
+    //the spread here makes actual copies, but wouldn't for those deep elements would need to use immer or json copy like in editeams
     this.state = { 
       wikiSearch: '',
       ...props.info,
