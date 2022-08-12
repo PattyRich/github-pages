@@ -5,7 +5,6 @@ import Button from './BootStrap/Button'
 import Modal from './BootStrap/TileModal'
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
-
 class BoardTile extends React.Component {
   constructor(props) {
     super(props);
@@ -25,6 +24,7 @@ class BoardTile extends React.Component {
 		let checked = this.props.teamInfo && this.props.teamInfo.checked
 		let completeStyle = localStorage.getItem('completeStyle') === 'true'
 		let showPoints = localStorage.getItem('showPoints') === 'true'
+		let showTitleTile = localStorage.getItem('showTitleTile') === 'true'
 		let style = this.props.dem ? {height: this.props.dem, width: this.props.dem} : {}
   	return (
 			<>
@@ -50,17 +50,24 @@ class BoardTile extends React.Component {
 				{ this.props.info && this.props.info.image &&
 					<img 
 						className='bg-img' 
-						style={{'opacity': this.props.info.image && this.props.info.image.opacity + '%', 'maxWidth': this.props.dem, 'maxHeight': this.props.dem}} 
+						style={{'opacity': this.props.info.image && this.props.info.image.opacity + '%', 'maxWidth': this.props.dem, 'maxHeight': !showTitleTile ? '80%' : this.props.dem}} 
 						src={this.props.info.image && this.props.info.image.url} 
 				/>
 				}
 				<div 
 					onClick={this.openModal} 
 					style={{
-						...style
+						...style,
+						flexDirection: 'column',
+						justifyContent : showTitleTile ? 'flex-end' : 'space-between'
 					}} 
 					className={`box-flex box-border ${this.props.br ? 'br' : ""} ${this.props.bb ? 'bb' : ""}`}
-				>
+				> 
+					{ !showTitleTile &&
+						<div style={{height: '20%', overflow: 'hidden', textAlign: 'center', fontFamily: 'osrsFont'}}>
+						{this.props.info.title}
+						</div>
+					}
 					{!this.props.bare &&  
 						<div style={{'width': '100%'}}>
 							{ this.props.info && this.props.teamInfo && !showPoints &&
