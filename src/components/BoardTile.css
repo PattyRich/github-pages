@@ -32,6 +32,11 @@
 .tile-wrapper {
   display: flex;
   justify-content: center;
-  align-items: center;
+  align-items: flex-end;
   position: relative;
+}
+
+@font-face {
+  font-family: 'osrsFont';
+  src: local('osrsFont'), url('../fonts/osrs.ttf') format('truetype');
 }

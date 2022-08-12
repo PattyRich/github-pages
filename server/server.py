@@ -1,7 +1,7 @@
-from flask import Flask, jsonify, Response, send_from_directory, request, abort
+from flask import Flask, jsonify, Response, request, abort
 from flask_cors import CORS, cross_origin
-import requests, sys, json, os, threading, datetime
-import time
+import json, datetime
+import time, requests
 import pymongo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -74,28 +74,6 @@ def clearBadData(data, acceptableKeys):
     if key not in acceptableKeys:
       data.pop(key, None)
   return data
-
-# Serve React App
-@app.route('/', defaults={'path': ''})
-@app.route('/<path:path>')
-def serve(path):
-  if path != "" and os.path.exists("build/" + path):
-    return send_from_directory('build', path)
-  else:
-    return send_from_directory('build', 'index.html')
-
-@app.route('/Hello', methods=['GET'])
-def Hello():
-    return 'Hello'
-
-@app.route('/test', methods=['GET'])
-def test():
-  mycol.drop()
-  return 'dropped'
-  # mycol = db['test']
-  # x = mycol.find_one({"test": True})
-  # print(x)
-  # return jsonify(x)
 
 @app.route('/createBoard', methods=['POST'])
 @limiter.limit("5 per hour")
@@ -181,6 +159,7 @@ def updateTeams(boardName, password, pwtype):
   size = len(data)
 
   updateOlderTeams = data[:cache['teams']]
+  ## adding a team // init an empty one here and we overwrite it with relevant data at end
   if (size) > cache['teams']:
     for i in range(size - cache['teams']):
       teamKey = 'team-' + str(cache['teams'] + i)
@@ -191,12 +170,14 @@ def updateTeams(boardName, password, pwtype):
       }
       newvalue = { "$set": {teamKey: teamData}}
       update = mycol.update_one({"boardName": boardName}, newvalue)
+  ## removing a team
   elif size < cache['teams']:
     for i in range(cache['teams'] - size):
       teamKey = 'team-' + str(cache['teams'] -1 -i)
       newvalue = { "$unset": {teamKey: ''}}
       update = mycol.update_one({"boardName": boardName}, newvalue)
 
+  ## is where we apply actual changes made other than adds + deletes
   overWrite = {}
   for i in range(len(updateOlderTeams)):
     teamKey = 'team-' + str(i)
@@ -207,7 +188,7 @@ def updateTeams(boardName, password, pwtype):
     ##spread object for all sets since it won't take a dict
     newvalue = { "$set": { **overWrite, 'teams': size }}
     update = mycol.update_one({"boardName": boardName}, newvalue)
-  
+
   return jsonify(success=True)
   
 
@@ -218,10 +199,6 @@ def authMethod(boardName, password, pwtype):
   if err:
     return err
   return jsonify(success=True)
-
-# @app.route('/lol/api/v1.0/sumInfo/<leagueName>/<region>', methods=['GET'])
-# def getSummonerInfo(leagueName,region, rankGather=False):
-
 
 if __name__ == "__main__":
   app.run(host='0.0.0.0',port=5001, debug=True)

@@ -8,13 +8,16 @@ import FormControl from "react-bootstrap/FormControl";
 class SettingsModal extends React.Component {
   constructor(props) {
     super(props);
+    //these should be named hide{Thing} too lazy to change
     const completeStyle = localStorage.getItem('completeStyle') === 'true';
     const showPoints = localStorage.getItem('showPoints') === 'true';
     const showTeamPoints = localStorage.getItem('showTeamPoints') === 'true';
+    const showTitleTile = localStorage.getItem('showTitleTile') === 'true';
     this.state = { 
       completeStyle,
       showPoints,
-      showTeamPoints
+      showTeamPoints,
+      showTitleTile
     }
     this.handleClose = this.handleClose.bind(this)
     this.setLocalStorage = this.setLocalStorage.bind(this)
@@ -68,6 +71,12 @@ class SettingsModal extends React.Component {
             <input className="form-check-input" checked={this.state.showTeamPoints} onChange={() => this.toggleCheck('showTeamPoints')} type="checkbox" id="flexCheckDefault3"/>
             <label className="form-check-label" htmlFor="flexCheckDefault3">
               Hide team points on team tabs?
+            </label>
+          </div>
+          <div className="form-check" style={{'marginTop': '15px'}}>
+            <input className="form-check-input" checked={this.state.showTitleTile} onChange={() => this.toggleCheck('showTitleTile')} type="checkbox" id="flexCheckDefault4"/>
+            <label className="form-check-label" htmlFor="flexCheckDefault4">
+              Hide tile title on board?
             </label>
           </div>
         </Modal.Body>

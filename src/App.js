@@ -35,7 +35,7 @@ class App extends React.Component {
             </nav>
             <Alert style={{'marginTop': '30px'}}>Check out the Bingo section :) </Alert>
             <div className='flex-center' style={{'height': '50%'}}>
-              <Image fluid={true} src={`${process.env.PUBLIC_URL}/board-min.png`} />
+              <Image fluid={true} src={`${process.env.PUBLIC_URL}/board-min2.png`} />
               <Image fluid={true} src={`${process.env.PUBLIC_URL}/create-min.png`} />
             </div>
             <hr/>
