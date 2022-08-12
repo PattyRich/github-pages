@@ -63,7 +63,7 @@ class BoardTile extends React.Component {
 					}} 
 					className={`box-flex box-border ${this.props.br ? 'br' : ""} ${this.props.bb ? 'bb' : ""}`}
 				> 
-					{ !showTitleTile &&
+					{!this.props.bare && !showTitleTile &&
 						<div style={{height: '20%', overflow: 'hidden', textAlign: 'center', fontFamily: 'osrsFont'}}>
 						{this.props.info.title}
 						</div>
