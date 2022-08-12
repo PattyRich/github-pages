@@ -159,6 +159,7 @@ def updateTeams(boardName, password, pwtype):
   size = len(data)
 
   updateOlderTeams = data[:cache['teams']]
+  ## adding a team // init an empty one here and we overwrite it with relevant data at end
   if (size) > cache['teams']:
     for i in range(size - cache['teams']):
       teamKey = 'team-' + str(cache['teams'] + i)
@@ -169,12 +170,14 @@ def updateTeams(boardName, password, pwtype):
       }
       newvalue = { "$set": {teamKey: teamData}}
       update = mycol.update_one({"boardName": boardName}, newvalue)
+  ## removing a team
   elif size < cache['teams']:
     for i in range(cache['teams'] - size):
       teamKey = 'team-' + str(cache['teams'] -1 -i)
       newvalue = { "$unset": {teamKey: ''}}
       update = mycol.update_one({"boardName": boardName}, newvalue)
 
+  ## is where we apply actual changes made other than adds + deletes
   overWrite = {}
   for i in range(len(updateOlderTeams)):
     teamKey = 'team-' + str(i)
@@ -185,7 +188,7 @@ def updateTeams(boardName, password, pwtype):
     ##spread object for all sets since it won't take a dict
     newvalue = { "$set": { **overWrite, 'teams': size }}
     update = mycol.update_one({"boardName": boardName}, newvalue)
-  
+
   return jsonify(success=True)
   
 

@@ -44,7 +44,7 @@ class BoardView extends React.Component {
     this.clearAlert = this.clearAlert.bind(this)
     window.addEventListener('resize', this.handleResize)
     
-    //poll every 2 min for data
+    //poll every 1 min for data
     this.refreshInterval = setInterval(()=> {
       this.refreshData()
     }, 60000)
