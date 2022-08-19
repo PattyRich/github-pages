@@ -17,7 +17,7 @@ export const Dustbin = (props) => {
     backgroundColor = 'lightblue'
   }
   return (
-    <div style={{'backgroundColor': backgroundColor}} ref={drop} className='draft-team' data-testid="dustbin">
+    <div style={{'backgroundColor': backgroundColor,  'overflow': 'scroll'}} ref={drop} className='draft-team' data-testid="dustbin">
       <div className='flex-center' style={{'paddingTop': '10px'}}>
         {props.editMode ?
           <EditableInput change={props.editName} value={props.team.name} width={'auto'} title='' />
