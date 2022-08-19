@@ -33,12 +33,12 @@ class App extends React.Component {
               	</li>
               </ul>
             </nav>
-            <Alert style={{'marginTop': '30px'}}>Check out the Bingo section :) </Alert>
+            <Alert style={{'marginTop': '30px'}}>Check out the Bingo Boards. Keep track of all teams boards in 1 place that can be quickly viewed and edited by anyone. </Alert>
             <div className='flex-center' style={{'height': '50%'}}>
-              <Image fluid={true} src={`${process.env.PUBLIC_URL}/board-min2.png`} />
-              <Image fluid={true} src={`${process.env.PUBLIC_URL}/create-min.png`} />
+              <Image style={{'padding': '10px'}} fluid={true} src={`${process.env.PUBLIC_URL}/board-min2.png`} />
+              <Image style={{'padding': '10px'}} fluid={true} src={`${process.env.PUBLIC_URL}/create-min.png`} />
             </div>
-            <hr/>
+            <hr style={{'margin': 'auto'}} />
           </div>
         </div>
     	);
