@@ -5,8 +5,8 @@ const style = {
   border: '1px dashed gray',
   backgroundColor: 'white',
   padding: '0.5rem 1rem',
-  marginRight: '1.5rem',
-  marginBottom: '1.5rem',
+  marginRight: '0.5rem',
+  marginBottom: '0.5rem',
   cursor: 'move',
   display: 'flex'
 }
@@ -29,7 +29,7 @@ export const Box = function Box({ name, dropped, notPlaced }) {
   return (
     <span style={{'position': 'relative'}}>
       {!(notPlaced) && 
-        <span onClick={() => dropped(name, 'jsadifoghdsal;kfgdjs;')} style={{'color': 'red', 'cursor': 'pointer', 'fontSize': 10, 'position': 'absolute', 'right': '27px'}}>x</span>
+        <span onClick={() => dropped(name, 'jsadifoghdsal;kfgdjs;')} style={{'color': 'red', 'cursor': 'pointer', 'fontSize': 10, 'position': 'absolute', 'right': '14px'}}>x</span>
       }
       <div ref={drag} style={{ ...style, opacity }} data-testid={`box`}>
         {name}
