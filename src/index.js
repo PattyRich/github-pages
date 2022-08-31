@@ -8,6 +8,7 @@ import Bingo from './routes/bingo'
 import BoardView from './components/BoardView'
 import reportWebVitals from './reportWebVitals';
 import BingoDraft from './routes/BingoDraft';
+import ToaFlip from './routes/ToaFlip';
 import { HashRouter, Routes, Route } from "react-router-dom";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -20,6 +21,8 @@ root.render(
   			<Route path="/github-pages/osrs" element={<Osrs />} />
    			<Route path="/mage-run" element={<Magerun />} />
   			<Route path="/github-pages/mage-run" element={<Magerun />} />
+				<Route path="/toa-flip" element={<ToaFlip />} />
+  			<Route path="/github-pages/toa-flip" element={<ToaFlip />} />
 				<Route path="/bingo/create" element={<Bingo key='create' screenSkip={2} />} />
 				<Route path="/github-pages/bingo/create" element={<Bingo key='create' screenSkip={2} />} />
 				<Route path="/bingo/join" element={<Bingo key='join' screenSkip={4} />} />
