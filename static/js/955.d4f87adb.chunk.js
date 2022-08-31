@@ -1,2 +1,0 @@
-"use strict";(self.webpackChunkgithub_pages=self.webpackChunkgithub_pages||[]).push([[955],{6401:function(e,a,t){t.r(a),t.d(a,{data:function(){return n}});var n={name:"corp",chance:7/4095*100,items:[{name:"Arcane sigil",rate:3},{name:"Elysian sigil",rate:1},{name:"Spectral sigil",rate:3}],pet:{rate:5e3,name:"Pet dark core"}}}}]);
-//# sourceMappingURL=955.d4f87adb.chunk.js.map

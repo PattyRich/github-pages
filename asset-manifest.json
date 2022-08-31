@@ -1,12 +1,12 @@
 {
   "files": {
     "main.css": "/github-pages/static/css/main.a5593569.css",
-    "main.js": "/github-pages/static/js/main.9111ffd0.js",
+    "main.js": "/github-pages/static/js/main.314ac2cb.js",
     "static/js/539.85345dcf.chunk.js": "/github-pages/static/js/539.85345dcf.chunk.js",
     "static/js/533.e498e66e.chunk.js": "/github-pages/static/js/533.e498e66e.chunk.js",
     "static/js/777.c3d91b26.chunk.js": "/github-pages/static/js/777.c3d91b26.chunk.js",
     "static/js/692.35bef8bb.chunk.js": "/github-pages/static/js/692.35bef8bb.chunk.js",
-    "static/js/955.d4f87adb.chunk.js": "/github-pages/static/js/955.d4f87adb.chunk.js",
+    "static/js/955.60b3c614.chunk.js": "/github-pages/static/js/955.60b3c614.chunk.js",
     "static/js/56.4397a030.chunk.js": "/github-pages/static/js/56.4397a030.chunk.js",
     "static/js/843.814b3c6f.chunk.js": "/github-pages/static/js/843.814b3c6f.chunk.js",
     "static/js/904.269e1b72.chunk.js": "/github-pages/static/js/904.269e1b72.chunk.js",
@@ -19,12 +19,12 @@
     "static/media/osrs.ttf": "/github-pages/static/media/osrs.8312160100eedb12bf64.ttf",
     "index.html": "/github-pages/index.html",
     "main.a5593569.css.map": "/github-pages/static/css/main.a5593569.css.map",
-    "main.9111ffd0.js.map": "/github-pages/static/js/main.9111ffd0.js.map",
+    "main.314ac2cb.js.map": "/github-pages/static/js/main.314ac2cb.js.map",
     "539.85345dcf.chunk.js.map": "/github-pages/static/js/539.85345dcf.chunk.js.map",
     "533.e498e66e.chunk.js.map": "/github-pages/static/js/533.e498e66e.chunk.js.map",
     "777.c3d91b26.chunk.js.map": "/github-pages/static/js/777.c3d91b26.chunk.js.map",
     "692.35bef8bb.chunk.js.map": "/github-pages/static/js/692.35bef8bb.chunk.js.map",
-    "955.d4f87adb.chunk.js.map": "/github-pages/static/js/955.d4f87adb.chunk.js.map",
+    "955.60b3c614.chunk.js.map": "/github-pages/static/js/955.60b3c614.chunk.js.map",
     "56.4397a030.chunk.js.map": "/github-pages/static/js/56.4397a030.chunk.js.map",
     "843.814b3c6f.chunk.js.map": "/github-pages/static/js/843.814b3c6f.chunk.js.map",
     "904.269e1b72.chunk.js.map": "/github-pages/static/js/904.269e1b72.chunk.js.map",
@@ -37,6 +37,6 @@
   },
   "entrypoints": [
     "static/css/main.a5593569.css",
-    "static/js/main.9111ffd0.js"
+    "static/js/main.314ac2cb.js"
   ]
 }
