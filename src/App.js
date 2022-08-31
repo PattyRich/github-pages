@@ -21,7 +21,10 @@ class App extends React.Component {
                 </li>
                 <li>
                 <Link to="/mage-run">Olm Mage run</Link>
-                </li>            
+                </li>         
+                <li>
+                <Link to="/toa-flip">Tombs of Amascut Flip Puzzle</Link>
+                </li>        
                 <li>
                 <Link to="/bingo">Bingo</Link>
                 </li>    
