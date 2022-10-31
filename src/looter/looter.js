@@ -57,11 +57,18 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 				//in those cases the weight doesn't have to equal a 1/blah fraction
 				//but if we are using a 1/blah we'll know the chance cause we can just sum them
 				if(!data.chance){
-					let sum = 0
-					data.items.forEach((item)=> {
-						sum += item.rate
-					})
-					data.chance = sum * 100
+					//toa uses an equation for rate fit since the calculations are too confusing otherwise.
+					//i got this equation by plotting calculator data in wolfram 
+					if (data.eq) {
+						data.chance = eval(data.eq.replaceAll('x',options.invocation))
+						data.pet.rate = Math.round(1/(eval(data.pet.rate.replaceAll('x',options.invocation))/100))
+					} else {
+						let sum = 0
+						data.items.forEach((item)=> {
+							sum += item.rate
+						})
+						data.chance = sum * 100		
+					}
 				}
 
 				if (data.name === 'cox') {
