@@ -28,6 +28,7 @@ class Osrs extends React.Component {
       progress: 0,
 	  	teamSize: 4,
       cms: false,
+      invocation: 300,
       worstRewards: null,
       bestRewards: null,
       createData: {
@@ -111,7 +112,7 @@ class Osrs extends React.Component {
   	this.setState({
   		[state]: event.target.value
   	}, ()=> {
-    	if (state == 'points' || state == 'teamSize'){
+    	if (state == 'points' || state == 'teamSize' || state == 'invocation'){
   			this.completion()
   		}		
   	})
@@ -277,7 +278,7 @@ class Osrs extends React.Component {
   async go(){
   	let rewards = []
 
-  	// this.addIcons(this.state.mode)
+  	//this.addIcons(this.state.mode)
 
   	if (this.state.fullRewards) {
   		try {
@@ -412,7 +413,8 @@ class Osrs extends React.Component {
     		<div className="box">
 		      <div>
 		        <input type="radio" value="cox" name="" checked={this.state.mode === 'cox'} onChange={this.onChangeValue} /> Cox
-		        <input type="radio" value="tob" name="" checked={this.state.mode === 'tob'} onChange={this.onChangeValue} /> Tob
+		        <input type="radio" value="tob" name="" checked={this.state.mode === 'tob'} onChange={this.onChangeValue} /> ToB
+		        <input type="radio" value="toa" name="" checked={this.state.mode === 'toa'} onChange={this.onChangeValue} /> ToA
 		        <input type="radio" value="cg" name="" checked={this.state.mode === 'cg'} onChange={this.onChangeValue} /> Corrupted Gauntlet
 			    <input type="radio" value="corp" name="" checked={this.state.mode === 'corp'} onChange={this.onChangeValue} /> Corp
 		      	<input type="radio" value="pnm" name="" checked={this.state.mode === 'pnm'} onChange={this.onChangeValue} /> Phosani's Nightmare
@@ -484,6 +486,12 @@ class Osrs extends React.Component {
 				     	<label>Number of cox points per raid </label>
 			  			<input type="text" value={this.state.points} onChange={(e) => this.onChangeValueInput('points', e)}/>
 		  				&nbsp; Challenge Mode? <input type="checkbox" onChange={()=>{ this.setState({cms: !this.state.cms}); } } checked={this.state.cms}/> 
+		  			</span>
+	  			: null }
+	  			{ this.state.mode === 'toa' ?
+			      <span>
+				     	<label>Invocation Level (only accurate for 150-575)</label>
+			  			&nbsp; <input type="text" value={this.state.invocation} onChange={(e) => this.onChangeValueInput('invocation', e)}/>
 		  			</span>
 	  			: null }
 		      <br/>
