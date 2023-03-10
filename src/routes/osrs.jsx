@@ -244,8 +244,7 @@ class Osrs extends React.Component {
 							    } catch (err) {
 									console.log(err)
 							    	console.log('Failed to add item to assets folder. Is the python server running????')
-							    }
-									
+							    }	
 							} 
 							console.log(err)
 							resolve()
@@ -366,6 +365,8 @@ class Osrs extends React.Component {
   }
 
   async componentDidMount(){
+	let availableItems = Object.keys(importAll(require.context('/public/assets', false, /\.(png)$/)));
+	this.setState({availableItems: availableItems});
 	this.completion();
   	// let completion = await (this.lootFunction(null, this.state.mode, {points: this.state.points, runCompletion: true, pets: this.state.pets, createData: this.state.createData, cms: this.state.cms}))
 	// 	this.setState({'completion': completion})
@@ -396,6 +397,12 @@ class Osrs extends React.Component {
 		this.setState({'completion': completion})  
 	}
 
+	imageSrc(name) {
+		return this.state.availableItems.includes(name) ?
+			`${process.env.PUBLIC_URL}/assets/${name}`
+			:
+			`https://oldschool.runescape.wiki/images/${name.replaceAll(' ', '_')}`
+	}
 
   stopInterval(){
 		if (this.interval)
@@ -519,7 +526,7 @@ class Osrs extends React.Component {
 		       		return (
 		       			<div className="item">
 		       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
-		       					<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.png`} title={item.name} alt={item.name}></img>
+		       					<img src={this.imageSrc(`${item.name}.png`)} title={item.name} alt={item.name}></img>
 		       				</a>
 		       				{item.kc}
 		       			</div>
@@ -546,7 +553,7 @@ class Osrs extends React.Component {
 							       			<div className="item">
 							       			{/*<img src={'data:image/png;base64,' + this.state.icons[item.name]} title={item.name} alt={item.name}></img>*/}
 							       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
-							       					<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.png`} title={item.name} alt={item.name}></img>
+							       					<img src={this.imageSrc(`${item.name}.png`)} title={item.name} alt={item.name}></img>
 							       				</a>							       				
 		       									{item.kc} ({(this.state.rewardCountConst * (this.state.rewardList.length - index)) - (this.state.rewardCountConst - item.kc)})
 							       			</div>
@@ -611,4 +618,10 @@ function bossHelper(mode){
 
 const pause = () => {
   return new Promise(r => setTimeout(r, 0))
+}
+
+function importAll(r) {
+  let images = {};
+  r.keys().map((item, index) => { images[item.replace('./', '')] = r(item); });
+  return images;
 }
