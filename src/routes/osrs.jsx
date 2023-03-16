@@ -307,6 +307,7 @@ class Osrs extends React.Component {
 		let items = []
 		this.setState({progress: 0})
 		this.setState({bestRewards: null, worstRewards: null})
+		let best, worst
 		for (let i=0; i<this.state.simulations; i++){
 			if(i%(this.state.simulations/100) == 0){
 				let progress = Math.round((i/this.state.simulations) * 100)
@@ -319,15 +320,15 @@ class Osrs extends React.Component {
 				items.push(x.length)		
 			}
 
-			if (!this.state.bestRewards || x[x.length-1].kc < this.state.bestRewards[this.state.bestRewards.length-1].kc) {
-				this.setState({bestRewards: x})
+			if (!best || x[x.length-1].kc < best[best.length-1].kc) {
+				best = x
 			}
-			if (!this.state.worstRewards || x[x.length-1].kc > this.state.worstRewards[this.state.worstRewards.length-1].kc) {
-				this.setState({worstRewards: x})
+			if (!worst || x[x.length-1].kc > worst[worst.length-1].kc) {
+				worst = x
 			}
 		}
 
-		this.setState({progress: 100})
+		this.setState({progress: 100, bestRewards: best, worstRewards: worst})
 
 		if (skipGraph){
 			return;
@@ -567,7 +568,7 @@ class Osrs extends React.Component {
 			      </div>
 			    </div>
 			  : null }
-			  {this.state.bestRewards && 
+			  {this.state.progress > 0 && 
 			  	<span>
 			  		 { this.state.progress > 0 && <div style= {{'margin-left': '20px'}}> {this.state.progress}% done </div> }
 		  			<button style={{'margin': '5px'}} onClick={() => this.showPlotData('best')}> Show best simulation. </button>
