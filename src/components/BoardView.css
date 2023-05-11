@@ -10,6 +10,7 @@
   display: flex;
   flex-flow: column;
   height: 100%;
+  overflow: hidden;
 }
 
 .flex-wrapper-create .top-bar {
