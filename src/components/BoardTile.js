@@ -42,7 +42,7 @@ class BoardTile extends React.Component {
 			<span className={`tile-wrapper ${!completeStyle && checked ? 'green-bg' : ''}`}>
 				{checked && completeStyle && !this.props.bare &&
 					<img 
-						style={{'position': 'absolute', 'zIndex': '100'}} 
+						style={{'position': 'absolute', 'zIndex': '100', 'maxHeight': '100%', 'maxWidth': '100%'}} 
 						src="data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='red' stroke-width='3'/><path d='M0 0 L100 100 ' stroke='red' stroke-width='3'/></svg>"
 						onClick={this.openModal} 
 					/>
