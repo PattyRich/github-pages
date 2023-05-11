@@ -29,6 +29,7 @@ class BoardTile extends React.Component {
   	return (
 			<>
 			<OverlayTrigger
+				transition={false}
 				placement={'top'}
 				overlay={
 					this.props.info && this.props.info.title ?
