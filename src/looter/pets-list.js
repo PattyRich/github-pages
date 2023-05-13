@@ -1,6 +1,6 @@
 export let data = {
   Skilling: [
-    'Abyssal Protector',
+    'Abyssal protector',
     'Baby chinchompa',
     'Beaver',
     'Giant squirrel',
