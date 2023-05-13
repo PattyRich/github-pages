@@ -32,6 +32,9 @@ class App extends React.Component {
                 <Link to="/bingo-draft">Bingo Draft</Link>
                 </li>   
                 <li>
+                <Link to="/pets">Create a Picture for Your Current Pets</Link>
+                </li>   
+                <li>
                 <a target="_blank" href="https://github.com/PattyRich/github-pages"> repo this comes from </a>
               	</li>
               </ul>

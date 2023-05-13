@@ -1,0 +1,124 @@
+.pet-info {
+  width: 30%;
+  display: flex;
+}
+
+.pet-container {
+  display: flex;
+  width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.pet-image-container {
+  height: 40px;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pet-kc-input-container {
+  margin: 0px 10px;
+}
+
+.pet-kc-input{
+  width: 130px;
+}
+
+.pet-image {
+  max-width: 40px;
+  max-height: 40px;
+}
+
+.pet-image-ofc {
+  max-width: 65px;
+  max-height: 65px;
+}
+
+
+.pet-image-container-ofc {
+  height: 65px;
+  width: 65px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+input {
+  margin: 0px 5px;
+}
+
+.pet-preview {
+  /* background-image: url(/public/assets/backgrounds/black.jpg); */
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  display: flex;
+  flex-direction: column;
+}
+
+.pet-center-info{
+  color: #FFFF00;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  height: 100%;
+}
+
+.pet-name {
+  font-size: 60px;
+}
+
+.pet-individual {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: rgb(120, 120, 120);
+  text-shadow: 2px 2px 2px black;
+}
+
+.pets-left {
+  float: left;
+ width: 35%;
+}
+
+.pets-right {
+  float: right;
+  width: 35%;
+}
+
+.pets-middle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.pet-section-header {
+  color: rgb(120, 120, 120);
+  justify-content: center;
+  align-items: center;
+  font-family: osrsFont;
+  display: flex;
+  font-size: 25px;
+  text-shadow: 2px 2px 2px black;
+}
+
+.pet-section {
+  display: flex;
+  flex-direction: column;
+}
+
+.pet-section-pets {
+  justify-content: center;
+  align-items: center;
+  display: flex;
+}
+
+.pet-buttons {
+  justify-content: center;
+  display: flex;
+  margin: 3px;
+}
