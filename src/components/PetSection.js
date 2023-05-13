@@ -18,7 +18,7 @@ class PetSection extends React.Component {
             {this.props.pets.map((pet, i) => {
               let petData = this.props.petInfo.find(petFind => petFind.name === pet)
               return (
-                <div className='pet-individual' style={{filter: petData.obtained ? 'brightness(100%)': 'brightness(60%)'}}>
+                <div className='pet-individual' style={{filter: petData.obtained ? 'brightness(100%)': 'brightness(40%)'}}>
                   <div className="pet-image-container-ofc">   
                     <img className='pet-image-ofc' src={`${process.env.PUBLIC_URL}/assets/detailed_pets/${pet}.png`} />
                   </div >
