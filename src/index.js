@@ -9,6 +9,7 @@ import BoardView from './components/BoardView'
 import reportWebVitals from './reportWebVitals';
 import BingoDraft from './routes/BingoDraft';
 import ToaFlip from './routes/ToaFlip';
+import Pets from './routes/Pets';
 import { HashRouter, Routes, Route } from "react-router-dom";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -33,6 +34,8 @@ root.render(
   			<Route path="/github-pages/bingo/:boardName" element={<BoardView />} />
 				<Route path="/bingo-draft" element={<BingoDraft />} />
   			<Route path="/github-pages/bingo-draft" element={<BingoDraft />} />				
+				<Route path="/pets" element={<Pets />} />
+  			<Route path="/github-pages/pets" element={<Pets />} />			
   			<Route
 		      path="*"
 		      element={
