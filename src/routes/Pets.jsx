@@ -89,6 +89,9 @@ class Pets extends React.Component {
   changeKc(i, val) {
     let pets =  [...this.state.petInfo];
     pets[i].kc = val;
+    if (val !== '' && val !== '-') {
+      pets[i].obtained = true;
+    }
     this.setState({petInfo: pets});
   }
   
