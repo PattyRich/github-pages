@@ -1,4 +1,5 @@
 import {completion} from './completion'
+import { cluesLvl } from '../routes/osrs';
 
 const teamActivites = ['nex', 'tob']
 
@@ -10,6 +11,12 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 		if (place === 'create') {
 			place = 'cg'
 			create = true
+		}
+
+		let clues = false
+		if (place === 'clues') {
+			place = 'cg'
+			clues = true
 		}
 
 		import('./' + place)
@@ -39,6 +46,27 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 								console.log(err)
 							}
 						}
+					})
+				}
+
+				let clueType = null;
+				if (clues) {
+					clueType = options.clue
+					data = {name: 'clues', items: []}
+					if (!options.cluesData){
+						return;
+					}
+					options.cluesData[options.clue].sobj.forEach((item)=> {
+						let itemJson =  JSON.parse(item.data[0].dataitem[0].item);
+						if (['Always', 'Common'].includes(itemJson['Rarity'])) {
+							return;
+						}
+						let evall = eval(itemJson['Rarity'].replace(',',''));
+						//slightly more common that beginner rares to weed out common items
+						if (evall > .0028) {
+							return;
+						}
+						data.items.push({name: itemJson['Dropped item'], rate: evall})
 					})
 				}
 
@@ -88,7 +116,7 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 				if (options.runCompletion){
 					resolve(completion(data))
 				}
-				resolve(looter(rolls, data))
+				resolve(looter(rolls, data, clueType))
 			})
 	});
 }
@@ -98,12 +126,17 @@ function random_generator(max, min) {
 	return Math.random() * (max - min) + min
 }
 
+function randomIntFromInterval(max, min) { // min and max included 
+  return Math.floor(Math.random() * (max - min + 1) + min)
+}
+
 function getRandomInt(max) {
   return Math.floor(Math.random() * max) + 1;
 }
 
 
-function looter(rolls, data) {
+function looter(rolls, data, clueType) {
+	console.log(data)
 	let rewards = []
 	let finish = rolls === 'f'
 	let checkList = []
@@ -122,9 +155,6 @@ function looter(rolls, data) {
 		checkList.push(0)
 	}
 
-	// if(data.name === 'cg') {
-	// 	checkList[2] -= 1
-	// }
 
 	for (let i=0; i<rolls; i++) {
 
@@ -140,6 +170,13 @@ function looter(rolls, data) {
 			rollItemAdHoc(i, data.cms)	
 		}
 
+		if (clueType){
+			let numRolls = getClueMultiRolls(clueType)
+			for (let j=1; j<numRolls; j++) {
+				rollItemAdHoc(i, data.items, true)
+			}
+		}
+
 		rollPet(i)
 		if (finish) {
 			if (!checkList.some(item => item <= 0)){
@@ -151,7 +188,7 @@ function looter(rolls, data) {
 	return rewards
 
 
-	function rollItemAdHoc(kc, items){
+	function rollItemAdHoc(kc, items, checkListBool = false){
 		let rng = Math.random()
 		//they got loot
 		let weight = 0
@@ -166,10 +203,16 @@ function looter(rolls, data) {
 			for (let j=0; j<items.length; j++) {	
 				cnt += items[j].rate
 				if (cnt >= item_per) {
+					if (items[j].name === 'Bloodhound') {
+						return;
+					}
 					rewards.push({
 						kc: kc+1,
 						name: items[j].name
 					})
+					if (checkListBool) {
+						checkList[j] += 1
+					}
 					break
 				}
 			}
@@ -225,3 +268,23 @@ function looter(rolls, data) {
 	}
 }
 
+function getClueMultiRolls (clueType) {
+	if (clueType === cluesLvl[0]) {
+		return randomIntFromInterval(3,1)
+	}
+	if (clueType === cluesLvl[1]) {
+		return randomIntFromInterval(4,2)
+	}
+	if (clueType === cluesLvl[2]) {
+		return randomIntFromInterval(5,3)
+	}
+	if (clueType === cluesLvl[3]) {
+		return randomIntFromInterval(6,4)
+	}
+	if (clueType === cluesLvl[4]) {
+		return randomIntFromInterval(6,4)
+	}
+	if (clueType === cluesLvl[5]) {
+		return randomIntFromInterval(7,5)
+	}
+}

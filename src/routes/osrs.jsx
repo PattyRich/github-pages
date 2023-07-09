@@ -6,6 +6,10 @@ import { totalLooter} from '../looter/totalLooter'
 import TotalLoot from '../components/TotalLoot'
 import Plotly from 'plotly.js-dist-min'
 
+export const cluesLvl = ['beginner', 'easy', 'medium', 'hard', 'elite', 'master'];
+const cluesData = {}
+cluesLvl.forEach((lvl)=> cluesData[lvl] = null)
+
 class Osrs extends React.Component {
   constructor() {
     super();
@@ -31,6 +35,8 @@ class Osrs extends React.Component {
       invocation: 300,
       worstRewards: null,
       bestRewards: null,
+			clue: 'beginner',
+			hovering: -1,
       createData: {
       	bossName: 'Name me',
       	numItems: 1,
@@ -80,6 +86,10 @@ class Osrs extends React.Component {
   	this.completion(event.target.value)
 		//this.addIcons(event.target.value)
   }
+
+	hoverHandler(bool) {
+		this.setState({hovering: bool})
+	}
 
   saveBoss(){
   	let index = this.state.bosses.findIndex(x => x.bossName === this.state.createData.bossName)
@@ -255,13 +265,19 @@ class Osrs extends React.Component {
 	  	}
   }
 
-  simulate(){
+	async getClueData(type){
+		const response = await fetch(`https://oldschool.runescape.wiki/w/Special:Browse?article=Reward_casket_(${type})&format=json`);
+		const data = await response.json();
+		cluesData[type] = data;
+	}
+
+  async simulate(){
   	if (this.interval){
   		clearInterval(this.interval)
   	}
 	  let num = Number(this.state.rolls)
-		if (num>100){
-			num = 100
+		if (num>1000){
+			num = 1000
 		}
   	this.setState({'rewardList': [], 'rewardCount': 0, 'rewardCountConst': num})
   	this.interval = setInterval(async ()=>{
@@ -277,23 +293,26 @@ class Osrs extends React.Component {
   async go(){
   	let rewards = []
 
-  	//this.addIcons(this.state.mode)
+		if (this.state.mode === 'clues') {
+			if (!cluesData[this.state.clue]) {
+				await this.getClueData(this.state.clue);
+			}
+		}
 
-  	if (this.state.fullRewards) {
-  		try {
-  			let bossName = bossHelper(this.state.mode)
-  			const response = await fetch(`https://api.osrsbox.com/monsters?where={ "name": "${bossName}", "duplicate": false }`);
-  			const data = await response.json();	
-  			//this.addIcons(this.state.mode, data._items[0].drops)	
-  			let loot = totalLooter(data._items[0].drops || null, this.state.rolls)
-  			this.setState({'fullLootRewards': loot})
-  		} catch(err) {
-
-  		}	
-  	} else {
-  		rewards = await this.lootFunction(this.state.rolls, this.state.mode, this.state)
-			this.setState({'rewards': rewards})		
-  	}
+		rewards = await this.lootFunction(this.state.rolls, this.state.mode, this.state)
+		if (this.state.mode === 'clues') {
+			let rewardsCleaned = []
+			rewards.forEach((reward)=> {
+				let index = rewardsCleaned.findIndex((item) => {return item.name === reward.name})
+				if (index < 0){
+					rewardsCleaned.push({...reward, quantity: 1})
+				} else {
+					rewardsCleaned[index].quantity +=1
+				}
+			})
+			rewards = rewardsCleaned
+		}
+		this.setState({'rewards': rewards})		
 
   	if (rewards && rewards.length === 0) {
   		this.setState({'nothingCounter': this.state.nothingCounter + 1})
@@ -384,11 +403,11 @@ class Osrs extends React.Component {
   	}
 
   	if (num && rolls) {
-  		return loot(num, place, options)
+  		return loot(num, place, {...options, cluesData})
   	} else if (num === 0) {
-  		return loot('f', place, options)
+  		return loot('f', place, {...options, cluesData})
   	} else {
-  		return loot(rolls, place, options)
+  		return loot(rolls, place, {...options, cluesData})
   	}
   }
 
@@ -426,7 +445,7 @@ class Osrs extends React.Component {
 		        <input type="radio" value="cg" name="" checked={this.state.mode === 'cg'} onChange={this.onChangeValue} /> Corrupted Gauntlet
 			    <input type="radio" value="corp" name="" checked={this.state.mode === 'corp'} onChange={this.onChangeValue} /> Corp
 		      	<input type="radio" value="pnm" name="" checked={this.state.mode === 'pnm'} onChange={this.onChangeValue} /> Phosani's Nightmare
-				<input type="radio" value="nex" name="" checked={this.state.mode === 'nex'} onChange={this.onChangeValue} /> Nex
+					<input type="radio" value="nex" name="" checked={this.state.mode === 'nex'} onChange={this.onChangeValue} /> Nex
 		      	<input type="radio" value="zulrah" name="" checked={this.state.mode === 'zulrah'} onChange={this.onChangeValue} /> Zulrah
 		  		<input type="radio" value="vorkath" name="" checked={this.state.mode === 'vorkath'} onChange={this.onChangeValue} /> Vorkath
 		    	<input type="radio" value="arma" name="" checked={this.state.mode === 'arma'} onChange={this.onChangeValue} /> Arma
@@ -434,8 +453,18 @@ class Osrs extends React.Component {
 		    	<input type="radio" value="sara" name="" checked={this.state.mode === 'sara'} onChange={this.onChangeValue} /> Sara
 		    	<input type="radio" value="zammy" name="" checked={this.state.mode === 'zammy'} onChange={this.onChangeValue} /> Zammy
 		    	<input type="radio" value="create" name="" checked={this.state.mode === 'create'} onChange={this.onChangeValue} /> Create Your Own Boss
-
+					<input type="radio" value="clues" name="" checked={this.state.mode === 'clues'} onChange={this.onChangeValue} /> Clues
 		      </div>
+					<div>
+						{this.state.mode === 'clues' &&
+						 cluesLvl.map((clue, i) => {
+							return (<>
+								<input type="radio" value={cluesLvl[i]} name="" checked={this.state.clue === cluesLvl[i]} onChange={(e) => this.onChangeValueInput('clue', e)} />
+								{capitalizeFirstLetter(clue)}
+								</>
+							)})
+						}
+					</div>
 		      {this.state.mode === 'create' ? 
 			      <div style={{'margin': '30px'}}>
 			      	<div style={{'padding': '10px', 'margin': '10px 0px', 'border' : 'solid black 2px'}}>
@@ -479,16 +508,19 @@ class Osrs extends React.Component {
 			    	</div> : null }
 		      <label>Number of rolls (f or nothing for completion) </label>
 	  			<input type="text" value={this.state.rolls} onChange={(e) => this.onChangeValueInput('rolls', e)}/>
-			 { ['nex', 'tob'].includes(this.state.mode) && 
-				<span>
-			  		&nbsp; <label> Team size </label>
-	  				<input type="text" value={this.state.teamSize} onChange={(e) => this.onChangeValueInput('teamSize', e)}/>
-			 	</span>
-			 }
-		      <br/>
-		      Include pet for completion? <input type="checkbox" onChange={()=>{ this.setState({pets: !this.state.pets}); this.clearData(); } } checked={this.state.pets}/> 
-		      <br/>
-		      {/*Simulate total rewards instead of uniques? (note this won't work for raids yet && requires a roll amount) <input type="checkbox" onChange={()=> { this.setState({fullRewards: !this.state.fullRewards}); this.clearData();} } checked={this.state.fullRewards}/>*/} 
+					{ ['nex', 'tob'].includes(this.state.mode) && 
+						<span>
+								&nbsp; <label> Team size </label>
+								<input type="text" value={this.state.teamSize} onChange={(e) => this.onChangeValueInput('teamSize', e)}/>
+						</span>
+					}
+					{this.state.mode !== 'clues' &&
+						<>
+						<br/>
+						Include pet for completion? <input type="checkbox" onChange={()=>{ this.setState({pets: !this.state.pets}); this.clearData(); } } checked={this.state.pets}/> 
+						<br/>
+						</>
+					}
 		      { this.state.mode === 'cox' ?
 			      <span>
 				     	<label>Number of cox points per raid </label>
@@ -505,7 +537,7 @@ class Osrs extends React.Component {
 		      <br/>
 		      <button onClick={this.go}> Go! </button>
 		       &nbsp; or 
-		      <button style={{margin: "10px"}} onClick={() => this.simulate()}> Simulate daily raids. (must be rolls &lt;= 100) </button>
+		      <button style={{margin: "10px"}} onClick={() => this.simulate()}> Simulate daily kc. (must be rolls &lt;= 1000) </button>
 		      {	this.state.rewardList.length ? 
 		      	<button style={{background: '#c90c1c'}} onClick={this.stopInterval}> Stop </button>
 		      : null }
@@ -523,18 +555,20 @@ class Osrs extends React.Component {
 	  			<button onClick={() => this.graphSimulation()}> Plot. </button>
 	  			<button onClick={() => this.graphSimulation(true)}> Sim without graph. </button>
 		      <div className="items">
-		      	{this.state.rewards ? this.state.rewards.map(item => {
+		      	{this.state.rewards ? this.state.rewards.map((item, i) => {
 		       		return (
-		       			<div className="item">
+		       			<div className="item"
+								 onMouseEnter={()=>this.hoverHandler(i)}
+								 onMouseLeave={()=>this.hoverHandler(-1)}
+								>
 		       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
-		       					<img src={this.imageSrc(`${item.name}.png`)} title={item.name} alt={item.name}></img>
+		       					<img src={this.imageSrc(`${item.name}.png`)} title={item.name} alt={item.name}/>
 		       				</a>
-		       				{item.kc}
+										{this.state.hovering === i && this.state.mode == 'clues' ? `${item.kc}(${item.quantity})` : item.kc}
 		       			</div>
 		       		)
 		      	}) : null}
 		      	{this.state.rewards && this.state.rewards.length === 0 ? 'Nothing x' + this.state.nothingCounter : null}
-		      	{this.state.fullRewards ? <TotalLoot icons={this.state.icons} loot={this.state.fullLootRewards}/> : null}
 		      </div>
 		    </div>
 		    { this.state.rewardList.length ? 
@@ -625,4 +659,8 @@ function importAll(r) {
   let images = {};
   r.keys().map((item, index) => { images[item.replace('./', '')] = r(item); });
   return images;
+}
+
+function capitalizeFirstLetter(string) {
+	return string.charAt(0).toUpperCase() + string.slice(1);
 }
