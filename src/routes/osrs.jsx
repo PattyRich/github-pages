@@ -300,18 +300,6 @@ class Osrs extends React.Component {
 		}
 
 		rewards = await this.lootFunction(this.state.rolls, this.state.mode, this.state)
-		if (this.state.mode === 'clues') {
-			let rewardsCleaned = []
-			rewards.forEach((reward)=> {
-				let index = rewardsCleaned.findIndex((item) => {return item.name === reward.name})
-				if (index < 0){
-					rewardsCleaned.push({...reward, quantity: 1})
-				} else {
-					rewardsCleaned[index].quantity +=1
-				}
-			})
-			rewards = rewardsCleaned
-		}
 		this.setState({'rewards': rewards})		
 
   	if (rewards && rewards.length === 0) {
@@ -562,7 +550,12 @@ class Osrs extends React.Component {
 								 onMouseLeave={()=>this.hoverHandler(-1)}
 								>
 		       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
-		       					<img src={this.imageSrc(`${item.name}.png`)} title={item.name} alt={item.name}/>
+		       					<img src={this.imageSrc(`${item.name}.png`)} title={item.name} alt={item.name}
+										  onError={({ currentTarget }) => {
+												currentTarget.onerror = null; // prevents looping
+												currentTarget.src=this.imageSrc('Lumbridge_Guide_icon.png');
+											}}
+										/>
 		       				</a>
 										{this.state.hovering === i && this.state.mode == 'clues' ? `${item.kc}(${item.quantity})` : item.kc}
 		       			</div>

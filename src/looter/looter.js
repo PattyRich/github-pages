@@ -184,7 +184,10 @@ function looter(rolls, data, clueType) {
 			}
 		}
 	}
-
+	
+	if (clueType) {
+		return cleanClueRewards(rewards);
+	}
 	return rewards
 
 
@@ -287,4 +290,17 @@ function getClueMultiRolls (clueType) {
 	if (clueType === cluesLvl[5]) {
 		return randomIntFromInterval(7,5)
 	}
+}
+
+function cleanClueRewards(rewards) {
+	let rewardsCleaned = []
+	rewards.forEach((reward)=> {
+		let index = rewardsCleaned.findIndex((item) => {return item.name === reward.name})
+		if (index < 0){
+			rewardsCleaned.push({...reward, quantity: 1})
+		} else {
+			rewardsCleaned[index].quantity +=1
+		}
+	})
+	return rewardsCleaned;
 }
