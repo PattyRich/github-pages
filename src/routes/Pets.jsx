@@ -4,8 +4,7 @@ import './Pets.css'
 import {data} from '../looter/pets-list';
 import PetSection from '../components/PetSection';
 
-//import { toPng } from 'html-to-image';
-import html2canvas from 'html2canvas'
+import { toPng } from 'html-to-image';
 
 let backgrounds = ['black', 'black2', 'black3', 'black5', 'purple1'];
 //https://oldschool.runescape.wiki/images/thumb/Rocky_(follower).png/560px-Rocky_(follower).png
@@ -50,27 +49,19 @@ class Pets extends React.Component {
     }
   }
 
-  download() {
+  download() {   
+    var node = document.getElementById('pet-preview');
 
-    html2canvas(document.getElementById('pet-preview')).then(function(canvas) {
-      var link = document.createElement('a');
-      link.download = 'pets.png';
-      link.href = canvas.toDataURL()
-      link.click();
-    });
-        
-    // var node = document.getElementById('pet-preview');
-
-    // toPng(node)
-    //   .then(function (dataUrl) {
-    //     var download = document.createElement('a');
-    //     download.href = dataUrl;
-    //     download.download = 'pets.png';
-    //     download.click();
-    //   })
-    //   .catch(function (error) {
-    //     console.error('oops, something went wrong!', error);
-    //   });
+    toPng(node)
+      .then(function (dataUrl) {
+        var download = document.createElement('a');
+        download.href = dataUrl;
+        download.download = 'pets.png';
+        download.click();
+      })
+      .catch(function (error) {
+        console.error('oops, something went wrong!', error);
+      });
   }
 
   changeInput(stateName, val){
@@ -134,7 +125,7 @@ class Pets extends React.Component {
       })}
       </div>
       <br/>
-      The download button is going to give you an image exactly how the image below looks on your browser, so increase and decrease your window size to get it exacatly how you want it.
+      The download button is going to give you an image exactly how the image below looks on your browser, so increase and decrease your window size to get it exacatly how you want it. You may need to disable chrome extensions like darkreader for this to load everything correctly.
       <div className='pet-buttons'> 
         <button style={{'marginRight': '5px'}} onClick={this.switchBackground}> Switch Background </button>
         <button onClick={this.download}>Download</button>
