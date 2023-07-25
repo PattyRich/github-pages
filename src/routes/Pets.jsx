@@ -49,7 +49,7 @@ class Pets extends React.Component {
     }
   }
 
-  download() {
+  download() {   
     var node = document.getElementById('pet-preview');
 
     toPng(node)
@@ -125,7 +125,7 @@ class Pets extends React.Component {
       })}
       </div>
       <br/>
-      The download button is going to give you an image exactly how the image below looks on your browser, so increase and decrease your window size to get it exacatly how you want it.
+      The download button is going to give you an image exactly how the image below looks on your browser, so increase and decrease your window size to get it exacatly how you want it. You may need to disable chrome extensions like darkreader for this to load everything correctly.
       <div className='pet-buttons'> 
         <button style={{'marginRight': '5px'}} onClick={this.switchBackground}> Switch Background </button>
         <button onClick={this.download}>Download</button>

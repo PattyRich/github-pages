@@ -38,5 +38,5 @@
 
 @font-face {
   font-family: 'osrsFont';
-  src: local('osrsFont'), url('../fonts/osrs.ttf') format('truetype');
+  src: local('osrsFont'), url('../../public/assets/fonts/osrs.ttf') format('truetype');
 }
