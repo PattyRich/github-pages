@@ -4,7 +4,8 @@ import './Pets.css'
 import {data} from '../looter/pets-list';
 import PetSection from '../components/PetSection';
 
-import { toPng } from 'html-to-image';
+//import { toPng } from 'html-to-image';
+import html2canvas from 'html2canvas'
 
 let backgrounds = ['black', 'black2', 'black3', 'black5', 'purple1'];
 //https://oldschool.runescape.wiki/images/thumb/Rocky_(follower).png/560px-Rocky_(follower).png
@@ -50,18 +51,26 @@ class Pets extends React.Component {
   }
 
   download() {
-    var node = document.getElementById('pet-preview');
 
-    toPng(node)
-      .then(function (dataUrl) {
-        var download = document.createElement('a');
-        download.href = dataUrl;
-        download.download = 'pets.png';
-        download.click();
-      })
-      .catch(function (error) {
-        console.error('oops, something went wrong!', error);
-      });
+    html2canvas(document.getElementById('pet-preview')).then(function(canvas) {
+      var link = document.createElement('a');
+      link.download = 'pets.png';
+      link.href = canvas.toDataURL()
+      link.click();
+    });
+        
+    // var node = document.getElementById('pet-preview');
+
+    // toPng(node)
+    //   .then(function (dataUrl) {
+    //     var download = document.createElement('a');
+    //     download.href = dataUrl;
+    //     download.download = 'pets.png';
+    //     download.click();
+    //   })
+    //   .catch(function (error) {
+    //     console.error('oops, something went wrong!', error);
+    //   });
   }
 
   changeInput(stateName, val){
