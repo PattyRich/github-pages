@@ -246,8 +246,8 @@ class Osrs extends React.Component {
 							if (!process.env.NODE_ENV || process.env.NODE_ENV === 'development') {
 							    // dev code
 							    try{
-							    	  console.log(`localhost:8080/${encodeURI(name)}`)
-											const response = await fetch(`http://localhost:8080/${encodeURI(name)}`, {
+							    	  console.log(`localhost:5000/${encodeURI(name)}`)
+											const response = await fetch(`http://localhost:5000/${encodeURI(name)}`, {
 												mode: 'no-cors' // 'cors' by default
 											  });
 											console.log(`Added item ${name} to public assets folder. (should see on refresh)`)					    	
@@ -291,6 +291,7 @@ class Osrs extends React.Component {
   }
 
   async go(){
+		//this.addIcons(this.state.mode);
   	let rewards = []
 
 		if (this.state.mode === 'clues') {
@@ -386,7 +387,7 @@ class Osrs extends React.Component {
 
   	if (this.state.mode === 'create') {
   		//these have to be run late on create since we won't know them ahead of time
-  		//this.addIcons(this.state.mode)
+  		// this.addIcons(this.state.mode)
   		this.completion()
   	}
 
@@ -440,6 +441,10 @@ class Osrs extends React.Component {
 		    	<input type="radio" value="bandos" name="" checked={this.state.mode === 'bandos'} onChange={this.onChangeValue} /> Bandos
 		    	<input type="radio" value="sara" name="" checked={this.state.mode === 'sara'} onChange={this.onChangeValue} /> Sara
 		    	<input type="radio" value="zammy" name="" checked={this.state.mode === 'zammy'} onChange={this.onChangeValue} /> Zammy
+					<input type="radio" value="duke" name="" checked={this.state.mode === 'duke'} onChange={this.onChangeValue} /> Duke
+					<input type="radio" value="leviathan" name="" checked={this.state.mode === 'leviathan'} onChange={this.onChangeValue} /> Leviathan
+					<input type="radio" value="vardorvis" name="" checked={this.state.mode === 'vardorvis'} onChange={this.onChangeValue} /> Vardorvis
+					<input type="radio" value="whisperer" name="" checked={this.state.mode === 'whisperer'} onChange={this.onChangeValue} /> Whisperer
 		    	<input type="radio" value="create" name="" checked={this.state.mode === 'create'} onChange={this.onChangeValue} /> Create Your Own Boss
 					<input type="radio" value="clues" name="" checked={this.state.mode === 'clues'} onChange={this.onChangeValue} /> Clues
 		      </div>

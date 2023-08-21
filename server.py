@@ -2,7 +2,6 @@
 from http.server import BaseHTTPRequestHandler, HTTPServer
 import time
 
-from osrsbox import items_api
 import sys
 import base64
 import urllib.parse
@@ -10,7 +9,7 @@ import json
 
 
 hostName = "localhost"
-serverPort = 8080
+serverPort = 5000
 
 class MyServer(BaseHTTPRequestHandler):
     def do_GET(self):

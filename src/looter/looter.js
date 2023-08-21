@@ -155,6 +155,11 @@ function looter(rolls, data, clueType) {
 		checkList.push(0)
 	}
 
+	let dt2 = 0;
+	let dt2Check = false;
+	if (['duke', 'vardorvis', 'leviathan', 'whisperer'].includes(data.name)) {
+		dt2Check = true;
+	}
 
 	for (let i=0; i<rolls; i++) {
 
@@ -233,6 +238,16 @@ function looter(rolls, data, clueType) {
 			for (let j=0; j<data.items.length; j++) {	
 				cnt += data.items[j].rate
 				if (cnt >= item_per) {
+					if (dt2Check) {
+						if (data.items[j].name.includes('vestige')) {
+							dt2 +=1
+							if (dt2 > 2) {
+								dt2=0
+							} else {
+								return
+							}
+						}
+					}
 					rewards.push({
 						kc: kcc+1,
 						name: data.items[j].name
