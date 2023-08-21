@@ -22,7 +22,7 @@ class Pets extends React.Component {
     this.state = {
       petInfo: petData,
       name: 'Cool Player',
-      info:'(13/52)',
+      info:'(13/56)',
       background: 0
     }
     this.toggleCheck = this.toggleCheck.bind(this);
