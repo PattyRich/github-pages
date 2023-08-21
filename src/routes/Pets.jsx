@@ -22,7 +22,7 @@ class Pets extends React.Component {
     this.state = {
       petInfo: petData,
       name: 'Cool Player',
-      info:'(13/52)',
+      info:'(13/56)',
       background: 0
     }
     this.toggleCheck = this.toggleCheck.bind(this);
@@ -135,8 +135,13 @@ class Pets extends React.Component {
         <PetSection petInfo={this.state.petInfo} pets={data['Raids']} section='Raids'/>
         <PetSection petInfo={this.state.petInfo} pets={data['Bosses']} section='Bosses'/>
         <div className='pets-middle'>
-          <div className='pets-left'>
-           <PetSection petInfo={this.state.petInfo} pets={data['Slayer']} section='Slayer'/>
+          <div className='left-container'>
+            <div className='pets-left'>
+            <PetSection petInfo={this.state.petInfo} pets={data['Slayer']} section='Slayer'/>
+            </div>
+            <div className='pets-left'>
+            <PetSection petInfo={this.state.petInfo} pets={data['DT2']} section='DT 2'/>
+            </div>
           </div>
           <div className='pet-center-info' style={{fontFamily: 'osrsFont'}}>
             <h4 className='pet-name'>{this.state.name}</h4>

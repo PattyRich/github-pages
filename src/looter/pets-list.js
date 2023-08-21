@@ -65,5 +65,11 @@ export let data = {
     'Chompy chick',
     'Lil\' creator',
     'Pet penance queen'
+  ],
+  DT2: [
+    'Lil\'viathan',
+    'Wisp',
+    'Butch',
+    'Baron'
   ]
 }
