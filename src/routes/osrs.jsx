@@ -7,6 +7,7 @@ import TotalLoot from '../components/TotalLoot'
 import Plotly from 'plotly.js-dist-min'
 
 export const cluesLvl = ['beginner', 'easy', 'medium', 'hard', 'elite', 'master'];
+let failedImages = [];
 const cluesData = {}
 cluesLvl.forEach((lvl)=> cluesData[lvl] = null)
 
@@ -407,10 +408,16 @@ class Osrs extends React.Component {
 	}
 
 	imageSrc(name) {
-		return this.state.availableItems.includes(name) ?
-			`${process.env.PUBLIC_URL}/assets/${name}`
-			:
-			`https://oldschool.runescape.wiki/images/${name.replaceAll(' ', '_')}`
+		name = this.state.availableItems.includes(name) ?
+		`${process.env.PUBLIC_URL}/assets/${name}`
+		:
+		`https://oldschool.runescape.wiki/images/${name.replaceAll(' ', '_')}`;
+
+		if (!failedImages.includes(name)){
+			return name
+		} else {
+			return 'Lumbridge_Guide_icon.png'
+		}
 	}
 
   stopInterval(){
@@ -557,6 +564,9 @@ class Osrs extends React.Component {
 		       				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
 		       					<img src={this.imageSrc(`${item.name}.png`)} title={item.name} alt={item.name}
 										  onError={({ currentTarget }) => {
+												if(failedImages.indexOf(currentTarget.src) === -1) {
+													failedImages.push(currentTarget.src)
+												}
 												currentTarget.onerror = null; // prevents looping
 												currentTarget.src=this.imageSrc('Lumbridge_Guide_icon.png');
 											}}

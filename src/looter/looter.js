@@ -85,6 +85,24 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 				//in those cases the weight doesn't have to equal a 1/blah fraction
 				//but if we are using a 1/blah we'll know the chance cause we can just sum them
 				if(!data.chance){
+					if (options.runCompletion) {
+						//remove extra items from completion calc
+						let dataClean = [...data.items]
+						dataClean = dataClean.filter((item)=>{
+							return !item.extra
+						})
+						data.items = dataClean
+
+						//add 2 more vestige drops if dt2
+						let vestige = data.items.find((item)=> {
+							return item.name.includes('vestige');
+						});
+					
+						if (vestige) {
+							data.items.push(vestige);
+							data.items.push(vestige);
+						}
+					}
 					//toa uses an equation for rate fit since the calculations are too confusing otherwise.
 					//i got this equation by plotting calculator data in wolfram 
 					if (data.eq) {
@@ -115,6 +133,7 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 
 				if (options.runCompletion){
 					resolve(completion(data))
+					return;
 				}
 				resolve(looter(rolls, data, clueType))
 			})
@@ -141,6 +160,10 @@ function looter(rolls, data, clueType) {
 	let finish = rolls === 'f'
 	let checkList = []
 
+	data.items.sort((item1)=> {
+		return item1.extra === true ? 1 : -1
+	});
+
 	if (finish) {
 		rolls = 1000000
 	}
@@ -148,7 +171,9 @@ function looter(rolls, data, clueType) {
 	let itemWeights = 0
 	data.items.forEach(item => {
 		itemWeights += item.rate
-		checkList.push(0)
+		if(!item.extra){
+			checkList.push(0)
+		}
 	})
 
 	if (data.pet && data.pet.getPet){
@@ -252,7 +277,9 @@ function looter(rolls, data, clueType) {
 						kc: kcc+1,
 						name: data.items[j].name
 					})
-					checkList[j] += 1
+					if (!data.items[j].extra){
+						checkList[j] += 1
+					}
 					break
 				}
 			}

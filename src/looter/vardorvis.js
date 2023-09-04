@@ -15,15 +15,18 @@ export let data = {
 		},
 		{
 			name: 'Virtus mask',
-			rate: 1/3264
+			rate: 1/3264,
+			extra: true
 		},
 		{
 			name: 'Virtus robe top',
-			rate: 1/3264
+			rate: 1/3264,
+			extra: true
 		},
 		{
 			name: 'Virtus robe bottom',
-			rate: 1/3264
+			rate: 1/3264,
+			extra: true
 		}
 	],
 	pet:{
