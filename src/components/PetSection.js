@@ -1,5 +1,7 @@
 import React from 'react';
 
+const wrap = ['Slayer', 'Wilderness'];
+
 class PetSection extends React.Component {
   constructor(props) {
     super(props);
@@ -14,7 +16,7 @@ class PetSection extends React.Component {
           <div className='pet-section-header'>
            {this.props.section}
           </div>
-          <div style={this.props.section === 'Slayer' ? {'flexWrap': 'wrap' , 'alignSelf': 'center', 'width': '80%'}: {}} className='pet-section-pets'>
+          <div style={wrap.includes(this.props.section) ? {'flexWrap': 'wrap' , 'alignSelf': 'center', 'width': '80%'}: {}} className='pet-section-pets'>
             {this.props.pets.map((pet, i) => {
               let petData = this.props.petInfo.find(petFind => petFind.name === pet)
               return (

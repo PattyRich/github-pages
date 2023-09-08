@@ -147,9 +147,13 @@ class Pets extends React.Component {
             <h4 className='pet-name'>{this.state.name}</h4>
             {this.state.info}
           </div>
-          <div className='pets-right'>
-            <PetSection petInfo={this.state.petInfo} pets={data['GodWars']} section='GodWars'/>
-            <PetSection petInfo={this.state.petInfo} pets={data['Wilderness']} section='Wilderness'/>
+          <div className='right-container'>
+            <div className='pets-right'>
+              <PetSection petInfo={this.state.petInfo} pets={data['Wilderness']} section='Wilderness'/>
+            </div>
+            <div className='pets-right'>
+              <PetSection petInfo={this.state.petInfo} pets={data['GodWars']} section='GodWars'/>
+            </div>
           </div>
         </div>
         <PetSection petInfo={this.state.petInfo} pets={data['Skilling']} section='Skilling'/>
