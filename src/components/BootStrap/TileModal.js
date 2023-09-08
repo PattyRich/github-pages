@@ -58,6 +58,7 @@ class TileModal extends React.Component {
 
   getImage() {
     let image = this.state.wikiSearch
+    image = image.replaceAll(' ', '_');
     let url = `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`
     this.setState({wikiSearchImg: url})
   }
@@ -67,6 +68,7 @@ class TileModal extends React.Component {
     if (skipUrlBuild) {
       url = image
     } else {
+      image = image.replaceAll(' ', '_');
       url = `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`
     }
     let obj = {
