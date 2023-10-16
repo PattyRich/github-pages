@@ -20,7 +20,8 @@ class BoardView extends React.Component {
       isLoading : false,
       alert : '',
       teams: 5,
-      showEditTeams: false
+      showEditTeams: false,
+      generalPasswordCopy: ''
     }
 
     const {state} = this.props.location
@@ -42,6 +43,7 @@ class BoardView extends React.Component {
     this.calculateTeamPoints = this.calculateTeamPoints.bind(this)
     this.refreshData = this.refreshData.bind(this)
     this.clearAlert = this.clearAlert.bind(this)
+    this.clipboard = this.clipboard.bind(this)
     window.addEventListener('resize', this.handleResize)
     
     //poll every 1 min for data
@@ -50,7 +52,17 @@ class BoardView extends React.Component {
     }, 60000)
   }
 
-  componentDidMount() {
+
+  promisedSetState = (newState) => new Promise(resolve => this.setState(newState, resolve));
+
+  async componentDidMount() {
+    const params = new URLSearchParams(this.props.location.search);
+    const pw = params.get('password');
+    if (pw) {
+      const path = window.location.href.replace(/^https?:\/\//, '').split('/');
+      await this.promisedSetState({privilage: 'general', generalPassword: pw, boardName: path[path.length-1].split('?')[0]})
+    }
+
     const tileHint = localStorage.getItem('tile-hint');
     if (!tileHint) {
       localStorage.setItem('tile-hint', true);
@@ -71,6 +83,7 @@ class BoardView extends React.Component {
   async refreshData(firstLoad = false) {
     if(!this.state.adminPassword && !this.state.generalPassword) {
       this.alert('danger', 'No Password is set, return to main page and start again.', true)
+      return;
     }
     let url = pwUrlBuilder(this.state)
     let [data, err] = await fetchGet(`getBoard/${url}`)
@@ -82,7 +95,8 @@ class BoardView extends React.Component {
       boardData: data.boardData, 
       teams: data.teamData.length, 
       teamData: data.teamData,
-      activeTeamIndex: this.state.activeTeamIndex || 0
+      activeTeamIndex: this.state.activeTeamIndex || 0,
+      generalPasswordCopy: data.generalPassword
     }, () => {
       this.calculateTeamPoints()
       if (firstLoad) {
@@ -217,6 +231,13 @@ class BoardView extends React.Component {
     }
   }
 
+  clipboard() {
+    navigator.clipboard.writeText(`${window.location.href}?password=${encodeURIComponent(this.state.generalPasswordCopy)}`).then(function() {
+    }, function(err) {
+    });
+    this.setState({showToast2: true})
+  }
+
   async updateBoard(row,col,info) {
     this.alert('loading')
     let url = pwUrlBuilder(this.state)
@@ -247,7 +268,10 @@ class BoardView extends React.Component {
           {(this.state.privilage === 'admin' || this.state.canSwitchPriv) &&
             <>
               { this.state.privilage === 'admin' &&
-                <Button click={this.toggleTeamEdit} text="Edit Teams" variant="primary"/>
+                <>
+                  <Button click={this.toggleTeamEdit} text="Edit Teams" variant="primary"/>
+                  <Button style={{'marginRight': '10px'}} click={this.clipboard} variant='warning' text={'Auto Signin Link 📋'} />
+                </>
               }
               { this.state.privilage === 'admin' ? 
                 <Button click={this.switchPrivilage} text="Admin Mode" variant="warning"/>
@@ -314,6 +338,16 @@ class BoardView extends React.Component {
           variant='info' 
           message={'Click on the bingo tiles to edit them!'} />
 				}
+        {	this.state.showToast2 && 
+          <Toast
+            onClose={() => this.setState({showToast2: false})}
+            message={'Copied to Clipboard'}
+            variant={'success'}
+            position={'top-end'}
+            title={'Success'}
+            timeout={2000}
+          />
+				}
         {	this.state.showSettings && 
           <SettingsModal handleClose={()=> this.setState({showSettings: false})} />
 				}
@@ -330,4 +364,4 @@ export default withHooks(BoardView)
 
 function transpose(matrix) {
   return matrix[0].map((col, i) => matrix.map(row => row[i]));
-}
+} 

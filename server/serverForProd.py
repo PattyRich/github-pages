@@ -6,8 +6,7 @@ import pymongo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 
-app = Flask(__name__, static_folder='build')
-CORS(app)
+from server import app
 
 limiter = Limiter(
     app,
@@ -78,7 +77,7 @@ def clearBadData(data, acceptableKeys):
 @app.route('/createBoard', methods=['POST'])
 @limiter.limit("5 per hour")
 def createBoard():
-  data = json.loads(request.data)
+  data = json.loads(request.data.decode(), parse_float=float)
   cache = mycol.find_one({'boardName': data['boardName']})
   if (cache):
     return bad_request('Board Name Already Taken!!')
@@ -130,7 +129,7 @@ def updateBoard(boardName, password, pwtype):
   cache, err = auth(boardName, password, pwtype)
   if err:
     return err
-  data = json.loads(request.data)
+  data = json.loads(request.data.decode(), parse_float=float)
   if (pwtype == 'admin'):
     data['info'] = clearBadData(data['info'], adminTileKeys)
 
@@ -158,7 +157,7 @@ def updateTeams(boardName, password, pwtype):
   if err:
     return err
 
-  data = json.loads(request.data)
+  data = json.loads(request.data.decode(), parse_float=float)
   data = data['info']
   size = len(data)
 
@@ -203,6 +202,3 @@ def authMethod(boardName, password, pwtype):
   if err:
     return err
   return jsonify(success=True)
-
-if __name__ == "__main__":
-  app.run(host='0.0.0.0',port=5001, debug=True)
