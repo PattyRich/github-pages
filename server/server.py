@@ -111,6 +111,7 @@ def getBoard(boardName, password, pwtype):
 
   boardData = cache['boardData']
   teamData = []
+  generalPassword = ''
 
   for i in range(cache['teams']):
     team = 'team-' + str(i)
@@ -119,7 +120,10 @@ def getBoard(boardName, password, pwtype):
       'data': cache[team]
     })
 
-  return jsonify(boardData=boardData, teamData=teamData)
+  if (pwtype == 'admin'):
+    generalPassword = cache['generalPassword']
+
+  return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword)
 
 @app.route('/updateBoard/<boardName>/<password>/<pwtype>', methods=['PUT'])
 def updateBoard(boardName, password, pwtype):
