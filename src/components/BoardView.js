@@ -341,11 +341,11 @@ class BoardView extends React.Component {
         {	this.state.showToast2 && 
           <Toast
             onClose={() => this.setState({showToast2: false})}
-            message={'Copied to Clipboard'}
+            message={'Copied to Clipboard. If you want to sign in as the admin again you\'ll need to auth from the main page.'}
             variant={'success'}
             position={'top-end'}
             title={'Success'}
-            timeout={2000}
+            timeout={5000}
           />
 				}
         {	this.state.showSettings && 
