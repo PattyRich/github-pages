@@ -111,7 +111,7 @@ def getBoard(boardName, password, pwtype):
 
   boardData = cache['boardData']
   teamData = []
-  generalPassword = ''
+  generalPassword = cache['generalPassword']
 
   for i in range(cache['teams']):
     team = 'team-' + str(i)
@@ -119,9 +119,6 @@ def getBoard(boardName, password, pwtype):
       'team': i,
       'data': cache[team]
     })
-
-  if (pwtype == 'admin'):
-    generalPassword = cache['generalPassword']
 
   return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword)
 

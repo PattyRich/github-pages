@@ -60,7 +60,7 @@ class BoardView extends React.Component {
     const pw = params.get('password');
     if (pw) {
       const path = window.location.href.replace(/^https?:\/\//, '').split('/');
-      await this.promisedSetState({privilage: 'general', generalPassword: pw, boardName: path[path.length-1].split('?')[0]})
+      await this.promisedSetState({privilage: 'general', generalPassword: pw, boardName: decodeURI(path[path.length-1].split('?')[0])})
     }
 
     const tileHint = localStorage.getItem('tile-hint');
