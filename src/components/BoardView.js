@@ -254,8 +254,8 @@ class BoardView extends React.Component {
   render() {
     let height = document.documentElement.clientHeight
     let width = document.documentElement.clientWidth
-    let maxWidth = (width / this.rows) - 40
-    let maxHeight = (height / this.columns) - 40
+    let maxWidth = (width / this.rows) - ((width < 600 || height < 600) ? 8 : 40)
+    let maxHeight = (height / this.columns) - ((width < 600 || height < 600) ? 8 : 40)
     let dem = maxHeight < maxWidth ? maxHeight : maxWidth
     //let dem = width < height ? (width / this.rows)-40 : (height / this.columns)-40;
     return (

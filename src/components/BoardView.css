@@ -30,6 +30,11 @@
 
 .bingo-edit button {
   margin-right: 10px;
+  margin-bottom: 2px;
+}
+
+.bingo-edit {
+  flex-wrap: wrap;
 }
 
 .edit-teams button {
