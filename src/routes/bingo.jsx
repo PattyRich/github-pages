@@ -94,6 +94,10 @@ class Bingo extends React.Component {
 			this.alert('danger', 'Please fill out all fields.')
 			return;
 		}
+		if (this.state.boardName.includes('?')) {
+			this.alert('danger', 'Board name cannot include "?" character')
+			return;
+		}
 		if (['join', 'create'].includes(this.state.boardName.toLowerCase())) {
 			this.alert('danger', 'Name can\'t be join or create for routing purposes. This probably a rare message to ever see. Congrats')
 			return;		
