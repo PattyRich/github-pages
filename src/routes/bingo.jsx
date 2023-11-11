@@ -116,7 +116,11 @@ class Bingo extends React.Component {
 					rowBingo: 0,
 					colBingo: 0
 				})
-			}   
+				if (i == 0 && j == 0) {
+					boardData[i][0].title = 'Example Tile';
+					boardData[i][0].image = {url: 'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png', opacity: 100}
+				}
+			}
 		}  
 		this.alert('loading')
 		const [data, err] = await fetchPost('createBoard', {...this.state, boardData})
