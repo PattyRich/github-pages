@@ -245,7 +245,7 @@ class Bingo extends React.Component {
 							<Alert variant="warning">
 								***NOTE do NOT use "REAL" passwords. I DON'T ENCRYPT this data, make it fun passwords that don't mean anything
 								<br/>
-								boards auto delete after 2 MONTHS do NOT reuse boards
+								boards auto delete after 1 YEAR do NOT reuse boards
 							</Alert>
 						</div>
 						<EditableInput title='Board Name' stateKey='boardName' change={this.inputState} value={this.state.boardName} />
