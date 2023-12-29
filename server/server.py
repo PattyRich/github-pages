@@ -27,8 +27,8 @@ indexes = mycol.index_information()
 
 if(len(indexes) != 1):
   mycol.create_index([("boardName", 1)])
-  ## ttl of 2 months
-  mycol.create_index([("date", 1)], expireAfterSeconds=5260000)
+  ## ttl of 1.1 years
+  mycol.create_index([("date", 1)], expireAfterSeconds=34712647)
 
 def initEmptyTeamData(row, col):
   teamData = []
