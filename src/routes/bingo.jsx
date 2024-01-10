@@ -94,9 +94,13 @@ class Bingo extends React.Component {
 			this.alert('danger', 'Please fill out all fields.')
 			return;
 		}
-		if (this.state.boardName.includes('?') || this.state.generalPassword.includes('?') || this.state.adminPassword.includes('?') || this.state.boardName.includes('#') || this.state.generalPassword.includes('#') || this.state.adminPassword.includes('#')) {
-			this.alert('danger', 'Passwords and boardname cannot have "? or #" characters')
-			return;
+
+		const notAllowed = ['?', '#', '/', '\\']
+		for (let i = 0; i < notAllowed.length; i++) {
+			if (this.state.boardName.includes(notAllowed[i]) || this.state.generalPassword.includes(notAllowed[i]) || this.state.adminPassword.includes(notAllowed[i])) {
+				this.alert('danger', 'Passwords and boardname cannot have these characters : ' + notAllowed.join(' '))
+				return;
+			}
 		}
 		if (['join', 'create'].includes(this.state.boardName.toLowerCase())) {
 			this.alert('danger', 'Name can\'t be join or create for routing purposes. This probably a rare message to ever see. Congrats')
