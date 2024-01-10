@@ -94,8 +94,8 @@ class Bingo extends React.Component {
 			this.alert('danger', 'Please fill out all fields.')
 			return;
 		}
-		if (this.state.boardName.includes('?') || this.state.generalPassword.includes('?') || this.state.adminPassword.includes('?')) {
-			this.alert('danger', 'Passwords and boardname cannot have "?" character')
+		if (this.state.boardName.includes('?') || this.state.generalPassword.includes('?') || this.state.adminPassword.includes('?') || this.state.boardName.includes('#') || this.state.generalPassword.includes('#') || this.state.adminPassword.includes('#')) {
+			this.alert('danger', 'Passwords and boardname cannot have "? or #" characters')
 			return;
 		}
 		if (['join', 'create'].includes(this.state.boardName.toLowerCase())) {
@@ -218,7 +218,7 @@ class Bingo extends React.Component {
   	return (
 			<>
 			  { this.state.alert && 
-          <Alert style={{'position' : 'absolute', 'width': '100%'}} variant={this.state.alertVariant}>
+          <Alert style={{'position' : 'absolute', 'width': '100%', 'zIndex' : '10000'}} variant={this.state.alertVariant}>
             {this.state.alert}
           </Alert>   
         } 
