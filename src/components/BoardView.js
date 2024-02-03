@@ -91,26 +91,28 @@ class BoardView extends React.Component {
       this.alert('danger', err.message)
       return
     }
+    let activeTeamValue = 0;
+    if (changeTeam){
+      let activeTeam = localStorage.getItem('activeTeam')
+      if (activeTeam) {
+        activeTeam = Number(activeTeam)
+        if (activeTeam <= data.teamData.length -1 && activeTeam >= 0) {
+          activeTeamValue = activeTeam
+        }
+      }
+    }
+    
     this.setState({
       boardData: data.boardData, 
       teams: data.teamData.length, 
       teamData: data.teamData,
-      activeTeamIndex: this.state.activeTeamIndex || 0,
+      activeTeamIndex: this.state.activeTeamIndex || activeTeamValue,
       generalPasswordCopy: data.generalPassword
     }, () => {
       this.calculateTeamPoints()
       if (firstLoad) {
         if (this.state.privilage === 'admin') {
           this.switchPrivilage()
-        }
-      }
-      if (changeTeam){
-        let activeTeam = localStorage.getItem('activeTeam')
-        if (activeTeam) {
-          activeTeam = Number(activeTeam)
-          if (activeTeam <= this.state.teams -1 && activeTeam >= 0) {
-            this.changeTeam(activeTeam)
-          }
         }
       }
     })
