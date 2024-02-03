@@ -29,6 +29,7 @@ export let data = {
   ],
   Bosses: [
     'Baby mole',
+    'Scurrius',
     'Muphin',
     'Little nightmare',
     'Pet dark core',

@@ -10,6 +10,7 @@ const Teams = (props) => {
     let teamId = props.teams.find((team)=> {
       return team.data.name === teamName
     }).team
+    localStorage.setItem('activeTeam', teamId)
     props.changeTeam(teamId)
     setKey(teamName)
   }
