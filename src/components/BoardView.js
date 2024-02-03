@@ -68,7 +68,7 @@ class BoardView extends React.Component {
       localStorage.setItem('tile-hint', true);
       this.setState({showToast: true})
     }
-    this.refreshData(!this.state.cameFromCreate)
+    this.refreshData(!this.state.cameFromCreate, true )
     if (this.state.boardJustCreated) {
       this.alert('success', 'Board Successfully Created!')
       this.setState({boardJustCreated: null })
@@ -80,7 +80,7 @@ class BoardView extends React.Component {
       clearInterval(this.refreshInterval)
     }
 
-  async refreshData(firstLoad = false) {
+  async refreshData(firstLoad = false, changeTeam=false) {
     if(!this.state.adminPassword && !this.state.generalPassword) {
       this.alert('danger', 'No Password is set, return to main page and start again.', true)
       return;
@@ -102,6 +102,15 @@ class BoardView extends React.Component {
       if (firstLoad) {
         if (this.state.privilage === 'admin') {
           this.switchPrivilage()
+        }
+      }
+      if (changeTeam){
+        let activeTeam = localStorage.getItem('activeTeam')
+        if (activeTeam) {
+          activeTeam = Number(activeTeam)
+          if (activeTeam <= this.state.teams -1 && activeTeam >= 0) {
+            this.changeTeam(activeTeam)
+          }
         }
       }
     })

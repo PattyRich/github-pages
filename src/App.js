@@ -4,7 +4,7 @@ import { Link } from "react-router-dom";
 import Image from 'react-bootstrap/Image'
 import Alert from 'react-bootstrap/Alert'
 
-window.API = process.env.NODE_ENV ==='development' ? 'http://localhost:5001' : 'https://praynr.com'
+window.API = process.env.NODE_ENV ==='development' ? 'https://praynr.com' : 'https://praynr.com'
 
 class App extends React.Component {
   render() {

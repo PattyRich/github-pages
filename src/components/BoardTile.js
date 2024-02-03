@@ -59,12 +59,13 @@ class BoardTile extends React.Component {
 					style={{
 						...style,
 						flexDirection: 'column',
-						justifyContent : showTitleTile ? 'flex-end' : 'space-between'
+						justifyContent : showTitleTile ? 'flex-end' : 'space-between',
+						overflow: 'hidden'
 					}} 
 					className={`box-flex box-border ${this.props.br ? 'br' : ""} ${this.props.bb ? 'bb' : ""}`}
 				> 
 					{!this.props.bare && !showTitleTile &&
-						<div style={{height: '20%', textAlign: 'center', fontFamily: 'osrsFont', overflow: 'hidden'}}>
+						<div style={{height: '20%', textAlign: 'center', fontFamily: 'osrsFont'}}>
 						{this.props.info.title}
 						</div>
 					}
