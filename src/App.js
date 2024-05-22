@@ -17,7 +17,7 @@ class App extends React.Component {
                 <Link to="/">Home</Link>
                 </li>
                 <li>
-                <Link to="/osrs">Osrs loot simulator.</Link>
+                <Link to="/osrs">Osrs loot simulator</Link>
                 </li>
                 <li>
                 <Link to="/mage-run">Olm Mage run</Link>
