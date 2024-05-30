@@ -13,11 +13,13 @@ class SettingsModal extends React.Component {
     const showPoints = localStorage.getItem('showPoints') === 'true';
     const showTeamPoints = localStorage.getItem('showTeamPoints') === 'true';
     const showTitleTile = localStorage.getItem('showTitleTile') === 'true';
+    const showFeedback = localStorage.getItem('showFeedback') === 'true';
     this.state = { 
       completeStyle,
       showPoints,
       showTeamPoints,
-      showTitleTile
+      showTitleTile,
+      showFeedback
     }
     this.handleClose = this.handleClose.bind(this)
     this.setLocalStorage = this.setLocalStorage.bind(this)
@@ -77,6 +79,12 @@ class SettingsModal extends React.Component {
             <input className="form-check-input" checked={this.state.showTitleTile} onChange={() => this.toggleCheck('showTitleTile')} type="checkbox" id="flexCheckDefault4"/>
             <label className="form-check-label" htmlFor="flexCheckDefault4">
               Hide tile title on board?
+            </label>
+          </div>
+          <div className="form-check" style={{'marginTop': '15px'}}>
+            <input className="form-check-input" checked={this.state.showFeedback} onChange={() => this.toggleCheck('showFeedback')} type="checkbox" id="flexCheckDefault5"/>
+            <label className="form-check-label" htmlFor="flexCheckDefault5">
+              Hide feedback button?
             </label>
           </div>
         </Modal.Body>

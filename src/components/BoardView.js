@@ -11,6 +11,7 @@ import Teams from './Teams'
 import Toast from './BootStrap/Toast'
 import EditTeams from './BootStrap/EditTeams'
 import SettingsModal from './BootStrap/SettingsModal';
+import FeedbackModal from './BootStrap/FeedbackModal';
 
 class BoardView extends React.Component {
   constructor(props) {
@@ -263,6 +264,7 @@ class BoardView extends React.Component {
   }
 
   render() {
+    const showFeedback = localStorage.getItem('showFeedback') === 'true'
     let height = document.documentElement.clientHeight
     let width = document.documentElement.clientWidth
     let maxWidth = (width / this.rows) - ((width < 600 || height < 600) ? 8 : 40)
@@ -361,6 +363,14 @@ class BoardView extends React.Component {
 				}
         {	this.state.showSettings && 
           <SettingsModal handleClose={()=> this.setState({showSettings: false})} />
+				}
+        { !showFeedback && width > 1000 ? 
+          <div className='feedback' onClick={()=>this.setState({showFeedback: true})}>
+            feedback
+          </div> : ''
+        }
+        {	this.state.showFeedback && 
+          <FeedbackModal handleClose={()=> this.setState({showFeedback: false})} />
 				}
       </div>
     )

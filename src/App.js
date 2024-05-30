@@ -3,10 +3,17 @@ import React from 'react';
 import { Link } from "react-router-dom";
 import Image from 'react-bootstrap/Image'
 import Alert from 'react-bootstrap/Alert'
+import FeedbackModal from './components/BootStrap/FeedbackModal'
 
 window.API = process.env.NODE_ENV ==='development' ? 'https://praynr.com' : 'https://praynr.com'
 
 class App extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      showFeedback: false
+    }
+  }
   render() {
       return (
         <div className="App">
@@ -46,6 +53,12 @@ class App extends React.Component {
             </div>
             <hr style={{'margin': 'auto'}} />
           </div>
+          <div className='feedback' onClick={()=>this.setState({showFeedback: true})}>
+            feedback
+          </div>
+          {	this.state.showFeedback && 
+            <FeedbackModal handleClose={()=> this.setState({showFeedback: false})} />
+          }
         </div>
     	);
   }
