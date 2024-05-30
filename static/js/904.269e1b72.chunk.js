@@ -1,2 +1,0 @@
-"use strict";(self.webpackChunkgithub_pages=self.webpackChunkgithub_pages||[]).push([[904],{5904:function(e,a,t){t.r(a),t.d(a,{data:function(){return r}});var r={name:"pnm",items:[{name:"Nightmare staff",rate:1/667},{name:"Inquisitor's great helm",rate:.001},{name:"Inquisitor's hauberk",rate:.001},{name:"Inquisitor's plateskirt",rate:.001},{name:"Inquisitor's mace",rate:5e-4},{name:"Eldritch orb",rate:1/3e3},{name:"Harmonised orb",rate:1/3e3},{name:"Volatile orb",rate:1/3e3}],pet:{rate:1400,name:"Little nightmare"}}}}]);
-//# sourceMappingURL=904.269e1b72.chunk.js.map
