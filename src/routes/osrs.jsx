@@ -542,7 +542,7 @@ class Osrs extends React.Component {
 		      	<button style={{background: '#c90c1c'}} onClick={this.stopInterval}> Stop </button>
 		      : null }
 		      {	this.state.completion ? 
-		      	<span> Average completion without pet is: {this.state.completion} kc </span>
+		      	<span> Average completion not including pet is: {this.state.completion} kc </span>
 		      : null }
 		      {	this.state.mode === 'create' ?
 		      	<span> (This will be wrong if your rates are very common) </span>
