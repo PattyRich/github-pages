@@ -52,3 +52,11 @@
 .recent-boards {
   display: flex;
 }
+
+.feedback {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  color: #0d6efd;
+  cursor: pointer;
+}

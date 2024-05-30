@@ -12,6 +12,7 @@ export let data = {
     'Rocky',
     'Tangleroot',
     'Tiny tempor', 
+    'Quetzin'
   ],
   Slayer: [
     'Abyssal orphan',
@@ -44,6 +45,7 @@ export let data = {
     'Jal-nib-rek',
     'Vorki', 
     'Youngllef',
+    'Smol heredit'
   ],
   Wilderness: [
     'Pet chaos elemental', 
