@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkgithub_pages=self.webpackChunkgithub_pages||[]).push([[738],{1738:(a,e,t)=>{t.r(e),t.d(e,{data:()=>m});let m={name:"zammy",items:[{name:"Steam battlestaff",rate:1/127},{name:"Zamorakian spear",rate:1/127},{name:"Staff of the dead",rate:1/508},{name:"Zamorak hilt",rate:1/508}],pet:{rate:5e3,name:"Pet k'ril tsutsaroth"}}}}]);
+//# sourceMappingURL=738.c112d7b8.chunk.js.map

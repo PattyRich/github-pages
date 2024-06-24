@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkgithub_pages=self.webpackChunkgithub_pages||[]).push([[469],{1469:(e,a,t)=>{t.r(a),t.d(a,{data:()=>r});let r={name:"duke",items:[{name:"Magus vestige",rate:3/720},{name:"Eye of the duke",rate:1/720},{name:"Chromium ingot",rate:3/720},{name:"Virtus mask",rate:1/2160,extra:!0},{name:"Virtus robe top",rate:1/2160,extra:!0},{name:"Virtus robe bottom",rate:1/2160,extra:!0}],pet:{rate:2500,name:"Baron"}}}}]);
+//# sourceMappingURL=469.7aeee047.chunk.js.map

@@ -1,0 +1,2 @@
+"use strict";(self.webpackChunkgithub_pages=self.webpackChunkgithub_pages||[]).push([[931],{6931:(e,a,t)=>{t.r(a),t.d(a,{data:()=>n});let n={name:"nex",items:[{name:"Zaryte vambraces",rate:1/172},{name:"Nihil horn",rate:1/258},{name:"Torva full helm (damaged)",rate:1/258},{name:"Torva platebody (damaged)",rate:1/258},{name:"Torva platelegs (damaged)",rate:1/258},{name:"Ancient hilt",rate:1/516}],pet:{rate:500,name:"Nexling"}}}}]);
+//# sourceMappingURL=931.02ca881c.chunk.js.map

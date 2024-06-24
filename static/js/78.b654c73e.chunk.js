@@ -1,2 +1,0 @@
-"use strict";(self.webpackChunkgithub_pages=self.webpackChunkgithub_pages||[]).push([[78],{7078:function(e,a,n){n.r(a),n.d(a,{data:function(){return t}});var t={name:"vorkath",items:[{name:"Draconic visage",rate:2e-4},{name:"Dragonbone necklace",rate:.001},{name:"Skeletal visage",rate:2e-4}],pet:{rate:3e3,name:"Vorki"}}}}]);
-//# sourceMappingURL=78.b654c73e.chunk.js.map
