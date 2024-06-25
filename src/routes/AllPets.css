@@ -1,4 +1,4 @@
-.items {
+.items-all-pets {
   display: flex;
   flex-direction: column;
   flex-wrap: wrap;
@@ -9,7 +9,7 @@
   margin: 1px
 }
 
-.main {
+.main-all-pets {
   padding: 10px;
   padding-top: 30px;
 }

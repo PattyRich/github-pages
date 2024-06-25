@@ -59,7 +59,7 @@ const AllPets = (props) => {
   
 
 	return (
-    <div className='main'>
+    <div className='main-all-pets'>
       Simulate getting all pets.
       <br />
       Assumes: Red chins, Amethyst mining, Inventories of mind runes, Redwood logs, Penguin Course, Karambwams, Stalls, 30k point cox, 3 man nex, On task jad rek, Teak trees for tangleroot, Phosani's, Singles wilderness pets.
@@ -67,7 +67,7 @@ const AllPets = (props) => {
       <button onClick={go}> Go! </button>
       <Button style={{position: 'absolute', right: '10px', top: '10px'}} click={() => navigate('/')} text="Home" variant="primary"/>
 
-      <div className="items">
+      <div className="items-all-pets">
         
         
       {petData ? petData.map((group, i) => {
