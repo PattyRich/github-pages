@@ -23,12 +23,19 @@ class Pets extends React.Component {
       petInfo: petData,
       name: 'Cool Player',
       info:'(13/59)',
-      background: 0
+      background: 0,
+      usePixelImages: false
     }
+
     this.toggleCheck = this.toggleCheck.bind(this);
     this.changeKc = this.changeKc.bind(this);
     this.changeInput = this.changeInput.bind(this);
     this.switchBackground = this.switchBackground.bind(this);
+    this.toggleUsePixelImages = this.toggleUsePixelImages.bind(this);
+  }
+
+  toggleUsePixelImages(){
+    this.setState({usePixelImages: !this.state.usePixelImages});
   }
 
   componentDidMount(){
@@ -96,6 +103,7 @@ class Pets extends React.Component {
   }
   
   render() {
+    const petPicturePath = !this.state.usePixelImages ? 'detailed_pets' : 'pets_pixel';
     return (<>
     <h4 style={{'textAlign': 'center'}}>Create a Pet Picture</h4>
     <p style={{'textAlign': 'center'}}>Mark the checkbox if the pet is obtained and fill the input with either kc or exp / anything else you want</p>
@@ -104,6 +112,9 @@ class Pets extends React.Component {
       <input value={this.state.name} onChange={(e) => this.changeInput('name', e.target.value)}></input>
       Any info you want to display. (optional)
       <input value={this.state.info} onChange={(e) => this.changeInput('info', e.target.value)}></input>
+      <br/>
+      Use pixel images?
+      <input type="checkbox" checked={this.state.usePixelImages} onChange={this.toggleUsePixelImages} />
     </div>
     <div className="pet-container">
       {this.state.petInfo.map((pet, i) => {
@@ -113,7 +124,7 @@ class Pets extends React.Component {
            <img src={'https://oldschool.runescape.wiki/images/' + urlName + '.png'} />
           </div> */}
           <div className="pet-image-container">   
-           <img className='pet-image' src={`${process.env.PUBLIC_URL}/assets/detailed_pets/${pet.name}.png`} />
+           <img className='pet-image' src={`${process.env.PUBLIC_URL}/assets/${petPicturePath}/${pet.name}.png`} />
           </div>
           <input className="form-check-input" checked={pet.obtained} onChange={() => this.toggleCheck(i)} type="checkbox" value="" id={"pet" + i}/>
           {/* <label className="form-check-label" htmlFor={"pet" + i}>
@@ -132,15 +143,15 @@ class Pets extends React.Component {
       </div>
       
       <div style={{'backgroundImage': `url(${process.env.PUBLIC_URL}/assets/backgrounds/${backgrounds[this.state.background]}.jpg)`}} id="pet-preview" className='pet-preview'>
-        <PetSection petInfo={this.state.petInfo} pets={data['Raids']} section='Raids'/>
-        <PetSection petInfo={this.state.petInfo} pets={data['Bosses']} section='Bosses'/>
+        <PetSection petInfo={this.state.petInfo} pets={data['Raids']} section='Raids' path={petPicturePath}/>
+        <PetSection petInfo={this.state.petInfo} pets={data['Bosses']} section='Bosses' path={petPicturePath}/>
         <div className='pets-middle'>
           <div className='left-container'>
             <div className='pets-left'>
-            <PetSection petInfo={this.state.petInfo} pets={data['Slayer']} section='Slayer'/>
+            <PetSection petInfo={this.state.petInfo} pets={data['Slayer']} section='Slayer' path={petPicturePath}/>
             </div>
             <div className='pets-left'>
-            <PetSection petInfo={this.state.petInfo} pets={data['DT2']} section='DT 2'/>
+            <PetSection petInfo={this.state.petInfo} pets={data['DT2']} section='DT 2' path={petPicturePath}/>
             </div>
           </div>
           <div className='pet-center-info' style={{fontFamily: 'osrsFont'}}>
@@ -149,15 +160,15 @@ class Pets extends React.Component {
           </div>
           <div className='right-container'>
             <div className='pets-right'>
-              <PetSection petInfo={this.state.petInfo} pets={data['Wilderness']} section='Wilderness'/>
+              <PetSection petInfo={this.state.petInfo} pets={data['Wilderness']} section='Wilderness' path={petPicturePath}/>
             </div>
             <div className='pets-right'>
-              <PetSection petInfo={this.state.petInfo} pets={data['GodWars']} section='GodWars'/>
+              <PetSection petInfo={this.state.petInfo} pets={data['GodWars']} section='GodWars' path={petPicturePath}/>
             </div>
           </div>
         </div>
-        <PetSection petInfo={this.state.petInfo} pets={data['Skilling']} section='Skilling'/>
-        <PetSection petInfo={this.state.petInfo} pets={data['Other']} section='Other'/>
+        <PetSection petInfo={this.state.petInfo} pets={data['Skilling']} section='Skilling' path={petPicturePath}/>
+        <PetSection petInfo={this.state.petInfo} pets={data['Other']} section='Other' path={petPicturePath}/>
       </div>
     </>)
   }

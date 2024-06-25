@@ -36,6 +36,10 @@
   max-height: 65px;
 }
 
+.scaled {
+  scale: 1.2;
+}
+
 
 .pet-image-container-ofc {
   height: 65px;

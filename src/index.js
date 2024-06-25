@@ -10,6 +10,8 @@ import reportWebVitals from './reportWebVitals';
 import BingoDraft from './routes/BingoDraft';
 import ToaFlip from './routes/ToaFlip';
 import Pets from './routes/Pets';
+import AllPets from './routes/AllPets';
+
 import { HashRouter, Routes, Route } from "react-router-dom";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -36,6 +38,8 @@ root.render(
   			<Route path="/github-pages/bingo-draft" element={<BingoDraft />} />				
 				<Route path="/pets" element={<Pets />} />
   			<Route path="/github-pages/pets" element={<Pets />} />			
+				<Route path="/all-pets" element={<AllPets />} />
+  			<Route path="/github-pages/all-pets" element={<AllPets />} />	
   			<Route
 		      path="*"
 		      element={

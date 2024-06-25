@@ -386,11 +386,11 @@ class Osrs extends React.Component {
   lootFunction(rolls, place, options){
   	let num = Number(rolls)
 
-  	if (this.state.mode === 'create') {
-  		//these have to be run late on create since we won't know them ahead of time
-  		// this.addIcons(this.state.mode)
-  		this.completion()
-  	}
+  	// if (this.state.mode === 'create') {
+  	// 	//these have to be run late on create since we won't know them ahead of time
+  	// 	// this.addIcons(this.state.mode)
+  	// 	this.completion()
+  	// }
 
   	if (num && rolls) {
   		return loot(num, place, {...options, cluesData})
@@ -435,14 +435,14 @@ class Osrs extends React.Component {
     	<div>
     		<div className="box">
 		      <div>
-		        <input type="radio" value="cox" name="" checked={this.state.mode === 'cox'} onChange={this.onChangeValue} /> Cox
-		        <input type="radio" value="tob" name="" checked={this.state.mode === 'tob'} onChange={this.onChangeValue} /> ToB
-		        <input type="radio" value="toa" name="" checked={this.state.mode === 'toa'} onChange={this.onChangeValue} /> ToA
-		        <input type="radio" value="cg" name="" checked={this.state.mode === 'cg'} onChange={this.onChangeValue} /> Corrupted Gauntlet
+					<input type="radio" value="cox" name="" checked={this.state.mode === 'cox'} onChange={this.onChangeValue} /> Cox
+					<input type="radio" value="tob" name="" checked={this.state.mode === 'tob'} onChange={this.onChangeValue} /> ToB
+					<input type="radio" value="toa" name="" checked={this.state.mode === 'toa'} onChange={this.onChangeValue} /> ToA
+					<input type="radio" value="cg" name="" checked={this.state.mode === 'cg'} onChange={this.onChangeValue} /> Corrupted Gauntlet
 			    <input type="radio" value="corp" name="" checked={this.state.mode === 'corp'} onChange={this.onChangeValue} /> Corp
-		      	<input type="radio" value="pnm" name="" checked={this.state.mode === 'pnm'} onChange={this.onChangeValue} /> Phosani's Nightmare
+		      <input type="radio" value="pnm" name="" checked={this.state.mode === 'pnm'} onChange={this.onChangeValue} /> Phosani's Nightmare
 					<input type="radio" value="nex" name="" checked={this.state.mode === 'nex'} onChange={this.onChangeValue} /> Nex
-		      	<input type="radio" value="zulrah" name="" checked={this.state.mode === 'zulrah'} onChange={this.onChangeValue} /> Zulrah
+		      <input type="radio" value="zulrah" name="" checked={this.state.mode === 'zulrah'} onChange={this.onChangeValue} /> Zulrah
 		  		<input type="radio" value="vorkath" name="" checked={this.state.mode === 'vorkath'} onChange={this.onChangeValue} /> Vorkath
 		    	<input type="radio" value="arma" name="" checked={this.state.mode === 'arma'} onChange={this.onChangeValue} /> Arma
 		    	<input type="radio" value="bandos" name="" checked={this.state.mode === 'bandos'} onChange={this.onChangeValue} /> Bandos

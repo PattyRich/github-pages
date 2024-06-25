@@ -11,6 +11,7 @@ class PetSection extends React.Component {
   }
   
   render() {
+    const scale = this.props.path === 'pets_pixel';
     return (<>
         <div className='pet-section'>
           <div className='pet-section-header'>
@@ -22,7 +23,7 @@ class PetSection extends React.Component {
               return (
                 <div className='pet-individual' style={{filter: petData.obtained ? 'brightness(100%)': 'brightness(40%)'}}>
                   <div className="pet-image-container-ofc">   
-                    <img className='pet-image-ofc' src={`${process.env.PUBLIC_URL}/assets/detailed_pets/${pet}.png`} />
+                    <img className={`pet-image-ofc ${scale ? 'scaled' : ''}`} src={`${process.env.PUBLIC_URL}/assets/${this.props.path}/${pet}.png`} />
                   </div >
                   {petData.kc ? petData.kc : '-'}
                 </div>
