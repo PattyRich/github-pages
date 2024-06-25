@@ -1,8 +1,8 @@
 {
   "files": {
     "main.css": "/github-pages/static/css/main.cc9d9548.css",
-    "main.js": "/github-pages/static/js/main.23941b3e.js",
-    "static/js/450.fbbf00bb.chunk.js": "/github-pages/static/js/450.fbbf00bb.chunk.js",
+    "main.js": "/github-pages/static/js/main.bbcdd207.js",
+    "static/js/450.3429e537.chunk.js": "/github-pages/static/js/450.3429e537.chunk.js",
     "static/js/267.d3ca4464.chunk.js": "/github-pages/static/js/267.d3ca4464.chunk.js",
     "static/js/759.eb5833bc.chunk.js": "/github-pages/static/js/759.eb5833bc.chunk.js",
     "static/js/748.ffce4960.chunk.js": "/github-pages/static/js/748.ffce4960.chunk.js",
@@ -26,8 +26,8 @@
     "static/media/osrs.ttf": "/github-pages/static/media/osrs.8312160100eedb12bf64.ttf",
     "index.html": "/github-pages/index.html",
     "main.cc9d9548.css.map": "/github-pages/static/css/main.cc9d9548.css.map",
-    "main.23941b3e.js.map": "/github-pages/static/js/main.23941b3e.js.map",
-    "450.fbbf00bb.chunk.js.map": "/github-pages/static/js/450.fbbf00bb.chunk.js.map",
+    "main.bbcdd207.js.map": "/github-pages/static/js/main.bbcdd207.js.map",
+    "450.3429e537.chunk.js.map": "/github-pages/static/js/450.3429e537.chunk.js.map",
     "267.d3ca4464.chunk.js.map": "/github-pages/static/js/267.d3ca4464.chunk.js.map",
     "759.eb5833bc.chunk.js.map": "/github-pages/static/js/759.eb5833bc.chunk.js.map",
     "748.ffce4960.chunk.js.map": "/github-pages/static/js/748.ffce4960.chunk.js.map",
@@ -51,6 +51,6 @@
   },
   "entrypoints": [
     "static/css/main.cc9d9548.css",
-    "static/js/main.23941b3e.js"
+    "static/js/main.bbcdd207.js"
   ]
 }
