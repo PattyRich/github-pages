@@ -62,7 +62,7 @@ const AllPets = (props) => {
     <div className='main'>
       Simulate getting all pets.
       <br />
-      Assumes: Red chins, Amethyst mining, Inventories of mind runes, Redwood logs, Penguin Course, Karambwams, Stalls, 30k point cox, 3 man nex, On task jad rek, Teak trees for tangleroot.
+      Assumes: Red chins, Amethyst mining, Inventories of mind runes, Redwood logs, Penguin Course, Karambwams, Stalls, 30k point cox, 3 man nex, On task jad rek, Teak trees for tangleroot, Phosani's, Singles wilderness pets.
       <br />
       <button onClick={go}> Go! </button>
       <Button style={{position: 'absolute', right: '10px', top: '10px'}} click={() => navigate('/')} text="Home" variant="primary"/>
