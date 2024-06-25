@@ -346,7 +346,7 @@ export let data = {
     {
       items: [{
         name: 'Butch',
-        rate: '1/2000'
+        rate: '1/3000'
       }]
     },
     {
