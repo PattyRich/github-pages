@@ -218,6 +218,10 @@ function looter(rolls, data, clueType) {
 	if (clueType) {
 		return cleanClueRewards(rewards);
 	}
+
+	if (data.allPets) {
+		rewards[0].rate = rewards[0].kc/(1/(data.items[0].rate))
+	}
 	return rewards
 
 

@@ -1,0 +1,27 @@
+.items {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  padding: 30px;
+}
+
+.item {
+  margin: 1px
+}
+
+.main {
+  padding: 10px;
+  padding-top: 30px;
+}
+
+.pet-rate {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: column;
+}
+
+.pet-rate-items {
+  display: flex;
+  flex-wrap: wrap;
+  flex-direction: row;
+}
