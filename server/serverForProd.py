@@ -208,7 +208,7 @@ def updateTeams(boardName, password, pwtype):
       newvalue = { "$set": {'requirePassword': requirePassword}}
       update = mycol.update_one({"boardName": boardName}, newvalue)
     elif ('requirePassword' not in cache):
-      newvalue = { "$set": {'requirePassword': False}}
+      newvalue = { "$set": {'requirePassword': requirePassword}}
       update = mycol.update_one({"boardName": boardName}, newvalue)
 
   return jsonify(success=True)
