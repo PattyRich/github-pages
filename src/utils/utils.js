@@ -55,7 +55,7 @@ async function fetchGet(url) {
   }
 } 
 
-function pwUrlBuilder(state) {
+function pwUrlBuilder(state, teamPassword = null) {
   let pwData = {}
   if (state.privilage == 'admin') {
     pwData.pw = state.adminPassword
@@ -64,7 +64,12 @@ function pwUrlBuilder(state) {
     pwData.pw = state.generalPassword || state.adminPassword
     pwData.type = 'general'
   }
-  return `${state.boardName}/${pwData.pw}/${pwData.type}`
+
+  let pw = `${state.boardName}/${pwData.pw}/${pwData.type}`
+  if (state.teamPasswordsRequired && teamPassword) {
+    pw += `/${teamPassword}`
+  }
+  return pw
 }
 
 export {fetchPost, fetchGet, fetchPut, pwUrlBuilder}

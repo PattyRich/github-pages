@@ -108,7 +108,8 @@ class BoardView extends React.Component {
       teams: data.teamData.length, 
       teamData: data.teamData,
       activeTeamIndex: this.state.activeTeamIndex || activeTeamValue,
-      generalPasswordCopy: data.generalPassword
+      generalPasswordCopy: data.generalPassword,
+      teamPasswordsRequired: data.teamPasswordsRequired
     }, () => {
       this.calculateTeamPoints()
       if (firstLoad) {
@@ -239,11 +240,12 @@ class BoardView extends React.Component {
     this.setState({activeTeamIndex: teamId})
   }
 
-  switchPrivilage() {
+  async switchPrivilage() {
     if (this.state.privilage === 'admin') {
       this.setState({privilage: 'general', canSwitchPriv: true})
     } else {
-      this.setState({privilage: 'admin'})
+      await this.promisedSetState({privilage: 'admin'})
+      await this.refreshData();
     }
   }
 
@@ -254,14 +256,34 @@ class BoardView extends React.Component {
     this.setState({showToast2: true})
   }
 
-  async updateBoard(row,col,info) {
+  async updateBoard(row,col,info, forcePrompt=false) {
     this.alert('loading')
-    let url = pwUrlBuilder(this.state)
+    let needToAddTeamPassword = false
+    let pw;
+    if (this.state.teamPasswordsRequired) {
+      pw = getTeamPassword(this.state.boardName, this.state.teamData[this.state.activeTeamIndex].data.name)
+      if (pw === null || forcePrompt) {
+        needToAddTeamPassword = true
+        const promptText = forcePrompt ? 'Your team password was incorrect. Please try again.' : 'Enter Team Password'
+        pw = prompt(promptText)
+        if (pw === null) {
+          return;
+        }
+      }
+    }
+    let url = pwUrlBuilder(this.state, pw)
     let [data, err] = await fetchPut(`updateBoard/${url}`, {row, col, info})
     if (err) {
       this.alert('danger', err.message)
       this.setState({isLoading: false})
+
+      if (err.message === 'Your team password was incorrect.') {
+        this.updateBoard(row,col,info,true)
+      }
       return
+    }
+    if (needToAddTeamPassword) {
+      setTeamPassword(this.state.boardName, this.state.teamData[this.state.activeTeamIndex].data.name, pw)
     }
     this.setState({isLoading: false})
     this.alert("success", 'Board Successfully Updated!')
@@ -346,6 +368,7 @@ class BoardView extends React.Component {
             handleClose={this.toggleTeamEdit}
             teams={this.state.teamData}
             handleSave={this.updateTeams}
+            passwordRequired={this.state.teamPasswordsRequired}
           />
         }
         {	this.state.showToast && 
@@ -390,3 +413,28 @@ export default withHooks(BoardView)
 function transpose(matrix) {
   return matrix[0].map((col, i) => matrix.map(row => row[i]));
 } 
+
+
+function getTeamPassword(boardName, teamName){
+  let pws = localStorage.getItem(`${boardName}-teamPasswords`)
+  if (pws) {
+    pws = JSON.parse(pws)
+    if (teamName in pws) {
+      return pws[teamName]
+    } 
+  }
+  return null
+}
+
+function setTeamPassword(boardName, teamName, password){
+  console.log(boardName, teamName, password)
+  let pws = localStorage.getItem(`${boardName}-teamPasswords`)
+  if (pws) {
+    pws = JSON.parse(pws)
+    pws[teamName] = password
+  } else {
+    pws = {}
+    pws[teamName] = password
+  }
+  localStorage.setItem(`${boardName}-teamPasswords`, JSON.stringify(pws))
+}

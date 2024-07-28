@@ -11,7 +11,7 @@ class EditTeams extends React.Component {
     super(props);
     this.state = {
       teams: JSON.parse(JSON.stringify(props.teams)),
-      passwordRequired: false
+      passwordRequired: props.passwordRequired || false
     }
     this.inputState = this.inputState.bind(this)
     this.handleSave = this.handleSave.bind(this)
@@ -92,6 +92,7 @@ class EditTeams extends React.Component {
               id="custom-switch"
               label="Require teams to enter a password to make edits?"
               onChange={() => this.setState({passwordRequired: !this.state.passwordRequired})}
+              checked={this.state.passwordRequired}
             />
           </div>
           { this.state.teams.map((team, i) => {
