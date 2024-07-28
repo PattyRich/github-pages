@@ -259,7 +259,7 @@ class BoardView extends React.Component {
     this.alert('loading')
     let needToAddTeamPassword = false
     let pw;
-    if (this.state.teamPasswordsRequired) {
+    if (this.state.teamPasswordsRequired && this.state.privilage !== 'admin') {
       pw = getTeamPassword(this.state.boardName, this.state.teamData[this.state.activeTeamIndex].data.name)
       if (pw === null || forcePrompt) {
         needToAddTeamPassword = true
