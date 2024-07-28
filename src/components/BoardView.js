@@ -267,6 +267,7 @@ class BoardView extends React.Component {
         const promptText = forcePrompt ? 'Your team password was incorrect. Please try again.' : 'Enter Team Password'
         pw = prompt(promptText)
         if (pw === null) {
+          this.alert('danger', 'No password entered aborting update.')
           return;
         }
       }
