@@ -215,7 +215,6 @@ class BoardView extends React.Component {
   async changeBoardTileInfo(row, col, data) {
     data.teamId = this.state.teamData[this.state.activeTeamIndex].team
     await this.updateBoard(row,col, data)  
-    this.refreshData()
   }
 
   async updateTeams(info, passwordRequired) { 
@@ -286,6 +285,7 @@ class BoardView extends React.Component {
     if (needToAddTeamPassword) {
       setTeamPassword(this.state.boardName, this.state.teamData[this.state.activeTeamIndex].data.name, pw)
     }
+    this.refreshData();
     this.setState({isLoading: false})
     this.alert("success", 'Board Successfully Updated!')
   }
@@ -428,7 +428,6 @@ function getTeamPassword(boardName, teamName){
 }
 
 function setTeamPassword(boardName, teamName, password){
-  console.log(boardName, teamName, password)
   let pws = localStorage.getItem(`${boardName}-teamPasswords`)
   if (pws) {
     pws = JSON.parse(pws)

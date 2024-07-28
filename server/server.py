@@ -116,7 +116,7 @@ def getBoard(boardName, password, pwtype):
 
   for i in range(cache['teams']):
     team = 'team-' + str(i)
-    if (pwtype != 'admin'):
+    if (pwtype != 'admin' and 'password' in cache[team]):
       del cache[team]['password']
     teamData.append({
       'team': i,
@@ -145,7 +145,7 @@ def updateBoard(boardName, password, pwtype, teampw):
     teamKey = 'team-' + str(data['info']['teamId'])
     data['info'] = clearBadData(data['info'], generalTileKeys)
 
-    if cache.get(requirePassword, False): 
+    if cache.get('requirePassword', False): 
       if (teampw != cache[teamKey]['password']):
         return bad_request('Your team password was incorrect.')
     
