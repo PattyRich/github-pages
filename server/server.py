@@ -182,9 +182,13 @@ def updateTeams(boardName, password, pwtype):
   overWrite = {}
   for i in range(len(updateOlderTeams)):
     teamKey = 'team-' + str(i)
+    password = ''
+    if 'password' in updateOlderTeams[i]['data']:
+      password = updateOlderTeams[i]['data']['password']
     overWrite[teamKey] = {
       'name': updateOlderTeams[i]['data']['name'],
-      'teamData': updateOlderTeams[i]['data']['teamData']
+      'teamData': updateOlderTeams[i]['data']['teamData'],
+      'password': password
     }
     ##spread object for all sets since it won't take a dict
     newvalue = { "$set": { **overWrite, 'teams': size }}

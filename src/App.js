@@ -5,7 +5,7 @@ import Image from 'react-bootstrap/Image'
 import Alert from 'react-bootstrap/Alert'
 import FeedbackModal from './components/BootStrap/FeedbackModal'
 
-window.API = process.env.NODE_ENV ==='development' ? 'https://localhost:5000' : 'https://praynr.com'
+window.API = process.env.NODE_ENV ==='development' ? 'http://localhost:5001' : 'https://praynr.com'
 
 class App extends React.Component {
   constructor(props) {

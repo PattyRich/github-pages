@@ -217,10 +217,14 @@ class BoardView extends React.Component {
     this.refreshData()
   }
 
-  async updateTeams(info) {
+  async updateTeams(info, passwordRequired) { 
+    const dataToSend = {
+      teamData: info,
+      passwordRequired
+    }
     this.alert('loading')
     let url = pwUrlBuilder(this.state)
-    let [data, err] = await fetchPut(`updateTeams/${url}`, {info})
+    let [data, err] = await fetchPut(`updateTeams/${url}`, {dataToSend})
     if (err) {
       this.alert('danger', err.message)
       this.setState({isLoading: false})
