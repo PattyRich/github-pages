@@ -112,18 +112,22 @@ def getBoard(boardName, password, pwtype):
   boardData = cache['boardData']
   teamData = []
   generalPassword = cache['generalPassword']
+  passwordRequired = cache.get('requirePassword', False)
 
   for i in range(cache['teams']):
     team = 'team-' + str(i)
+    if (pwtype != 'admin' and 'password' in cache[team]):
+      del cache[team]['password']
     teamData.append({
       'team': i,
       'data': cache[team]
     })
 
-  return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword)
+  return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired)
 
-@app.route('/updateBoard/<boardName>/<password>/<pwtype>', methods=['PUT'])
-def updateBoard(boardName, password, pwtype):
+@app.route('/updateBoard/<boardName>/<password>/<pwtype>', defaults={'teampw': ''}, methods=['PUT'])
+@app.route('/updateBoard/<boardName>/<password>/<pwtype>/<teampw>', methods=['PUT'])
+def updateBoard(boardName, password, pwtype, teampw):
   cache, err = auth(boardName, password, pwtype)
   if err:
     return err
@@ -140,9 +144,14 @@ def updateBoard(boardName, password, pwtype):
   if (pwtype == 'general'):
     teamKey = 'team-' + str(data['info']['teamId'])
     data['info'] = clearBadData(data['info'], generalTileKeys)
+
+    if cache.get('requirePassword', False): 
+      if (teampw != cache[teamKey]['password']):
+        return bad_request('Your team password was incorrect.')
     
     teamData = cache[teamKey]
     teamData['teamData'][data['row']][data['col']] = { **teamData['teamData'][data['row']][data['col']], **data['info']}
+    
     newvalue = { "$set": {teamKey: teamData}}
     update = mycol.update_one({"boardName": boardName}, newvalue)
 
@@ -156,7 +165,8 @@ def updateTeams(boardName, password, pwtype):
     return err
 
   data = json.loads(request.data)
-  data = data['info']
+  requirePassword = data['dataToSend']['passwordRequired']
+  data = data['dataToSend']['teamData']
   size = len(data)
 
   updateOlderTeams = data[:cache['teams']]
@@ -182,13 +192,25 @@ def updateTeams(boardName, password, pwtype):
   overWrite = {}
   for i in range(len(updateOlderTeams)):
     teamKey = 'team-' + str(i)
+    password = ''
+    if 'password' in updateOlderTeams[i]['data']:
+      password = updateOlderTeams[i]['data']['password']
     overWrite[teamKey] = {
       'name': updateOlderTeams[i]['data']['name'],
-      'teamData': updateOlderTeams[i]['data']['teamData']
+      'teamData': updateOlderTeams[i]['data']['teamData'],
+      'password': password
     }
-    ##spread object for all sets since it won't take a dict
+    ## spread object for all sets since it won't take a dict
     newvalue = { "$set": { **overWrite, 'teams': size }}
     update = mycol.update_one({"boardName": boardName}, newvalue)
+    
+    ## a passwords requirement for teams to submit proof has been set (backwards compatible)
+    if ('requirePassword' in cache and requirePassword != cache['requirePassword']):
+      newvalue = { "$set": {'requirePassword': requirePassword}}
+      update = mycol.update_one({"boardName": boardName}, newvalue)
+    elif ('requirePassword' not in cache):
+      newvalue = { "$set": {'requirePassword': False}}
+      update = mycol.update_one({"boardName": boardName}, newvalue)
 
   return jsonify(success=True)
   

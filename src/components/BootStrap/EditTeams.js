@@ -4,12 +4,14 @@ import BSButton from './Button';
 import Modal from "react-bootstrap/Modal"
 import EditableInput from './EditableInput';
 import Alert from "react-bootstrap/Alert"
+import Form from 'react-bootstrap/Form';
 
 class EditTeams extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      teams: JSON.parse(JSON.stringify(props.teams))
+      teams: JSON.parse(JSON.stringify(props.teams)),
+      passwordRequired: props.passwordRequired || false
     }
     this.inputState = this.inputState.bind(this)
     this.handleSave = this.handleSave.bind(this)
@@ -17,6 +19,7 @@ class EditTeams extends React.Component {
     this.editName = this.editName.bind(this)
     this.removeTeam = this.removeTeam.bind(this)
     this.addTeam = this.addTeam.bind(this)
+    this.editPassword = this.editPassword.bind(this)
   }
 
   inputState(e, target) {
@@ -31,8 +34,14 @@ class EditTeams extends React.Component {
     this.setState({teams: x})
   }
 
+  editPassword(e, index){
+    let x = this.state.teams
+    x[index].data.password = e.target.value
+    this.setState({teams: x})
+  }
+
   handleSave() {
-    this.props.handleSave(this.state.teams)
+    this.props.handleSave(this.state.teams, this.state.passwordRequired)
     this.props.handleClose()
   }
 
@@ -77,10 +86,26 @@ class EditTeams extends React.Component {
         <Modal.Body>
           <Alert variant={'danger'}>***NOTE removing teams will delete all their current data.</Alert>
           <hr/>
+          <div style={{marginBottom: '15px'}}> 
+            <Form.Check // prettier-ignore
+              type="switch"
+              id="custom-switch"
+              label="Require teams to enter a password to make edits?"
+              onChange={() => this.setState({passwordRequired: !this.state.passwordRequired})}
+              checked={this.state.passwordRequired}
+            />
+          </div>
           { this.state.teams.map((team, i) => {
-            return <EditableInput key={i} change={(e) => this.editName(e, i)} value={team.data.name}/>
-          })
-          }
+            const password = team.data.password || ''
+            return (
+              <div key={i}>
+                <EditableInput change={(e) => this.editName(e, i)} value={team.data.name}/>
+                { this.state.passwordRequired && 
+                  <EditableInput title={`Team ${team.data.name}'s password`} change={(e) => this.editPassword(e, i)} value={password}/>
+                }
+              </div>
+           )
+          })}
         </Modal.Body>
         <Modal.Footer>
           <Button variant="secondary" onClick={this.handleClose}>Close</Button>
