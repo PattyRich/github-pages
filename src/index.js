@@ -11,8 +11,30 @@ import BingoDraft from './routes/BingoDraft';
 import ToaFlip from './routes/ToaFlip';
 import Pets from './routes/Pets';
 import AllPets from './routes/AllPets';
+import {
+  enable as enableDarkMode,
+  disable as disableDarkMode,
+  auto as followSystemColorScheme,
+  isEnabled as isDarkReaderEnabled
+} from 'darkreader';
 
 import { HashRouter, Routes, Route } from "react-router-dom";
+
+followSystemColorScheme();
+let darkMode = localStorage.getItem('darkMode');
+if (darkMode === null) {
+	localStorage.setItem('darkMode', isDarkReaderEnabled());
+	darkMode = isDarkReaderEnabled();
+}
+if (darkMode === 'true') {
+	enableDarkMode({
+    brightness: 100,
+    contrast: 90,
+    sepia: 10,
+	});
+} else {
+	disableDarkMode();
+}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
