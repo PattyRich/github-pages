@@ -26,7 +26,7 @@ if (darkMode === null) {
 	localStorage.setItem('darkMode', isDarkReaderEnabled());
 	darkMode = isDarkReaderEnabled();
 }
-if (darkMode === 'true') {
+if (darkMode === 'true' || darkMode === true) {
 	enableDarkMode({
     brightness: 100,
     contrast: 90,

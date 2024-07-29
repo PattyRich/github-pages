@@ -101,7 +101,7 @@ class EditTeams extends React.Component {
               <div key={i}>
                 <EditableInput change={(e) => this.editName(e, i)} value={team.data.name}/>
                 { this.state.passwordRequired && 
-                  <EditableInput title={`Team ${team.data.name}'s password`} change={(e) => this.editPassword(e, i)} value={password}/>
+                  <EditableInput title={`${team.data.name}'s password`} change={(e) => this.editPassword(e, i)} value={password}/>
                 }
               </div>
            )
