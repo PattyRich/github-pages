@@ -300,9 +300,11 @@ class Osrs extends React.Component {
 				await this.getClueData(this.state.clue);
 			}
 		}
-
 		rewards = await this.lootFunction(this.state.rolls, this.state.mode, this.state)
 		this.setState({'rewards': rewards})		
+		if (this.state.mode === 'create') {
+			this.completion(this.state.mode);
+		}
 
   	if (rewards && rewards.length === 0) {
   		this.setState({'nothingCounter': this.state.nothingCounter + 1})
