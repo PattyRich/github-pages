@@ -22,6 +22,7 @@ export let data = {
     'Noon', 
     'Pet kraken', 
     'Pet smoke devil',
+    'Nid'
   ],
   Raids: [
     'Lil\' zik',
@@ -45,7 +46,9 @@ export let data = {
     'Jal-nib-rek',
     'Vorki', 
     'Youngllef',
-    'Smol heredit'
+    'Smol heredit',
+    'Moxi',
+    'Huberte'
   ],
   Wilderness: [
     'Pet chaos elemental', 
