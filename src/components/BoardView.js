@@ -157,7 +157,7 @@ class BoardView extends React.Component {
           if (addBonusRow && !tile.checked) {
             addBonusRow = false
           }
-          pointTotal += Number(tile.currPoints)
+          pointTotal += tile.checked ? Number(tile.currPoints) : 0
           if (j === this.rows-1)
             if (addBonusRow) {
               pointTotal += Number(this.state.boardData[i][j].rowBingo)
