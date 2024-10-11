@@ -335,6 +335,7 @@ class BoardView extends React.Component {
         }
         {this.state.boardData &&
           <div className='center-board'>
+          <div className='test'>
             {this.state.boardData.map((row,i) => (
               <span key={i} className='flex'>
                   {row.map((tile,j) => (
@@ -354,6 +355,7 @@ class BoardView extends React.Component {
               </span>
               )
             )}
+            </div>
           </div>
         }
         { (this.state.teamData && this.state.privilage === 'general') && 
