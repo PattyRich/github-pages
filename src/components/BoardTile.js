@@ -1,7 +1,6 @@
 import React from 'react';
 //import { Link } from "react-router-dom";
 import './BoardTile.css';
-import Button from './BootStrap/Button'
 import Modal from './BootStrap/TileModal'
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 
@@ -26,6 +25,16 @@ class BoardTile extends React.Component {
 		let showPoints = localStorage.getItem('showPoints') === 'true'
 		let showTitleTile = localStorage.getItem('showTitleTile') === 'true'
 		let style = this.props.dem ? {height: this.props.dem, width: this.props.dem} : {}
+		const bgValue = localStorage.getItem('darkMode') === 'true' ? 'green-bg-dark' : 'green-bg';
+		let bgHeight;
+		if ((this.props.info.points === 0 && !checked) || !this.props.teamInfo){
+			bgHeight = null
+		} else if (checked){
+			bgHeight = '100%'
+		} else {
+			bgHeight = Math.round(this.props.teamInfo.currPoints / this.props.info.points * 100) + '%'
+		}
+
   	return (
 			<>
 			<OverlayTrigger
@@ -39,7 +48,10 @@ class BoardTile extends React.Component {
 					<></>
 				}
 			>
-			<span className={`tile-wrapper ${!completeStyle && checked ? 'green-bg' : ''}`}>
+			<span 
+				className={`tile-wrapper ${!completeStyle && (bgHeight || checked) ? bgValue : ''}`}
+				style={{'--bgHeight' : bgHeight}}
+			 >
 				{checked && completeStyle && !this.props.bare &&
 					<img 
 						style={{'position': 'absolute', 'zIndex': '100', 'maxHeight': '100%', 'maxWidth': '100%'}} 

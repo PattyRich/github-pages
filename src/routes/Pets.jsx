@@ -22,7 +22,7 @@ class Pets extends React.Component {
     this.state = {
       petInfo: petData,
       name: 'Cool Player',
-      info:'(13/59)',
+      info:'(13/62)',
       background: 0,
       usePixelImages: false
     }

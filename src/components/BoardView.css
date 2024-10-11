@@ -42,7 +42,11 @@
 }
 
 .green-bg {
-  background-color: #bbfc8a;
+  background: linear-gradient(to top, #bbfc8a var(--bgHeight), #0000ff00 0%);
+}
+
+.green-bg-dark{
+  background: linear-gradient(to top, #517817 var(--bgHeight), #0000ff00 0%);
 }
 
 .form-check-label {
