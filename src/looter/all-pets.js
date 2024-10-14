@@ -354,6 +354,24 @@ export let data = {
         name: 'Baron',
         rate: '1/2500'
       }]
+    },
+    {
+      items: [{
+        name: 'Nid',
+        rate: '1/1500'
+      }]
+    },
+    {
+      items: [{
+        name: 'Moxi',
+        rate: '1/3000'
+      }]
+    },
+    {
+      items: [{
+        name: 'Huberte',
+        rate: '1/400'
+      }]
     }
   ]
 }
