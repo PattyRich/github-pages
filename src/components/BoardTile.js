@@ -27,7 +27,7 @@ class BoardTile extends React.Component {
 		let style = this.props.dem ? {height: this.props.dem, width: this.props.dem} : {}
 		const bgValue = localStorage.getItem('darkMode') === 'true' ? 'green-bg-dark' : 'green-bg';
 		let bgHeight;
-		if ((this.props.info.points === 0 && !checked) || !this.props.teamInfo){
+		if ((this.props.info && this.props.info.points === 0 && !checked) || !this.props.teamInfo){
 			bgHeight = null
 		} else if (checked){
 			bgHeight = '100%'
