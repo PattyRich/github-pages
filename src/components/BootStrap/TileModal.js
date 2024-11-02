@@ -109,7 +109,6 @@ class TileModal extends React.Component {
       this.setState({suggestions: []})
       return
     }
-    console.log(curr)
     let data = []
     curr.forEach((item) => {
       if (this.state.storedSuggestions[item.title]) {
@@ -117,7 +116,6 @@ class TileModal extends React.Component {
       }
     });
     this.setState({suggestions: data})
-    console.log(this.state)
   }
 
   toggleImageSelect() {
@@ -127,7 +125,6 @@ class TileModal extends React.Component {
 
   getImage() {
     let url = getImageUrl(this.state.wikiSearch)
-    console.log(url)
     this.setState({wikiSearchImg: url})
   }
 
