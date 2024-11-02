@@ -5,9 +5,10 @@ import EditableInput from './EditableInput';
 import InputGroup from "react-bootstrap/InputGroup";
 import FormControl from "react-bootstrap/FormControl";
 import Alert from "react-bootstrap/Alert"
+import ListGroup from 'react-bootstrap/ListGroup';
 
 const numInputs = ['points', 'currPoints', 'rowBingo', 'colBingo']
-
+let badTitles = [];
 class TileModal extends React.Component {
   constructor(props) {
     super(props);
@@ -18,7 +19,9 @@ class TileModal extends React.Component {
     this.state = { 
       wikiSearch: '',
       ...props.info,
-      ...props.teamInfo
+      ...props.teamInfo,
+      suggestions: [],
+      storedSuggestions: {}
     }
 
     this.listOfImages = []
@@ -30,6 +33,19 @@ class TileModal extends React.Component {
     this.getImage = this.getImage.bind(this)
     this.changeOpacity = this.changeOpacity.bind(this)
     this.toggleImageSelect = this.toggleImageSelect.bind(this)
+    this.setCurrSuggestions = this.setCurrSuggestions.bind(this)
+    this.setSuggestions = this.setSuggestions.bind(this)
+
+    const debounce = (func, delay) => {
+      let debounceTimer;
+      return function(...args) {
+        const context = this;
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => func.apply(context, args), delay);
+      };
+    };
+
+    this.setCurrSuggestions = debounce(this.setCurrSuggestions, 600);
   }
 
   inputState(e, target) {
@@ -46,10 +62,63 @@ class TileModal extends React.Component {
     }
     if (target==='wikiSearch') {
       e.target.value = nameFilter(e.target.value)
+      this.setCurrSuggestions(e.target.value)
     }
 		stateChange[target] = e.target.value
 		this.setState(stateChange)
 	}
+
+  setCurrSuggestions(){
+    if (this.state.wikiSearch.length == 0) {
+      this.setSuggestions(null)
+      return;
+    }
+    const urlImages = `https://oldschool.runescape.wiki/rest.php/v1/search/title?q=${encodeURIComponent(this.state.wikiSearch)}&limit=5`
+    fetch(urlImages)
+      .then(res => res.json())
+      .then((data) => {
+        data.pages?.forEach(async (item) => {
+          if (item.thumbnail && !badTitles.includes(item.title)) {
+            if (this.state.storedSuggestions[item.title]) {
+              //this.setState({suggestions: [...this.state.suggestions, goodData[item.title]]})
+              this.setSuggestions(data.pages);
+              return;
+            }
+            const url = getImageUrl(item.title)
+            fetch(url)
+              .then(response => {
+                if (response.status === 200) {
+                  let obj = {...this.state.storedSuggestions}
+                  item.url = url
+                  obj[item.title] = item
+                  this.setState({storedSuggestions: obj}, () => {
+                    this.setSuggestions(data.pages);
+                  });
+                } else {
+                  badTitles.push(item.title)
+                }
+              })
+          }
+          this.setSuggestions(data.pages);
+        })
+      })
+  }
+
+  setSuggestions(curr) {
+    if (!curr) {  
+      this.setState({suggestions: []})
+      return
+    }
+    console.log(curr)
+    let data = []
+    curr.forEach((item) => {
+      if (this.state.storedSuggestions[item.title]) {
+        data.push(this.state.storedSuggestions[item.title])
+      }
+    });
+    this.setState({suggestions: data})
+    console.log(this.state)
+  }
 
   toggleImageSelect() {
     this.setState({chooseImage: true})
@@ -57,9 +126,8 @@ class TileModal extends React.Component {
   }
 
   getImage() {
-    let image = this.state.wikiSearch
-    image = image.replaceAll(' ', '_');
-    let url = `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`
+    let url = getImageUrl(this.state.wikiSearch)
+    console.log(url)
     this.setState({wikiSearchImg: url})
   }
 
@@ -68,8 +136,7 @@ class TileModal extends React.Component {
     if (skipUrlBuild) {
       url = image
     } else {
-      image = image.replaceAll(' ', '_');
-      url = `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`
+      url = getImageUrl(image)
     }
     let obj = {
       opacity: '100',
@@ -222,21 +289,35 @@ class TileModal extends React.Component {
             }
             <hr/>
             <Alert>
-              Click any image to set it OR
-              Type ANY item's name as close as possible and i'll try and find it for you.
-              Your text will be edited as you type to aid in searches. (use osrs wiki names if you're stuck)
+              Click any image above to set it OR
+              Type ANY item's below
               <br/>
               Examples : (Coins, Infernal cape, Bucket of milk, Sigil of the menacing mage, Beaver, Plank)
             </Alert>
             <div style={{'display': 'flex'}}>
-              <EditableInput enterAction={this.getImage} value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item" />
-              <Button style={{'height': '38px', 'marginLeft': '15px'}} variant="primary" onClick={this.getImage}>Search</Button>
+              <EditableInput enterAction={this.getImage} value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item Search" />
+              {/* <Button style={{'height': '38px', 'marginLeft': '15px'}} variant="primary" onClick={this.getImage}>Search</Button> */}
             </div>
             { this.state.wikiSearchImg &&
               <img 
                 src={this.state.wikiSearchImg}
                 onClick={() => this.setImage(this.state.wikiSearchImg, true)}
               />
+            }
+            {
+              this.state.suggestions?.length > 0 &&
+              <ListGroup>
+                {this.state.suggestions.map((item, i) => {
+                    return( 
+                    <ListGroup.Item key={i} action onClick={() => this.setImage(item.url, true)}>
+                      <div style={{'display': 'flex', 'alignItems': 'center'}}>
+                      <img src={item.thumbnail?.url} style={{'maxWidth': '40px', 'maxHeight': '40px', 'paddingRight': '10px'}}/>
+                      {item.title}
+                      </div>
+                    </ListGroup.Item>
+                    )
+                })}
+              </ListGroup>
             }
             </>
           }
@@ -272,4 +353,8 @@ function detectURLs(message) {
     return []
   }
   return res
+}
+function getImageUrl(image) {
+    image = image.replaceAll(' ', '_');
+    return `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`
 }
