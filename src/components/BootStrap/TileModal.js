@@ -6,6 +6,8 @@ import InputGroup from "react-bootstrap/InputGroup";
 import FormControl from "react-bootstrap/FormControl";
 import Alert from "react-bootstrap/Alert"
 import ListGroup from 'react-bootstrap/ListGroup';
+import Spinner from 'react-bootstrap/Spinner';
+
 
 const numInputs = ['points', 'currPoints', 'rowBingo', 'colBingo']
 let badTitles = [];
@@ -71,36 +73,43 @@ class TileModal extends React.Component {
   setCurrSuggestions(){
     if (this.state.wikiSearch.length == 0) {
       this.setSuggestions(null)
+      this.setState({triedToSearch: false});
       return;
     }
     const urlImages = `https://oldschool.runescape.wiki/rest.php/v1/search/title?q=${encodeURIComponent(this.state.wikiSearch)}&limit=5`
     fetch(urlImages)
       .then(res => res.json())
       .then((data) => {
-        data.pages?.forEach(async (item) => {
+        const fetchPromises = data.pages?.map(async (item) => {
           if (item.thumbnail && !badTitles.includes(item.title)) {
             if (this.state.storedSuggestions[item.title]) {
-              //this.setState({suggestions: [...this.state.suggestions, goodData[item.title]]})
-              this.setSuggestions(data.pages);
-              return;
+              return item;
             }
-            const url = getImageUrl(item.title)
-            fetch(url)
-              .then(response => {
-                if (response.status === 200) {
-                  let obj = {...this.state.storedSuggestions}
-                  item.url = url
-                  obj[item.title] = item
-                  this.setState({storedSuggestions: obj}, () => {
-                    this.setSuggestions(data.pages);
-                  });
-                } else {
-                  badTitles.push(item.title)
-                }
-              })
+            const url = getImageUrl(item.title);
+            const response = await fetch(url);
+            if (response.status === 200) {
+              item.url = url;
+              return item;
+            } else {
+              badTitles.push(item.title);
+              return null;
+            }
           }
-          this.setSuggestions(data.pages);
-        })
+          return null;
+        });
+
+        this.setState({triedToSearch: true});
+        Promise.all(fetchPromises).then((results) => {
+          const validResults = results.filter(item => item !== null);
+          const obj = {...this.state.storedSuggestions};
+          validResults.forEach(item => {
+            obj[item.title] = item;
+          });
+          this.setState({storedSuggestions: obj}, () => {
+            this.setSuggestions(data.pages);
+            this.setState({loading: false});
+          });
+        });
       })
   }
 
@@ -293,13 +302,19 @@ class TileModal extends React.Component {
             </Alert>
             <div style={{'display': 'flex'}}>
               <EditableInput enterAction={this.getImage} value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item Search" />
-              {/* <Button style={{'height': '38px', 'marginLeft': '15px'}} variant="primary" onClick={this.getImage}>Search</Button> */}
+              {/* <Button style={{'height': '38px', 'marginLeft': '15px</div>'}} variant="primary" onClick={this.getImage}>Search</Button> */}
             </div>
             { this.state.wikiSearchImg &&
               <img 
                 src={this.state.wikiSearchImg}
                 onClick={() => this.setImage(this.state.wikiSearchImg, true)}
               />
+            }
+            {
+              this.state.triedToSearch && this.state.suggestions?.length == 0 &&
+              <Alert>
+                No results found, try searching something else
+              </Alert>
             }
             {
               this.state.suggestions?.length > 0 &&
