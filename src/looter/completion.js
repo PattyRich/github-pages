@@ -41,6 +41,16 @@ export function completion(data) {
 	}
 
 	let subSets = getAllSubsets(x)
+	console.log(subSets)
+	// subsets will follow pascals triangle for amount of items in each "size"
+	// assuming the starting x length was 4 (triangle) [1,4,6,4,1] (1's) on edge are [] and [all items]
+	// the subsets that have 0 items will be 1
+	// the subsets that have 1 items will be 4
+	// the subsets that have 2 items will be 6 
+	// the subsets that have 3 items will be 4
+	// the subsets that have 4 items will be 1
+	// this is used below by getting the index of the first item in each subset so we know
+	// which items in that range should be used in the calc
 
 	subSets.sort((item1, item2)=> {
 		return item1.length >= item2.length ? 1 : -1
@@ -50,6 +60,8 @@ export function completion(data) {
 
 	let total = 0
 
+	// https://en.wikipedia.org/wiki/Coupon_collector%27s_problem
+	
 	for(let i=0; i<x.length; i++) {
 		let mult = Math.pow(-1,(x.length -1 - i))
 		for (let j=0; j<pascal[i]; j++) {
