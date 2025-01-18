@@ -212,6 +212,23 @@ def updateTeams(boardName, password, pwtype):
       update = mycol.update_one({"boardName": boardName}, newvalue)
 
   return jsonify(success=True)
+
+@app.route('/feedback', methods=['POST'])
+@limiter.limit("10 per hour")
+def postToDiscord():
+  data = json.loads(request.data.decode(), parse_float=float)
+  message = data.get('message')
+
+  webhook_url = "Webhook URL here"
+  payload = {
+    "content": message
+  }
+
+  response = requests.post(webhook_url, json=payload)
+  if response.status_code != 204:
+    return bad_request('Failed to post message to Discord.')
+
+  return jsonify(success=True)
   
 
 @app.route('/auth/<boardName>/<password>/<pwtype>', methods=['GET'])
