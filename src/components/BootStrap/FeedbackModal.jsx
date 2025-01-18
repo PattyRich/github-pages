@@ -4,19 +4,14 @@ import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal"
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
+import {fetchPost} from '../../utils/utils';
 
 const FeedbackModal = ({handleClose}) => {
   const [feedback, setFeedback] = useState('');
   const [sent, setSent] = useState(false);
 
   function sendMessage(message) {
-    fetch('https://discord.com/api/webhooks/1245534472938459147/KJLkB4Kt3GdnvkAywC8jRsFh1DCpIrcXHPQ_3_OW-vQGm68SGnz3PDhF0LXO05cAtY2o', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({content: message})
-    })
+    fetchPost('feedback', {message: message})
     setSent(true);
   } 
 
