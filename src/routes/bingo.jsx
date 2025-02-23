@@ -63,8 +63,8 @@ class Bingo extends React.Component {
 		if(currValue < 1) {
 			currValue = 1
 		}
-		if (currValue > 10) {
-			currValue = 10
+		if (currValue > 11) {
+			currValue = 11
 		}
 		stateChange[target] = currValue
 

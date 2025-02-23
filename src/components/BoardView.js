@@ -12,6 +12,7 @@ import Toast from './BootStrap/Toast'
 import EditTeams from './BootStrap/EditTeams'
 import SettingsModal from './BootStrap/SettingsModal';
 import FeedbackModal from './BootStrap/FeedbackModal';
+import EditBoard from './BootStrap/EditBoard';
 
 class BoardView extends React.Component {
   constructor(props) {
@@ -41,17 +42,24 @@ class BoardView extends React.Component {
     this.changeTeam = this.changeTeam.bind(this)
     this.toggleTeamEdit = this.toggleTeamEdit.bind(this)
     this.updateTeams = this.updateTeams.bind(this)
+    this.updateBoardSize = this.updateBoardSize.bind(this)
     this.calculateTeamPoints = this.calculateTeamPoints.bind(this)
     this.refreshData = this.refreshData.bind(this)
     this.clearAlert = this.clearAlert.bind(this)
     this.clipboard = this.clipboard.bind(this)
+    this.toggleBoardEdit = this.toggleBoardEdit.bind(this)
     window.addEventListener('resize', this.handleResize)
     
     //poll every 1 min for data
     this.refreshInterval = setInterval(()=> {
       this.refreshData()
     }, 60000)
+    this.refreshIntervall = setInterval(()=> {
+      console.log(this.state)
+    }, 1000)
   }
+
+
 
 
   promisedSetState = (newState) => new Promise(resolve => this.setState(newState, resolve));
@@ -189,6 +197,10 @@ class BoardView extends React.Component {
     this.setState({showEditTeams: !this.state.showEditTeams})
   }
 
+  toggleBoardEdit() {
+    this.setState({showEditBoard: !this.state.showEditBoard})
+  }
+
   handleResize() {  
     this.forceUpdate()  
   }
@@ -233,6 +245,24 @@ class BoardView extends React.Component {
     this.setState({isLoading: false})
     this.refreshData()
     this.alert("success", 'Teams Successfully Updated!') 
+  }
+
+  async updateBoardSize(info) { 
+    const dataToSend = {
+      rows: info.rows,
+      cols: info.cols
+    }
+    this.alert('loading')
+    let url = pwUrlBuilder(this.state)
+    let [data, err] = await fetchPut(`updateBoardSize/${url}`, {dataToSend})
+    if (err) {
+      this.alert('danger', err.message)
+      this.setState({isLoading: false})
+      return
+    }
+    this.setState({isLoading: false})
+    this.refreshData()
+    this.alert("success", 'Board Successfully Updated!') 
   }
 
   changeTeam(teamId) {
@@ -310,6 +340,7 @@ class BoardView extends React.Component {
               { this.state.privilage === 'admin' &&
                 <>
                   <Button click={this.toggleTeamEdit} text="Edit Teams" variant="primary"/>
+                  <Button style={{'marginRight': '10px'}} click={this.toggleBoardEdit} variant='primary' text={'Edit Board Size'} />
                   <Button style={{'marginRight': '10px'}} click={this.clipboard} variant='warning' text={'Auto Signin Link 📋'} />
                 </>
               }
@@ -370,6 +401,15 @@ class BoardView extends React.Component {
             teams={this.state.teamData}
             handleSave={this.updateTeams}
             passwordRequired={this.state.teamPasswordsRequired}
+          />
+        }
+        { this.state.showEditBoard &&
+          <EditBoard
+            show={true}
+            handleClose={this.toggleBoardEdit}
+            rows={this.state.boardData.length}
+            cols={this.state.boardData[0].length}
+            handleSave={this.updateBoardSize}
           />
         }
         {	this.state.showToast && 

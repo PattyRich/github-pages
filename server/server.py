@@ -214,6 +214,45 @@ def updateTeams(boardName, password, pwtype):
 
   return jsonify(success=True)
 
+
+@app.route('/updateBoardSize/<boardName>/<password>/<pwtype>', methods=['PUT'])
+@limiter.limit("1000 per hour")
+def updateBoardSize(boardName, password, pwtype):
+  cache, err = auth(boardName, password, pwtype, True)
+  if err:
+    return err
+
+  data = json.loads(request.data)
+  rows = data['dataToSend']['rows']
+  cols = data['dataToSend']['cols']
+
+  if not (1 <= rows <= 11) or not (1 <= cols <= 11):
+    return bad_request('Rows and columns must be between 1 and 11 inclusive.')
+  
+  boardData = cache['boardData']
+  teams = cache['teams']
+
+  if rows > len(boardData):
+    for i in range(rows - len(boardData)):
+      boardData.append(boardData[0].copy())
+  else:
+    boardData = boardData[:rows]
+
+  if cols > len(boardData[0]):
+    for i, row in enumerate(boardData):
+      boardData[i] = row + [row[0].copy() for _ in range(cols - len(row))]
+  else:
+    for i, row in enumerate(boardData):
+      boardData[i] = row[:cols]
+
+  
+
+  newvalue = { "$set": {'boardData': boardData}}
+  update = mycol.update_one({"boardName": boardName}, newvalue)
+  return jsonify(success=True)
+
+  
+
 @app.route('/feedback', methods=['POST'])
 @limiter.limit("10 per hour")
 def postToDiscord():
