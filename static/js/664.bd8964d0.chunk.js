@@ -1,0 +1,2 @@
+"use strict";(globalThis.webpackChunkgithub_pages=globalThis.webpackChunkgithub_pages||[]).push([[664],{664(a,e,n){n.r(e),n.d(e,{data:()=>t});let t={name:"zulrah",items:[{name:"Tanzanite fang",rate:1/1024},{name:"Magic fang",rate:1/1024},{name:"Serpentine visage",rate:1/1024},{name:"Uncut onyx",rate:1/1024},{name:"Tanzanite mutagen",rate:1/13106},{name:"Magma mutagen",rate:1/13106}],pet:{rate:4e3,name:"Pet snakeling"}}}}]);
+//# sourceMappingURL=664.bd8964d0.chunk.js.map

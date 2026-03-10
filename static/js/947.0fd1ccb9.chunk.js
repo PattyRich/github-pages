@@ -1,0 +1,2 @@
+"use strict";(globalThis.webpackChunkgithub_pages=globalThis.webpackChunkgithub_pages||[]).push([[947],{1947(e,a,t){t.r(a),t.d(a,{data:()=>n});let n={name:"vorkath",items:[{name:"Draconic visage",rate:2e-4},{name:"Dragonbone necklace",rate:.001},{name:"Skeletal visage",rate:2e-4}],pet:{rate:3e3,name:"Vorki"}}}}]);
+//# sourceMappingURL=947.0fd1ccb9.chunk.js.map
