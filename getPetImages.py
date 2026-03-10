@@ -7,14 +7,18 @@ import urllib.parse
 import string
 import os
 
-def tryToGetPet(name, urlBase):
+def tryToGetPet(name, urlBase, detailed = False):
+  assetDestination = 'public/assets/pets_pixel/' if not detailed else 'public/assets/detailed_pets/'
+  if (os.path.isfile(assetDestination + data[i] + '.png')):
+    print('Already have' + name)
+    return True
   name = name.replace(" ", "_")
   name = urllib.parse.quote(name)
   url = urlBase + name + '.png'
   response = requests.get(url)
   print(response.status_code, url)
   if (response.status_code == 200):
-    with open('public/assets/pets_pixel/' + data[i] + '.png', 'wb') as f:
+    with open(assetDestination + data[i] + '.png', 'wb') as f:
       f.write(response.content)
       return True
   return False
@@ -23,10 +27,10 @@ def tryToGetPet(name, urlBase):
 with open('itemsToGet.json', 'r') as f:
   data = json.load(f)
   for i in range(len(data)): 
-    if (os.path.isfile('public/assets/pets_pixel/' + data[i] + '.png')):
-      continue
-    
+    detailedURL = 'https://oldschool.runescape.wiki/images/thumb/' + data[i] + '_(follower).png'
+    detailedURL += '/300px-' + data[i] + '_(follower).png'
     tryToGetPet(data[i], 'https://oldschool.runescape.wiki/images/')
+    tryToGetPet(data[i], detailedURL, True)
     print(data[i])
 
 # def tryToGetPet(name, urlBase):
