@@ -422,10 +422,10 @@ class Osrs extends React.Component {
 		}
 	}
 
-  stopInterval(){
+	stopInterval(){
 		if (this.interval)
-  		clearInterval(this.interval)  
-  }
+		clearInterval(this.interval)  
+	}
 
 	componentWillUnmount(){
 		this.stopInterval()
@@ -433,29 +433,39 @@ class Osrs extends React.Component {
 
 
   render() {
+    const bossModes = [
+      { value: 'cox', label: 'Cox' },
+      { value: 'tob', label: 'ToB' },
+      { value: 'toa', label: 'ToA' },
+      { value: 'cg', label: 'Corrupted Gauntlet' },
+      { value: 'corp', label: 'Corp' },
+      { value: 'pnm', label: 'Phosani\'s Nightmare' },
+      { value: 'nex', label: 'Nex' },
+      { value: 'zulrah', label: 'Zulrah' },
+      { value: 'vorkath', label: 'Vorkath' },
+      { value: 'arma', label: 'Arma' },
+      { value: 'bandos', label: 'Bandos' },
+      { value: 'sara', label: 'Sara' },
+      { value: 'zammy', label: 'Zammy' },
+      { value: 'duke', label: 'Duke' },
+	  { value: 'araxxor', label:'Araxxor'},
+	  { value: 'yama', label:'Yama'},
+      { value: 'leviathan', label: 'Leviathan' },
+      { value: 'vardorvis', label: 'Vardorvis' },
+      { value: 'whisperer', label: 'Whisperer' },
+      { value: 'create', label: 'Create Your Own Boss' },
+      { value: 'clues', label: 'Clues' }
+    ];
+
     return (
     	<div>
     		<div className="box">
 		      <div>
-					<input type="radio" value="cox" name="" checked={this.state.mode === 'cox'} onChange={this.onChangeValue} /> Cox
-					<input type="radio" value="tob" name="" checked={this.state.mode === 'tob'} onChange={this.onChangeValue} /> ToB
-					<input type="radio" value="toa" name="" checked={this.state.mode === 'toa'} onChange={this.onChangeValue} /> ToA
-					<input type="radio" value="cg" name="" checked={this.state.mode === 'cg'} onChange={this.onChangeValue} /> Corrupted Gauntlet
-			    <input type="radio" value="corp" name="" checked={this.state.mode === 'corp'} onChange={this.onChangeValue} /> Corp
-		      <input type="radio" value="pnm" name="" checked={this.state.mode === 'pnm'} onChange={this.onChangeValue} /> Phosani's Nightmare
-					<input type="radio" value="nex" name="" checked={this.state.mode === 'nex'} onChange={this.onChangeValue} /> Nex
-		      <input type="radio" value="zulrah" name="" checked={this.state.mode === 'zulrah'} onChange={this.onChangeValue} /> Zulrah
-		  		<input type="radio" value="vorkath" name="" checked={this.state.mode === 'vorkath'} onChange={this.onChangeValue} /> Vorkath
-		    	<input type="radio" value="arma" name="" checked={this.state.mode === 'arma'} onChange={this.onChangeValue} /> Arma
-		    	<input type="radio" value="bandos" name="" checked={this.state.mode === 'bandos'} onChange={this.onChangeValue} /> Bandos
-		    	<input type="radio" value="sara" name="" checked={this.state.mode === 'sara'} onChange={this.onChangeValue} /> Sara
-		    	<input type="radio" value="zammy" name="" checked={this.state.mode === 'zammy'} onChange={this.onChangeValue} /> Zammy
-					<input type="radio" value="duke" name="" checked={this.state.mode === 'duke'} onChange={this.onChangeValue} /> Duke
-					<input type="radio" value="leviathan" name="" checked={this.state.mode === 'leviathan'} onChange={this.onChangeValue} /> Leviathan
-					<input type="radio" value="vardorvis" name="" checked={this.state.mode === 'vardorvis'} onChange={this.onChangeValue} /> Vardorvis
-					<input type="radio" value="whisperer" name="" checked={this.state.mode === 'whisperer'} onChange={this.onChangeValue} /> Whisperer
-		    	<input type="radio" value="create" name="" checked={this.state.mode === 'create'} onChange={this.onChangeValue} /> Create Your Own Boss
-					<input type="radio" value="clues" name="" checked={this.state.mode === 'clues'} onChange={this.onChangeValue} /> Clues
+					{bossModes.map((boss) => (
+						<>
+							<input type="radio" value={boss.value} name="" checked={this.state.mode === boss.value} onChange={this.onChangeValue} /> {boss.label}
+						</>
+					))}
 		      </div>
 					<div>
 						{this.state.mode === 'clues' &&

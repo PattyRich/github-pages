@@ -185,6 +185,7 @@ function looter(rolls, data, clueType) {
 	if (['duke', 'vardorvis', 'leviathan', 'whisperer'].includes(data.name)) {
 		dt2Check = true;
 	}
+	let sequence = 1;
 
 	for (let i=0; i<rolls; i++) {
 
@@ -277,12 +278,25 @@ function looter(rolls, data, clueType) {
 							}
 						}
 					}
+					let name = data.items[j].name
+					let index = j
+					//yucky code lazy atm
+					if (data.items[j].sequence) {
+						let seqItem = data.items.find((item) => item.sequence === sequence)
+						if (!seqItem) {
+							sequence = 1
+							seqItem = data.items.find((item) => item.sequence === sequence)
+						}
+						name = seqItem.name
+						index = data.items.findIndex((item) => item.sequence === sequence)
+						sequence += 1
+					}
 					rewards.push({
 						kc: kcc+1,
-						name: data.items[j].name
+						name: name
 					})
-					if (!data.items[j].extra){
-						checkList[j] += 1
+					if (!data.items[index].extra){
+						checkList[index] += 1
 					}
 					break
 				}

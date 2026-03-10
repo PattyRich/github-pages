@@ -5,7 +5,7 @@ import {data} from '../looter/pets-list';
 import PetSection from '../components/PetSection';
 
 import { toPng } from 'html-to-image';
-
+let totalPets = 0
 let backgrounds = ['black', 'black2', 'black3', 'black5', 'purple1'];
 //https://oldschool.runescape.wiki/images/thumb/Rocky_(follower).png/560px-Rocky_(follower).png
 //https://oldschool.runescape.wiki/images/' + urllib.parse.quote(urlName) + '.png
@@ -15,14 +15,18 @@ class Pets extends React.Component {
 
     let petData = []
     for (const section in data) {
+      totalPets += data[section].length
       for (const pet of data[section]) {
         petData.push({name: pet, obtained: false, kc: '-'})
       }
     }
+
+
+
     this.state = {
       petInfo: petData,
       name: 'Cool Player',
-      info:'(13/62)',
+      info:`(13/${totalPets})`,
       background: 0,
       usePixelImages: false
     }

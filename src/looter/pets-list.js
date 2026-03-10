@@ -12,7 +12,8 @@ export let data = {
     'Rocky',
     'Tangleroot',
     'Tiny tempor', 
-    'Quetzin'
+    'Quetzin',
+    'Soup'
   ],
   Slayer: [
     'Abyssal orphan',
@@ -22,7 +23,8 @@ export let data = {
     'Noon', 
     'Pet kraken', 
     'Pet smoke devil',
-    'Nid'
+    'Nid',
+    'Gull'
   ],
   Raids: [
     'Lil\' zik',
@@ -48,7 +50,11 @@ export let data = {
     'Youngllef',
     'Smol heredit',
     'Moxi',
-    'Huberte'
+    'Huberte',
+    'Dom', 
+    'Beef',
+    'Yami',
+    'Bran'
   ],
   Wilderness: [
     'Pet chaos elemental', 
