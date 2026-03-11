@@ -107,27 +107,8 @@ class Bingo extends React.Component {
 			return;		
 		}
 
-		//why i didn't make this server side??? the world may never know too lazy to fix
-		let boardData = []
-		for (let i=0; i<this.state.columns; i++) {
-			boardData.push([])
-			for (let j=0; j<this.state.rows; j++) {
-				boardData[i].push({
-					points: 0,
-					title: '',
-					description: '',
-					image: null,
-					rowBingo: 0,
-					colBingo: 0
-				})
-				if (i == 0 && j == 0) {
-					boardData[i][0].title = 'Example Tile';
-					boardData[i][0].image = {url: 'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png', opacity: 100}
-				}
-			}
-		}  
 		this.alert('loading')
-		const [data, err] = await fetchPost('createBoard', {...this.state, boardData})
+		const [data, err] = await fetchPost('createBoard', {...this.state })
 		if (data) {
 			this.addToRecent(this.state.recentBoards, this.state.boardName, this.state.adminPassword, 'admin')
 			this.props.navigate('/bingo/' + this.state.boardName, { state: 

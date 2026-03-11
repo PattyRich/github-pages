@@ -6,12 +6,16 @@ import EditableInput from './EditableInput';
 import Alert from "react-bootstrap/Alert"
 import Form from 'react-bootstrap/Form';
 
+const boardSizeOptions = [1,2,3,4,5,6,7,8,9,10];
+
 class EditTeams extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
       teams: JSON.parse(JSON.stringify(props.teams)),
-      passwordRequired: props.passwordRequired || false
+      passwordRequired: props.passwordRequired || false,
+      columns: props.columns,
+      rows: props.rows
     }
     this.inputState = this.inputState.bind(this)
     this.handleSave = this.handleSave.bind(this)
@@ -41,7 +45,7 @@ class EditTeams extends React.Component {
   }
 
   handleSave() {
-    this.props.handleSave(this.state.teams, this.state.passwordRequired)
+    this.props.handleSave(this.state.teams, this.state.passwordRequired, this.state.rows, this.state.columns)
     this.props.handleClose()
   }
 
@@ -72,19 +76,32 @@ class EditTeams extends React.Component {
         centered
       >
         <Modal.Header closeButton>
-          <Modal.Title id="contained-modal-title-vcenter" style={{'width': '100%  '}}>
+          <Modal.Title id="contained-modal-title-vcenter">
             <div className='flex edit-teams' style={{'justifyContent': 'space-between'}}>
-              <div> Edit Teams </div>
-              <div className='flex-center' style={{'marginRight': '200px', 'alignItems': 'center'}}>
+              <div className='flex-center' style={{'alignItems': 'center', 'width': '300px', 'marginRight': '50px'}}>
                 <BSButton click={this.removeTeam} text="-"></BSButton>
                   # of Teams : {this.state.teams.length}
                 <BSButton click={this.addTeam} text="+"></BSButton>
+              </div>
+              <div style={{'alignItems': 'center',  'paddingRight': '100px'}}>
+                <div>
+                  Columns (up and down)
+                  <Form.Select onChange={(e) => {this.inputState(e, 'columns')}} value={this.state.columns} style={{'marginLeft': '10px'}}>
+                    {boardSizeOptions.map(num => <option key={num} value={num}>{num}</option>)}
+                  </Form.Select>
+                </div>
+                <div style={{'marginTop': '15px'}}>
+                  Rows (left and right)
+                  <Form.Select onChange={(e) => {this.inputState(e, 'rows')}} value={this.state.rows} style={{'marginLeft': '10px'}}>
+                    {boardSizeOptions.map(num => <option key={num} value={num}>{num}</option>)}
+                  </Form.Select>
+                </div>
               </div>
             </div>
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          <Alert variant={'danger'}>***NOTE removing teams will delete all their current data.</Alert>
+          <Alert variant={'danger'}>***NOTE removing teams or columns/rows will delete all their current data.</Alert>
           <hr/>
           <div style={{marginBottom: '15px'}}> 
             <Form.Check // prettier-ignore

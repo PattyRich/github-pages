@@ -3,3 +3,4 @@ Flask_Cors==4.0.0
 Flask_Limiter==2.4.5.1
 pymongo==4.1.1
 requests==2.27.1
+python-dotenv==0.20.0

@@ -217,10 +217,12 @@ class BoardView extends React.Component {
     await this.updateBoard(row,col, data)  
   }
 
-  async updateTeams(info, passwordRequired) { 
+  async updateTeams(info, passwordRequired, rows, columns) { 
     const dataToSend = {
       teamData: info,
-      passwordRequired
+      passwordRequired,
+      rows, 
+      columns
     }
     this.alert('loading')
     let url = pwUrlBuilder(this.state)
@@ -309,7 +311,7 @@ class BoardView extends React.Component {
             <>
               { this.state.privilage === 'admin' &&
                 <>
-                  <Button click={this.toggleTeamEdit} text="Edit Teams" variant="primary"/>
+                  <Button click={this.toggleTeamEdit} text="Edit Board" variant="primary"/>
                   <Button style={{'marginRight': '10px'}} click={this.clipboard} variant='warning' text={'Auto Signin Link 📋'} />
                 </>
               }
@@ -370,6 +372,8 @@ class BoardView extends React.Component {
             teams={this.state.teamData}
             handleSave={this.updateTeams}
             passwordRequired={this.state.teamPasswordsRequired}
+            columns={this.columns}
+            rows={this.rows}
           />
         }
         {	this.state.showToast && 

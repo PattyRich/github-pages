@@ -372,7 +372,43 @@ export let data = {
         name: 'Huberte',
         rate: '1/400'
       }]
-    }
+    },
+    {
+      items: [{
+        name: 'Bran',
+        rate: '1/1500'
+      }]
+    },
+    {
+      items: [{
+        name: 'Yami',
+        rate: '1/2500'
+      }]
+    },
+    {
+      items: [{
+        name: 'Dom',
+        rate: '1/120'
+      }]
+    },
+    {
+      items: [{
+        name: 'Gull',
+        rate: '1/3000'
+      }]
+    },
+    {
+      items: [{
+        name: 'Beef',
+        rate: '1/1000'
+      }]
+    },
+    {
+      items: [{
+        name: 'Soup',
+        rate: '1/4500'
+      }]
+    },
   ]
 }
 
