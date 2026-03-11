@@ -21,8 +21,20 @@ mycol = db['bingo']
 
 adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
 generalTileKeys = ['proof', 'checked', 'currPoints']
-boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams']
-
+boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns']
+defaultTeamObj = {
+  'checked': False,
+  'proof': '',
+  'currPoints': 0
+}
+defaultBoardObj = {
+  'points': 0,
+  'title': '',
+  'description': '',
+  'image': None,
+  'rowBingo': 0,
+  'colBingo': 0
+}
 indexes = mycol.index_information()
 
 if(len(indexes) != 1):
@@ -35,12 +47,7 @@ def initEmptyTeamData(row, col):
   for i in range(row):
     teamData.append([])
     for j in range(col):
-      teamObj = {
-        'checked': False,
-        'proof': '',
-        'currPoints': 0
-      }
-      teamData[i].append(teamObj)
+      teamData[i].append(defaultTeamObj)
   return teamData
 
 
@@ -84,6 +91,17 @@ def createBoard():
     return bad_request('Board Name Already Taken!!')
 
   data = clearBadData(data, boardCreationKeys)
+
+  boardData = []
+  for i in range(data['columns']):
+    boardData.append([])
+    for j in range(data['rows']):
+      boardData[i].append(defaultBoardObj)
+      if i == 0 and j == 0:
+        boardData[i][0]['title'] = 'Example Tile'
+        boardData[i][0]['image'] = {'url': 'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png', 'opacity': 100}
+  
+  data['boardData'] = boardData
 
   for i in range(data['teams']):
     team = 'team-' + str(i)
@@ -166,15 +184,21 @@ def updateTeams(boardName, password, pwtype):
 
   data = json.loads(request.data)
   requirePassword = data['dataToSend']['passwordRequired']
+  rows = int(data['dataToSend']['rows'])
+  cols = int(data['dataToSend']['columns'])
   data = data['dataToSend']['teamData']
   size = len(data)
+
+  changed = changeBoardSize(data, rows, cols, cache, boardName)
+  if changed:
+    cache = auth(boardName, password, pwtype)[0]
 
   updateOlderTeams = data[:cache['teams']]
   ## adding a team // init an empty one here and we overwrite it with relevant data at end
   if (size) > cache['teams']:
     for i in range(size - cache['teams']):
       teamKey = 'team-' + str(cache['teams'] + i)
-      teamData = initEmptyTeamData(len(cache['boardData']), len(cache['boardData'][0]))
+      teamData = initEmptyTeamData(cols, rows)
       teamData = {
         'name': data[cache['teams'] + i]['data']['name'],
         'teamData': teamData
@@ -195,9 +219,13 @@ def updateTeams(boardName, password, pwtype):
     password = ''
     if 'password' in updateOlderTeams[i]['data']:
       password = updateOlderTeams[i]['data']['password']
+
+    # some nasty logic here. We need cache for teamData, its not actually going to be changing
+    # from this call but we need it for the mongo obj, name and password could actually change though
+    # teamData might change due to board size changes, but not in the same way as direct changes from users for pw / name
     overWrite[teamKey] = {
       'name': updateOlderTeams[i]['data']['name'],
-      'teamData': updateOlderTeams[i]['data']['teamData'],
+      'teamData': cache[teamKey]['teamData'],
       'password': password
     }
     ## spread object for all sets since it won't take a dict
@@ -213,6 +241,87 @@ def updateTeams(boardName, password, pwtype):
       update = mycol.update_one({"boardName": boardName}, newvalue)
 
   return jsonify(success=True)
+
+def changeBoardSize(teamData, rows, cols, cache, boardName):
+  if(cache['columns'] != cols or cache['rows'] != rows):
+
+    lessRows = False
+    moreRows = False
+    lessCols = False
+    moreCols = False
+    overWrite = {}
+    
+    if rows < cache['rows']:
+      lessRows = True
+    elif rows > cache['rows']:
+      moreRows = True
+    
+    if cols < cache['columns']:
+      lessCols = True 
+    elif cols > cache['columns']:
+      moreCols = True
+
+    # team changes
+    for i in range(cache['teams']):
+      teamKey = 'team-' + str(i)
+      teamData = cache[teamKey]['teamData']
+
+      overWrite[teamKey] = {
+        'name': cache[teamKey]['name'],
+        'password': cache[teamKey].get('password', '')
+      }
+
+      if lessRows:
+        for j in range(len(teamData)):
+          teamData[j] = teamData[j][:rows]
+      elif moreRows:
+        for j in range(len(teamData)):
+          for k in range(rows - cache['rows']):
+            teamData[j].append(defaultTeamObj)
+
+      if lessCols:
+        teamData = teamData[:cols]
+      elif moreCols:
+        for j in range(cols - cache['columns']):
+          teamData.append([])
+          for k in range(rows):
+            teamData[len(teamData) -1].append(defaultTeamObj)
+      
+      overWrite[teamKey]['teamData'] = teamData
+
+    overWrite['rows'] = rows
+    overWrite['columns'] = cols 
+
+    # board data changes
+    if lessRows:
+      boardData = cache['boardData']
+      for i in range(len(boardData)):
+        boardData[i] = boardData[i][:rows]
+      overWrite['boardData'] = boardData
+    elif moreRows:
+      boardData = cache['boardData']
+      for i in range(len(boardData)):
+        for j in range(rows - cache['rows']):
+          boardData[i].append(defaultBoardObj)
+      overWrite['boardData'] = boardData
+    
+    if lessCols:
+      boardData = cache['boardData'][:cols]
+      overWrite['boardData'] = boardData
+    elif moreCols:
+      boardData = cache['boardData']
+      for i in range(cols - cache['columns']):
+        boardData.append([])
+        for j in range(rows):
+          boardData[len(boardData) -1].append(defaultBoardObj)
+      overWrite['boardData'] = boardData
+    
+    newvalue = { "$set": { **overWrite }}
+    update = mycol.update_one({"boardName": boardName}, newvalue)
+
+    return True
+  else:
+    return False
 
 @app.route('/feedback', methods=['POST'])
 @limiter.limit("10 per hour")
