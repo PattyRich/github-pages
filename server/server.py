@@ -47,7 +47,7 @@ def initEmptyTeamData(row, col):
   for i in range(row):
     teamData.append([])
     for j in range(col):
-      teamData[i].append(defaultTeamObj)
+      teamData[i].append(defaultTeamObj.copy())
   return teamData
 
 
@@ -96,7 +96,7 @@ def createBoard():
   for i in range(data['columns']):
     boardData.append([])
     for j in range(data['rows']):
-      boardData[i].append(defaultBoardObj)
+      boardData[i].append(defaultBoardObj.copy())
       if i == 0 and j == 0:
         boardData[i][0]['title'] = 'Example Tile'
         boardData[i][0]['image'] = {'url': 'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png', 'opacity': 100}
@@ -243,7 +243,9 @@ def updateTeams(boardName, password, pwtype):
   return jsonify(success=True)
 
 def changeBoardSize(teamData, rows, cols, cache, boardName):
-  if(cache['columns'] != cols or cache['rows'] != rows):
+  currCols = len(cache['boardData'])
+  currRows = len(cache['boardData'][0])
+  if(currCols != cols or currRows != rows):
 
     lessRows = False
     moreRows = False
@@ -251,14 +253,14 @@ def changeBoardSize(teamData, rows, cols, cache, boardName):
     moreCols = False
     overWrite = {}
     
-    if rows < cache['rows']:
+    if rows < currRows:
       lessRows = True
-    elif rows > cache['rows']:
+    elif rows > currRows:
       moreRows = True
     
-    if cols < cache['columns']:
+    if cols < currCols:
       lessCols = True 
-    elif cols > cache['columns']:
+    elif cols > currCols:
       moreCols = True
 
     # team changes
@@ -276,16 +278,16 @@ def changeBoardSize(teamData, rows, cols, cache, boardName):
           teamData[j] = teamData[j][:rows]
       elif moreRows:
         for j in range(len(teamData)):
-          for k in range(rows - cache['rows']):
-            teamData[j].append(defaultTeamObj)
+          for k in range(rows - currRows):
+            teamData[j].append(defaultTeamObj.copy())
 
       if lessCols:
         teamData = teamData[:cols]
       elif moreCols:
-        for j in range(cols - cache['columns']):
+        for j in range(cols - currCols):
           teamData.append([])
           for k in range(rows):
-            teamData[len(teamData) -1].append(defaultTeamObj)
+            teamData[len(teamData) -1].append(defaultTeamObj.copy())
       
       overWrite[teamKey]['teamData'] = teamData
 
@@ -301,19 +303,19 @@ def changeBoardSize(teamData, rows, cols, cache, boardName):
     elif moreRows:
       boardData = cache['boardData']
       for i in range(len(boardData)):
-        for j in range(rows - cache['rows']):
-          boardData[i].append(defaultBoardObj)
+        for j in range(rows - currRows):
+          boardData[i].append(defaultBoardObj.copy())
       overWrite['boardData'] = boardData
-    
+      
     if lessCols:
       boardData = cache['boardData'][:cols]
       overWrite['boardData'] = boardData
     elif moreCols:
       boardData = cache['boardData']
-      for i in range(cols - cache['columns']):
+      for i in range(cols - currCols):
         boardData.append([])
         for j in range(rows):
-          boardData[len(boardData) -1].append(defaultBoardObj)
+          boardData[len(boardData) -1].append(defaultBoardObj.copy())
       overWrite['boardData'] = boardData
     
     newvalue = { "$set": { **overWrite }}
