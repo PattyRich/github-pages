@@ -46,21 +46,21 @@ root.render(
   			<Route path="/github-pages/osrs" element={<Osrs />} />
    			<Route path="/mage-run" element={<Magerun />} />
   			<Route path="/github-pages/mage-run" element={<Magerun />} />
-				<Route path="/toa-flip" element={<ToaFlip />} />
+			<Route path="/toa-flip" element={<ToaFlip />} />
   			<Route path="/github-pages/toa-flip" element={<ToaFlip />} />
-				<Route path="/bingo/create" element={<Bingo key='create' screenSkip={2} />} />
-				<Route path="/github-pages/bingo/create" element={<Bingo key='create' screenSkip={2} />} />
-				<Route path="/bingo/join" element={<Bingo key='join' screenSkip={4} />} />
-				<Route path="/github-pages/bingo/join" element={<Bingo key='join' screenSkip={4} />} />
-				<Route path="/bingo" element={<Bingo />} />
+			<Route path="/bingo/create" element={<Bingo key='create' screenSkip={2} />} />
+			<Route path="/github-pages/bingo/create" element={<Bingo key='create' screenSkip={2} />} />
+			<Route path="/bingo/join" element={<Bingo key='join' screenSkip={4} />} />
+			<Route path="/github-pages/bingo/join" element={<Bingo key='join' screenSkip={4} />} />
+			<Route path="/bingo" element={<Bingo />} />
   			<Route path="/github-pages/bingo" element={<Bingo />} />
-				<Route path="/bingo/:boardName" element={<BoardView />} />
+			<Route path="/bingo/:boardName" element={<BoardView />} />
   			<Route path="/github-pages/bingo/:boardName" element={<BoardView />} />
-				<Route path="/bingo-draft" element={<BingoDraft />} />
-  			<Route path="/github-pages/bingo-draft" element={<BingoDraft />} />				
-				<Route path="/pets" element={<Pets />} />
+			<Route path="/bingo-draft" element={<BingoDraft />} />
+  			<Route path="/github-pages/bingo-draft" element={<BingoDraft />} />		
+			<Route path="/pets" element={<Pets />} />
   			<Route path="/github-pages/pets" element={<Pets />} />			
-				<Route path="/all-pets" element={<AllPets />} />
+			<Route path="/all-pets" element={<AllPets />} />
   			<Route path="/github-pages/all-pets" element={<AllPets />} />	
   			<Route
 		      path="*"
