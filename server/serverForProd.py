@@ -346,7 +346,7 @@ def postToDiscord():
   data = json.loads(request.data.decode(), parse_float=float)
   message = data.get('message')
 
-  webhook_url = creation_webhook_url
+  webhook_url = feedback_webhook_url
   payload = {
     "content": message
   }
