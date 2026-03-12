@@ -5,6 +5,12 @@ import time, requests
 import pymongo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+import os
+from dotenv import load_dotenv
+load_dotenv()
+
+feedback_webhook_url = os.getenv('FEEDBACK_WEBHOOK')
+creation_webhook_url = os.getenv('CREATION_WEBHOOK')
 
 app = Flask(__name__, static_folder='build')
 CORS(app)
@@ -117,6 +123,16 @@ def createBoard():
   insert = mycol.insert_one(data)
   if (not insert):
     return bad_request('Failed to create bingo board in Mongo.')
+
+  discord_webhook_url = creation_webhook_url
+  board_url = 'https://pattyrich.github.io/github-pages/#/bingo/{}?password={}'.format(data["boardName"].replace(' ', '%20'), data.get('generalPassword', ''))
+  discord_message = {
+    'content': 'New bingo board created: **[{}]({})**'.format(data["boardName"], board_url)
+  }
+  try:
+    requests.post(discord_webhook_url, json=discord_message)
+  except Exception as e:
+    pass
 
   return jsonify(success=True)
 
@@ -331,7 +347,7 @@ def postToDiscord():
   data = json.loads(request.data)
   message = data.get('message')
 
-  webhook_url = "Webhook URL here"
+  webhook_url = creation_webhook_url
   payload = {
     "content": message
   }
