@@ -246,7 +246,7 @@ class Bingo extends React.Component {
 						</Alert>
 						</div>
 						<EditableInput title='General Password' stateKey='generalPassword' change={this.inputState} value={this.state.generalPassword} />
-						Board Size. (This cannot be changed later)
+						Board Size.
 						<div className="board-controls"> 
 							<Button click={()=> this.changeNum(-1, 'rows')} text="-"></Button>
 							Row : {this.state.rows}
