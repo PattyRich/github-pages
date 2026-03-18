@@ -33,7 +33,7 @@ const FeedbackModal = ({handleClose}) => {
       { sent ?
         <>
           <h1> Thanks! </h1>
-          <div style={{'marginBottom': '10px'}}> If you want to talk to me directly my in game name is Praynr I may be on! </div>
+          <div style={{'marginBottom': '10px'}}> If you want to talk to me directly my in game name is Praynr or Praynyr I may be on! </div>
         </>
         :
         <>
