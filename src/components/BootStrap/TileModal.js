@@ -307,8 +307,7 @@ class TileModal extends React.Component {
             }
             <hr/>
             <Alert>
-              Click any image above to set it OR
-              Type ANY item's below
+              Click any image above to set it or type an item's name below as it would appear on the wiki.
               <br/>
               Examples : (Coins, Infernal cape, Bucket of milk, Sigil of the menacing mage, Beaver, Plank)
             </Alert>
@@ -349,6 +348,7 @@ class TileModal extends React.Component {
                 })}
               </ListGroup>
             }
+            <br/>
             <input 
               type="file" 
               accept=".png,.jpeg" 
@@ -356,7 +356,7 @@ class TileModal extends React.Component {
               style={{display: 'none'}}
               ref={(input) => this.fileInput = input}
             />
-            <Button onClick={() => this.fileInput.click()}>Custom image</Button>
+            <Button style={{marginTop: '10px'}} onClick={() => this.fileInput.click()}>Custom image</Button>
             </>
           }
         </Modal.Body>
