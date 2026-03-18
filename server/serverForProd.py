@@ -1,16 +1,14 @@
-from flask import Flask, jsonify, Response, request, abort
-from flask_cors import CORS, cross_origin
+from flask import Flask, jsonify, request
+from flask_cors import CORS
 import json, datetime
 import time, requests
 import pymongo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
+from imgSizeReducer import reduce_image_size
 import os
 from dotenv import load_dotenv
 load_dotenv()
-
-feedback_webhook_url = os.getenv('FEEDBACK_WEBHOOK')
-creation_webhook_url = os.getenv('CREATION_WEBHOOK')
 
 from server import app
 
@@ -123,15 +121,9 @@ def createBoard():
   if (not insert):
     return bad_request('Failed to create bingo board in Mongo.')
 
-  discord_webhook_url = creation_webhook_url
   board_url = 'https://pattyrich.github.io/github-pages/#/bingo/{}?password={}'.format(data["boardName"].replace(' ', '%20'), data.get('generalPassword', ''))
-  discord_message = {
-    'content': 'New bingo board created: **[{}]({})**'.format(data["boardName"], board_url)
-  }
-  try:
-    requests.post(discord_webhook_url, json=discord_message)
-  except Exception as e:
-    pass
+  discord_message = 'New bingo board created: **[{}]({})**'.format(data["boardName"], board_url)
+  postToDiscord(discord_message, 'CREATION_WEBHOOK')
 
   return jsonify(success=True)
 
@@ -170,6 +162,15 @@ def updateBoard(boardName, password, pwtype, teampw):
 
     boardData = cache['boardData']
     boardData[data['row']][data['col']] = { **boardData[data['row']][data['col']], **data['info']}
+
+    if data['info']['image']['url'] [0:5] == 'data:':
+      try:
+        reduced_image = reduce_image_size(data['info']['image']['url'], 20)
+        boardData[data['row']][data['col']]['image']['url'] = reduced_image
+      except Exception as e:
+        postToDiscord('Image reduction failed: {} for {}'.format(str(e), boardName), 'DEBUG_WEBHOOK')
+        pass
+
 
     newvalue = { "$set": {'boardData': boardData}}
     mycol.update_one({"boardName": boardName}, newvalue)
@@ -321,7 +322,7 @@ def changeBoardSize(teamData, rows, cols, cache, boardName):
         for j in range(rows - currRows):
           boardData[i].append(defaultBoardObj.copy())
       overWrite['boardData'] = boardData
-
+      
     if lessCols:
       boardData = cache['boardData'][:cols]
       overWrite['boardData'] = boardData
@@ -342,17 +343,12 @@ def changeBoardSize(teamData, rows, cols, cache, boardName):
 
 @app.route('/feedback', methods=['POST'])
 @limiter.limit("10 per hour")
-def postToDiscord():
+def postFeedbackToDiscord():
   data = json.loads(request.data.decode(), parse_float=float)
   message = data.get('message')
 
-  webhook_url = feedback_webhook_url
-  payload = {
-    "content": message
-  }
-
-  response = requests.post(webhook_url, json=payload)
-  if response.status_code != 204:
+  result = postToDiscord(message, 'FEEDBACK_WEBHOOK')
+  if not result:
     return bad_request('Failed to post message to Discord.')
 
   return jsonify(success=True)
@@ -365,3 +361,16 @@ def authMethod(boardName, password, pwtype):
   if err:
     return err
   return jsonify(success=True)
+
+def postToDiscord(message, webhook_env_var):
+  webhook_url = os.getenv(webhook_env_var)
+  payload = {
+    "content": message
+  }
+  try:
+    requests.post(webhook_url, json=payload)
+    return True
+  except Exception as e:
+    postToDiscord('Failed to post message to Discord: {}'.format(str(e)), 'DEBUG_WEBHOOK')
+    return False
+

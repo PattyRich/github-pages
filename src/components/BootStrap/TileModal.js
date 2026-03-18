@@ -37,6 +37,7 @@ class TileModal extends React.Component {
     this.toggleImageSelect = this.toggleImageSelect.bind(this)
     this.setCurrSuggestions = this.setCurrSuggestions.bind(this)
     this.setSuggestions = this.setSuggestions.bind(this)
+    this.handleCustomImage = this.handleCustomImage.bind(this)
 
     const debounce = (func, delay) => {
       let debounceTimer;
@@ -48,6 +49,19 @@ class TileModal extends React.Component {
     };
 
     this.setCurrSuggestions = debounce(this.setCurrSuggestions, 600);
+  }
+
+  handleCustomImage(e) {
+    const file = e.target.files[0];
+    if (file && (file.type === 'image/png' || file.type === 'image/jpeg')) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        this.setImage(event.target.result, true);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      alert('Please select a valid PNG or JPEG file');
+    }
   }
 
   inputState(e, target) {
@@ -71,11 +85,11 @@ class TileModal extends React.Component {
 	}
 
   setCurrSuggestions(){
+    this.setSuggestions(null)
     if (this.state.wikiSearch.length == 0) {
-      this.setSuggestions(null)
-      this.setState({triedToSearch: false});
       return;
     }
+    this.setState({loading: true, triedToSearch: false});
     const urlImages = `https://oldschool.runescape.wiki/rest.php/v1/search/title?q=${encodeURIComponent(this.state.wikiSearch)}&limit=5`
     fetch(urlImages)
       .then(res => res.json())
@@ -98,7 +112,6 @@ class TileModal extends React.Component {
           return null;
         });
 
-        this.setState({triedToSearch: true});
         Promise.all(fetchPromises).then((results) => {
           const validResults = results.filter(item => item !== null);
           const obj = {...this.state.storedSuggestions};
@@ -106,8 +119,7 @@ class TileModal extends React.Component {
             obj[item.title] = item;
           });
           this.setState({storedSuggestions: obj}, () => {
-            this.setSuggestions(data.pages);
-            this.setState({loading: false});
+            this.setSuggestions(validResults);
           });
         });
       })
@@ -124,7 +136,7 @@ class TileModal extends React.Component {
         data.push(this.state.storedSuggestions[item.title])
       }
     });
-    this.setState({suggestions: data})
+    this.setState({suggestions: data, triedToSearch: true, loading: false})
   }
 
   toggleImageSelect() {
@@ -295,13 +307,12 @@ class TileModal extends React.Component {
             }
             <hr/>
             <Alert>
-              Click any image above to set it OR
-              Type ANY item's below
+              Click any image above to set it or type an item's name below as it would appear on the wiki.
               <br/>
               Examples : (Coins, Infernal cape, Bucket of milk, Sigil of the menacing mage, Beaver, Plank)
             </Alert>
             <div style={{'display': 'flex'}}>
-              <EditableInput enterAction={this.getImage} value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item Search" />
+              <EditableInput value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item Search" />
               {/* <Button style={{'height': '38px', 'marginLeft': '15px</div>'}} variant="primary" onClick={this.getImage}>Search</Button> */}
             </div>
             { this.state.wikiSearchImg &&
@@ -309,6 +320,12 @@ class TileModal extends React.Component {
                 src={this.state.wikiSearchImg}
                 onClick={() => this.setImage(this.state.wikiSearchImg, true)}
               />
+            }
+            {
+              this.state.loading &&
+              <Spinner animation="border" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </Spinner>
             }
             {
               this.state.triedToSearch && this.state.suggestions?.length == 0 &&
@@ -331,6 +348,15 @@ class TileModal extends React.Component {
                 })}
               </ListGroup>
             }
+            <br/>
+            <input 
+              type="file" 
+              accept=".png,.jpeg" 
+              onChange={this.handleCustomImage}
+              style={{display: 'none'}}
+              ref={(input) => this.fileInput = input}
+            />
+            <Button style={{marginTop: '10px'}} onClick={() => this.fileInput.click()}>Custom image</Button>
             </>
           }
         </Modal.Body>
