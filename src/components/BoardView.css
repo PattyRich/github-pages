@@ -4,9 +4,9 @@
   justify-content: center;
   align-items: center;
   height: 100%;
-  background-color: #0c1424;
-  /* Deep thematic blue fallback */
-  background-image: linear-gradient(rgba(12, 20, 36, 0.8), rgba(12, 20, 36, 0.8)), url('../../public/assets/backgrounds/osrs_bg_magic.png');
+  background-color: var(--osrs-bg-brown-dark);
+  /* Deep thematic brown fallback */
+  background-image: linear-gradient(rgba(43, 38, 30, 0.85), rgba(43, 38, 30, 0.85)), url('../../public/assets/backgrounds/osrs_bg_stone.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;
@@ -17,9 +17,9 @@
   display: flex;
   flex-flow: column;
   height: 100%;
-  background-color: #0c1424;
-  /* Deep thematic blue fallback */
-  background-image: linear-gradient(rgba(12, 20, 36, 0.8), rgba(12, 20, 36, 0.8)), url('../../public/assets/backgrounds/osrs_bg_magic.png');
+  background-color: var(--osrs-bg-brown-dark);
+  /* Deep thematic brown fallback */
+  background-image: linear-gradient(rgba(43, 38, 30, 0.85), rgba(43, 38, 30, 0.85)), url('../../public/assets/backgrounds/osrs_bg_stone.png');
   background-size: cover;
   background-position: center;
   background-attachment: fixed;

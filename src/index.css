@@ -134,15 +134,18 @@ code {
 .form-control:focus {
   background-color: var(--osrs-bg-brown) !important;
   color: var(--osrs-text-gold) !important;
-  box-shadow: inset 1px 1px 4px rgba(0,0,0,0.8), 0 0 5px var(--osrs-text-gold) !important;
+  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.8), 0 0 5px var(--osrs-text-gold) !important;
   border-color: var(--osrs-text-gold) !important;
 }
 
-.form-control:disabled, .form-control[readonly] {
-  background-color: #2b2318 !important; /* Duller, darker brown */
-  color: #8c7e6a !important; /* Muted, grayish tan */
+.form-control:disabled,
+.form-control[readonly] {
+  background-color: #2b2318 !important;
+  /* Duller, darker brown */
+  color: #8c7e6a !important;
+  /* Muted, grayish tan */
   opacity: 0.7 !important;
-  box-shadow: inset 1px 1px 5px rgba(0,0,0,0.9) !important;
+  box-shadow: inset 1px 1px 5px rgba(0, 0, 0, 0.9) !important;
   cursor: not-allowed;
 }
 
@@ -248,4 +251,62 @@ code {
 hr {
   border-top: 2px solid var(--osrs-border-dark);
   opacity: 1;
+}
+
+/* OSRS Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--osrs-bg-brown-dark);
+  border-left: 2px solid var(--osrs-border-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--osrs-button-bg);
+  border: 2px solid var(--osrs-border-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--osrs-button-hover);
+}
+
+/* OSRS Style Tooltips */
+.tooltip-inner {
+  background-color: var(--osrs-bg-inventory) !important;
+  color: var(--osrs-text-gold) !important;
+  border: 2px solid #1d1813 !important;
+  box-shadow: inset 0 0 0 2px #5d503f !important;
+  font-family: 'osrsFont', sans-serif !important;
+  text-shadow: 1px 1px 0px black !important;
+  border-radius: 0 !important;
+  padding: 6px 10px !important;
+  font-size: 1rem !important;
+}
+
+.tooltip .tooltip-arrow::before {
+  display: none !important;
+  /* Hide the arrow for the blocky menu look */
+}
+
+/* OSRS Checkbox styling */
+.form-check-input {
+  background-color: var(--osrs-bg-inventory) !important;
+  border: 2px solid var(--osrs-border-dark) !important;
+  border-radius: 0 !important;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light) !important;
+  cursor: pointer;
+  transition: none !important;
+}
+
+.form-check-input:checked {
+  background-color: #24461a !important;
+  /* OSRS Herblore Green for checked state */
+  border-color: #1d1813 !important;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 2px rgba(255, 152, 31, 0.5) !important;
+  border-color: var(--osrs-text-gold) !important;
 }
