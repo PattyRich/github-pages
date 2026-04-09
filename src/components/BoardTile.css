@@ -25,6 +25,7 @@
   width: 100%;
   color: var(--osrs-text-yellow);
   text-shadow: 1px 1px 1px black;
+  z-index: 20;
 }
 
 .box-flex:hover {
