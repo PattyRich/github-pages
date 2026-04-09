@@ -7,23 +7,27 @@
 }
 
 .start-menu {
-    height: 100vh;
-    width: 50vw;
+    height: 60vh;
+    width: 40vw;
     justify-content: center;
     align-items: center;
     display: flex;
     cursor: pointer;
-    background-color: white;
+    background-color: var(--osrs-bg-brown);
+    border: 4px solid var(--osrs-border-dark);
+    box-shadow: inset 0 0 0 2px var(--osrs-border-light), 0 4px 8px rgba(0, 0, 0, 0.5);
     user-select: none;
     flex-direction: column;
+    margin: 20px;
+    transition: filter 0.2s;
 }
 
 .start-menu:hover {
-    filter: brightness(85%);
+    filter: brightness(1.2);
 }
 
 .start-menu:active {
-    filter: brightness(80%);
+    filter: brightness(0.9);
 }
 
 .create-menu {
@@ -31,7 +35,12 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    height: 100vh;
+    min-height: 100vh;
+    background-color: var(--osrs-bg-brown-dark);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    padding: 20px;
 }
 
 .margin-15 {
@@ -46,22 +55,37 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    background-color: var(--osrs-bg-inventory);
+    border: 2px solid var(--osrs-border-dark);
+    padding: 10px;
+    margin-top: 10px;
 }
 
 .board-controls button {
     margin: 5px;
-
 }
 
 .flex {
     display: flex;
 }
 
-.join-wrapper{
+.join-wrapper {
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 100%;
+    height: 100vh;
     flex-direction: column;
+    background-color: var(--osrs-bg-brown-dark);
+    background-image: linear-gradient(rgba(43, 38, 30, 0.8), rgba(43, 38, 30, 0.8)), url('../../public/assets/backgrounds/osrs_bg_stone.png');
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
 }
 
+.osrs-container {
+    background-color: var(--osrs-bg-inventory);
+    border: 4px solid var(--osrs-border-dark);
+    box-shadow: inset 0 0 0 2px var(--osrs-border-light);
+    padding: 20px;
+    margin: 15px;
+}

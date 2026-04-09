@@ -46,8 +46,8 @@ const FeedbackModal = ({handleClose}) => {
       }
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="secondary" onClick={handleClose}>Close</Button>
-        { !sent && <Button disabled={feedback.length === 0} variant="primary" onClick={()=> sendMessage(feedback)}>Send</Button> }
+        <Button variant="danger" onClick={handleClose}>Close</Button>
+        { !sent && <Button disabled={feedback.length === 0} variant="success" onClick={()=> sendMessage(feedback)}>Send</Button> }
       </Modal.Footer>
     </Modal>
   );
