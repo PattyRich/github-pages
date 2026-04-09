@@ -47,7 +47,7 @@ code {
   border: 1px solid var(--osrs-border-dark) !important;
   font-family: 'osrsFont', sans-serif !important;
   text-shadow: 1px 1px 0px black;
-  border-radius: 0 !important;
+  border-radius: 6px !important;
 }
 
 .osrs-btn:hover,

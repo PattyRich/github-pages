@@ -125,8 +125,8 @@ class EditTeams extends React.Component {
           })}
         </Modal.Body>
         <Modal.Footer>
-          <Button variant="secondary" onClick={this.handleClose}>Close</Button>
-          <Button onClick={this.handleSave}>Save</Button>
+          <Button variant="danger" onClick={this.handleClose}>Close</Button>
+          <Button variant="success" onClick={this.handleSave}>Save</Button>
         </Modal.Footer>
       </Modal>
     );
