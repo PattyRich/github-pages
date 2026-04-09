@@ -330,9 +330,9 @@ class BoardView extends React.Component {
           </Alert>   
         }     
         {(this.state.teamData && !(this.state.privilage === 'admin')) && 
-          <div style={{'alignItems': 'center'}} className='flex-center'>
-            <h3 className='flex-center'> {this.state.teamData[this.state.activeTeamIndex].data.name}</h3>
-            <span style={{'marginBottom': '0.5rem', 'marginLeft': '10px'}}> (Points : {this.state.teamData[this.state.activeTeamIndex].pointTotal}) </span>
+          <div style={{'alignItems': 'center'}} className='flex-center osrs-header'>
+            <h3 className='flex-center' style={{marginBottom: 0}}> {this.state.teamData[this.state.activeTeamIndex].data.name}</h3>
+            <span style={{'marginLeft': '10px', fontSize: '1.2rem'}}> (Points: {this.state.teamData[this.state.activeTeamIndex].pointTotal}) </span>
           </div>
         }
         {this.state.boardData &&

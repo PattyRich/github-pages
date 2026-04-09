@@ -213,12 +213,12 @@ class Bingo extends React.Component {
 				{this.state.screen === 1 && 
 					<div className='start-screen'>
 						<div className='start-menu' onClick={() => this.props.navigate('/bingo/create')}> 
-							<h1>
+							<h1 className='osrs-header'>
 								Create Bingo Board
 							</h1>
 						</div>
 						<div className='start-menu' onClick={() => this.props.navigate('/bingo/join')}>
-							<h1>
+							<h1 className='osrs-header'>
 								Join Bingo Board
 							</h1>
 						</div>
@@ -246,20 +246,20 @@ class Bingo extends React.Component {
 						</Alert>
 						</div>
 						<EditableInput title='General Password' stateKey='generalPassword' change={this.inputState} value={this.state.generalPassword} />
-						Board Size.
-						<div className="board-controls"> 
+						<h3 className="osrs-header" style={{marginTop: '15px', marginBottom: 0}}>Board Size</h3>
+						<div className="board-controls" style={{ color: 'var(--osrs-text-gold)', textShadow: '1px 1px 0px black', fontFamily: 'osrsFont, sans-serif', fontSize: '1.2rem' }}> 
 							<Button click={()=> this.changeNum(-1, 'rows')} text="-"></Button>
-							Row : {this.state.rows}
+							<span style={{margin: '0 10px'}}>Row: {this.state.rows}</span>
 							<Button click={()=> this.changeNum(1, 'rows')} text="+"></Button>
 							<Button click={()=> this.changeNum(-1, 'columns')} text="-"></Button>
-							Column : {this.state.columns}
+							<span style={{margin: '0 10px'}}>Column: {this.state.columns}</span>
 							<Button click={()=> this.changeNum(1, 'columns')} text="+"></Button>
 						</div>
-						<div className='margin-15'>
+						<div className='margin-15 osrs-container' style={{padding: '10px', display: 'flex', flexDirection: 'column'}}>
 							{[...Array(this.state.columns)].map((x,i) => (
-								<span key={i} className='flex'>
+								<span key={i} className='flex' style={{justifyContent: 'center'}}>
 										{[...Array(this.state.rows)].map((x,j) => (
-											<BoardTile bare={true} key={j} br={this.state.rows === j+1} bb={this.state.columns=== i+1} />
+											<BoardTile bare={true} key={j} br={this.state.rows === j+1} bb={this.state.columns=== i+1} dem="40px" />
 										)
 									)}
 								</span>
@@ -271,18 +271,18 @@ class Bingo extends React.Component {
 				}
 				{this.state.screen === 4 && 
 					<span className='flex join-wrapper'>
-						<h1 className='margin-15'> Join a Bingo Board </h1>
+						<h1 className='margin-15 osrs-header'> Join a Bingo Board </h1>
 						<EditableInput id="boardName" title='Board Name' stateKey='boardName' change={this.inputState} value={this.state.boardName} />
+						<div style={{display: 'flex', width: '500px', justifyContent: 'space-between', marginBottom: '15px'}}>
+							<Button 
+								style={{border: this.state.joinPwTitle === 'general' ? '2px solid var(--osrs-text-gold)' : '', color: this.state.joinPwTitle === 'general' ? 'var(--osrs-text-gold)' : 'var(--osrs-text-normal)'}} 
+								click={()=> this.setState({joinPwTitle: 'general'})} text="Join as General" />
+							<Button 
+								style={{border: this.state.joinPwTitle === 'admin' ? '2px solid var(--osrs-text-gold)' : '', color: this.state.joinPwTitle === 'admin' ? 'var(--osrs-text-gold)' : 'var(--osrs-text-normal)'}} 
+								click={()=> this.setState({joinPwTitle: 'admin'})} text="Join as Admin" />
+						</div>
 						<InputGroup style={{width: '500px'}} className="mb-3">
-							<DropdownButton
-								variant="outline-secondary"
-								title={this.state.joinPwTitle + ' Password'}
-								id="input-group-dropdown-1"
-							>
-								<Dropdown.Item onClick={()=> this.setState({joinPwTitle: 'general'})} href="#">General</Dropdown.Item>
-								<Dropdown.Divider />
-								<Dropdown.Item onClick={()=> this.setState({joinPwTitle: 'admin'})} href="#">Admin</Dropdown.Item>
-							</DropdownButton>
+							<InputGroup.Text style={{width: '150px'}}>{this.state.joinPwTitle === 'general' ? 'General' : 'Admin'} Pw</InputGroup.Text>
 							<FormControl     
 								id="bingo-pw"    
 								value={this.state.joinPw}

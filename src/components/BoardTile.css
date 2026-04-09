@@ -1,16 +1,19 @@
 .box-border {
-  border-top: 1px black solid;
-  border-left: 1px black solid;
-  height: 40px;
-  width: 40px;
+  border-top: 2px solid var(--osrs-border-light);
+  border-left: 2px solid var(--osrs-border-light);
+  border-right: 2px solid var(--osrs-border-dark);
+  border-bottom: 2px solid var(--osrs-border-dark);
+  height: 48px;
+  width: 48px;
+  box-sizing: border-box;
 }
 
 .br {
-  border-right: 1px black solid;
+  /* Handled by border settings in .box-border to keep symmetry */
 }
 
 .bb {
-  border-bottom: 1px black solid;
+  /* Handled by border settings in .box-border to keep symmetry */
 }
 
 .box-flex {
@@ -18,22 +21,43 @@
   justify-content: space-between;
   position: relative;
   cursor: pointer;
+  height: 100%;
+  width: 100%;
+  color: var(--osrs-text-yellow);
+  text-shadow: 1px 1px 1px black;
+}
+
+.box-flex:hover {
+  background-color: rgba(255, 255, 255, 0.15);
 }
 
 .box-flex .title {
   overflow: hidden;
+  font-size: 0.8rem;
+  color: var(--osrs-text-normal);
+  text-align: center;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
 .bg-img {
-  opacity: 10%;
+  opacity: 30%;
   position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 10;
+  pointer-events: none;
 }
 
 .tile-wrapper {
   display: flex;
   justify-content: center;
-  align-items: flex-end;
+  align-items: center;
   position: relative;
+  background-color: var(--osrs-bg-inventory);
 }
 
 @font-face {

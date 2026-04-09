@@ -4,12 +4,26 @@
   justify-content: center;
   align-items: center;
   height: 100%;
+  background-color: #0c1424;
+  /* Deep thematic blue fallback */
+  background-image: linear-gradient(rgba(12, 20, 36, 0.8), rgba(12, 20, 36, 0.8)), url('../../public/assets/backgrounds/osrs_bg_magic.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  padding: 20px;
 }
 
 .flex-wrapper-create {
   display: flex;
   flex-flow: column;
   height: 100%;
+  background-color: #0c1424;
+  /* Deep thematic blue fallback */
+  background-image: linear-gradient(rgba(12, 20, 36, 0.8), rgba(12, 20, 36, 0.8)), url('../../public/assets/backgrounds/osrs_bg_magic.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
 }
 
 .flex-wrapper-create .top-bar {
@@ -17,10 +31,17 @@
   justify-content: space-between;
   margin: 15px;
   margin-bottom: 0px;
+  background-color: var(--osrs-bg-brown);
+  border: 2px solid var(--osrs-border-light);
+  padding: 10px;
+  border-radius: 4px;
 }
 
 .flex-wrapper-create h2 {
   margin: 10px;
+  font-family: 'osrsFont', sans-serif;
+  color: var(--osrs-text-gold);
+  text-shadow: 1px 1px 0px black;
 }
 
 .flex-center {
@@ -42,11 +63,11 @@
 }
 
 .green-bg {
-  background: linear-gradient(to top, #bbfc8a var(--bgHeight), #0000ff00 0%);
+  background-image: linear-gradient(to top, rgba(0, 150, 0, 0.4) var(--bgHeight), transparent 0%);
 }
 
-.green-bg-dark{
-  background: linear-gradient(to top, #517817 var(--bgHeight), #0000ff00 0%);
+.green-bg-dark {
+  background-image: linear-gradient(to top, rgba(0, 80, 0, 0.6) var(--bgHeight), transparent 0%);
 }
 
 .form-check-label {
@@ -61,6 +82,6 @@
   position: absolute;
   right: 10px;
   bottom: 10px;
-  color: #0d6efd;
+  color: var(--osrs-text-gold);
   cursor: pointer;
 }

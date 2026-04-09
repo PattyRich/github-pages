@@ -1,3 +1,17 @@
+:root {
+  --osrs-bg-brown-dark: #2b261e;
+  --osrs-bg-brown: #3c3224;
+  --osrs-bg-inventory: #463d32;
+  --osrs-border-dark: #1d1813;
+  --osrs-border-light: #5d503f;
+  --osrs-text-gold: #ff981f;
+  --osrs-text-yellow: #ffff00;
+  --osrs-text-normal: #dbceb4;
+  --osrs-button-bg: #5a4c37;
+  --osrs-button-hover: #483d2c;
+  --osrs-button-active: #362d20;
+}
+
 body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
@@ -5,9 +19,233 @@ body {
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  background-color: var(--osrs-bg-brown-dark);
+  color: var(--osrs-text-normal);
+}
+
+.osrs-header {
+  font-family: 'osrsFont', sans-serif;
+  color: var(--osrs-text-gold);
+  text-shadow: 1px 1px 0px black;
 }
 
 code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
+}
+
+.osrs-btn,
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-warning,
+.btn-danger,
+.btn-info,
+.btn {
+  background-color: var(--osrs-button-bg) !important;
+  color: var(--osrs-text-normal) !important;
+  border: 1px solid var(--osrs-border-dark) !important;
+  font-family: 'osrsFont', sans-serif !important;
+  text-shadow: 1px 1px 0px black;
+  border-radius: 0 !important;
+}
+
+.osrs-btn:hover,
+.btn:hover {
+  background-color: var(--osrs-button-hover) !important;
+  color: var(--osrs-text-gold) !important;
+}
+
+.osrs-btn:active,
+.btn:active {
+  background-color: var(--osrs-button-active) !important;
+}
+
+/* Accessibility Focus States */
+.osrs-btn:focus,
+.osrs-btn:focus-visible,
+.btn:focus,
+.btn:focus-visible {
+  outline: 2px solid var(--osrs-border-light) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+  color: var(--osrs-text-gold) !important;
+}
+
+/* Specific Button Intents */
+.btn-success,
+.btn-outline-success {
+  background-color: #24461a !important;
+  /* OSRS Herblore Green */
+}
+
+.btn-success:hover,
+.btn-outline-success:hover,
+.btn-success:focus,
+.btn-outline-success:focus {
+  background-color: #2c541e !important;
+  color: var(--osrs-text-gold) !important;
+}
+
+.btn-danger,
+.btn-outline-danger {
+  background-color: #5c1b1b !important;
+  /* OSRS Hitpoints Red */
+}
+
+.btn-danger:hover,
+.btn-outline-danger:hover,
+.btn-danger:focus,
+.btn-outline-danger:focus {
+  background-color: #6e2020 !important;
+  color: var(--osrs-text-normal) !important;
+}
+
+.btn-warning,
+.btn-outline-warning {
+  background-color: #634316 !important;
+  /* OSRS Orange tone */
+}
+
+.btn-warning:hover,
+.btn-outline-warning:hover,
+.btn-warning:focus,
+.btn-outline-warning:focus {
+  background-color: #734e19 !important;
+  color: var(--osrs-text-normal) !important;
+}
+
+/* Override bootstrap inputs */
+.form-control,
+.input-group-text,
+.dropdown-toggle {
+  background-color: var(--osrs-bg-brown-dark) !important;
+  color: var(--osrs-text-normal) !important;
+  border: 1px solid var(--osrs-border-dark) !important;
+  border-radius: 0 !important;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
+}
+
+.form-control::placeholder {
+  color: #f7e6c1 !important;
+  opacity: 0.8 !important;
+}
+
+.form-control:focus {
+  background-color: var(--osrs-bg-brown) !important;
+  color: var(--osrs-text-gold) !important;
+  box-shadow: inset 1px 1px 4px rgba(0,0,0,0.8), 0 0 5px var(--osrs-text-gold) !important;
+  border-color: var(--osrs-text-gold) !important;
+}
+
+.form-control:disabled, .form-control[readonly] {
+  background-color: #2b2318 !important; /* Duller, darker brown */
+  color: #8c7e6a !important; /* Muted, grayish tan */
+  opacity: 0.7 !important;
+  box-shadow: inset 1px 1px 5px rgba(0,0,0,0.9) !important;
+  cursor: not-allowed;
+}
+
+/* Override nav pills for tabs */
+.nav-pills .nav-link {
+  background-color: var(--osrs-button-bg);
+  color: var(--osrs-text-normal);
+  border: 2px solid var(--osrs-border-dark);
+  font-family: 'osrsFont', sans-serif;
+  border-radius: 0;
+  margin: 0 2px;
+  text-shadow: 1px 1px 0px black;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+}
+
+.nav-pills .nav-link:hover {
+  background-color: var(--osrs-button-hover);
+  color: var(--osrs-text-gold);
+}
+
+.nav-pills .nav-link.active {
+  background-color: var(--osrs-bg-brown-dark) !important;
+  color: var(--osrs-text-gold) !important;
+  border-color: var(--osrs-border-dark) !important;
+}
+
+/* Modal styling overrides */
+.modal-content {
+  background-color: var(--osrs-bg-inventory) !important;
+  color: var(--osrs-text-normal) !important;
+  border: 4px solid var(--osrs-border-dark) !important;
+  box-shadow: inset 0 0 0 2px var(--osrs-border-light) !important;
+  border-radius: 0 !important;
+}
+
+.modal-header,
+.modal-footer {
+  border-color: var(--osrs-border-dark) !important;
+}
+
+.modal-header .btn-close,
+.modal-header .close {
+  filter: invert(1) grayscale(100%) brightness(200%) !important;
+}
+
+/* Modal Inner Element Overrides */
+.modal-title,
+.modal-title h2,
+.modal-title h3 {
+  font-family: 'osrsFont', sans-serif !important;
+  color: var(--osrs-text-gold) !important;
+  text-shadow: 1px 1px 0px black;
+}
+
+.list-group-item {
+  background-color: var(--osrs-bg-inventory) !important;
+  color: var(--osrs-text-normal) !important;
+  border: 1px solid var(--osrs-border-dark) !important;
+}
+
+.list-group-item:hover {
+  background-color: var(--osrs-bg-brown) !important;
+  color: var(--osrs-text-gold) !important;
+  cursor: pointer;
+}
+
+.alert {
+  background-color: var(--osrs-bg-brown);
+  /* Default fallback */
+  color: #fffac9 !important;
+  /* Extremely legible bright light-gold/parchment hue */
+  border: 4px solid var(--osrs-border-light) !important;
+  font-family: inherit;
+  font-weight: 500;
+  box-shadow: inset 0 0 0 2px var(--osrs-border-dark) !important;
+}
+
+.alert-danger {
+  background-color: #5c1b1b !important;
+  /* OSRS Hitpoints Red tone */
+}
+
+.alert-warning {
+  background-color: #634316 !important;
+  /* OSRS Bronze/Orange tone */
+}
+
+.alert-success {
+  background-color: #24461a !important;
+  /* OSRS Herblore Green tone */
+}
+
+.alert-primary {
+  background-color: #1a3152 !important;
+  /* OSRS Magic Blue tone */
+}
+
+.form-check-label {
+  color: var(--osrs-text-gold);
+  font-weight: bold;
+}
+
+hr {
+  border-top: 2px solid var(--osrs-border-dark);
+  opacity: 1;
 }
