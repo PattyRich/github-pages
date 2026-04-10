@@ -1,6 +1,6 @@
 {
   "files": {
-    "main.css": "/github-pages/static/css/main.b133a769.css",
+    "main.css": "/github-pages/static/css/main.910dd1f0.css",
     "main.js": "/github-pages/static/js/main.f3636610.js",
     "static/js/450.5a75a190.chunk.js": "/github-pages/static/js/450.5a75a190.chunk.js",
     "static/js/103.9fb66673.chunk.js": "/github-pages/static/js/103.9fb66673.chunk.js",
@@ -28,7 +28,7 @@
     "static/media/osrs_bg_stone.png": "/github-pages/static/media/osrs_bg_stone.60a56858f7a368b21d73.png",
     "static/media/osrs.ttf": "/github-pages/static/media/osrs.8312160100eedb12bf64.ttf",
     "index.html": "/github-pages/index.html",
-    "main.b133a769.css.map": "/github-pages/static/css/main.b133a769.css.map",
+    "main.910dd1f0.css.map": "/github-pages/static/css/main.910dd1f0.css.map",
     "main.f3636610.js.map": "/github-pages/static/js/main.f3636610.js.map",
     "450.5a75a190.chunk.js.map": "/github-pages/static/js/450.5a75a190.chunk.js.map",
     "103.9fb66673.chunk.js.map": "/github-pages/static/js/103.9fb66673.chunk.js.map",
@@ -55,7 +55,7 @@
     "453.a7ff4453.chunk.js.map": "/github-pages/static/js/453.a7ff4453.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.b133a769.css",
+    "static/css/main.910dd1f0.css",
     "static/js/main.f3636610.js"
   ]
 }
