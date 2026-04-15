@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal"
 import EditableInput from './EditableInput';
@@ -18,7 +18,7 @@ class TileModal extends React.Component {
     //spreading props like this is probably bad, it works here because they are all strings or bools, but
     //if there were objects or array with deeper elements changing our new state here would affect parent data
     //the spread here makes actual copies, but wouldn't for those deep elements would need to use immer or json copy like in editeams
-    this.state = { 
+    this.state = {
       wikiSearch: '',
       ...props.info,
       ...props.teamInfo,
@@ -31,6 +31,7 @@ class TileModal extends React.Component {
     this.handleSave = this.handleSave.bind(this)
     this.handleClose = this.handleClose.bind(this)
     this.toggleCheck = this.toggleCheck.bind(this)
+    this.toggleUsePixel = this.toggleUsePixel.bind(this)
     this.setImage = this.setImage.bind(this)
     this.getImage = this.getImage.bind(this)
     this.changeOpacity = this.changeOpacity.bind(this)
@@ -41,7 +42,7 @@ class TileModal extends React.Component {
 
     const debounce = (func, delay) => {
       let debounceTimer;
-      return function(...args) {
+      return function (...args) {
         const context = this;
         clearTimeout(debounceTimer);
         debounceTimer = setTimeout(() => func.apply(context, args), delay);
@@ -65,31 +66,31 @@ class TileModal extends React.Component {
   }
 
   inputState(e, target) {
-		let stateChange = {}
+    let stateChange = {}
     if (numInputs.includes(target)) {
       if (isNaN(e.target.value)) {
         e.target.value = 0
       }
-      if (target==='currPoints') {
+      if (target === 'currPoints') {
         if (Number(e.target.value) > Number(this.state.points)) {
           e.target.value = this.state.points
         }
       }
     }
-    if (target==='wikiSearch') {
+    if (target === 'wikiSearch') {
       e.target.value = nameFilter(e.target.value)
       this.setCurrSuggestions(e.target.value)
     }
-		stateChange[target] = e.target.value
-		this.setState(stateChange)
-	}
+    stateChange[target] = e.target.value
+    this.setState(stateChange)
+  }
 
-  setCurrSuggestions(){
+  setCurrSuggestions() {
     this.setSuggestions(null)
     if (this.state.wikiSearch.length == 0) {
       return;
     }
-    this.setState({loading: true, triedToSearch: false});
+    this.setState({ loading: true, triedToSearch: false });
     const urlImages = `https://oldschool.runescape.wiki/rest.php/v1/search/title?q=${encodeURIComponent(this.state.wikiSearch)}&limit=5`
     fetch(urlImages)
       .then(res => res.json())
@@ -114,11 +115,11 @@ class TileModal extends React.Component {
 
         Promise.all(fetchPromises).then((results) => {
           const validResults = results.filter(item => item !== null);
-          const obj = {...this.state.storedSuggestions};
+          const obj = { ...this.state.storedSuggestions };
           validResults.forEach(item => {
             obj[item.title] = item;
           });
-          this.setState({storedSuggestions: obj}, () => {
+          this.setState({ storedSuggestions: obj }, () => {
             this.setSuggestions(validResults);
           });
         });
@@ -126,8 +127,8 @@ class TileModal extends React.Component {
   }
 
   setSuggestions(curr) {
-    if (!curr) {  
-      this.setState({suggestions: []})
+    if (!curr) {
+      this.setState({ suggestions: [] })
       return
     }
     let data = []
@@ -136,17 +137,17 @@ class TileModal extends React.Component {
         data.push(this.state.storedSuggestions[item.title])
       }
     });
-    this.setState({suggestions: data, triedToSearch: true, loading: false})
+    this.setState({ suggestions: data, triedToSearch: true, loading: false })
   }
 
   toggleImageSelect() {
-    this.setState({chooseImage: true})
+    this.setState({ chooseImage: true })
     this.listOfImages = importAll(require.context('/public/assets', false, /\.(png)$/));
   }
 
   getImage() {
     let url = getImageUrl(this.state.wikiSearch)
-    this.setState({wikiSearchImg: url})
+    this.setState({ wikiSearchImg: url })
   }
 
   setImage(image, skipUrlBuild = false) {
@@ -158,34 +159,41 @@ class TileModal extends React.Component {
     }
     let obj = {
       opacity: '100',
-      url: url
+      url: url,
+      usePixel: false
     }
-    this.setState({image: obj, chooseImage: false})
+    this.setState({ image: obj, chooseImage: false })
+  }
+
+  toggleUsePixel() {
+    let x = this.state.image
+    x.usePixel = !x.usePixel
+    this.setState({ image: x })
   }
 
   changeOpacity(e, target) {
     if (isNaN(e.target.value)) {
       e.target.value = 100
     }
-    if (e.target.value !== ''){
+    if (e.target.value !== '') {
       if (e.target.value > 100) {
         e.target.value = 100
-      } 
+      }
       if (e.target.value <= 1) {
         e.target.value = 1
-      } 
+      }
     }
     let x = this.state.image
     x.opacity = Number(e.target.value)
-    this.setState({image: x})
+    this.setState({ image: x })
   }
 
   toggleCheck() {
-    this.setState({checked: !this.state.checked, currPoints: this.state.points})
+    this.setState({ checked: !this.state.checked, currPoints: this.state.points })
   }
 
   handleSave() {
-    let state = {...this.state}
+    let state = { ...this.state }
     if (this.props.privilage === 'admin') {
       delete state.checked
       delete state.proof
@@ -218,13 +226,13 @@ class TileModal extends React.Component {
       >
         <Modal.Header closeButton>
           <Modal.Title id="contained-modal-title-vcenter">
-            { !this.state.chooseImage ?
-              <> 
-              { !disabled ?
-                <EditableInput value={this.state.title} stateKey='title' change={this.inputState} title='Title' disabled={disabled}/>
-                :
-                <h2>{this.state.title || 'Info'}</h2>
-              }
+            {!this.state.chooseImage ?
+              <>
+                {!disabled ?
+                  <EditableInput value={this.state.title} stateKey='title' change={this.inputState} title='Title' disabled={disabled} />
+                  :
+                  <h2>{this.state.title || 'Info'}</h2>
+                }
               </>
               :
               <h3>Set Tile Background Image</h3>
@@ -232,131 +240,139 @@ class TileModal extends React.Component {
           </Modal.Title>
         </Modal.Header>
         <Modal.Body>
-          { !this.state.chooseImage ?
+          {!this.state.chooseImage ?
             <>
               <EditableInput value={this.state.description} textArea={true} stateKey='description' change={this.inputState} title='Description' disabled={disabled} />
-              { this.props.br &&
+              {this.props.br &&
                 <EditableInput value={this.state.rowBingo} stateKey='rowBingo' change={this.inputState} title='Row Bonus' disabled={disabled} />
               }
-              { this.props.bb &&
+              {this.props.bb &&
                 <EditableInput value={this.state.colBingo} stateKey='colBingo' change={this.inputState} title='Column Bonus' disabled={disabled} />
               }
-              { !disabled &&
+              {!disabled &&
                 <>
-                { this.state.image ? 
-                  <>
-                    <Button style={{'marginBottom': '10px'}}
+                  {this.state.image ?
+                    <>
+                      <Button style={{ 'marginBottom': '10px' }}
+                        variant="primary"
+                        onClick={() => { this.setState({ image: null }) }}
+                      > Remove Tile Background Image </Button> :
+                      <img
+                        src={this.state.image.url}
+                        style={{ 'maxWidth': '60px', 'opacity': this.state.image.opacity + '%' }}
+                      />
+                    </>
+                    :
+                    <Button
+                      style={{ 'marginBottom': '10px' }}
                       variant="primary"
-                      onClick={()=> {this.setState({image: null})}}
-                    > Remove Tile Background Image </Button> : 
-                    <img 
-                      src={this.state.image.url}
-                      style={{'maxWidth': '60px', 'opacity': this.state.image.opacity + '%'}}
-                    />
-                  </>
-                  :
-                  <Button 
-                  style={{'marginBottom': '10px'}} 
-                  variant="primary" 
-                  onClick={this.toggleImageSelect}
-                  > Set Tile Background Image </Button>
-                }
-                { this.state.image &&
-                  <EditableInput value={this.state.image.opacity} change={this.changeOpacity} title='Image Opacity (1-100)' />
-                }
+                      onClick={this.toggleImageSelect}
+                    > Set Tile Background Image </Button>
+                  }
+                  {this.state.image &&
+                    <>
+                      <EditableInput value={this.state.image.opacity} change={this.changeOpacity} title='Image Opacity (1-100)' />
+                      <div className="form-check" style={{ 'marginTop': '15px', 'marginBottom': '10px' }}>
+                        <input className="form-check-input" checked={this.state.image.usePixel} onChange={this.toggleUsePixel} type="checkbox" id="pixelImageCheckbox" />
+                        <label className="form-check-label" htmlFor="pixelImageCheckbox">
+                          Use pixel image?
+                        </label>
+                      </div>
+                    </>
+                  }
                 </>
               }
-              <InputGroup className="mb-3" style={{'width': '240px'}}>
-                <InputGroup.Text id="basic-addon1">Points</InputGroup.Text> 
-                <FormControl placeholder={!disabled ? '0' : null} value={this.state.currPoints} disabled={!disabled || this.state.checked} onChange={(e) => this.inputState(e,'currPoints')} />
+              <InputGroup className="mb-3" style={{ 'width': '240px' }}>
+                <InputGroup.Text id="basic-addon1">Points</InputGroup.Text>
+                <FormControl placeholder={!disabled ? '0' : null} value={this.state.currPoints} disabled={!disabled || this.state.checked} onChange={(e) => this.inputState(e, 'currPoints')} />
                 <InputGroup.Text>/</InputGroup.Text>
-                <FormControl value={this.state.points} disabled={disabled} onChange={(e) => this.inputState(e,'points')} />
+                <FormControl value={this.state.points} disabled={disabled} onChange={(e) => this.inputState(e, 'points')} />
               </InputGroup>
-              { !generalDisabled && 
+              {!generalDisabled &&
                 <>
-                <div className='flex'>
-                  <EditableInput placeholder="Paste imgurs or any link and i'll provide clickable links " value={this.state.proof} textArea={true} stateKey='proof' change={this.inputState} title='Proof' />
-                  <div className='flex' style={{flexWrap: 'wrap'}}>
-                    { detectURLs(this.state.proof).map((url, i)=> {
-                        return <div key={url} style={{'margin': '5px'}}> <a target="_blank" href={url}> Link-{i} </a> </div>
+                  <div className='flex'>
+                    <EditableInput placeholder="Paste imgurs or any link and i'll provide clickable links " value={this.state.proof} textArea={true} stateKey='proof' change={this.inputState} title='Proof' />
+                    <div className='flex' style={{ flexWrap: 'wrap' }}>
+                      {detectURLs(this.state.proof).map((url, i) => {
+                        return <div key={url} style={{ 'margin': '5px' }}> <a target="_blank" href={url}> Link-{i} </a> </div>
                       })
-                    }
+                      }
+                    </div>
                   </div>
-                </div>
-                  <div className="form-check" style={{'marginTop': '15px'}}>
-                    <input className="form-check-input" disabled={generalDisabled} checked={this.state.checked} onChange={this.toggleCheck} type="checkbox" value="" id="flexCheckDefault"/>
+                  <div className="form-check" style={{ 'marginTop': '15px' }}>
+                    <input className="form-check-input" disabled={generalDisabled} checked={this.state.checked} onChange={this.toggleCheck} type="checkbox" value="" id="flexCheckDefault" />
                     <label className="form-check-label" htmlFor="flexCheckDefault">
                       Completed?
                     </label>
                   </div>
                 </>
-              } 
+              }
             </>
             :
             <>
-            { Object.keys(this.listOfImages).map((image, i) => {
-              return (
-                <img 
-                  key={i}
-                  title={image}
-                  src={this.listOfImages[image]}
-                  onClick={() => this.setImage(image.split('.')[0])}
-                />
-              )
-              })  
-            }
-            <hr/>
-            <Alert>
-              Click any image above to set it or type an item's name below as it would appear on the wiki.
-              <br/>
-              Examples : (Coins, Infernal cape, Bucket of milk, Sigil of the menacing mage, Beaver, Plank)
-            </Alert>
-            <div style={{'display': 'flex'}}>
-              <EditableInput value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item Search" />
-              {/* <Button style={{'height': '38px', 'marginLeft': '15px</div>'}} variant="primary" onClick={this.getImage}>Search</Button> */}
-            </div>
-            { this.state.wikiSearchImg &&
-              <img 
-                src={this.state.wikiSearchImg}
-                onClick={() => this.setImage(this.state.wikiSearchImg, true)}
-              />
-            }
-            {
-              this.state.loading &&
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </Spinner>
-            }
-            {
-              this.state.triedToSearch && this.state.suggestions?.length == 0 &&
+              {Object.keys(this.listOfImages).map((image, i) => {
+                return (
+                  <img
+                    key={i}
+                    title={image}
+                    src={this.listOfImages[image]}
+                    onClick={() => this.setImage(image.split('.')[0])}
+                  />
+                )
+              })
+              }
+              <hr />
               <Alert>
-                No results found, try searching something else
+                Click any image above to set it or type an item's name below as it would appear on the wiki.
+                <br />
+                Examples : (Coins, Infernal cape, Bucket of milk, Sigil of the menacing mage, Beaver, Plank)
               </Alert>
-            }
-            {
-              this.state.suggestions?.length > 0 &&
-              <ListGroup>
-                {this.state.suggestions.map((item, i) => {
-                    return( 
-                    <ListGroup.Item key={i} action onClick={() => this.setImage(item.url, true)}>
-                      <div style={{'display': 'flex', 'alignItems': 'center'}}>
-                      <img src={item.thumbnail?.url} style={{'maxWidth': '40px', 'maxHeight': '40px', 'paddingRight': '10px'}}/>
-                      {item.title}
-                      </div>
-                    </ListGroup.Item>
+              <div style={{ 'display': 'flex' }}>
+                <EditableInput value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item Search" />
+                {/* <Button style={{'height': '38px', 'marginLeft': '15px</div>'}} variant="primary" onClick={this.getImage}>Search</Button> */}
+              </div>
+              {this.state.wikiSearchImg &&
+                <img
+                  src={this.state.wikiSearchImg}
+                  onClick={() => this.setImage(this.state.wikiSearchImg, true)}
+                />
+              }
+              {
+                this.state.loading &&
+                <Spinner animation="border" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </Spinner>
+              }
+              {
+                this.state.triedToSearch && this.state.suggestions?.length == 0 &&
+                <Alert>
+                  No results found, try searching something else
+                </Alert>
+              }
+              {
+                this.state.suggestions?.length > 0 &&
+                <ListGroup>
+                  {this.state.suggestions.map((item, i) => {
+                    return (
+                      <ListGroup.Item key={i} action onClick={() => this.setImage(item.url, true)}>
+                        <div style={{ 'display': 'flex', 'alignItems': 'center' }}>
+                          <img src={item.thumbnail?.url} style={{ 'maxWidth': '40px', 'maxHeight': '40px', 'paddingRight': '10px' }} />
+                          {item.title}
+                        </div>
+                      </ListGroup.Item>
                     )
-                })}
-              </ListGroup>
-            }
-            <br/>
-            <input 
-              type="file" 
-              accept=".png,.jpeg" 
-              onChange={this.handleCustomImage}
-              style={{display: 'none'}}
-              ref={(input) => this.fileInput = input}
-            />
-            <Button style={{marginTop: '10px'}} onClick={() => this.fileInput.click()}>Custom image</Button>
+                  })}
+                </ListGroup>
+              }
+              <br />
+              <input
+                type="file"
+                accept=".png,.jpeg"
+                onChange={this.handleCustomImage}
+                style={{ display: 'none' }}
+                ref={(input) => this.fileInput = input}
+              />
+              <Button style={{ marginTop: '10px' }} onClick={() => this.fileInput.click()}>Custom image</Button>
             </>
           }
         </Modal.Body>
@@ -377,22 +393,25 @@ function importAll(r) {
   return images;
 }
 
-function nameFilter(name){
+function nameFilter(name) {
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 }
 
 function detectURLs(message) {
-  if(!message || message.length == 0) {
+  if (!message || message.length == 0) {
     return []
   }
   var urlRegex = /(((https?:\/\/)|(www\.))[^\s]+)/g;
   let res = message.match(urlRegex)
-  if(!res || res.length == 0) {
+  if (!res || res.length == 0) {
     return []
   }
   return res
 }
 function getImageUrl(image) {
-    image = image.replaceAll(' ', '_');
-    return `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`
+  image = image.replaceAll(' ', '_');
+  console.log(image)
+  image = image.charAt(0).toUpperCase() + image.slice(1);
+  console.log(image)
+  return `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`
 }
