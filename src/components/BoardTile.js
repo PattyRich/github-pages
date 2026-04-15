@@ -65,9 +65,13 @@ class BoardTile extends React.Component {
 								style={{
 									'opacity': this.props.info.image && this.props.info.image.opacity + '%',
 									'maxWidth': 'calc(100% - 8px)',
-									'maxHeight': !showTitleTile ? '80%' : 'calc(100% - 8px)'
+									'width': this.props.info.image.usePixel ? '200px' : 'auto',
+									'height': this.props.info.image.usePixel ? '200px' : 'auto',
+									'objectFit': 'contain',
+									'maxHeight': !showTitleTile ? '80%' : 'calc(100% - 8px)',
+									'imageRendering': this.props.info.image.usePixel ? 'pixelated' : 'auto'
 								}}
-								src={this.props.info.image && this.props.info.image.url}
+								src={this.props.info.image && (this.props.info.image.usePixel ? getPixelUrl(this.props.info.image.url) : this.props.info.image.url)}
 							/>
 						}
 						<div
@@ -121,3 +125,14 @@ class BoardTile extends React.Component {
 }
 
 export default BoardTile
+
+function getPixelUrl(url) {
+	if (!url) return url;
+	const match = url.match(/\/thumb\/([^\/]+)_detail\.png\//);
+	if (match) {
+		let name = match[1].toLowerCase();
+		name = name.charAt(0).toUpperCase() + name.slice(1);
+		return `https://oldschool.runescape.wiki/images/${name}.png`;
+	}
+	return url;
+}
