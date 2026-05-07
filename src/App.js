@@ -10,7 +10,7 @@ import {
   disable as disableDarkMode,
 } from 'darkreader';
 
-window.API = process.env.NODE_ENV === 'development' ? 'http://localhost:5001' : 'https://praynr.com'
+window.API = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://praynr.com'
 
 class App extends React.Component {
   constructor(props) {
@@ -66,6 +66,9 @@ class App extends React.Component {
               </li>
               <li>
                 <Link to="/pets">Create a Picture for Your Current Pets</Link>
+              </li>
+              <li>
+                <Link to="/lol-beat">LoL Beat #1 – Six Degrees to Challenger</Link>
               </li>
               <li>
                 <a target="_blank" href="https://github.com/PattyRich/github-pages"> repo this comes from </a>

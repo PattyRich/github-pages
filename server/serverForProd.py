@@ -18,7 +18,8 @@ limiter = Limiter(
     default_limits=["10000 per hour"]
 )
 
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
+myclient = pymongo.MongoClient(mongo_uri)
 db = myclient["bingo"]
 mycol = db['bingo']
 
