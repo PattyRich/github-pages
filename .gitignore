@@ -5,3 +5,4 @@ server/health.py
 server/.env
 server/__pycache__
 old-files/*
+dozzle/*
