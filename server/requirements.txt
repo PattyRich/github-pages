@@ -5,3 +5,5 @@ pymongo==4.1.1
 requests==2.27.1
 python-dotenv==0.20.0
 pillow==12.1.1
+redis>=5.0.0
+rq>=1.16.0

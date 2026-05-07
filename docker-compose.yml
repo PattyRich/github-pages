@@ -1,0 +1,47 @@
+services:
+  mongo:
+    image: mongo:7.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    restart: unless-stopped
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    restart: unless-stopped
+
+  api:
+    build:
+      context: ./server
+    ports:
+      - "8000:8000"
+    env_file:
+      - ./server/.env
+    volumes:
+      - ./server:/app
+    depends_on:
+      - mongo
+      - redis
+    command: python server.py
+    restart: unless-stopped
+
+  worker:
+    build:
+      context: ./server
+    env_file:
+      - ./server/.env
+    volumes:
+      - ./server:/app
+    depends_on:
+      - redis
+    command: rq worker --url redis://redis:6379/0 default
+    restart: unless-stopped
+
+volumes:
+  mongo_data:
+  redis_data:

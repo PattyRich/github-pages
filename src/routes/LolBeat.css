@@ -1,0 +1,251 @@
+:root {
+  --lol-bg: #1c1c1f;
+  --lol-card-bg: #28344e;
+  --lol-border-left: #5383e8;
+  --lol-text: #ffffff;
+  --lol-text-secondary: #9e9eb1;
+  --lol-accent: #5383e8;
+  --lol-accent-hover: #4570d1;
+  --lol-loss-border: #e84057;
+}
+
+.lol-container {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--lol-bg);
+  color: var(--lol-text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px 20px;
+  box-sizing: border-box;
+}
+
+.lol-home-btn {
+  align-self: flex-start;
+  background: none;
+  border: 1px solid #3a3a40;
+  color: var(--lol-text-secondary);
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 24px;
+  font-size: 0.9rem;
+}
+
+.lol-home-btn:hover {
+  border-color: var(--lol-accent);
+  color: var(--lol-text);
+}
+
+.lol-header {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.lol-header h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+  font-weight: 700;
+}
+
+.lol-header p {
+  color: var(--lol-text-secondary);
+  font-size: 1.1rem;
+}
+
+.lol-search-box {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 24px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.lol-search-box input {
+  flex: 1;
+  padding: 15px 20px;
+  border-radius: 8px;
+  border: 1px solid #3a3a40;
+  background-color: #2b2b30;
+  color: white;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.lol-search-box input:focus {
+  border-color: var(--lol-accent);
+}
+
+.lol-search-box button {
+  padding: 15px 24px;
+  border-radius: 8px;
+  border: none;
+  background-color: var(--lol-accent);
+  color: white;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+}
+
+.lol-search-box button:hover:not(:disabled) {
+  background-color: var(--lol-accent-hover);
+}
+
+.lol-search-box button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.lol-crawl-btn {
+  background-color: #3a3a40 !important;
+}
+
+.lol-crawl-btn:hover:not(:disabled) {
+  background-color: #4a4a52 !important;
+}
+
+.lol-loading {
+  text-align: center;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  background-color: rgba(83, 131, 232, 0.1);
+  color: var(--lol-accent);
+  width: 100%;
+  max-width: 800px;
+}
+
+.lol-error {
+  text-align: center;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  background-color: rgba(232, 64, 87, 0.1);
+  color: var(--lol-loss-border);
+  width: 100%;
+  max-width: 800px;
+}
+
+.lol-info {
+  text-align: center;
+  padding: 16px 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  background-color: rgba(83, 131, 232, 0.08);
+  border: 1px solid var(--lol-accent);
+  color: var(--lol-text-secondary);
+  width: 100%;
+  max-width: 800px;
+  line-height: 1.8;
+}
+
+.lol-info code {
+  color: var(--lol-accent);
+  font-size: 0.85rem;
+}
+
+.lol-match-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.lol-match-card {
+  display: flex;
+  align-items: center;
+  background-color: var(--lol-card-bg);
+  border-left: 6px solid var(--lol-border-left);
+  border-radius: 4px;
+  padding: 15px 20px;
+  min-height: 90px;
+  position: relative;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.lol-match-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.lol-match-type {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.lol-match-time {
+  color: var(--lol-text-secondary);
+  font-size: 0.8rem;
+}
+
+.lol-match-result {
+  font-weight: 700;
+  font-size: 1.2rem;
+  margin-top: 5px;
+  color: var(--lol-accent);
+}
+
+.lol-match-players {
+  flex: 3;
+  display: flex;
+  align-items: center;
+  justify-content: space-around;
+}
+
+.lol-player {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+
+.lol-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #1e232f;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  color: var(--lol-text-secondary);
+  border: 2px solid #3a3a40;
+}
+
+.lol-winner .lol-avatar {
+  border-color: var(--lol-accent);
+  color: white;
+}
+
+.lol-loser .lol-avatar {
+  border-color: var(--lol-loss-border);
+}
+
+.lol-player-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.lol-vs {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--lol-text-secondary);
+}
+
+.lol-match-id {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 0.7rem;
+  color: var(--lol-text-secondary);
+  background: rgba(0, 0, 0, 0.2);
+  padding: 2px 6px;
+  border-radius: 4px;
+}

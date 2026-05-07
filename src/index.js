@@ -11,11 +11,12 @@ import BingoDraft from './routes/BingoDraft';
 import ToaFlip from './routes/ToaFlip';
 import Pets from './routes/Pets';
 import AllPets from './routes/AllPets';
+import LolBeat from './routes/LolBeat';
 import {
-  enable as enableDarkMode,
-  disable as disableDarkMode,
-  auto as followSystemColorScheme,
-  isEnabled as isDarkReaderEnabled
+	enable as enableDarkMode,
+	disable as disableDarkMode,
+	auto as followSystemColorScheme,
+	isEnabled as isDarkReaderEnabled
 } from 'darkreader';
 
 import { HashRouter, Routes, Route } from "react-router-dom";
@@ -28,9 +29,9 @@ if (darkMode === null) {
 }
 if (darkMode === 'true' || darkMode === true) {
 	enableDarkMode({
-    brightness: 100,
-    contrast: 90,
-    sepia: 10,
+		brightness: 100,
+		contrast: 90,
+		sepia: 10,
 	});
 } else {
 	disableDarkMode();
@@ -38,43 +39,48 @@ if (darkMode === 'true' || darkMode === true) {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
+const Maintenance = (
+	<main style={{ padding: "1rem" }}>
+		<p>Undergoing maintenance</p>
+	</main>
+);
+
 root.render(
-  	<HashRouter>
-  		<Routes>
-  			<Route path="/" element={<App />} />
-  			<Route path="/osrs" element={<Osrs />} />
-  			<Route path="/github-pages/osrs" element={<Osrs />} />
-   			<Route path="/mage-run" element={<Magerun />} />
-  			<Route path="/github-pages/mage-run" element={<Magerun />} />
+	<HashRouter>
+		<Routes>
+			<Route path="/" element={<App />} />
+			<Route path="/osrs" element={<Osrs />} />
+			<Route path="/github-pages/osrs" element={<Osrs />} />
+			<Route path="/mage-run" element={<Magerun />} />
+			<Route path="/github-pages/mage-run" element={<Magerun />} />
 			<Route path="/toa-flip" element={<ToaFlip />} />
-  			<Route path="/github-pages/toa-flip" element={<ToaFlip />} />
+			<Route path="/github-pages/toa-flip" element={<ToaFlip />} />
 			<Route path="/bingo/create" element={<Bingo key='create' screenSkip={2} />} />
 			<Route path="/github-pages/bingo/create" element={<Bingo key='create' screenSkip={2} />} />
 			<Route path="/bingo/join" element={<Bingo key='join' screenSkip={4} />} />
 			<Route path="/github-pages/bingo/join" element={<Bingo key='join' screenSkip={4} />} />
 			<Route path="/bingo" element={<Bingo />} />
-  			<Route path="/github-pages/bingo" element={<Bingo />} />
+			<Route path="/github-pages/bingo" element={<Bingo />} />
 			<Route path="/bingo/:boardName" element={<BoardView />} />
-  			<Route path="/github-pages/bingo/:boardName" element={<BoardView />} />
+			<Route path="/github-pages/bingo/:boardName" element={<BoardView />} />
 			<Route path="/bingo-draft" element={<BingoDraft />} />
-  			<Route path="/github-pages/bingo-draft" element={<BingoDraft />} />		
+			<Route path="/github-pages/bingo-draft" element={<BingoDraft />} />
 			<Route path="/pets" element={<Pets />} />
-  			<Route path="/github-pages/pets" element={<Pets />} />			
+			<Route path="/github-pages/pets" element={<Pets />} />
 			<Route path="/all-pets" element={<AllPets />} />
-  			<Route path="/github-pages/all-pets" element={<AllPets />} />	
-  			<Route
-		      path="*"
-		      element={
-		        <main style={{ padding: "1rem" }}>
-		          <p>There's nothing here!</p>
-		        </main>
-		      }
-    		/>
-  		</Routes>
-		</HashRouter>
-  );
+			<Route path="/github-pages/all-pets" element={<AllPets />} />
+			<Route path="/lol-beat" element={<LolBeat />} />
+			<Route path="/github-pages/lol-beat" element={<LolBeat />} />
+			<Route
+				path="*"
+				element={
+					<main style={{ padding: "1rem" }}>
+						<p>There's nothing here!</p>
+					</main>
+				}
+			/>
+		</Routes>
+	</HashRouter>
+);
 
-// If you want to start measuring performance in your app, pass a function
-// to log results (for example: reportWebVitals(console.log))
-// or send to an analytics endpoint. Learn more: https://bit.ly/CRA-vitals
 reportWebVitals();

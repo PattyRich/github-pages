@@ -10,8 +10,13 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+from lol_server import lol_api
+
 app = Flask(__name__, static_folder='build')
 CORS(app)
+
+# Register the League of Legends API routes
+app.register_blueprint(lol_api, url_prefix='/lol/api')
 
 limiter = Limiter(
     app,
@@ -19,7 +24,8 @@ limiter = Limiter(
     default_limits=["10000 per hour"]
 )
 
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
+myclient = pymongo.MongoClient(mongo_uri)
 db = myclient["bingo"]
 mycol = db['bingo']
 
@@ -89,7 +95,7 @@ def clearBadData(data, acceptableKeys):
 @app.route('/createBoard', methods=['POST'])
 @limiter.limit("5 per hour")
 def createBoard():
-  data = json.loads(request.data)
+  data = json.loads(request.data.decode(), parse_float=float)
   cache = mycol.find_one({'boardName': data['boardName']})
   if (cache):
     return bad_request('Board Name Already Taken!!')
@@ -157,7 +163,7 @@ def updateBoard(boardName, password, pwtype, teampw):
   cache, err = auth(boardName, password, pwtype)
   if err:
     return err
-  data = json.loads(request.data)
+  data = json.loads(request.data.decode(), parse_float=float)
   if (pwtype == 'admin'):
     data['info'] = clearBadData(data['info'], adminTileKeys)
 
@@ -199,7 +205,7 @@ def updateTeams(boardName, password, pwtype):
   if err:
     return err
 
-  data = json.loads(request.data)
+  data = json.loads(request.data.decode(), parse_float=float)
   requirePassword = data['dataToSend']['passwordRequired']
   rows = int(data['dataToSend']['rows'])
   cols = int(data['dataToSend']['columns'])
@@ -345,7 +351,7 @@ def changeBoardSize(teamData, rows, cols, cache, boardName):
 @app.route('/feedback', methods=['POST'])
 @limiter.limit("10 per hour")
 def postFeedbackToDiscord():
-  data = json.loads(request.data)
+  data = json.loads(request.data.decode(), parse_float=float)
   message = data.get('message')
 
   result = postToDiscord(message, 'FEEDBACK_WEBHOOK')
@@ -376,4 +382,4 @@ def postToDiscord(message, webhook_env_var):
     return False
 
 if __name__ == "__main__":
-  app.run(host='0.0.0.0',port=5001, debug=True)
+  app.run(host='0.0.0.0',port=8000, debug=True)
