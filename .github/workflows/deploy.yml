@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - main
+    paths:
+      - 'server/**'
+      - 'docker-compose.prod.yml'
 
 jobs:
   deploy:
