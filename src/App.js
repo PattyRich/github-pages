@@ -10,7 +10,7 @@ import {
   disable as disableDarkMode,
 } from 'darkreader';
 
-window.API = process.env.NODE_ENV === 'development' ? 'https://praynr.com' : 'https://praynr.com'
+window.API = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://praynr.com'
 
 class App extends React.Component {
   constructor(props) {
