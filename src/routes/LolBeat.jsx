@@ -182,7 +182,7 @@ function LolBeat() {
               <div className="lol-match-card" key={index}>
                 {/* Left sidebar — game info */}
                 <div className="lol-match-sidebar">
-                  <div className="lol-match-type">Ranked Solo</div>
+                  <div className="lol-match-type">{step.game_type || 'Game'}</div>
                   <div className="lol-match-step">{title}</div>
                   {step.game_date && (
                     <div className="lol-match-date">{formatTimeAgo(step.game_date)}</div>

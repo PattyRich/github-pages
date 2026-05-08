@@ -2,7 +2,7 @@
 lol-beat-number-one
 ===================
 Build a directed "beat graph" where edge A -> B means:
-  "A beat B in at least one ranked solo/duo game we've seen"
+  "A beat B in at least one game we've seen"
 
 Then find the shortest path from YOUR puuid to the #1 Challenger player.
 
@@ -333,15 +333,10 @@ def print_path(r: redis.Redis, path: list[str]):
 # RQ entrypoint – called by lol_server.py via q.enqueue()
 # ---------------------------------------------------------------------------
 
-def crawl_user_graph(riot_id: str, depth: int = 2, ranked_only: bool = False) -> dict:
+def crawl_user_graph(riot_id: str, depth: int = 2) -> dict:
     """
     Importable RQ job target. Crawls `riot_id`'s games up to `depth` hops
-    and stores the beat graph in Redis.
-
-    - Your own matches (depth 0) are always filtered to ranked solo/duo (queue 420).
-    - Opponent matches (depth 1+) default to all queues so we don't miss games
-      like an enemy beating #1 in a non-ranked queue. Pass ranked_only=True to
-      restrict everything to ranked.
+    and stores the beat graph in Redis. All game types are included.
 
     Returns a summary dict that RQ stores as the job result.
     """
@@ -364,10 +359,7 @@ def crawl_user_graph(riot_id: str, depth: int = 2, ranked_only: bool = False) ->
     # Make sure #1 is cached so find_path works immediately after
     get_challenger_top1(r)
 
-    opponent_queue = 420 if ranked_only else None
-
     frontier = [my_puuid]
-    your_turn = True
     visited_this_run: set[str] = {my_puuid}
 
     for d in range(depth):
@@ -375,11 +367,8 @@ def crawl_user_graph(riot_id: str, depth: int = 2, ranked_only: bool = False) ->
         next_frontier: list[str] = []
 
         for puuid in frontier:
-            q_filter = 420 if your_turn else opponent_queue
-            enemies = process_player(r, puuid, queue=q_filter)
+            enemies = process_player(r, puuid)
             next_frontier.extend(enemies)
-
-        your_turn = False
 
         # Deduplicate and skip anyone we've already queued this run
         frontier = []
@@ -413,9 +402,6 @@ def parse_args():
                    help="BFS crawl depth (default 2 – each hop fetches opponents' matches)")
     p.add_argument("--find-only", action="store_true",
                    help="Skip crawling, just search existing graph in Redis")
-    p.add_argument("--ranked-only", action="store_true",
-                   help="Only fetch ranked solo/duo matches (queue 420). "
-                        "Your own matches always use this; opponents default to all queues.")
     return p.parse_args()
 
 
@@ -451,7 +437,7 @@ def main():
     log.info("Your puuid: %s…", my_puuid[:12])
 
     if not args.find_only:
-        crawl_user_graph(args.riot_id, depth=args.depth, ranked_only=args.ranked_only)
+        crawl_user_graph(args.riot_id, depth=args.depth)
 
     log.info("Searching beat graph for path %s → %s…", args.riot_id, top1_name)
     path = find_path(r, my_puuid, top1_puuid)

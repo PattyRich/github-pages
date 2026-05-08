@@ -18,6 +18,28 @@ REDIS_DB   = int(os.environ.get("REDIS_DB", 0))
 redis_conn = redis.Redis(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
 q = Queue(connection=redis_conn)
 
+# Common queue ID -> display name mapping
+# https://static.developer.riotgames.com/docs/lol/queues.json
+QUEUE_NAMES = {
+    420: "Ranked Solo",
+    440: "Ranked Flex",
+    400: "Normal Draft",
+    430: "Normal Blind",
+    450: "ARAM",
+    490: "Quickplay",
+    700: "Clash",
+    720: "ARAM Clash",
+    830: "Co-op Intro",
+    840: "Co-op Beginner",
+    850: "Co-op Intermediate",
+    900: "URF",
+    1020: "One for All",
+    1300: "Nexus Blitz",
+    1400: "Ultimate Spellbook",
+    1700: "Arena",
+    1900: "Pick URF",
+}
+
 # ---------------------------------------------------------------------------
 # Routes 
 # ---------------------------------------------------------------------------
@@ -63,6 +85,7 @@ def get_chain():
             "match_id":      match_id,
             "game_date":     None,
             "game_duration": None,
+            "game_type":     None,
             "participants":  [],
         }
 
@@ -75,6 +98,8 @@ def get_chain():
                 step_data["game_date"] = info.get("gameCreation")
                 # gameDuration is in seconds (post-patch 11.20)
                 step_data["game_duration"] = info.get("gameDuration")
+                queue_id = info.get("queueId", 0)
+                step_data["game_type"] = QUEUE_NAMES.get(queue_id, f"Game ({queue_id})")
 
                 for p in info.get("participants", []):
                     step_data["participants"].append({
