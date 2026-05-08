@@ -53,12 +53,42 @@ def get_chain():
         winner_puuid = path[i]
         loser_puuid  = path[i + 1]
         match_id = r.hget(f"match_link:{winner_puuid}", loser_puuid)
-        chain_data.append({
-            "step":     i + 1,
-            "winner":   crawler.get_name(r, winner_puuid),
-            "loser":    crawler.get_name(r, loser_puuid),
-            "match_id": match_id,
-        })
+
+        step_data = {
+            "step":          i + 1,
+            "winner":        crawler.get_name(r, winner_puuid),
+            "winner_puuid":  winner_puuid,
+            "loser":         crawler.get_name(r, loser_puuid),
+            "loser_puuid":   loser_puuid,
+            "match_id":      match_id,
+            "game_date":     None,
+            "game_duration": None,
+            "participants":  [],
+        }
+
+        # Fetch full match detail to enrich the step
+        if match_id:
+            detail = crawler.get_match_detail(match_id)
+            if detail:
+                info = detail.get("info", {})
+                # gameCreation is epoch millis
+                step_data["game_date"] = info.get("gameCreation")
+                # gameDuration is in seconds (post-patch 11.20)
+                step_data["game_duration"] = info.get("gameDuration")
+
+                for p in info.get("participants", []):
+                    step_data["participants"].append({
+                        "puuid":        p.get("puuid", ""),
+                        "summoner_name": f"{p.get('riotIdGameName', '?')}#{p.get('riotIdTagline', '?')}",
+                        "champion":     p.get("championName", "Unknown"),
+                        "kills":        p.get("kills", 0),
+                        "deaths":       p.get("deaths", 0),
+                        "assists":      p.get("assists", 0),
+                        "team_id":      p.get("teamId", 0),
+                        "win":          p.get("win", False),
+                    })
+
+        chain_data.append(step_data)
 
     return jsonify({"found": True, "chain": chain_data})
 

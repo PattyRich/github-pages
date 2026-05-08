@@ -105,7 +105,7 @@ def is_match_processed(r: redis.Redis, match_id: str) -> bool:
 
 
 def set_top1(r: redis.Redis, puuid: str):
-    r.set("top1:puuid", puuid)
+    r.set("top1:puuid", puuid, ex=3600)
 
 
 def get_top1(r: redis.Redis) -> str | None:
@@ -139,6 +139,19 @@ def _get(url: str, params: dict | None = None) -> dict | list | None:
     return None
 
 
+def get_riot_id_by_puuid(puuid: str) -> str | None:
+    """Resolve a puuid to a Riot ID (GameName#TagLine) via account-v1."""
+    url = f"{AMERICAS}/riot/account/v1/accounts/by-puuid/{puuid}"
+    data = _get(url)
+    time.sleep(RATE_SLEEP)
+    if data:
+        game_name = data.get("gameName", "")
+        tag_line = data.get("tagLine", "")
+        if game_name:
+            return f"{game_name}#{tag_line}"
+    return None
+
+
 def get_challenger_top1(r: redis.Redis) -> tuple[str, str]:
     """
     Fetch NA Challenger ladder and return (puuid, name) of the
@@ -159,7 +172,7 @@ def get_challenger_top1(r: redis.Redis) -> tuple[str, str]:
     entries = data.get("entries", [])
     top = max(entries, key=lambda e: e["leaguePoints"])
     puuid = top["puuid"]
-    name = f"LP:{top['leaguePoints']}"
+    name = get_riot_id_by_puuid(puuid) or f"LP:{top['leaguePoints']}"
 
     set_top1(r, puuid)
     set_name(r, puuid, name)

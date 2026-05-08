@@ -1,6 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LolBeat.css';
+
+const DDRAGON_BASE = 'https://ddragon.leagueoflegends.com/cdn';
+const DDRAGON_FALLBACK = '16.9.1';
 
 function LolBeat() {
   const navigate = useNavigate();
@@ -11,8 +14,20 @@ function LolBeat() {
   const [chain, setChain] = useState([]);
   const [error, setError] = useState('');
   const [found, setFound] = useState(null);
+  const [ddVersion, setDdVersion] = useState(DDRAGON_FALLBACK);
 
-  const getInitials = (name) => name.split('#')[0].substring(0, 2).toUpperCase();
+  useEffect(() => {
+    fetch('https://ddragon.leagueoflegends.com/api/versions.json')
+      .then((res) => res.json())
+      .then((versions) => {
+        if (Array.isArray(versions) && versions.length > 0) {
+          setDdVersion(versions[0]);
+        }
+      })
+      .catch(() => { }); // silently fall back to hardcoded version
+  }, []);
+
+  const champIcon = (name) => `${DDRAGON_BASE}/${ddVersion}/img/champion/${name}.png`;
 
   const startCrawl = async () => {
     if (!riotId.trim()) return;
@@ -56,6 +71,61 @@ function LolBeat() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const formatTimeAgo = (epochMs) => {
+    if (!epochMs) return '';
+    const diff = Date.now() - epochMs;
+    const mins = Math.floor(diff / 60000);
+    if (mins < 60) return `${mins}m ago`;
+    const hours = Math.floor(mins / 60);
+    if (hours < 24) return `${hours}h ago`;
+    const days = Math.floor(hours / 24);
+    if (days < 30) return `${days}d ago`;
+    return new Date(epochMs).toLocaleDateString();
+  };
+
+  const formatDuration = (seconds) => {
+    if (!seconds) return '';
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${String(s).padStart(2, '0')}`;
+  };
+
+  const renderTeamRow = (player, step) => {
+    const isChainPlayer =
+      player.puuid === step.winner_puuid || player.puuid === step.loser_puuid;
+    const isWinner = player.puuid === step.winner_puuid;
+    const isLoser = player.puuid === step.loser_puuid;
+
+    let highlightClass = '';
+    if (isWinner) highlightClass = 'lol-highlight-winner';
+    else if (isLoser) highlightClass = 'lol-highlight-loser';
+
+    return (
+      <div
+        className={`lol-team-player ${highlightClass}`}
+        key={player.puuid}
+      >
+        <img
+          className="lol-champ-icon"
+          src={champIcon(player.champion)}
+          alt={player.champion}
+          title={player.champion}
+          onError={(e) => { e.target.style.display = 'none'; }}
+        />
+        <span className={`lol-team-player-name ${isChainPlayer ? 'lol-chain-player' : ''}`}>
+          {player.summoner_name.split('#')[0]}
+        </span>
+        <span className="lol-team-player-kda">
+          <span className="lol-k">{player.kills}</span>
+          <span className="lol-slash">/</span>
+          <span className="lol-d">{player.deaths}</span>
+          <span className="lol-slash">/</span>
+          <span className="lol-a">{player.assists}</span>
+        </span>
+      </div>
+    );
   };
 
   return (
@@ -102,27 +172,57 @@ function LolBeat() {
           {chain.map((step, index) => {
             const isLast = index === chain.length - 1;
             const title = index === 0 ? 'Start' : isLast ? 'Victory to #1' : `Step ${step.step}`;
+            const team1 = step.participants.filter((p) => p.team_id === 100);
+            const team2 = step.participants.filter((p) => p.team_id === 200);
+            const winners = team1[0]?.win ? team1 : team2;
+            const losers = team1[0]?.win ? team2 : team1;
+            const hasDetail = step.participants.length > 0;
+
             return (
               <div className="lol-match-card" key={index}>
+                {/* Left sidebar — game info */}
+                <div className="lol-match-sidebar">
+                  <div className="lol-match-type">Ranked Solo</div>
+                  <div className="lol-match-step">{title}</div>
+                  {step.game_date && (
+                    <div className="lol-match-date">{formatTimeAgo(step.game_date)}</div>
+                  )}
+                  {step.game_duration && (
+                    <div className="lol-match-duration">{formatDuration(step.game_duration)}</div>
+                  )}
+                  <div className="lol-match-result">WIN</div>
+                </div>
+
+                {/* Divider */}
+                <div className="lol-match-divider" />
+
+                {/* Main content — teams */}
+                {hasDetail ? (
+                  <div className="lol-match-teams">
+                    <div className="lol-team lol-team-blue">
+                      <div className="lol-team-label">
+                        Victory
+                      </div>
+                      {winners.map((p) => renderTeamRow(p, step))}
+                    </div>
+                    <div className="lol-team lol-team-red">
+                      <div className="lol-team-label">
+                        Defeat
+                      </div>
+                      {losers.map((p) => renderTeamRow(p, step))}
+                    </div>
+                  </div>
+                ) : (
+                  <div className="lol-match-players-simple">
+                    <span className="lol-chain-player">{step.winner}</span>
+                    <span className="lol-vs">beat</span>
+                    <span className="lol-chain-player">{step.loser}</span>
+                  </div>
+                )}
+
                 {step.match_id && (
                   <div className="lol-match-id">{step.match_id}</div>
                 )}
-                <div className="lol-match-info">
-                  <div className="lol-match-type">Ranked Solo</div>
-                  <div className="lol-match-time">{title}</div>
-                  <div className="lol-match-result">WIN</div>
-                </div>
-                <div className="lol-match-players">
-                  <div className="lol-player lol-winner">
-                    <div className="lol-avatar">{getInitials(step.winner)}</div>
-                    <div className="lol-player-name">{step.winner}</div>
-                  </div>
-                  <div className="lol-vs">beat</div>
-                  <div className="lol-player lol-loser">
-                    <div className="lol-avatar">{getInitials(step.loser)}</div>
-                    <div className="lol-player-name">{step.loser}</div>
-                  </div>
-                </div>
               </div>
             );
           })}
