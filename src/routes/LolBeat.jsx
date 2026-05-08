@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './LolBeat.css';
 
@@ -15,6 +15,9 @@ function LolBeat() {
   const [error, setError] = useState('');
   const [found, setFound] = useState(null);
   const [ddVersion, setDdVersion] = useState(DDRAGON_FALLBACK);
+  const [countdown, setCountdown] = useState(0);
+  const countdownRef = useRef(null);
+  const retryRef = useRef(null);
 
   useEffect(() => {
     fetch('https://ddragon.leagueoflegends.com/api/versions.json')
@@ -24,10 +27,61 @@ function LolBeat() {
           setDdVersion(versions[0]);
         }
       })
-      .catch(() => { }); // silently fall back to hardcoded version
+      .catch(() => { });
+  }, []);
+
+  // Cleanup intervals on unmount
+  useEffect(() => {
+    return () => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      if (retryRef.current) clearTimeout(retryRef.current);
+    };
   }, []);
 
   const champIcon = (name) => `${DDRAGON_BASE}/${ddVersion}/img/champion/${name}.png`;
+
+  const stopCrawling = useCallback(() => {
+    setCrawling(false);
+    setCountdown(0);
+    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; }
+    if (retryRef.current) { clearTimeout(retryRef.current); retryRef.current = null; }
+  }, []);
+
+  const startCountdownCycle = useCallback((rid) => {
+    setCountdown(60);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+
+    countdownRef.current = setInterval(() => {
+      setCountdown((prev) => {
+        if (prev <= 1) {
+          clearInterval(countdownRef.current);
+          countdownRef.current = null;
+
+          // Auto-search when countdown hits 0
+          (async () => {
+            try {
+              const resp = await fetch(`${window.API}/lol/api/chain?riot_id=${encodeURIComponent(rid)}`);
+              const data = await resp.json();
+              if (resp.ok && data.found && data.chain?.length > 0) {
+                setFound(true);
+                setChain(data.chain);
+                setError('');
+                stopCrawling();
+              } else {
+                // Not found yet — restart countdown
+                retryRef.current = setTimeout(() => startCountdownCycle(rid), 500);
+              }
+            } catch {
+              retryRef.current = setTimeout(() => startCountdownCycle(rid), 500);
+            }
+          })();
+
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  }, [stopCrawling]);
 
   const startCrawl = async () => {
     if (!riotId.trim()) return;
@@ -46,6 +100,7 @@ function LolBeat() {
       const data = await resp.json();
       if (!resp.ok) throw new Error(data.error || 'Failed to enqueue crawl');
       setJobId(data.job_id);
+      startCountdownCycle(riotId.trim());
     } catch (err) {
       setError(err.message);
       setCrawling(false);
@@ -145,7 +200,7 @@ function LolBeat() {
           onChange={(e) => setRiotId(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && searchChain()}
         />
-        <button onClick={searchChain} disabled={loading || crawling}>
+        <button onClick={searchChain} disabled={loading}>
           {loading ? 'Searching…' : 'Find Path'}
         </button>
         <button className="lol-crawl-btn" onClick={startCrawl} disabled={loading || crawling}>
@@ -153,15 +208,30 @@ function LolBeat() {
         </button>
       </div>
 
-      {jobId && (
-        <div className="lol-info">
-          Crawl job queued! Job ID: <code>{jobId}</code>
-          <br />
-          <small>This runs in the background. Come back and hit "Find Path" in a minute.</small>
+      {crawling && (
+        <div className="lol-countdown-box">
+          <div className="lol-countdown-ring">
+            <svg viewBox="0 0 72 72">
+              <circle className="lol-ring-bg" cx="36" cy="36" r="30" />
+              <circle
+                className="lol-ring-progress"
+                cx="36" cy="36" r="30"
+                style={{
+                  strokeDasharray: `${2 * Math.PI * 30}`,
+                  strokeDashoffset: `${2 * Math.PI * 30 * (1 - countdown / 60)}`,
+                }}
+              />
+            </svg>
+            <span className="lol-countdown-number">{countdown}s</span>
+          </div>
+          <div className="lol-countdown-text">
+            Crawling in progress… checking for path in <strong>{countdown}s</strong>
+          </div>
+          <button className="lol-stop-btn" onClick={stopCrawling}>Stop</button>
         </div>
       )}
 
-      {(loading || (crawling && !jobId)) && (
+      {loading && (
         <div className="lol-loading">Searching the beat graph…</div>
       )}
 
@@ -177,6 +247,7 @@ function LolBeat() {
             const winners = team1[0]?.win ? team1 : team2;
             const losers = team1[0]?.win ? team2 : team1;
             const hasDetail = step.participants.length > 0;
+            const isArena = step.game_type === 'Arena';
 
             return (
               <div className="lol-match-card" key={index}>
@@ -200,15 +271,19 @@ function LolBeat() {
                 {hasDetail ? (
                   <div className="lol-match-teams">
                     <div className="lol-team lol-team-blue">
-                      <div className="lol-team-label">
-                        Victory
-                      </div>
+                      {!isArena && (
+                        <div className="lol-team-label">
+                          Victory
+                        </div>
+                      )}
                       {winners.map((p) => renderTeamRow(p, step))}
                     </div>
                     <div className="lol-team lol-team-red">
-                      <div className="lol-team-label">
-                        Defeat
-                      </div>
+                      {!isArena && (
+                        <div className="lol-team-label">
+                          Defeat
+                        </div>
+                      )}
                       {losers.map((p) => renderTeamRow(p, step))}
                     </div>
                   </div>

@@ -150,7 +150,85 @@
   font-size: 0.85rem;
 }
 
-/* ---- Match list / cards ---- */
+/* ---- Countdown spinner ---- */
+
+.lol-countdown-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 24px;
+  margin-bottom: 20px;
+  background: rgba(83, 131, 232, 0.06);
+  border: 1px solid rgba(83, 131, 232, 0.2);
+  border-radius: 12px;
+  width: 100%;
+  max-width: 800px;
+}
+
+.lol-countdown-ring {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+
+.lol-countdown-ring svg {
+  width: 100%;
+  height: 100%;
+  transform: rotate(-90deg);
+}
+
+.lol-ring-bg {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.06);
+  stroke-width: 4;
+}
+
+.lol-ring-progress {
+  fill: none;
+  stroke: var(--lol-accent);
+  stroke-width: 4;
+  stroke-linecap: round;
+  transition: stroke-dashoffset 0.9s linear;
+}
+
+.lol-countdown-number {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--lol-accent);
+  font-variant-numeric: tabular-nums;
+}
+
+.lol-countdown-text {
+  font-size: 0.85rem;
+  color: var(--lol-text-secondary);
+}
+
+.lol-countdown-text strong {
+  color: var(--lol-accent);
+}
+
+.lol-stop-btn {
+  padding: 6px 20px;
+  border-radius: 6px;
+  border: 1px solid rgba(232, 64, 87, 0.4);
+  background: rgba(232, 64, 87, 0.1);
+  color: var(--lol-defeat-red);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+}
+
+.lol-stop-btn:hover {
+  background: rgba(232, 64, 87, 0.2);
+  border-color: var(--lol-defeat-red);
+}
 
 .lol-match-list {
   display: flex;
