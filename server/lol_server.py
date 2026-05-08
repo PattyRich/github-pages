@@ -26,6 +26,7 @@ QUEUE_NAMES = {
     400: "Normal Draft",
     430: "Normal Blind",
     450: "ARAM",
+    480: "SwiftPlay",
     490: "Quickplay",
     700: "Clash",
     720: "ARAM Clash",
@@ -162,3 +163,22 @@ def job_status(job_id):
     except Exception as e:
         return jsonify({"error": str(e)}), 404
 
+
+@lol_api.route("/queue", methods=["GET"])
+def queue_info():
+    """
+    GET /lol/api/queue
+    Returns the current size of the RQ job queue.
+    """
+    from rq.registry import StartedJobRegistry, FinishedJobRegistry, FailedJobRegistry
+
+    started = StartedJobRegistry(queue=q).count
+    finished = FinishedJobRegistry(queue=q).count
+    failed = FailedJobRegistry(queue=q).count
+
+    return jsonify({
+        "queued":   len(q),
+        "started":  started,
+        "finished": finished,
+        "failed":   failed,
+    })
