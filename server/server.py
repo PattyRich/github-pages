@@ -170,9 +170,11 @@ def updateBoard(boardName, password, pwtype, teampw):
     boardData = cache['boardData']
     boardData[data['row']][data['col']] = { **boardData[data['row']][data['col']], **data['info']}
 
-    if data['info']['image'] and data['info']['image']['url'][0:5] == 'data:':
+    image = data.get('info', {}).get('image') if isinstance(data.get('info'), dict) else None
+    image_url = image.get('url', '') if isinstance(image, dict) else ''
+    if image and isinstance(image_url, str) and image_url[0:5] == 'data:':
       try:
-        reduced_image = reduce_image_size(data['info']['image']['url'], 20)
+        reduced_image = reduce_image_size(image_url, 20)
         boardData[data['row']][data['col']]['image']['url'] = reduced_image
       except Exception as e:
         postToDiscord('Image reduction failed: {} for {}'.format(str(e), boardName), 'DEBUG_WEBHOOK')
