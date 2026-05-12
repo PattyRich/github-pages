@@ -28,6 +28,15 @@ jobs:
           npm install
           CI=false npm run build
           
+      # Clean the old files first
+      - name: Clean old frontend
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_KEY }}
+          script: rm -rf /var/www/frontend/*
+
       - name: Upload to Server
         uses: appleboy/scp-action@v0.1.7
         with:
