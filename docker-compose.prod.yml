@@ -46,7 +46,6 @@ services:
       - "127.0.0.1:8080:8080"
     environment:
       DOZZLE_AUTH_PROVIDER: simple
-      DOZZLE_BASE: /logs
     restart: unless-stopped
 
 volumes:
