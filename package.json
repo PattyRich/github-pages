@@ -1,6 +1,6 @@
 {
   "name": "github-pages",
-  "homepage": "https://pattyrich.github.io/github-pages/",
+  "homepage": ".",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
