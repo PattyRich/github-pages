@@ -29,6 +29,7 @@ myclient = pymongo.MongoClient(mongo_uri)
 db = myclient["bingo"]
 mycol = db['bingo']
 
+allowedAuthTypes = ['admin', 'general']
 adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
 generalTileKeys = ['proof', 'checked', 'currPoints']
 boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns']
@@ -67,6 +68,8 @@ def bad_request(message):
   return response
 
 def auth(boardName, password, pwtype, mustBeAdmin = False):
+  if (pwtype not in allowedAuthTypes):
+    return [None, bad_request('Invalid auth type.')]
   if (pwtype == 'admin'):
     pwtype = 'adminPassword'
   if (mustBeAdmin):

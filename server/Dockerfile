@@ -13,16 +13,13 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY --chown=appuser:appuser requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 # Install uwsgi for production use
 RUN pip install --no-cache-dir uwsgi
 
-COPY . .
-
-# Give the user ownership of the app files
-RUN chown -R appuser:appuser /app
+COPY --chown=appuser:appuser . .
 
 # Switch to the non-root user
 USER appuser
