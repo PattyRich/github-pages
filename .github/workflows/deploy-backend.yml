@@ -7,6 +7,7 @@ on:
     paths:
       - 'server/**'
       - 'docker-compose.prod.yml'
+      - 'nginx/**'
       - '.github/workflows/deploy-backend.yml'
 
 jobs:
