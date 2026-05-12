@@ -1,5 +1,8 @@
 FROM python:3.11-slim
 
+# Create a non-privileged user
+RUN useradd -m -r appuser
+
 WORKDIR /app
 
 # Install system dependencies required for uWSGI and Pillow
@@ -17,6 +20,12 @@ RUN pip install --no-cache-dir -r requirements.txt
 RUN pip install --no-cache-dir uwsgi
 
 COPY . .
+
+# Give the user ownership of the app files
+RUN chown -R appuser:appuser /app
+
+# Switch to the non-root user
+USER appuser
 
 # Expose port for dev and prod (8000)
 EXPOSE 8000
