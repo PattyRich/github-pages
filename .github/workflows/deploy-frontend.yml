@@ -38,7 +38,6 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
-          fingerprint: ${{ secrets.LIGHTSAIL_FINGERPRINT }}
           script: rm -rf /var/www/frontend/*
 
       - name: Upload to Server
@@ -47,7 +46,6 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
-          fingerprint: ${{ secrets.LIGHTSAIL_FINGERPRINT }}
           source: "build/*"
           target: "/var/www/frontend"
           strip_components: 1

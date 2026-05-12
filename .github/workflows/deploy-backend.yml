@@ -23,7 +23,6 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
-          fingerprint: ${{ secrets.LIGHTSAIL_FINGERPRINT }}
           script: |
             cd /var/www/server/github-pages
             git fetch origin main
