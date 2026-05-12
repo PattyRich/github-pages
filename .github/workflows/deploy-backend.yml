@@ -1,4 +1,4 @@
-name: Deploy to Lightsail
+name: Deploy Backend
 
 on:
   push:
@@ -7,13 +7,13 @@ on:
     paths:
       - 'server/**'
       - 'docker-compose.prod.yml'
+      - '.github/workflows/deploy-backend.yml'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Deploy to Lightsail
+      - name: SSH and Update Docker
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
