@@ -40,6 +40,7 @@ services:
     image: amir20/dozzle:latest
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+      - dozzle_data:/data
       - ./dozzle/users.yml:/data/users.yml
     ports:
       - "8080:8080"
@@ -50,3 +51,4 @@ services:
 volumes:
   mongo_data:
   redis_data:
+  dozzle_data:
