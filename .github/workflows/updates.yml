@@ -1,0 +1,32 @@
+name: Weekly Container Maintenance
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  schedule:
+    - cron: '0 0 * * 0' # Weekly at midnight Sunday UTC
+  workflow_dispatch: # Allows you to run this manually from the Actions tab
+
+jobs:
+  update-images:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Pull and Update Third-Party Images
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_KEY }}
+          script: |
+            cd /var/www/server/github-pages
+            # Pull latest version of Dozzle (and other tools if added)
+            docker compose -f docker-compose.prod.yml pull dozzle
+            
+            # Rebuild API and Worker with the latest base images (--pull)
+            docker compose -f docker-compose.prod.yml build --pull api worker
+            
+            # Recreate containers if anything changed
+            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            # Optional: Clean up old images to save disk space
+            docker image prune -f

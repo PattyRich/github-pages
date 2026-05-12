@@ -1,4 +1,7 @@
-FROM python:3.11-slim
+FROM python:3.13-slim
+
+# Create a non-privileged user
+RUN useradd -m -r appuser
 
 WORKDIR /app
 
@@ -10,13 +13,16 @@ RUN apt-get update && apt-get install -y \
     zlib1g-dev \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+COPY --chown=appuser:appuser requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 # Install uwsgi for production use
 RUN pip install --no-cache-dir uwsgi
 
-COPY . .
+COPY --chown=appuser:appuser . .
+
+# Switch to the non-root user
+USER appuser
 
 # Expose port for dev and prod (8000)
 EXPOSE 8000

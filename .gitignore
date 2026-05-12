@@ -6,3 +6,4 @@ server/.env
 server/__pycache__
 old-files/*
 dozzle/*
+scripts/backup_config.ps1

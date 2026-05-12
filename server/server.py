@@ -18,9 +18,15 @@ CORS(app)
 # Register the League of Legends API routes
 app.register_blueprint(lol_api, url_prefix='/lol/api')
 
+redis_host = os.environ.get("REDIS_HOST", "localhost")
+redis_port = os.environ.get("REDIS_PORT", "6379")
+redis_db = os.environ.get("REDIS_DB", "0")
+redis_url = f"redis://{redis_host}:{redis_port}/{redis_db}"
+
 limiter = Limiter(
-    app,
     key_func=get_remote_address,
+    app=app,
+    storage_uri=redis_url,
     default_limits=["10000 per hour"]
 )
 
@@ -29,6 +35,7 @@ myclient = pymongo.MongoClient(mongo_uri)
 db = myclient["bingo"]
 mycol = db['bingo']
 
+allowedAuthTypes = ['admin', 'general']
 adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
 generalTileKeys = ['proof', 'checked', 'currPoints']
 boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns']
@@ -67,6 +74,8 @@ def bad_request(message):
   return response
 
 def auth(boardName, password, pwtype, mustBeAdmin = False):
+  if (pwtype not in allowedAuthTypes):
+    return [None, bad_request('Invalid auth type.')]
   if (pwtype == 'admin'):
     pwtype = 'adminPassword'
   if (mustBeAdmin):

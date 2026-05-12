@@ -1,0 +1,37 @@
+name: Deploy Backend
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'server/**'
+      - 'docker-compose.prod.yml'
+      - 'nginx/**'
+      - '.github/workflows/deploy-backend.yml'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH and Update Docker/Nginx
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_KEY }}
+          script: |
+            cd /var/www/server/github-pages
+            git fetch origin main
+            git reset --hard origin/main
+            
+            # 1. Update Nginx Config
+            sudo cp nginx/cloudflare.conf /etc/nginx/cloudflare.conf
+            sudo cp nginx/praynr.conf /etc/nginx/sites-available/default
+            sudo nginx -t && sudo systemctl reload nginx
+            
+            # 2. Update Docker Containers
+            docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
