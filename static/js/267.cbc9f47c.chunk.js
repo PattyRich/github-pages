@@ -1,0 +1,2 @@
+"use strict";(globalThis.webpackChunkgithub_pages=globalThis.webpackChunkgithub_pages||[]).push([[267],{9267(a,e,t){t.r(e),t.d(e,{data:()=>r});let r={name:"arma",items:[{name:"Armadyl helmet",rate:1/381},{name:"Armadyl chainskirt",rate:1/381},{name:"Armadyl chestplate",rate:1/381},{name:"Armadyl hilt",rate:1/508}],pet:{rate:5e3,name:"Pet kree'arra"}}}}]);
+//# sourceMappingURL=267.cbc9f47c.chunk.js.map

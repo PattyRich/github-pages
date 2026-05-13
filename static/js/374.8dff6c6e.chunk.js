@@ -1,0 +1,2 @@
+"use strict";(globalThis.webpackChunkgithub_pages=globalThis.webpackChunkgithub_pages||[]).push([[374],{2374(a,e,t){t.r(e),t.d(e,{data:()=>h});let h={name:"yama",items:[{name:"Soulflame horn",rate:1/300},{name:"Oathplate helm",rate:1/600},{name:"Oathplate chest",rate:1/600},{name:"Oathplate legs",rate:1/600}],pet:{rate:2500,name:"Yami"}}}}]);
+//# sourceMappingURL=374.8dff6c6e.chunk.js.map

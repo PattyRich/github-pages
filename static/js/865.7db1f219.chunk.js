@@ -1,0 +1,2 @@
+"use strict";(globalThis.webpackChunkgithub_pages=globalThis.webpackChunkgithub_pages||[]).push([[865],{2865(e,a,t){t.r(a),t.d(a,{data:()=>r});let r={name:"whisperer",items:[{name:"Bellator vestige",rate:3/512},{name:"Siren's staff",rate:1/512},{name:"Chromium ingot",rate:3/512},{name:"Virtus mask",rate:1/1536,extra:!0},{name:"Virtus robe top",rate:1/1536,extra:!0},{name:"Virtus robe bottom",rate:1/1536,extra:!0}],pet:{rate:2e3,name:"Wisp"}}}}]);
+//# sourceMappingURL=865.7db1f219.chunk.js.map

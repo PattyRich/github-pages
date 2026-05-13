@@ -1,1 +1,0 @@
-let e={name:"whisperer",items:[{name:"Bellator vestige",rate:.005859375},{name:"Siren's staff",rate:.001953125},{name:"Chromium ingot",rate:.005859375},{name:"Virtus mask",rate:.0006510416666666666,extra:!0},{name:"Virtus robe top",rate:.0006510416666666666,extra:!0},{name:"Virtus robe bottom",rate:.0006510416666666666,extra:!0}],pet:{rate:2e3,name:"Wisp"}};export{e as data};

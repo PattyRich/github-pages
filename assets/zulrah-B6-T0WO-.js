@@ -1,1 +1,0 @@
-let a={name:"zulrah",items:[{name:"Tanzanite fang",rate:.0009765625},{name:"Magic fang",rate:.0009765625},{name:"Serpentine visage",rate:.0009765625},{name:"Uncut onyx",rate:.0009765625},{name:"Tanzanite mutagen",rate:7630093087135663e-20},{name:"Magma mutagen",rate:7630093087135663e-20}],pet:{rate:4e3,name:"Pet snakeling"}};export{a as data};

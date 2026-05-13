@@ -1,1 +1,0 @@
-let a={name:"zammy",items:[{name:"Steam battlestaff",rate:.007874015748031496},{name:"Zamorakian spear",rate:.007874015748031496},{name:"Staff of the dead",rate:.001968503937007874},{name:"Zamorak hilt",rate:.001968503937007874}],pet:{rate:5e3,name:"Pet k'ril tsutsaroth"}};export{a as data};

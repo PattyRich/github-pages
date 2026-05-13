@@ -1,0 +1,2 @@
+"use strict";(globalThis.webpackChunkgithub_pages=globalThis.webpackChunkgithub_pages||[]).push([[968],{968(e,a,t){t.r(a),t.d(a,{data:()=>r});let r={name:"vardorvis",items:[{name:"Ultor vestige",rate:3/1088},{name:"Executioner's axe head",rate:1/1088},{name:"Chromium ingot",rate:3/1088},{name:"Virtus mask",rate:1/3264,extra:!0},{name:"Virtus robe top",rate:1/3264,extra:!0},{name:"Virtus robe bottom",rate:1/3264,extra:!0}],pet:{rate:3e3,name:"Butch"}}}}]);
+//# sourceMappingURL=968.206d1874.chunk.js.map

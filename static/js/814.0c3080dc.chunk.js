@@ -1,0 +1,2 @@
+"use strict";(globalThis.webpackChunkgithub_pages=globalThis.webpackChunkgithub_pages||[]).push([[814],{6814(e,a,t){t.r(a),t.d(a,{data:()=>i});let i={name:"corp",chance:7/4095*100,items:[{name:"Arcane sigil",rate:3},{name:"Elysian sigil",rate:1},{name:"Spectral sigil",rate:3}],pet:{rate:5e3,name:"Pet dark core"}}}}]);
+//# sourceMappingURL=814.0c3080dc.chunk.js.map

@@ -1,0 +1,2 @@
+"use strict";(globalThis.webpackChunkgithub_pages=globalThis.webpackChunkgithub_pages||[]).push([[103],{2103(e,a,t){t.r(a),t.d(a,{data:()=>s});let s={name:"araxxor",items:[{name:"Araxyte fang",rate:1/600},{name:"Noxious pommel",rate:1/600,sequence:1},{name:"Noxious point",rate:1/600,sequence:2},{name:"Noxious blade",rate:1/600,sequence:3}],pet:{rate:3e3,name:"Nid"}}}}]);
+//# sourceMappingURL=103.9fb66673.chunk.js.map
