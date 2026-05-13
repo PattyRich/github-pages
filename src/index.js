@@ -39,7 +39,7 @@ if (darkMode === 'true' || darkMode === true) {
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
-const IS_MAINTENANCE = true;
+const IS_MAINTENANCE = false;
 
 const Maintenance = (
 	<main style={{
