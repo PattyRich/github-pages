@@ -1,0 +1,46 @@
+#background {
+  background-color: var(--osrs-page-bg);
+  height: 100vh;
+}
+
+.parent {
+  position: relative;
+  width: 100%;
+}
+
+.olm {
+  transition: transform 1.2s;
+}
+
+.olm-left   { transform: rotate(30deg) translate(-50%, 25%); }
+.olm-center { transform: translate(-50%, 0%); }
+.olm-right  { transform: rotate(-30deg) translate(-50%, -50%); }
+
+.child {
+  position: absolute;
+  top:  50%;
+  left: 50%;
+}
+
+.child2 {
+  position: absolute;
+  top:  130px;
+  left: 75%;
+}
+
+.fade-out {
+  animation: fadeOut ease 3s;
+  opacity: 0;
+}
+
+@keyframes fadeOut {
+  0%   { opacity: 1; }
+  100% { opacity: 0; top: 0px; }
+}
+
+#projectiles {
+  position: absolute;
+  top:    0;
+  left:   0;
+  z-index: 2;
+}

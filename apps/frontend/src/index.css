@@ -1,0 +1,556 @@
+@font-face {
+  font-family: 'osrsFont';
+  src: local('osrsFont'), url('./assets/fonts/osrs.ttf') format('truetype');
+}
+
+/* ─── Design Tokens ──────────────────────────────────────────────────────── */
+:root {
+  /* Core palette */
+  --osrs-bg-brown-dark: #2b261e;
+  --osrs-bg-brown: #3c3224;
+  --osrs-bg-inventory: #463d32;
+  --osrs-border-dark: #1d1813;
+  --osrs-border-light: #5d503f;
+  --osrs-text-gold: #ff981f;
+  --osrs-text-yellow: #ffff00;
+  --osrs-text-normal: #dbceb4;
+  --osrs-text-beige: #f7e6c1;
+  --osrs-button-bg: #5a4c37;
+  --osrs-button-hover: #483d2c;
+  --osrs-button-active: #362d20;
+
+  /* Semantic surfaces */
+  --osrs-page-bg: var(--osrs-bg-brown-dark);
+  --osrs-surface: var(--osrs-bg-inventory);
+  --osrs-surface-raised: var(--osrs-bg-brown);
+
+  /* Dark glass — amber tones, not white frost */
+  --osrs-glass-bg: rgba(46, 40, 28, 0.72);
+  --osrs-glass-bg-raised: rgba(58, 50, 36, 0.82);
+  --osrs-glass-border: rgba(93, 80, 63, 0.55);
+  --osrs-glass-blur: blur(10px);
+  --osrs-glass-shadow: 0 6px 24px rgba(0, 0, 0, 0.55);
+
+  /* Semantic colors */
+  --osrs-tile-on: #2d6e2d;
+  --osrs-tile-hint: #b8a800;
+
+  /* Spacing & shape */
+  --osrs-radius: 4px;
+  --osrs-radius-lg: 8px;
+  --osrs-padding-panel: 20px;
+  --osrs-gap: 10px;
+}
+
+/* ─── Base ───────────────────────────────────────────────────────────────── */
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--osrs-page-bg);
+  background-image:
+    linear-gradient(rgba(43, 38, 30, 0.65), rgba(43, 38, 30, 0.65)),
+    url('./assets/backgrounds/osrs_bg_stone.png');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  color: var(--osrs-text-normal);
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
+}
+
+hr {
+  border-top: 2px solid var(--osrs-border-dark);
+  opacity: 1;
+}
+
+/* ─── Typography helpers ─────────────────────────────────────────────────── */
+.osrs-header {
+  font-family: 'osrsFont', sans-serif;
+  color: var(--osrs-text-gold);
+  text-shadow: 1px 1px 0px black;
+}
+
+/* ─── Glass utility classes ──────────────────────────────────────────────── */
+.osrs-glass {
+  background: var(--osrs-glass-bg);
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
+  border-radius: var(--osrs-radius-lg);
+}
+
+.osrs-glass-raised {
+  background: var(--osrs-glass-bg-raised);
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
+  border-radius: var(--osrs-radius-lg);
+}
+
+/* ─── Raw <button> elements (no class) ──────────────────────────────────── */
+button:not([class]) {
+  background-color: var(--osrs-button-bg);
+  color: var(--osrs-text-normal);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 0.9rem;
+  text-shadow: 1px 1px 0px black;
+  border-radius: var(--osrs-radius);
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: background-color 0.15s, color 0.15s;
+}
+
+button:not([class]):hover {
+  background-color: var(--osrs-button-hover);
+  color: var(--osrs-text-gold);
+}
+
+button:not([class]):active {
+  background-color: var(--osrs-button-active);
+}
+
+button:not([class]):focus-visible {
+  outline: 2px solid var(--osrs-border-light);
+  outline-offset: 2px;
+  color: var(--osrs-text-gold);
+}
+
+/* ─── Raw <input> / <select> elements ───────────────────────────────────── */
+input[type="text"]:not([class]),
+input[type="number"]:not([class]) {
+  background-color: var(--osrs-bg-brown-dark);
+  color: var(--osrs-text-normal);
+  border: 1px solid var(--osrs-border-dark);
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7);
+  border-radius: var(--osrs-radius);
+  padding: 3px 7px;
+  font-family: inherit;
+  font-size: 0.9rem;
+}
+
+
+
+select:not([class]) {
+  background-color: var(--osrs-bg-brown-dark);
+  color: var(--osrs-text-normal);
+  border: 1px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius);
+  padding: 3px 7px;
+  font-family: inherit;
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+input[type="radio"]:not([class]),
+input[type="checkbox"]:not([class]) {
+  accent-color: var(--osrs-text-gold);
+  cursor: pointer;
+}
+
+/* ─── Bootstrap button overrides ────────────────────────────────────────── */
+.osrs-btn,
+.btn-primary,
+.btn-secondary,
+.btn-success,
+.btn-warning,
+.btn-danger,
+.btn-info,
+.btn {
+  background-color: var(--osrs-button-bg) !important;
+  color: var(--osrs-text-normal) !important;
+  border: 2px solid var(--osrs-border-dark) !important;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light) !important;
+  font-family: 'osrsFont', sans-serif !important;
+  text-shadow: 1px 1px 0px black;
+  border-radius: var(--osrs-radius) !important;
+}
+
+.osrs-btn:hover,
+.btn:hover {
+  background-color: var(--osrs-button-hover) !important;
+  color: var(--osrs-text-gold) !important;
+}
+
+.osrs-btn:active,
+.btn:active {
+  background-color: var(--osrs-button-active) !important;
+}
+
+.osrs-btn:focus,
+.osrs-btn:focus-visible,
+.btn:focus,
+.btn:focus-visible {
+  outline: 2px solid var(--osrs-border-light) !important;
+  outline-offset: 2px !important;
+  box-shadow: none !important;
+  color: var(--osrs-text-gold) !important;
+}
+
+.btn-success,
+.btn-outline-success {
+  background-color: #24461a !important;
+}
+
+.btn-success:hover,
+.btn-outline-success:hover,
+.btn-success:focus,
+.btn-outline-success:focus {
+  background-color: #2c541e !important;
+  color: var(--osrs-text-gold) !important;
+}
+
+.btn-danger,
+.btn-outline-danger {
+  background-color: #5c1b1b !important;
+}
+
+.btn-danger:hover,
+.btn-outline-danger:hover,
+.btn-danger:focus,
+.btn-outline-danger:focus {
+  background-color: #6e2020 !important;
+}
+
+.btn-warning,
+.btn-outline-warning {
+  background-color: #634316 !important;
+}
+
+.btn-warning:hover,
+.btn-outline-warning:hover,
+.btn-warning:focus,
+.btn-outline-warning:focus {
+  background-color: #734e19 !important;
+}
+
+/* ─── Bootstrap form control overrides ──────────────────────────────────── */
+.form-control,
+.input-group-text,
+.dropdown-toggle {
+  background-color: var(--osrs-bg-brown-dark) !important;
+  color: var(--osrs-text-normal) !important;
+  border: 1px solid var(--osrs-border-dark) !important;
+  border-radius: 0 !important;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
+}
+
+.form-control::placeholder {
+  color: var(--osrs-text-beige) !important;
+  opacity: 0.8 !important;
+}
+
+.form-control:focus,
+input:not([type="checkbox"]):not([type="radio"]):focus,
+textarea:focus {
+  background-color: var(--osrs-bg-brown) !important;
+  color: var(--osrs-text-beige) !important;
+  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.8) !important;
+  border: 0.5px solid var(--osrs-border-light) !important;
+  outline: none !important;
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+  background-color: #2b2318 !important;
+  color: #8c7e6a !important;
+  opacity: 0.7 !important;
+  box-shadow: inset 1px 1px 5px rgba(0, 0, 0, 0.9) !important;
+  cursor: not-allowed;
+}
+
+/* ─── Nav pills ──────────────────────────────────────────────────────────── */
+.nav-pills .nav-link {
+  background-color: var(--osrs-button-bg);
+  color: var(--osrs-text-normal);
+  border: 2px solid var(--osrs-border-dark);
+  font-family: 'osrsFont', sans-serif;
+  border-radius: 0;
+  margin: 0 2px;
+  text-shadow: 1px 1px 0px black;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+}
+
+.nav-pills .nav-link:hover {
+  background-color: var(--osrs-button-hover);
+  color: var(--osrs-text-gold);
+}
+
+.nav-pills .nav-link.active {
+  background-color: var(--osrs-bg-brown-dark) !important;
+  color: var(--osrs-text-gold) !important;
+  border-color: var(--osrs-border-dark) !important;
+}
+
+/* ─── Modals ─────────────────────────────────────────────────────────────── */
+.modal-content {
+  background-color: var(--osrs-bg-inventory) !important;
+  color: var(--osrs-text-normal) !important;
+  border: 4px solid var(--osrs-border-dark) !important;
+  box-shadow: inset 0 0 0 2px var(--osrs-border-light) !important;
+  border-radius: 0 !important;
+}
+
+.modal-header,
+.modal-footer {
+  border-color: var(--osrs-border-dark) !important;
+}
+
+.modal-header .btn-close,
+.modal-header .close {
+  filter: invert(1) grayscale(100%) brightness(200%) !important;
+}
+
+.modal-title,
+.modal-title h2,
+.modal-title h3 {
+  font-family: 'osrsFont', sans-serif !important;
+  color: var(--osrs-text-gold) !important;
+  text-shadow: 1px 1px 0px black;
+}
+
+/* ─── List groups ────────────────────────────────────────────────────────── */
+.list-group-item {
+  background-color: var(--osrs-bg-inventory) !important;
+  color: var(--osrs-text-normal) !important;
+  border: 1px solid var(--osrs-border-dark) !important;
+}
+
+.list-group-item:hover {
+  background-color: var(--osrs-bg-brown) !important;
+  color: var(--osrs-text-gold) !important;
+  cursor: pointer;
+}
+
+/* ─── Alerts ─────────────────────────────────────────────────────────────── */
+.alert {
+  background-color: var(--osrs-bg-brown);
+  color: #fffac9 !important;
+  border: 4px solid var(--osrs-border-light) !important;
+  box-shadow: inset 0 0 0 2px var(--osrs-border-dark) !important;
+}
+
+.alert-danger {
+  background-color: #5c1b1b !important;
+}
+
+.alert-warning {
+  background-color: #634316 !important;
+}
+
+.alert-success {
+  background-color: #24461a !important;
+}
+
+.alert-primary {
+  background-color: #1a3152 !important;
+}
+
+/* ─── Checkboxes ─────────────────────────────────────────────────────────── */
+.form-check-label {
+  color: var(--osrs-text-gold);
+  font-weight: bold;
+}
+
+.form-check-input {
+  background-color: var(--osrs-bg-inventory) !important;
+  border: 2px solid var(--osrs-border-dark) !important;
+  border-radius: 0 !important;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light) !important;
+  cursor: pointer;
+  transition: none !important;
+}
+
+.form-check-input:checked {
+  background-color: #24461a !important;
+  border-color: #1d1813 !important;
+}
+
+.form-check-input:focus {
+  box-shadow: none !important;
+  border-color: var(--osrs-text-gold) !important;
+  outline: none !important;
+}
+
+.bingo-completed-check {
+  width: 1.15em !important;
+  height: 1.15em !important;
+  background-color: #f7e6c1 !important;
+  border-color: var(--osrs-text-gold) !important;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-dark), 0 0 0 1px var(--osrs-border-light) !important;
+}
+
+.bingo-completed-check:checked {
+  background-color: #24461a !important;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fffac9' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m4 10 4 4 8-8'/%3e%3c/svg%3e") !important;
+  border-color: var(--osrs-text-gold) !important;
+}
+
+/* ─── Scrollbar ──────────────────────────────────────────────────────────── */
+::-webkit-scrollbar {
+  width: 14px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--osrs-bg-brown-dark);
+  border-left: 2px solid var(--osrs-border-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--osrs-button-bg);
+  border: 2px solid var(--osrs-border-dark);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--osrs-button-hover);
+}
+
+/* ─── Tooltips ───────────────────────────────────────────────────────────── */
+.tooltip-inner {
+  background-color: var(--osrs-bg-inventory) !important;
+  color: var(--osrs-text-gold) !important;
+  border: 2px solid #1d1813 !important;
+  box-shadow: inset 0 0 0 2px #5d503f !important;
+  font-family: 'osrsFont', sans-serif !important;
+  text-shadow: 1px 1px 0px black !important;
+  border-radius: 0 !important;
+  padding: 6px 10px !important;
+  font-size: 1rem !important;
+}
+
+.tooltip .tooltip-arrow::before {
+  display: none !important;
+}
+
+/* ─── Route Themes ───────────────────────────────────────────────────────── */
+.route-dark-bg {
+  background-color: #383333 !important;
+  background-image: none !important;
+  min-height: 100vh;
+  width: 100%;
+  color: #ffffff !important;
+  position: relative;
+  overflow: auto;
+  /* Prevent margin collapse from showing body background */
+  padding-top: 0.1px;
+  margin-top: -0.1px;
+}
+
+/* Bottom picture (preview) yellow text */
+.pet-preview p,
+.pet-preview span,
+.pet-preview label,
+.pet-preview div:not(.osrs-header),
+.pet-preview .pet-individual,
+.pet-preview .pet-section-header,
+.pet-preview .pet-name,
+.all-pets-theme p,
+.all-pets-theme span,
+.all-pets-theme label,
+.all-pets-theme div:not(.osrs-header) {
+  color: var(--osrs-text-yellow) !important;
+}
+
+/* Inputs with OSRS theme (brown background, beige text) */
+input:not([type="checkbox"]):not([type="radio"]),
+.form-control,
+.input-group-text {
+  background-color: var(--osrs-bg-brown-dark) !important;
+  color: var(--osrs-text-beige) !important;
+  border: 2px solid var(--osrs-border-dark) !important;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
+}
+
+
+
+input,
+textarea,
+select,
+.form-control,
+.form-check-input {
+  transition: none !important;
+}
+
+input:focus,
+textarea:focus,
+select:focus,
+.form-check-input:focus,
+button:focus {
+  box-shadow: none !important;
+  outline: none !important;
+}
+
+.route-dark-bg .osrs-header,
+.route-dark-bg h1,
+.route-dark-bg h2,
+.route-dark-bg h3,
+.route-dark-bg h4 {
+  color: var(--osrs-text-gold) !important;
+}
+
+.route-dark-bg * {
+  color: inherit;
+}
+
+.route-dark-bg p,
+.route-dark-bg span,
+.route-dark-bg label,
+.route-dark-bg div {
+  color: var(--osrs-text-beige);
+}
+
+/* ─── Toast Notifications ────────────────────────────────────────────────── */
+.toast {
+  background-color: var(--osrs-glass-bg-raised) !important;
+  backdrop-filter: var(--osrs-glass-blur) !important;
+  -webkit-backdrop-filter: var(--osrs-glass-blur) !important;
+  border: 2px solid var(--osrs-border-dark) !important;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow) !important;
+  border-radius: var(--osrs-radius-lg) !important;
+  overflow: hidden;
+}
+
+.toast-header {
+  background-color: rgba(43, 38, 30, 0.9) !important;
+  color: var(--osrs-text-gold) !important;
+  border-bottom: 1px solid var(--osrs-border-dark) !important;
+  font-family: 'osrsFont', sans-serif !important;
+}
+
+.toast-body {
+  color: var(--osrs-text-beige) !important;
+  padding: 12px 16px !important;
+}
+
+.toast-header .btn-close {
+  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(-15deg) !important;
+  /* Gold-ish close button */
+}
+
+.osrs-toast-success .toast-header {
+  background-color: rgba(36, 70, 26, 0.95) !important;
+  border-bottom: 1px solid #1a3212 !important;
+}
+
+.osrs-toast-danger .toast-header {
+  background-color: rgba(92, 27, 27, 0.95) !important;
+  border-bottom: 1px solid #3d1212 !important;
+}
+
+.osrs-toast-warning .toast-header {
+  background-color: rgba(99, 67, 22, 0.95) !important;
+  border-bottom: 1px solid #4a3210 !important;
+}
+
+.osrs-toast-info .toast-header {
+  background-color: rgba(43, 38, 30, 0.95) !important;
+  border-bottom: 1px solid var(--osrs-border-dark) !important;
+}

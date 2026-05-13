@@ -1,109 +1,126 @@
-# 🦒Praynr / github-pages
+# 🦒 Praynr — OSRS Community Toolbox
 
-The official OSRS Community Toolbox. Create, manage, and share customizable Bingo boards, simulate boss loot, and more.
+A full-stack, production-deployed web application for the Old School RuneScape community. Features a real-time collaborative Bingo board system and a social graph explorer that maps competitive player relationships across the League of Legends ranked ladder.
 
-- **Frontend**: [pattyrich.github.io/github-pages](https://pattyrich.github.io/github-pages/)
-- **Frontend also at**: [praynr.com](https://praynr.com)
-- **API**: [praynr.com](https://praynr.com)
+**Live:** [praynr.com](https://praynr.com) · **Frontend:** [pattyrich.github.io/github-pages](https://pattyrich.github.io/github-pages/) · **Logs:** [dozzle.praynr.com](https://dozzle.praynr.com)
 
----
-
-## 📡 Technology Stack
-
-- **OS**: Ubuntu 24.04 LTS (Noble Numbat)
-- **Backend**: Python 3.13 (Flask + uWSGI)
-- **Frontend**: React 18 (pinned for compatibility)
-- **Database**: MongoDB 7.0
-- **Cache/Task Queue**: Redis 7 + RQ worker
-- **Reverse Proxy**: Nginx (with Cloudflare optimization)
-- **Monitoring**: Dozzle (real-time log viewer)
-- **Infrastructure**: AWS Lightsail + Docker Compose
+> **Docs:** [System Architecture](docs/architecture.md) · [LoL-Beat Deep Dive](docs/lol-beat.md)
 
 ---
 
-## 🛠️ Setup & Development
+## What It Does
 
-### 1. Frontend
+**Bingo Boards** — Create, share, and collaboratively track customizable OSRS bingo boards. Teams authenticate independently, mark tiles with images and points, and see each other's progress in real time. Boards are stored in MongoDB with a 3-year TTL and auto-expire to keep the database lean.
+
+**LoL-Beat** — Given any two League of Legends summoners, find the shortest "beat chain" connecting them: a path of players who defeated each other in ranked games, all the way up to the #1 Challenger. Built on a Redis-backed player graph crawled from the Riot API, with BFS pathfinding and background job processing via RQ. See [docs/lol-beat.md](docs/lol-beat.md) for a full breakdown of the graph schema, crawl strategy, and API.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Frontend | React 19, Vite, Bootstrap 5 |
+| Backend | Python 3.13, Flask, uWSGI |
+| Background Jobs | Redis Queue (RQ) |
+| Database | MongoDB 7.0 |
+| Cache / Graph Store | Redis 7 |
+| Reverse Proxy | Nginx + Cloudflare |
+| Infrastructure | AWS Lightsail, Docker Compose |
+| CI/CD | GitHub Actions |
+| Monitoring | Dozzle |
+
+---
+
+## Architecture
+
+This is a monorepo organized for clarity and scale:
+
+```
+root/
+├── apps/frontend/          # React 19 SPA (Vite)
+├── services/api/           # Flask API + RQ Worker
+├── scripts/                # Backup automation, data ingestion
+├── nginx/                  # Reverse proxy & SSL config
+└── .github/workflows/      # CI/CD pipelines
+```
+
+See [docs/architecture.md](docs/architecture.md) for a full breakdown of the system design, data models, and background job flow.
+
+---
+
+## Quick Start
+
+The project is managed via a root-level `Makefile`.
+
 ```bash
-npm i && npm start
-```
+# Install all dependencies
+make install
 
-### 2. Backend Environment (`server/.env`)
-Create `server/.env` with the following variables:
-```env
-FEEDBACK_WEBHOOK=...
-CREATION_WEBHOOK=...
-DEBUG_WEBHOOK=...
-RIOT_API_KEY=...
-MONGO_URI=mongodb://mongo:27017/
-REDIS_HOST=redis
-REDIS_PORT=6379
-REDIS_DB=0
-DOZZLE_PASSWORD=... (not needed here I just put it for my own memory)
-DOZZLE_USERNAME=... (same as above)
-```
+# Configure environment (copy and fill in API keys)
+cp services/api/.env.example services/api/.env
 
-### 3. Monitoring (Dozzle)
-Generate a bcrypt hash for `data/users.yml`:
-```bash
-python3 -c "import bcrypt; print(bcrypt.hashpw(b'yourpassword', bcrypt.gensalt()).decode().replace('\$2b\$', '\$2a\$'))"
+# Start backend (Docker) + frontend (Vite) with cleanup on exit
+make dev
 ```
-or just use https://bcrypt-generator.com/
 
 ---
 
-## 🐳 Docker Management
+## CI/CD
 
-### Production Deployment
+GitHub Actions handles all deployments automatically on push to `main`:
+
+- **Frontend** — Built and deployed to `/var/www/frontend` on the production server via SCP.
+- **Backend** — API and worker containers restarted on AWS Lightsail via SSH.
+- **Maintenance** — Weekly job prunes old Docker images and updates base images.
+
+---
+
+## Docker (Production)
+
 ```bash
 # Start all services
 docker compose -f docker-compose.prod.yml up -d
 
-# Stop services (keeps data persistent in volumes)
-docker compose -f docker-compose.prod.yml down
-
-# Rebuild specific services after code changes
+# Rebuild only the API and worker after code changes (zero-downtime for other services)
 docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
+
+# Stop (data is safe in named volumes)
+docker compose -f docker-compose.prod.yml down
 ```
 
 > [!CAUTION]
-> **Data Persistence**: Never use `docker compose down -v` in production. It will permanently delete your MongoDB and Redis volumes.
+> **Never** use `docker compose down -v` in production — it destroys MongoDB and Redis volumes permanently.
 
 ---
 
-## 🔄 CI/CD Pipeline
+## Monitoring
 
-- **Frontend**: Deployed to `gh-pages` via manual command `npm run deploy`.
-- **Frontend & Backend (Production)**: Automatically built and deployed to AWS Lightsail (`praynr.com`) via GitHub Actions on push to `main`.
-  - Requires `LIGHTSAIL_HOST`, `LIGHTSAIL_USER`, and `LIGHTSAIL_KEY` secrets.
+Dozzle provides live container log streaming at [dozzle.praynr.com](https://dozzle.praynr.com) — useful for debugging production without SSH access. Auth is configured in `dozzle/users.yml`.
 
 ---
 
-## 💾 Maintenance & Backups
-
-### Maintenance Mode
-Toggle maintenance mode for Bingo and LoL-Beat routes in `src/index.js` via the `IS_MAINTENANCE` boolean. This displays a premium styled maintenance screen to users.
+## Backups & Recovery
 
 ### Automated Backups
-We use an **SSH Streaming** script to pull daily backups from the server directly to local storage.
-- **Script**: `scripts/backup.ps1`
-- **Schedule**: Configured via Windows Task Scheduler.
-- **Retention**: Automatically keeps only the 5 most recent backups.
+Daily SSH-streamed backups from the server to local storage, managed by Windows Task Scheduler.
 
-To run a manual backup:
 ```powershell
+# Manual backup
 powershell -ExecutionPolicy Bypass -File "scripts/backup.ps1"
 ```
 
----
+Keeps the 5 most recent backups automatically.
 
-## 🗃️ Mongo Data Recovery
+### MongoDB Restore
 
-If you ever need to restore a backup:
 ```bash
-# 1. Copy the archive into the container
+# Copy archive into the container
 docker cp your_backup.gz github-pages-mongo-1:/tmp/backup.gz
 
-# 2. Run the restore command inside the container
+# Restore
 docker exec github-pages-mongo-1 mongorestore --archive=/tmp/backup.gz --gzip
 ```
+
+### Maintenance Mode
+Toggle the `IS_MAINTENANCE` boolean in `apps/frontend/src/index.jsx` to enable maintenance mode for Bingo and LoL-Beat routes.

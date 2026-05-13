@@ -8,7 +8,7 @@ on:
     branches:
       - main
     paths:
-      - 'server/**'
+      - 'services/api/**'
       - 'docker-compose.prod.yml'
       - 'nginx/**'
       - '.github/workflows/deploy-backend.yml'
