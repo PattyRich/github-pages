@@ -78,7 +78,7 @@
   border-radius: 30px;
   position: relative;
   transition: background-color 0.3s ease;
-  box-shadow: inset 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .theme-toggle.dark .toggle-track {
@@ -98,7 +98,7 @@
   justify-content: center;
   font-size: 12px;
   transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
 }
 
 .theme-toggle.dark .toggle-thumb {
@@ -216,7 +216,7 @@
 
 .preview-img {
   border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.12);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
   transition: transform 0.3s ease;
   width: 100%;
   object-fit: cover;
@@ -313,7 +313,7 @@
     text-align: center;
     gap: 1rem;
   }
-  
+
   .bingo-section {
     padding: 1.5rem;
   }
