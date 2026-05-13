@@ -1,6 +1,6 @@
 # 🦒Praynr / github-pages
 
-The official OSRS Community Toolbox. Create, manage, and share customizable Bingo boards, simulate Mage Runs, and more.
+The official OSRS Community Toolbox. Create, manage, and share customizable Bingo boards, simulate boss loot, and more.
 
 - **Frontend**: [pattyrich.github.io/github-pages](https://pattyrich.github.io/github-pages/)
 - **Frontend also at**: [praynr.com](https://praynr.com)
