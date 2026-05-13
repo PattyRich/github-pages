@@ -46,6 +46,6 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
-          source: "build/*"
+          source: "dist/*"
           target: "/var/www/frontend"
           strip_components: 1
