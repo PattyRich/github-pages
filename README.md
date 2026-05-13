@@ -4,7 +4,7 @@ The official OSRS Community Toolbox. Create, manage, and share customizable Bing
 
 - **Frontend**: [pattyrich.github.io/github-pages](https://pattyrich.github.io/github-pages/)
 - **Frontend also at**: [praynr.com](https://praynr.com)
-- **API**: [praynr.com/api](https://praynr.com/api)
+- **API**: [praynr.com/api](https://praynr.com)
 
 ---
 
