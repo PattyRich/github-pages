@@ -19,8 +19,8 @@ CORS(app)
 app.register_blueprint(lol_api, url_prefix='/lol/api')
 
 limiter = Limiter(
-    app,
     key_func=get_remote_address,
+    app=app,
     default_limits=["10000 per hour"]
 )
 
