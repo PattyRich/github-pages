@@ -142,8 +142,8 @@ class TileModal extends React.Component {
   }
 
   toggleImageSelect() {
+    this.listOfImages = tileImages;
     this.setState({ chooseImage: true })
-    // this.listOfImages = tileImages;
   }
 
   getImage() {
@@ -152,7 +152,6 @@ class TileModal extends React.Component {
   }
 
   setImage(image, skipUrlBuild = false) {
-    console.log(image)
     let url;
     if (skipUrlBuild) {
       url = image
@@ -319,7 +318,7 @@ class TileModal extends React.Component {
                     key={i}
                     title={imageName}
                     src={this.listOfImages[image]}
-                    onClick={() => this.setImage(this.listOfImages[image])}
+                    onClick={() => this.setImage(imageName)}
                   />
                 )
               })
