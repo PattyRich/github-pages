@@ -1,0 +1,1 @@
+let e={name:"cg",items:[{name:"Crystal weapon seed",rate:.02},{name:"Crystal armour seed",rate:.02},{name:"Enhanced crystal weapon seed",rate:.0025}],pet:{rate:800,name:"Youngllef"}};export{e as data};

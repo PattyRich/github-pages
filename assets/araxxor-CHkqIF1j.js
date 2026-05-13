@@ -1,0 +1,1 @@
+let e={name:"araxxor",items:[{name:"Araxyte fang",rate:.0016666666666666668},{name:"Noxious pommel",rate:.0016666666666666668,sequence:1},{name:"Noxious point",rate:.0016666666666666668,sequence:2},{name:"Noxious blade",rate:.0016666666666666668,sequence:3}],pet:{rate:3e3,name:"Nid"}};export{e as data};

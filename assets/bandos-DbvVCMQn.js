@@ -1,0 +1,1 @@
+let a={name:"bandos",items:[{name:"Bandos chestplate",rate:.0026246719160104987},{name:"Bandos boots",rate:.0026246719160104987},{name:"Bandos tassets",rate:.0026246719160104987},{name:"Bandos hilt",rate:.001968503937007874}],pet:{rate:5e3,name:"Pet general graardor"}};export{a as data};
