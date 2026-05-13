@@ -1,7 +1,7 @@
 {
   "files": {
-    "main.css": "./static/css/main.be23d9df.css",
-    "main.js": "./static/js/main.9af2927a.js",
+    "main.css": "./static/css/main.45d9b0bf.css",
+    "main.js": "./static/js/main.aad07db0.js",
     "static/js/450.5a75a190.chunk.js": "./static/js/450.5a75a190.chunk.js",
     "static/js/103.9fb66673.chunk.js": "./static/js/103.9fb66673.chunk.js",
     "static/js/267.cbc9f47c.chunk.js": "./static/js/267.cbc9f47c.chunk.js",
@@ -28,8 +28,8 @@
     "static/media/osrs_bg_stone.png": "./static/media/osrs_bg_stone.60a56858f7a368b21d73.png",
     "static/media/osrs.ttf": "./static/media/osrs.8312160100eedb12bf64.ttf",
     "index.html": "./index.html",
-    "main.be23d9df.css.map": "./static/css/main.be23d9df.css.map",
-    "main.9af2927a.js.map": "./static/js/main.9af2927a.js.map",
+    "main.45d9b0bf.css.map": "./static/css/main.45d9b0bf.css.map",
+    "main.aad07db0.js.map": "./static/js/main.aad07db0.js.map",
     "450.5a75a190.chunk.js.map": "./static/js/450.5a75a190.chunk.js.map",
     "103.9fb66673.chunk.js.map": "./static/js/103.9fb66673.chunk.js.map",
     "267.cbc9f47c.chunk.js.map": "./static/js/267.cbc9f47c.chunk.js.map",
@@ -55,7 +55,7 @@
     "453.a7ff4453.chunk.js.map": "./static/js/453.a7ff4453.chunk.js.map"
   },
   "entrypoints": [
-    "static/css/main.be23d9df.css",
-    "static/js/main.9af2927a.js"
+    "static/css/main.45d9b0bf.css",
+    "static/js/main.aad07db0.js"
   ]
 }
