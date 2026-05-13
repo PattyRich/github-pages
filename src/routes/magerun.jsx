@@ -35,6 +35,17 @@ class Magerun extends React.Component {
 		this.drawTiles = this.drawTiles.bind(this);
   	this.getTile = this.getTile.bind(this);
   	this.attackWillHit = false;
+    this.handleMouseDown = this.handleMouseDown.bind(this);
+    this.requestID = null;
+  }
+
+  handleMouseDown(e) {
+    this.destinationOnTick = this.getTile(e)
+    this.drawBoard()
+    //this simulates ping
+    setTimeout(() => {
+      this.updateDestinationAfterTimeout()
+    }, 75)
   }
 
 
@@ -319,21 +330,22 @@ class Magerun extends React.Component {
  		this.drawBoard()
  	}
 
- 	animate(){
- 		this.ctx2.clearRect(0,0,this.canvas2.current.width, this.canvas2.current.height)
- 		requestAnimationFrame(()=> this.animate())
- 		try{
-  		if (this.olmAttack){
+  	animate(){
+      if (!this.canvas2.current) return;
+  		this.ctx2.clearRect(0,0,this.canvas2.current.width, this.canvas2.current.height)
+  		this.requestID = requestAnimationFrame(()=> this.animate())
+  		try{
+   		if (this.olmAttack){
 	 			this.ctx2.beginPath()
 	 			this.olmAttack = approachTarget(this.olmAttack, this.playerCords())
 	 			this.ctx2.arc(this.olmAttack.x, this.olmAttack.y, 10, 0, Math.PI*2, false )
 	 			this.ctx2.fillStyle = 'green'
 	 			this.ctx2.fill()
- 			}
- 		}	catch (err) {
- 		}	
+  			}
+  		}	catch (err) {
+  		}	
 
- 		try {
+  		try {
 			this.ctx2.beginPath()
 			this.playerAttack = approachTarget(this.playerAttack, {x: 175, y: 200})
 			if(this.playerAttack == null) {
@@ -347,13 +359,15 @@ class Magerun extends React.Component {
 			this.ctx2.arc(this.playerAttack.x, this.playerAttack.y, 10, 0, Math.PI*2, false )
 			this.ctx2.fillStyle = 'blue'
 			this.ctx2.fill()
- 		} catch (err) {
- 		}
+  		} catch (err) {
+  		}
 	 }
 
  	playerCords(){
  		return ({x: this.player.x * this.tileSize + this.tileSize/2, y: this.offset + this.player.y * this.tileSize + this.tileSize/2})
  	}
+
+
 
   componentDidMount(){
   	const context = this.canvas.current.getContext('2d')
@@ -363,14 +377,7 @@ class Magerun extends React.Component {
   	this.resize()
     this.drawBoard()
     window.addEventListener('resize', this.resize)
-    window.addEventListener('mousedown', (e) => {
-    	this.destinationOnTick = this.getTile(e)
-    	this.drawBoard()
-    	//this simulates ping
-    	setTimeout(()=>{
-    		this.updateDestinationAfterTimeout()
-    	},75)
-		});
+    window.addEventListener('mousedown', this.handleMouseDown);
     this.interval = setInterval(()=> {
     	this.gameTick()
     },600)
@@ -381,6 +388,11 @@ class Magerun extends React.Component {
 		if (this.interval){
 			clearInterval(this.interval)
 		}
+    if (this.requestID) {
+      cancelAnimationFrame(this.requestID);
+    }
+    window.removeEventListener('resize', this.resize);
+    window.removeEventListener('mousedown', this.handleMouseDown);
 	}
 
 
