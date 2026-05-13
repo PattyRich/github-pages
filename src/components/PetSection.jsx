@@ -1,4 +1,5 @@
 import React from 'react';
+import { assetUrl } from '../utils/assetUrl';
 
 const wrap = ['Slayer', 'Wilderness'];
 
@@ -23,7 +24,7 @@ class PetSection extends React.Component {
               return (
                 <div className='pet-individual' style={{filter: petData.obtained ? 'brightness(100%)': 'brightness(40%)'}}>
                   <div className="pet-image-container-ofc">   
-                    <img className={`pet-image-ofc ${scale ? 'scaled' : ''}`} src={`${process.env.PUBLIC_URL}/assets/${this.props.path}/${pet}.png`} />
+                    <img className={`pet-image-ofc ${scale ? 'scaled' : ''}`} src={assetUrl(`${this.props.path}/${pet}.png`)} />
                   </div >
                   {petData.kc ? petData.kc : '-'}
                 </div>

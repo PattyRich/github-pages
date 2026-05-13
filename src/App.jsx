@@ -4,12 +4,9 @@ import { Link } from "react-router-dom";
 import Image from 'react-bootstrap/Image'
 import FeedbackModal from './components/BootStrap/FeedbackModal'
 import Form from 'react-bootstrap/Form';
-import {
-  enable as enableDarkMode,
-  disable as disableDarkMode,
-} from 'darkreader';
+import { disableAppDarkMode, enableAppDarkMode } from './utils/darkMode';
 
-window.API = process.env.NODE_ENV === 'development' ? 'http://localhost:8000' : 'https://praynr.com'
+window.API = import.meta.env.DEV ? 'http://localhost:8000' : 'https://praynr.com'
 
 const ROUTES = [
   { path: "/bingo-draft", name: "📝 Bingo Draft", desc: "Draft teams and items for your next big bingo event." },
@@ -35,9 +32,9 @@ export default function App() {
 
   useEffect(() => {
     if (isDarkMode) {
-      enableDarkMode({ brightness: 100, contrast: 90, sepia: 10 });
+      enableAppDarkMode();
     } else {
-      disableDarkMode();
+      disableAppDarkMode();
     }
   }, [isDarkMode]);
 
@@ -106,8 +103,8 @@ export default function App() {
               </div>
 
               <div className="bingo-previews">
-                <Image className="preview-img" fluid src={`${process.env.PUBLIC_URL}/board-min2.png`} alt="Bingo Board Preview" />
-                <Image className="preview-img" fluid src={`${process.env.PUBLIC_URL}/create-min.png`} alt="Bingo Create Preview" />
+                <Image className="preview-img" fluid src={`${import.meta.env.BASE_URL}board-min2.png`} alt="Bingo Board Preview" />
+                <Image className="preview-img" fluid src={`${import.meta.env.BASE_URL}create-min.png`} alt="Bingo Create Preview" />
               </div>
             </div>
           </section>

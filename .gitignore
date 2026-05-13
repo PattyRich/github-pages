@@ -7,3 +7,5 @@ server/__pycache__
 old-files/*
 dozzle/*
 scripts/backup_config.ps1
+dist
+vite-dev*.log

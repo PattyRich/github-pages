@@ -3,6 +3,7 @@ import React from 'react';
 import './Pets.css'
 import {data} from '../looter/pets-list';
 import PetSection from '../components/PetSection';
+import { assetUrl } from '../utils/assetUrl';
 
 import { toPng } from 'html-to-image';
 let totalPets = 0
@@ -128,7 +129,7 @@ class Pets extends React.Component {
            <img src={'https://oldschool.runescape.wiki/images/' + urlName + '.png'} />
           </div> */}
           <div className="pet-image-container">   
-           <img className='pet-image' src={`${process.env.PUBLIC_URL}/assets/${petPicturePath}/${pet.name}.png`} />
+           <img className='pet-image' src={assetUrl(`${petPicturePath}/${pet.name}.png`)} />
           </div>
           <input className="form-check-input" checked={pet.obtained} onChange={() => this.toggleCheck(i)} type="checkbox" value="" id={"pet" + i}/>
           {/* <label className="form-check-label" htmlFor={"pet" + i}>
@@ -146,7 +147,7 @@ class Pets extends React.Component {
         <button onClick={this.download}>Download</button>
       </div>
       
-      <div style={{'backgroundImage': `url(${process.env.PUBLIC_URL}/assets/backgrounds/${backgrounds[this.state.background]}.jpg)`}} id="pet-preview" className='pet-preview'>
+      <div style={{'backgroundImage': `url(${assetUrl(`backgrounds/${backgrounds[this.state.background]}.jpg`)})`}} id="pet-preview" className='pet-preview'>
         <PetSection petInfo={this.state.petInfo} pets={data['Raids']} section='Raids' path={petPicturePath}/>
         <PetSection petInfo={this.state.petInfo} pets={data['Bosses']} section='Bosses' path={petPicturePath}/>
         <div className='pets-middle'>

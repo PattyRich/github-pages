@@ -82,7 +82,7 @@ docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
 ## 💾 Maintenance & Backups
 
 ### Maintenance Mode
-Toggle maintenance mode for Bingo and LoL-Beat routes in `src/index.js` via the `IS_MAINTENANCE` boolean. This displays a premium styled maintenance screen to users.
+Toggle maintenance mode for Bingo and LoL-Beat routes in `src/index.jsx` via the `IS_MAINTENANCE` boolean. This displays a premium styled maintenance screen to users.
 
 ### Automated Backups
 We use an **SSH Streaming** script to pull daily backups from the server directly to local storage.

@@ -2,6 +2,7 @@ import {completion} from './completion'
 import { cluesLvl } from '../routes/osrs';
 
 const teamActivites = ['nex', 'tob']
+const lootModules = import.meta.glob('./*.js');
 
 export function loot(rolls, place, options = {points: 30000, runCompletion: false, pets: true, cms: false, teamSize: 1}) {
 	return new Promise((resolve, reject) => {
@@ -19,7 +20,13 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 			clues = true
 		}
 
-		import('./' + place)
+		const loadLootModule = lootModules[`./${place}.js`];
+		if (!loadLootModule) {
+			reject(new Error(`Unknown loot table: ${place}`));
+			return;
+		}
+
+		loadLootModule()
 			.then((datax) => {
 				//need a completely fresh copy since deleteing the pet perm deletes it from the file as well
 				//that happens since its a .js file and not json

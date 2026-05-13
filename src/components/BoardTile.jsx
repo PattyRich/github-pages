@@ -45,7 +45,7 @@ class BoardTile extends React.Component {
 								{this.props.info.title}
 							</Tooltip>
 							:
-							<></>
+							<div />
 					}
 				>
 					<span

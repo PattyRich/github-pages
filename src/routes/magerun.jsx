@@ -4,6 +4,7 @@ import React from 'react';
 //https://forum.ikov.io/profile/82597-rational/content/page/2/ olm picture
 //olm room 10/18
 import './magerun.css';
+import { assetUrl } from '../utils/assetUrl';
 
 class Magerun extends React.Component {
   constructor() {
@@ -295,7 +296,7 @@ class Magerun extends React.Component {
 
  	playerAttackFunc(){
  		if (this.attackLoop && this.player.x <=12 && this.playerAttackcd <=0){
- 			let audio = new Audio(`${process.env.PUBLIC_URL}/assets/trident.mp3`)
+ 			let audio = new Audio(assetUrl('trident.mp3'))
  				audio.addEventListener('loadeddata', () => {
  				audio.play()
  			})
@@ -400,11 +401,11 @@ class Magerun extends React.Component {
     return (
     	<div id="background">
 	    	<div className="parent">
-	    	  <img className={`olm ${this.state.headDirection} child`} src={`${process.env.PUBLIC_URL}/assets/olm.jpg`} height={this.offset-20}/>
+	    	  <img className={`olm ${this.state.headDirection} child`} src={assetUrl('olm.jpg')} height={this.offset-20}/>
 						{this.state.xpDrops.map(() => {
 		       		return (
 	    	  			<div style={{'color': 'white'}} className='fade-out child2'>
-	    	  				<img className='' src={`${process.env.PUBLIC_URL}/assets/magic-icon.png`} height={20}/>
+	    	  				<img className='' src={assetUrl('magic-icon.png')} height={20}/>
 			       			123
 			       		</div>
 			       	)

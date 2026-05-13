@@ -1,10 +1,7 @@
 import React, {useEffect} from 'react';
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal"
-import {
-  enable as enableDarkMode,
-  disable as disableDarkMode,
-} from 'darkreader';
+import { disableAppDarkMode, enableAppDarkMode } from '../../utils/darkMode';
 
 class SettingsModal extends React.Component {
   constructor(props) {
@@ -37,13 +34,9 @@ class SettingsModal extends React.Component {
     this.setLocalStorage(key, newVal)
     if (key === 'darkMode') {
       if (newVal) {
-        enableDarkMode({
-          brightness: 100,
-          contrast: 90,
-          sepia: 10,
-        });
+        enableAppDarkMode();
       } else {
-        disableDarkMode();
+        disableAppDarkMode();
       }
     }
   }

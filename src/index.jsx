@@ -13,28 +13,24 @@ import Pets from './routes/Pets';
 import AllPets from './routes/AllPets';
 import LolBeat from './routes/LolBeat';
 import {
-	enable as enableDarkMode,
-	disable as disableDarkMode,
-	auto as followSystemColorScheme,
-	isEnabled as isDarkReaderEnabled
-} from 'darkreader';
+	disableAppDarkMode,
+	enableAppDarkMode,
+	followAppSystemColorScheme,
+	isAppDarkModeEnabled,
+} from './utils/darkMode';
 
 import { HashRouter, Routes, Route } from "react-router-dom";
 
-followSystemColorScheme();
+followAppSystemColorScheme();
 let darkMode = localStorage.getItem('darkMode');
 if (darkMode === null) {
-	localStorage.setItem('darkMode', isDarkReaderEnabled());
-	darkMode = isDarkReaderEnabled();
+	localStorage.setItem('darkMode', isAppDarkModeEnabled());
+	darkMode = isAppDarkModeEnabled();
 }
 if (darkMode === 'true' || darkMode === true) {
-	enableDarkMode({
-		brightness: 100,
-		contrast: 90,
-		sepia: 10,
-	});
+	enableAppDarkMode();
 } else {
-	disableDarkMode();
+	disableAppDarkMode();
 }
 
 const root = ReactDOM.createRoot(document.getElementById('root'));

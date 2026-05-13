@@ -3,6 +3,7 @@ import Button from '../components/BootStrap/Button'
 import { useNavigate } from "react-router-dom";
 import { loot } from '../looter/looter'
 import './AllPets.css'
+import { assetUrl } from '../utils/assetUrl';
 
 
 const AllPets = (props) => {
@@ -81,7 +82,7 @@ const AllPets = (props) => {
                   return (
                     <div key={item} className='item'>
                       <a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
-                        <img src={`${process.env.PUBLIC_URL}/assets/pets_pixel/${item.name}.png`} title={item.name} alt={item.name} />
+                        <img src={assetUrl(`pets_pixel/${item.name}.png`)} title={item.name} alt={item.name} />
                       </a>
                       {`${item.kc}`}
                     </div>

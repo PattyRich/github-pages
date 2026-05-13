@@ -10,6 +10,7 @@ import Spinner from 'react-bootstrap/Spinner';
 
 
 const numInputs = ['points', 'currPoints', 'rowBingo', 'colBingo']
+const tileImages = import.meta.glob('../../assets/*.png', { eager: true, import: 'default' });
 let badTitles = [];
 class TileModal extends React.Component {
   constructor(props) {
@@ -142,7 +143,7 @@ class TileModal extends React.Component {
 
   toggleImageSelect() {
     this.setState({ chooseImage: true })
-    this.listOfImages = importAll(require.context('/public/assets', false, /\.(png)$/));
+    this.listOfImages = tileImages;
   }
 
   getImage() {
@@ -300,7 +301,7 @@ class TileModal extends React.Component {
                     </div>
                   </div>
                   <div className="form-check" style={{ 'marginTop': '15px' }}>
-                    <input className="form-check-input" disabled={generalDisabled} checked={this.state.checked} onChange={this.toggleCheck} type="checkbox" value="" id="flexCheckDefault" />
+                    <input className="form-check-input bingo-completed-check" disabled={generalDisabled} checked={this.state.checked} onChange={this.toggleCheck} type="checkbox" value="" id="flexCheckDefault" />
                     <label className="form-check-label" htmlFor="flexCheckDefault">
                       Completed?
                     </label>
@@ -311,12 +312,13 @@ class TileModal extends React.Component {
             :
             <>
               {Object.keys(this.listOfImages).map((image, i) => {
+                const imageName = image.split('/').pop()?.replace(/\.png$/i, '') || image;
                 return (
                   <img
                     key={i}
-                    title={image}
+                    title={imageName}
                     src={this.listOfImages[image]}
-                    onClick={() => this.setImage(image.split('.')[0])}
+                    onClick={() => this.setImage(this.listOfImages[image], true)}
                   />
                 )
               })
@@ -388,9 +390,7 @@ class TileModal extends React.Component {
 export default TileModal
 
 function importAll(r) {
-  let images = {};
-  r.keys().map((item, index) => { images[item.replace('./', '')] = r(item); });
-  return images;
+  return {};
 }
 
 function nameFilter(name) {

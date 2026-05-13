@@ -76,7 +76,7 @@
     height: 100vh;
     flex-direction: column;
     background-color: var(--osrs-bg-brown-dark);
-    background-image: linear-gradient(rgba(43, 38, 30, 0.8), rgba(43, 38, 30, 0.8)), url('../../public/assets/backgrounds/osrs_bg_stone.png');
+    background-image: linear-gradient(rgba(43, 38, 30, 0.8), rgba(43, 38, 30, 0.8)), url('../assets/backgrounds/osrs_bg_stone.png');
     background-size: cover;
     background-position: center;
     background-attachment: fixed;

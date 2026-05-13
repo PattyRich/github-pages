@@ -1,4 +1,5 @@
 import React, {useEffect} from 'react';
+import { assetUrl } from '../utils/assetUrl';
 
 const TotalLoot = (props) => {
 	useEffect(()=> {
@@ -14,7 +15,7 @@ const TotalLoot = (props) => {
      		return (
      			<span className="item">
      				<a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
-     					<img src={`${process.env.PUBLIC_URL}/assets/${item.name}.png`} title={item.name} alt={item.name}></img>
+     					<img src={assetUrl(`${item.name}.png`)} title={item.name} alt={item.name}></img>
      				</a>
      				{item.amount}
      			</span>

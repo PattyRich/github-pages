@@ -54,7 +54,7 @@ input {
 }
 
 .pet-preview {
-  /* background-image: url(/public/assets/backgrounds/black.jpg); */
+  /* background-image: url('../assets/backgrounds/black.jpg'); */
   width: 100%;
   height: 100%;
   background-size: cover;
