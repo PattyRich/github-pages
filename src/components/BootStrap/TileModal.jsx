@@ -152,6 +152,7 @@ class TileModal extends React.Component {
   }
 
   setImage(image, skipUrlBuild = false) {
+    console.log(image)
     let url;
     if (skipUrlBuild) {
       url = image
@@ -318,7 +319,7 @@ class TileModal extends React.Component {
                     key={i}
                     title={imageName}
                     src={this.listOfImages[image]}
-                    onClick={() => this.setImage(this.listOfImages[image], true)}
+                    onClick={() => this.setImage(this.listOfImages[image])}
                   />
                 )
               })
@@ -409,8 +410,12 @@ function detectURLs(message) {
   return res
 }
 function getImageUrl(image) {
+  image = image.split('/').pop()
+  if (image.endsWith('png')) {
+    image = image.slice(0, -4)
+  }
+  image = decodeURI(image)
   image = image.replaceAll(' ', '_');
-  console.log(image)
   image = image.charAt(0).toUpperCase() + image.slice(1);
   console.log(image)
   return `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`
