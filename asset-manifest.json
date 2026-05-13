@@ -1,7 +1,7 @@
 {
   "files": {
     "main.css": "./static/css/main.45d9b0bf.css",
-    "main.js": "./static/js/main.aad07db0.js",
+    "main.js": "./static/js/main.812355ac.js",
     "static/js/450.5a75a190.chunk.js": "./static/js/450.5a75a190.chunk.js",
     "static/js/103.9fb66673.chunk.js": "./static/js/103.9fb66673.chunk.js",
     "static/js/267.cbc9f47c.chunk.js": "./static/js/267.cbc9f47c.chunk.js",
@@ -24,12 +24,12 @@
     "static/js/374.8dff6c6e.chunk.js": "./static/js/374.8dff6c6e.chunk.js",
     "static/js/738.b9a3b65e.chunk.js": "./static/js/738.b9a3b65e.chunk.js",
     "static/js/664.bd8964d0.chunk.js": "./static/js/664.bd8964d0.chunk.js",
-    "static/js/453.a7ff4453.chunk.js": "./static/js/453.a7ff4453.chunk.js",
+    "static/js/453.df987567.chunk.js": "./static/js/453.df987567.chunk.js",
     "static/media/osrs_bg_stone.png": "./static/media/osrs_bg_stone.60a56858f7a368b21d73.png",
     "static/media/osrs.ttf": "./static/media/osrs.8312160100eedb12bf64.ttf",
     "index.html": "./index.html",
     "main.45d9b0bf.css.map": "./static/css/main.45d9b0bf.css.map",
-    "main.aad07db0.js.map": "./static/js/main.aad07db0.js.map",
+    "main.812355ac.js.map": "./static/js/main.812355ac.js.map",
     "450.5a75a190.chunk.js.map": "./static/js/450.5a75a190.chunk.js.map",
     "103.9fb66673.chunk.js.map": "./static/js/103.9fb66673.chunk.js.map",
     "267.cbc9f47c.chunk.js.map": "./static/js/267.cbc9f47c.chunk.js.map",
@@ -52,10 +52,10 @@
     "374.8dff6c6e.chunk.js.map": "./static/js/374.8dff6c6e.chunk.js.map",
     "738.b9a3b65e.chunk.js.map": "./static/js/738.b9a3b65e.chunk.js.map",
     "664.bd8964d0.chunk.js.map": "./static/js/664.bd8964d0.chunk.js.map",
-    "453.a7ff4453.chunk.js.map": "./static/js/453.a7ff4453.chunk.js.map"
+    "453.df987567.chunk.js.map": "./static/js/453.df987567.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.45d9b0bf.css",
-    "static/js/main.aad07db0.js"
+    "static/js/main.812355ac.js"
   ]
 }
