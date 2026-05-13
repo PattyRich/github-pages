@@ -1,0 +1,1 @@
+let a={name:"arma",items:[{name:"Armadyl helmet",rate:.0026246719160104987},{name:"Armadyl chainskirt",rate:.0026246719160104987},{name:"Armadyl chestplate",rate:.0026246719160104987},{name:"Armadyl hilt",rate:.001968503937007874}],pet:{rate:5e3,name:"Pet kree'arra"}};export{a as data};
