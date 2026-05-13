@@ -29,11 +29,10 @@
   "scripts": {
     "start": "vite",
     "build": "vite build",
-    "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist",
+    "build:gh": "vite build --mode gh",
+    "deploy": "npm run build:gh && gh-pages -d dist",
     "test": "vitest",
-    "preview": "vite preview",
-    "eject": "echo 'Vite does not have an eject command.'"
+    "preview": "vite preview"
   },
   "browserslist": {
     "production": [
