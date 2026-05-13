@@ -143,7 +143,7 @@ class TileModal extends React.Component {
 
   toggleImageSelect() {
     this.setState({ chooseImage: true })
-    this.listOfImages = tileImages;
+    // this.listOfImages = tileImages;
   }
 
   getImage() {
