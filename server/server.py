@@ -52,12 +52,24 @@ defaultBoardObj = {
   'rowBingo': 0,
   'colBingo': 0
 }
-indexes = mycol.index_information()
+def setup_indexes(collection):
+    """
+    Ensures required indexes exist. 
+    Handles TTL changes by dropping/recreating the index if options differ.
+    """
+    # Standard index for fast lookups
+    collection.create_index([("boardName", 1)])
 
-if(len(indexes) != 1):
-  mycol.create_index([("boardName", 1)])
-  ## ttl of 1.1 years
-  mycol.create_index([("date", 1)], expireAfterSeconds=34712647)
+    # TTL index for auto-deletion
+    try:
+        # 3.17 year TTL
+        collection.create_index([("date", 1)], expireAfterSeconds=100000000)
+    except pymongo.errors.OperationFailure:
+        # If expireAfterSeconds changed, we must drop and recreate
+        collection.drop_index("date_1")
+        collection.create_index([("date", 1)], expireAfterSeconds=100000000)
+
+setup_indexes(mycol)
 
 def initEmptyTeamData(row, col):
   teamData = []
