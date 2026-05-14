@@ -53,21 +53,11 @@ defaultBoardObj = {
   'colBingo': 0
 }
 def setup_indexes(collection):
-    """
-    Ensures required indexes exist. 
-    Handles TTL changes by dropping/recreating the index if options differ.
-    """
-    # Standard index for fast lookups
-    collection.create_index([("boardName", 1)])
-
-    # TTL index for auto-deletion
     try:
-        # 3.17 year TTL
+        collection.create_index([("boardName", 1)])
         collection.create_index([("date", 1)], expireAfterSeconds=100000000)
-    except pymongo.errors.OperationFailure:
-        # If expireAfterSeconds changed, we must drop and recreate
-        collection.drop_index("date_1")
-        collection.create_index([("date", 1)], expireAfterSeconds=100000000)
+    except:
+        pass
 
 setup_indexes(mycol)
 
