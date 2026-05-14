@@ -1,7 +1,6 @@
-import React, {useEffect} from 'react';
+import React from 'react';
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal"
-import { disableAppDarkMode, enableAppDarkMode } from '../../utils/darkMode';
 
 class SettingsModal extends React.Component {
   constructor(props) {
@@ -12,14 +11,12 @@ class SettingsModal extends React.Component {
     const showTeamPoints = localStorage.getItem('showTeamPoints') === 'true';
     const showTitleTile = localStorage.getItem('showTitleTile') === 'true';
     const showFeedback = localStorage.getItem('showFeedback') === 'true';
-    const darkMode = localStorage.getItem('darkMode') === 'true';
     this.state = { 
       completeStyle,
       showPoints,
       showTeamPoints,
       showTitleTile,
-      showFeedback,
-      darkMode
+      showFeedback
     }
     this.handleClose = this.handleClose.bind(this)
     this.setLocalStorage = this.setLocalStorage.bind(this)
@@ -32,13 +29,6 @@ class SettingsModal extends React.Component {
     obj[key] = newVal
     this.setState(obj)
     this.setLocalStorage(key, newVal)
-    if (key === 'darkMode') {
-      if (newVal) {
-        enableAppDarkMode();
-      } else {
-        disableAppDarkMode();
-      }
-    }
   }
 
   setLocalStorage(key, value){
@@ -92,12 +82,6 @@ class SettingsModal extends React.Component {
             <input className="form-check-input" checked={this.state.showFeedback} onChange={() => this.toggleCheck('showFeedback')} type="checkbox" id="flexCheckDefault5"/>
             <label className="form-check-label" htmlFor="flexCheckDefault5">
               Hide feedback button?
-            </label>
-          </div>
-          <div className="form-check" style={{'marginTop': '15px'}}>
-            <input className="form-check-input" checked={this.state.darkMode} onChange={() => this.toggleCheck('darkMode')} type="checkbox" id="flexCheckDefault6"/>
-            <label className="form-check-label" htmlFor="flexCheckDefault6">
-              Dark mode?
             </label>
           </div>
         </Modal.Body>

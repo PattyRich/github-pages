@@ -12,12 +12,14 @@ export const Dustbin = (props) => {
     }),
   }))
   const isActive = canDrop && isOver
-  let backgroundColor = 'white'
+  let backgroundColor = 'var(--osrs-bg-brown-dark)'
+  let border = '2px solid var(--osrs-border-dark)'
   if (isActive) {
-    backgroundColor = 'lightblue'
+    backgroundColor = 'var(--osrs-bg-brown)'
+    border = '2px solid var(--osrs-text-gold)'
   }
   return (
-    <div style={{'backgroundColor': backgroundColor,  'overflow': 'scroll'}} ref={drop} className='draft-team' data-testid="dustbin">
+    <div style={{'backgroundColor': backgroundColor, 'border': border, 'overflow': 'scroll'}} ref={drop} className='draft-team' data-testid="dustbin">
       <div className='flex-center' style={{'paddingTop': '10px'}}>
         {props.editMode ?
           <EditableInput change={props.editName} value={props.team.name} width={'auto'} title='' />

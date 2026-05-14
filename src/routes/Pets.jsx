@@ -1,7 +1,7 @@
 import React from 'react';
 //import { Link } from "react-router-dom";
 import './Pets.css'
-import {data} from '../looter/pets-list';
+import { data } from '../looter/pets-list';
 import PetSection from '../components/PetSection';
 import { assetUrl } from '../utils/assetUrl';
 
@@ -18,7 +18,7 @@ class Pets extends React.Component {
     for (const section in data) {
       totalPets += data[section].length
       for (const pet of data[section]) {
-        petData.push({name: pet, obtained: false, kc: '-'})
+        petData.push({ name: pet, obtained: false, kc: '-' })
       }
     }
 
@@ -27,7 +27,7 @@ class Pets extends React.Component {
     this.state = {
       petInfo: petData,
       name: 'Cool Player',
-      info:`(13/${totalPets})`,
+      info: `(13/${totalPets})`,
       background: 0,
       usePixelImages: false
     }
@@ -39,16 +39,16 @@ class Pets extends React.Component {
     this.toggleUsePixelImages = this.toggleUsePixelImages.bind(this);
   }
 
-  toggleUsePixelImages(){
-    this.setState({usePixelImages: !this.state.usePixelImages});
+  toggleUsePixelImages() {
+    this.setState({ usePixelImages: !this.state.usePixelImages });
   }
 
-  componentDidMount(){
-    setInterval(()=> {
+  componentDidMount() {
+    setInterval(() => {
       localStorage.setItem('pets', JSON.stringify(this.state.petInfo))
-    },30000)
+    }, 30000)
     let petData = localStorage.getItem('pets')
-    if (petData){
+    if (petData) {
       petData = JSON.parse(petData)
       let newPetData = [...this.state.petInfo];
       for (const pet of petData) {
@@ -57,11 +57,11 @@ class Pets extends React.Component {
           newPetData[index] = pet
         }
       }
-      this.setState({petInfo: newPetData})
+      this.setState({ petInfo: newPetData })
     }
   }
 
-  download() {   
+  download() {
     var node = document.getElementById('pet-preview');
 
     toPng(node)
@@ -76,106 +76,106 @@ class Pets extends React.Component {
       });
   }
 
-  changeInput(stateName, val){
+  changeInput(stateName, val) {
     let stateChange = {}
     stateChange[stateName] = val
     this.setState(stateChange);
   }
 
-  switchBackground(){
+  switchBackground() {
     let newbg = this.state.background
     newbg += 1
     if (newbg >= backgrounds.length) {
       newbg = 0
     }
-    console.log(this.state,newbg)
-    this.setState({background: newbg})
+    console.log(this.state, newbg)
+    this.setState({ background: newbg })
   }
 
   toggleCheck(i) {
-    let pets =  [...this.state.petInfo];
+    let pets = [...this.state.petInfo];
     pets[i].obtained = !pets[i].obtained;
-    this.setState({petInfo: pets});
+    this.setState({ petInfo: pets });
   }
 
   changeKc(i, val) {
-    let pets =  [...this.state.petInfo];
+    let pets = [...this.state.petInfo];
     pets[i].kc = val;
     if (val !== '' && val !== '-') {
       pets[i].obtained = true;
     }
-    this.setState({petInfo: pets});
+    this.setState({ petInfo: pets });
   }
-  
+
   render() {
     const petPicturePath = !this.state.usePixelImages ? 'detailed_pets' : 'pets_pixel';
-    return (<>
-    <h4 style={{'textAlign': 'center'}}>Create a Pet Picture</h4>
-    <p style={{'textAlign': 'center'}}>Mark the checkbox if the pet is obtained and fill the input with either kc or exp / anything else you want</p>
-    <div className='pet-user-input' style={{'textAlign': 'center', 'marginBottom': '10px'}}>
-      Your name?
-      <input value={this.state.name} onChange={(e) => this.changeInput('name', e.target.value)}></input>
-      Any info you want to display. (optional)
-      <input value={this.state.info} onChange={(e) => this.changeInput('info', e.target.value)}></input>
-      <br/>
-      Use pixel images?
-      <input type="checkbox" checked={this.state.usePixelImages} onChange={this.toggleUsePixelImages} />
-    </div>
-    <div className="pet-container">
-      {this.state.petInfo.map((pet, i) => {
-        // let urlName = encodeURIComponent(urlHelper(pet.name).replaceAll(' ', '_'));
-        return (<div className='pet-info'>   
-          {/* <div className="pet-image-container">   
+    return <div className='route-dark-bg' style={{ padding: '20px' }}>
+      <h4 style={{ 'textAlign': 'center' }}>Create a Pet Picture</h4>
+      <p style={{ 'textAlign': 'center' }}>Mark the checkbox if the pet is obtained and fill the input with either kc or exp / anything else you want</p>
+      <div className='pet-user-input' style={{ 'textAlign': 'center', 'marginBottom': '10px' }}>
+        Your name?
+        <input value={this.state.name} onChange={(e) => this.changeInput('name', e.target.value)}></input>
+        Any info you want to display. (optional)
+        <input value={this.state.info} onChange={(e) => this.changeInput('info', e.target.value)}></input>
+        <br />
+        Use pixel images?
+        <input type="checkbox" checked={this.state.usePixelImages} onChange={this.toggleUsePixelImages} />
+      </div>
+      <div className="pet-container">
+        {this.state.petInfo.map((pet, i) => {
+          // let urlName = encodeURIComponent(urlHelper(pet.name).replaceAll(' ', '_'));
+          return (<div className='pet-info'>
+            {/* <div className="pet-image-container">   
            <img src={'https://oldschool.runescape.wiki/images/' + urlName + '.png'} />
           </div> */}
-          <div className="pet-image-container">   
-           <img className='pet-image' src={assetUrl(`${petPicturePath}/${pet.name}.png`)} />
-          </div>
-          <input className="form-check-input" checked={pet.obtained} onChange={() => this.toggleCheck(i)} type="checkbox" value="" id={"pet" + i}/>
-          {/* <label className="form-check-label" htmlFor={"pet" + i}>
+            <div className="pet-image-container">
+              <img className='pet-image' src={assetUrl(`${petPicturePath}/${pet.name}.png`)} />
+            </div>
+            <input className="form-check-input" checked={pet.obtained} onChange={() => this.toggleCheck(i)} type="checkbox" value="" id={"pet" + i} />
+            {/* <label className="form-check-label" htmlFor={"pet" + i}>
           </label> */}
-          <div className='pet-kc-input-container'>
-            <input className='pet-kc-input' value={pet.kc} onChange={(e) => this.changeKc(i, e.target.value)}></input>
-          </div>
-        </div>)
-      })}
+            <div className='pet-kc-input-container'>
+              <input className='pet-kc-input' value={pet.kc} onChange={(e) => this.changeKc(i, e.target.value)}></input>
+            </div>
+          </div>)
+        })}
       </div>
-      <br/>
+      <br />
       The download button is going to give you an image exactly how the image below looks on your browser, so increase and decrease your window size to get it exacatly how you want it. You may need to disable chrome extensions like darkreader for this to load everything correctly.
-      <div className='pet-buttons'> 
-        <button style={{'marginRight': '5px'}} onClick={this.switchBackground}> Switch Background </button>
+      <div className='pet-buttons'>
+        <button style={{ 'marginRight': '5px' }} onClick={this.switchBackground}> Switch Background </button>
         <button onClick={this.download}>Download</button>
       </div>
-      
-      <div style={{'backgroundImage': `url(${assetUrl(`backgrounds/${backgrounds[this.state.background]}.jpg`)})`}} id="pet-preview" className='pet-preview'>
-        <PetSection petInfo={this.state.petInfo} pets={data['Raids']} section='Raids' path={petPicturePath}/>
-        <PetSection petInfo={this.state.petInfo} pets={data['Bosses']} section='Bosses' path={petPicturePath}/>
+
+      <div style={{ 'backgroundImage': `url(${assetUrl(`backgrounds/${backgrounds[this.state.background]}.jpg`)})` }} id="pet-preview" className='pet-preview'>
+        <PetSection petInfo={this.state.petInfo} pets={data['Raids']} section='Raids' path={petPicturePath} />
+        <PetSection petInfo={this.state.petInfo} pets={data['Bosses']} section='Bosses' path={petPicturePath} />
         <div className='pets-middle'>
           <div className='left-container'>
             <div className='pets-left'>
-            <PetSection petInfo={this.state.petInfo} pets={data['Slayer']} section='Slayer' path={petPicturePath}/>
+              <PetSection petInfo={this.state.petInfo} pets={data['Slayer']} section='Slayer' path={petPicturePath} />
             </div>
             <div className='pets-left'>
-            <PetSection petInfo={this.state.petInfo} pets={data['DT2']} section='DT 2' path={petPicturePath}/>
+              <PetSection petInfo={this.state.petInfo} pets={data['DT2']} section='DT 2' path={petPicturePath} />
             </div>
           </div>
-          <div className='pet-center-info' style={{fontFamily: 'osrsFont'}}>
+          <div className='pet-center-info' style={{ fontFamily: 'osrsFont' }}>
             <h4 className='pet-name'>{this.state.name}</h4>
             {this.state.info}
           </div>
           <div className='right-container'>
             <div className='pets-right'>
-              <PetSection petInfo={this.state.petInfo} pets={data['Wilderness']} section='Wilderness' path={petPicturePath}/>
+              <PetSection petInfo={this.state.petInfo} pets={data['Wilderness']} section='Wilderness' path={petPicturePath} />
             </div>
             <div className='pets-right'>
-              <PetSection petInfo={this.state.petInfo} pets={data['GodWars']} section='GodWars' path={petPicturePath}/>
+              <PetSection petInfo={this.state.petInfo} pets={data['GodWars']} section='GodWars' path={petPicturePath} />
             </div>
           </div>
         </div>
-        <PetSection petInfo={this.state.petInfo} pets={data['Skilling']} section='Skilling' path={petPicturePath}/>
-        <PetSection petInfo={this.state.petInfo} pets={data['Other']} section='Other' path={petPicturePath}/>
+        <PetSection petInfo={this.state.petInfo} pets={data['Skilling']} section='Skilling' path={petPicturePath} />
+        <PetSection petInfo={this.state.petInfo} pets={data['Other']} section='Other' path={petPicturePath} />
       </div>
-    </>)
+    </div>
   }
 }
 

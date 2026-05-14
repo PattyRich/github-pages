@@ -60,43 +60,55 @@ const AllPets = (props) => {
   
 
 	return (
-    <div className='main-all-pets'>
-      Simulate getting all pets.
-      <br />
-      Assumes: Red chins, Amethyst mining, Inventories of mind runes, Redwood logs, Penguin Course, Karambwams, Stalls, 30k point cox, 3 man nex, On task jad rek, Teak trees for tangleroot, Phosani's, Singles wilderness pets, destroy araxxor, solo huberte, soup port tasks, sacrifice dom, wave 9 delve.
-      <br />
-      <button onClick={go}> Go! </button>
+    <div className='main-all-pets route-dark-bg pets-theme'>
       <Button style={{position: 'absolute', right: '10px', top: '10px'}} click={() => navigate('/')} text="Home" variant="primary"/>
-
-      <div className="items-all-pets">
+      
+      <div className='osrs-container' style={{ maxWidth: '1000px', margin: '0 auto', padding: '10px' }}>
+        <h3 className='osrs-header' style={{ textAlign: 'center', marginBottom: '10px' }}>All Pets Simulator</h3>
         
-        
-      {petData ? petData.map((group, i) => {
-        return (<div className='pet-rate' key={group.rate+'-group'}>
-          <h4>{`${group.rate}.x Rate`}</h4>
-          <div className='pet-rate-items'>
-            {group.data.map((pet, j) => {
-              return (
-              <div key={j}>
-                {pet.map((item, i) => { 
-                  return (
-                    <div key={item} className='item'>
-                      <a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
-                        <img src={assetUrl(`pets_pixel/${item.name}.png`)} title={item.name} alt={item.name} />
-                      </a>
-                      {`${item.kc}`}
-                    </div>
-                  )
-                })}
-              </div>)
-            })}
+        <div className='osrs-glass' style={{ padding: '10px', marginBottom: '15px', textAlign: 'center' }}>
+          <div className='osrs-glass-raised' style={{ padding: '8px', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'left' }}>
+            <strong>Assumed Methods:</strong> Red chins, Amethyst mining, Mind runes, Redwood logs, Penguin Course, Karambwams, Stalls, 30k point COX, 3-man NEX, On-task Jad/Zuk, Teak trees, Phosani's, Singles Wildy, Araxxor, Solo Huberte, Soup Port, Dom Sacrifice, Wave 9 Delve.
           </div>
-        </div>)
-      }) : null}
-      
-      
-      
-      
+          <button className='osrs-btn' style={{ fontSize: '1rem', padding: '5px 25px' }} onClick={go}>
+            Start Simulation!
+          </button>
+        </div>
+
+        <div className="items-all-pets" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '10px', padding: '0' }}>
+          {petData && petData.length > 0 && petData[0].data.length > 0 ? (
+            petData.map((group, i) => {
+              if (group.data.length === 0) return null;
+              return (
+                <div className='pet-rate osrs-glass' key={group.rate + '-group'} style={{ padding: '10px' }}>
+                  <h5 className='osrs-header' style={{ borderBottom: '1px solid var(--osrs-border-dark)', paddingBottom: '3px', marginBottom: '10px', fontSize: '0.95rem' }}>
+                    {`${group.rate}.x Rate`}
+                  </h5>
+                  <div className='pet-rate-items' style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                    {group.data.map((pet, j) => {
+                      return (
+                        <div key={j} style={{ display: 'flex', flexWrap: 'wrap', gap: '4px' }}>
+                          {pet.map((item, k) => (
+                            <div key={k} className='item osrs-glass-raised' style={{ padding: '4px', textAlign: 'center', minWidth: '60px' }}>
+                              <a href={`https://oldschool.runescape.wiki/w/${item.name.split(' ').join('_')}`} target='_blank' rel='noreferrer'>
+                                <img src={assetUrl(`pets_pixel/${item.name}.png`)} title={item.name} alt={item.name} style={{ display: 'block', margin: '0 auto 2px', width: '24px' }} />
+                              </a>
+                              <span style={{ fontSize: '0.75rem', fontWeight: 'bold' }}>{item.kc}</span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })
+          ) : (
+            <div style={{ gridColumn: '1 / -1', textAlign: 'center', opacity: 0.6, marginTop: '20px' }}>
+              Click "Start Simulation!" to begin.
+            </div>
+          )}
+        </div>
       </div>
     </div>
 	)

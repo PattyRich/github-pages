@@ -12,26 +12,7 @@ import ToaFlip from './routes/ToaFlip';
 import Pets from './routes/Pets';
 import AllPets from './routes/AllPets';
 import LolBeat from './routes/LolBeat';
-import {
-	disableAppDarkMode,
-	enableAppDarkMode,
-	followAppSystemColorScheme,
-	isAppDarkModeEnabled,
-} from './utils/darkMode';
-
 import { HashRouter, Routes, Route } from "react-router-dom";
-
-followAppSystemColorScheme();
-let darkMode = localStorage.getItem('darkMode');
-if (darkMode === null) {
-	localStorage.setItem('darkMode', isAppDarkModeEnabled());
-	darkMode = isAppDarkModeEnabled();
-}
-if (darkMode === 'true' || darkMode === true) {
-	enableAppDarkMode();
-} else {
-	disableAppDarkMode();
-}
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 

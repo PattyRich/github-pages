@@ -1,87 +1,82 @@
 .center-board {
-  display: flex;
-  flex-direction: column;
+  display:         flex;
+  flex-direction:  column;
   justify-content: center;
-  align-items: center;
-  height: 100%;
-  background-color: var(--osrs-bg-brown-dark);
-  /* Deep thematic brown fallback */
-  background-image: linear-gradient(rgba(43, 38, 30, 0.85), rgba(43, 38, 30, 0.85)), url('../assets/backgrounds/osrs_bg_stone.png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  padding: 20px;
+  align-items:     center;
+  padding:         20px;
 }
 
 .flex-wrapper-create {
-  display: flex;
-  flex-flow: column;
-  height: 100%;
-  background-color: var(--osrs-bg-brown-dark);
-  /* Deep thematic brown fallback */
-  background-image: linear-gradient(rgba(43, 38, 30, 0.85), rgba(43, 38, 30, 0.85)), url('../assets/backgrounds/osrs_bg_stone.png');
-  background-size: cover;
-  background-position: center;
-  background-attachment: fixed;
-  min-height: 100vh;
+  display:          flex;
+  flex-flow:        column;
+  min-height:       100vh;
 }
 
 .flex-wrapper-create .top-bar {
-  display: flex;
+  display:         flex;
   justify-content: space-between;
-  margin: 15px;
-  margin-bottom: 0px;
-  background-color: var(--osrs-bg-brown);
-  border: 2px solid var(--osrs-border-light);
-  padding: 10px;
-  border-radius: 4px;
+  align-items:     center;
+  margin:          15px 15px 0;
+  padding:         10px 16px;
+  background:      var(--osrs-glass-bg-raised);
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border:          2px solid var(--osrs-border-dark);
+  box-shadow:      inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
+  border-radius:   var(--osrs-radius-lg);
 }
 
 .flex-wrapper-create h2 {
-  margin: 10px;
+  margin:      0;
   font-family: 'osrsFont', sans-serif;
-  color: var(--osrs-text-gold);
+  color:       var(--osrs-text-gold);
   text-shadow: 1px 1px 0px black;
 }
 
 .flex-center {
-  display: flex;
+  display:         flex;
   justify-content: center;
-}
-
-.bingo-edit button {
-  margin-right: 10px;
-  margin-bottom: 2px;
+  align-items:     center;
 }
 
 .bingo-edit {
+  display:   flex;
   flex-wrap: wrap;
+  gap:       8px;
+  align-items: center;
 }
 
-.edit-teams button {
-  margin: 0px 10px 0px 10px;
-}
+.edit-teams button { margin: 0 10px; }
 
-.green-bg {
-  background-image: linear-gradient(to top, rgba(0, 150, 0, 0.4) var(--bgHeight), transparent 0%);
-}
+/* Board tile progress fills */
+.green-bg      { background-image: linear-gradient(to top, rgba(0,150,0,0.4) var(--bgHeight), transparent 0%); }
+.green-bg-dark { background-image: linear-gradient(to top, rgba(0,80,0,0.6)  var(--bgHeight), transparent 0%); }
 
-.green-bg-dark {
-  background-image: linear-gradient(to top, rgba(0, 80, 0, 0.6) var(--bgHeight), transparent 0%);
-}
+.form-check-label { cursor: pointer; }
 
-.form-check-label {
-  cursor: pointer;
-}
+.recent-boards { display: flex; }
 
-.recent-boards {
-  display: flex;
-}
-
+/* Fixed to viewport corner so it never overlaps board content */
 .feedback {
-  position: absolute;
-  right: 10px;
-  bottom: 10px;
-  color: var(--osrs-text-gold);
-  cursor: pointer;
+  position:         fixed;
+  right:            20px;
+  bottom:           20px;
+  font-family:      'osrsFont', sans-serif;
+  font-size:        0.85rem;
+  color:            var(--osrs-text-normal);
+  text-shadow:      1px 1px 0px black;
+  cursor:           pointer;
+  background:       var(--osrs-glass-bg-raised);
+  backdrop-filter:  var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border:           2px solid var(--osrs-border-dark);
+  box-shadow:       inset 0 0 0 1px var(--osrs-border-light);
+  border-radius:    20px;
+  padding:          6px 16px;
+  transition:       filter 0.15s ease, color 0.15s ease;
+}
+
+.feedback:hover {
+  filter: brightness(1.2);
+  color:  var(--osrs-text-gold);
 }

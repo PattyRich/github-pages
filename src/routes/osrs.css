@@ -1,66 +1,52 @@
-html,
-body {
-	height: 100vh;
-}
-
-#root {
-	height: 100%;
-}
-
-* {
-	margin: 0;
-}
+/* Layout only — no global resets, no html/body overrides */
 
 .items {
-	display: flex;	
-	flex-wrap: wrap;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 8px;
 }
 
-.day{
-	display: flex;
-	flex-direction: column;
+.day {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
 }
 
 .item {
-	display: flex;
-	justify-content: center;
-	align-items: center;
-	flex-direction: column;
-	padding: 3px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  padding: 3px;
+  font-size: 0.8rem;
+  color: var(--osrs-text-normal);
+  text-align: center;
 }
 
-.box{
-	border: solid black 1px;
-	padding: 10px;
-	margin:  5px;
+.item img {
+  image-rendering: pixelated;
+  display: block;
+  transition: transform 0.12s ease;
 }
 
-.flexCol{
-	display: flex;
-	flex-direction: column;
+.item:hover img {
+  transform: scale(1.18);
 }
 
-hr {
-	width:  95%;
+.box {
+  border:           2px solid var(--osrs-border-dark);
+  box-shadow:       inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
+  background:       var(--osrs-glass-bg);
+  backdrop-filter:  var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  padding:          var(--osrs-padding-panel);
+  margin:           5px;
+  border-radius:    var(--osrs-radius-lg);
+  line-height:      1.9;
 }
 
-.loader {
-  border: 4px solid #f3f3f3;
-  border-radius: 50%;
-  border-top: 4px solid #3498db;
-  width: 10px;
-  height: 10px;
-  -webkit-animation: spin 2s linear infinite; /* Safari */
-  animation: spin 2s linear infinite;
-}
-
-/* Safari */
-@-webkit-keyframes spin {
-  0% { -webkit-transform: rotate(0deg); }
-  100% { -webkit-transform: rotate(360deg); }
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+.flexCol {
+  display: flex;
+  flex-direction: column;
 }

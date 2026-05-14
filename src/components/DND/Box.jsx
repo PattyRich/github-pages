@@ -2,13 +2,17 @@ import { useDrag } from 'react-dnd'
 import Button from '../BootStrap/Button'
 
 const style = {
-  border: '1px dashed gray',
-  backgroundColor: 'white',
+  border: '2px solid var(--osrs-border-dark)',
+  backgroundColor: 'var(--osrs-bg-inventory)',
+  color: 'var(--osrs-text-yellow)',
+  textShadow: '1px 1px 0px black',
+  boxShadow: 'inset 0 0 0 1px var(--osrs-border-light)',
   padding: '0.5rem 1rem',
   marginRight: '0.5rem',
   marginBottom: '0.5rem',
   cursor: 'move',
-  display: 'flex'
+  display: 'flex',
+  borderRadius: 'var(--osrs-radius)'
 }
 export const Box = function Box({ name, dropped, notPlaced }) {
   const [{ isDragging }, drag] = useDrag(() => ({

@@ -1,320 +1,249 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Inter:wght@400;500;700&display=swap');
+/* Home page — OSRS palette, stone texture background, dark glass panels */
 
 .App {
   min-height: 100vh;
-  font-family: 'Inter', sans-serif;
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
-  color: #2d3748;
-  padding: 2rem 1rem;
+  color: var(--osrs-text-normal);
+  padding: 2rem 1.5rem 4rem;
 }
 
-/* Container for all content */
 .app-container {
-  max-width: 1200px;
+  max-width: 1100px;
   margin: 0 auto;
   display: flex;
   flex-direction: column;
-  gap: 3rem;
+  gap: 2.5rem;
 }
 
-/* Header Styles */
+/* ─── Header ─────────────────────────────────────────────────────────────── */
 .app-header {
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: center;
   padding: 1.5rem 2rem;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border-radius: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.5);
+  background: var(--osrs-glass-bg-raised);
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
+  border-radius: var(--osrs-radius-lg);
 }
 
 .header-content h1 {
   margin: 0;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 800;
-  font-size: 2.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  font-family: 'osrsFont', sans-serif;
+  font-size: 2.2rem;
+  color: var(--osrs-text-gold);
+  text-shadow: 2px 2px 0px black;
+  text-align: center;
+  letter-spacing: 0.04em;
 }
 
 .header-content .subtitle {
-  margin: 0.5rem 0 0 0;
-  color: #4a5568;
-  font-size: 1.1rem;
-}
-
-.theme-toggle {
-  position: fixed;
-  top: 2rem;
-  right: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  cursor: pointer;
-  user-select: none;
-  z-index: 1000;
-  background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(10px);
-  padding: 0.5rem 1rem;
-  border-radius: 30px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border: 1px solid rgba(255, 255, 255, 0.5);
-}
-
-.toggle-label {
-  font-weight: 600;
+  margin: 0.4rem 0 0;
+  color: var(--osrs-text-normal);
   font-size: 1rem;
-  color: #4a5568;
+  text-align: center;
+  opacity: 0.8;
 }
 
-.toggle-track {
-  width: 56px;
-  height: 30px;
-  background-color: #cbd5e0;
-  border-radius: 30px;
-  position: relative;
-  transition: background-color 0.3s ease;
-  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
+/* ─── Section heading ────────────────────────────────────────────────────── */
+.section-title {
+  font-family: 'osrsFont', sans-serif;
+  color: var(--osrs-text-gold);
+  text-shadow: 1px 1px 0px black;
+  font-size: 1.4rem;
+  margin: 0 0 1rem 0;
+  padding-bottom: 6px;
+  border-bottom: 2px solid var(--osrs-border-dark);
+  box-shadow: 0 1px 0 var(--osrs-border-light);
 }
 
-.theme-toggle.dark .toggle-track {
-  background-color: #4a5568;
+/* ─── Route grid ─────────────────────────────────────────────────────────── */
+.route-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1rem;
 }
 
-.toggle-thumb {
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 24px;
-  height: 24px;
-  background-color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 12px;
-  transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1);
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
-}
-
-.theme-toggle.dark .toggle-thumb {
-  transform: translateX(26px);
-}
-
-/* Main Content Area */
-.app-main {
+.route-card {
   display: flex;
   flex-direction: column;
-  gap: 4rem;
+  padding: 1.1rem 1.3rem;
+  text-decoration: none;
+  color: var(--osrs-text-normal);
+  background: var(--osrs-glass-bg);
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  border-radius: var(--osrs-radius-lg);
+  transition: filter 0.18s ease, box-shadow 0.18s ease;
 }
 
-/* Bingo Section (Featured) */
+.route-card:hover {
+  filter: brightness(1.18);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light), 0 8px 28px rgba(0, 0, 0, 0.65);
+  color: var(--osrs-text-normal);
+}
+
+.route-card.premium-card {
+  border-color: #a85f00;
+  background: linear-gradient(160deg,
+      rgba(255, 25, 25, 0.8) 0%,
+      rgba(12, 12, 12, 0.8) 55%);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 152, 31, 0.45),
+    0 4px 20px rgba(180, 90, 0, 0.35),
+    0 0 0 1px rgba(120, 60, 0, 0.6);
+}
+
+.route-card.premium-card:hover {
+  box-shadow: inset 0 0 0 1px rgba(255, 152, 31, 0.6), 0 8px 28px rgba(0, 0, 0, 0.65);
+}
+
+.route-card h4 {
+  margin: 0 0 0.3rem;
+  font-family: 'osrsFont', sans-serif;
+  font-size: 1rem;
+  color: var(--osrs-text-gold);
+  text-shadow: 1px 1px 0px black;
+}
+
+.route-card.premium-card h4 {
+  font-size: 1.05rem;
+}
+
+.route-card p {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--osrs-text-normal);
+  opacity: 0.85;
+  line-height: 1.45;
+}
+
+.card-action {
+  margin-top: 0.8rem;
+  font-family: 'osrsFont', sans-serif;
+  font-size: 0.8rem;
+  color: var(--osrs-text-gold);
+  text-shadow: 1px 1px 0px black;
+  opacity: 0.9;
+}
+
+/* ─── Featured bingo section ─────────────────────────────────────────────── */
 .bingo-section {
-  background: rgba(255, 255, 255, 0.6);
-  backdrop-filter: blur(12px);
-  border-radius: 24px;
-  padding: 3rem;
-  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  background: var(--osrs-glass-bg-raised);
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
+  border-radius: var(--osrs-radius-lg);
+  padding: 1.8rem 2rem;
+  margin-top: 2rem;
 }
 
 .bingo-layout {
   display: flex;
-  gap: 3rem;
-  align-items: center;
+  gap: 2.5rem;
+  align-items: flex-start;
 }
 
 .bingo-text-area {
   flex: 1;
 }
 
-.section-header h2 {
-  font-family: 'Outfit', sans-serif;
-  font-size: 2.5rem;
-  color: #1a202c;
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-}
-
 .section-header p {
-  font-size: 1.2rem;
-  color: #4a5568;
-  margin-bottom: 2rem;
+  color: var(--osrs-text-normal);
+  font-size: 0.95rem;
+  margin: 0.3rem 0 1.2rem;
+  opacity: 0.85;
+  line-height: 1.5;
 }
 
 .bingo-cards {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
-}
-
-.route-card.premium-card {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white !important;
-  border: none;
-  transform: translateY(0);
-  transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
-  box-shadow: 0 10px 20px rgba(118, 75, 162, 0.3);
-  text-decoration: none;
-  padding: 1.5rem;
-  border-radius: 20px;
-  display: flex;
-  flex-direction: column;
-}
-
-.route-card.premium-card:hover {
-  transform: translateY(-8px);
-  box-shadow: 0 15px 30px rgba(118, 75, 162, 0.5);
-  color: white !important;
-}
-
-.premium-card h3,
-.premium-card h4 {
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.8rem;
-  margin-top: 0;
-  margin-bottom: 1rem;
-  color: white !important;
-}
-
-.premium-card h4 {
-  font-size: 1.25rem;
-  margin-bottom: 0.5rem;
-}
-
-.premium-card p {
-  font-size: 1.1rem;
-  opacity: 0.9;
-  line-height: 1.5;
-  flex-grow: 1;
-  color: white !important;
-}
-
-.card-action {
-  margin-top: 1.5rem;
-  font-weight: 600;
-  font-size: 1.1rem;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.premium-card .card-action {
-  color: white !important;
+  gap: 0.9rem;
 }
 
 .bingo-previews {
   flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1rem;
+  max-width: 380px;
 }
 
 .preview-img {
-  border-radius: 12px;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
-  transition: transform 0.3s ease;
+  border-radius: var(--osrs-radius-lg);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light), 0 4px 16px rgba(0, 0, 0, 0.5);
   width: 100%;
   object-fit: cover;
+  display: block;
+  transition: filter 0.2s ease;
 }
 
 .preview-img:hover {
-  transform: scale(1.02);
+  filter: brightness(1.1);
 }
 
-/* Other Routes Grid */
-.other-routes-section h3 {
-  font-family: 'Outfit', sans-serif;
-  font-size: 2rem;
-  text-align: center;
-  margin-bottom: 2rem;
-  color: #2d3748;
-}
-
-.route-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-  gap: 1.5rem;
-}
-
-.route-card {
-  display: flex;
-  flex-direction: column;
-  background: white;
-  padding: 1.5rem;
-  border-radius: 16px;
-  text-decoration: none;
-  color: #2d3748;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-  border: 1px solid rgba(226, 232, 240, 0.8);
-  transition: all 0.2s ease;
-}
-
-.route-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 12px 20px rgba(0, 0, 0, 0.1);
-  color: #2d3748;
-  border-color: #cbd5e0;
-}
-
-.route-card h4 {
-  margin-top: 0;
-  margin-bottom: 0.5rem;
-  font-family: 'Outfit', sans-serif;
-  font-size: 1.25rem;
-  color: #4a5568;
-}
-
-.route-card p {
-  margin: 0;
-  font-size: 0.95rem;
-  color: #718096;
-  line-height: 1.4;
-}
-
-
-
-/* Feedback Button */
+/* ─── Feedback button ────────────────────────────────────────────────────── */
 .feedback-btn {
   position: fixed;
-  bottom: 2rem;
-  right: 2rem;
-  background: white;
-  color: #4a5568;
-  border: 1px solid #e2e8f0;
-  padding: 0.75rem 1.5rem;
-  border-radius: 30px;
-  font-weight: 600;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  bottom: 1.5rem;
+  right: 1.5rem;
+  background: var(--osrs-glass-bg-raised);
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  color: var(--osrs-text-normal);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  padding: 0.45rem 1.1rem;
+  border-radius: 20px;
+  font-family: 'osrsFont', sans-serif;
+  font-size: 0.85rem;
+  text-shadow: 1px 1px 0px black;
   cursor: pointer;
-  transition: all 0.2s ease;
   z-index: 100;
+  transition: filter 0.15s ease, color 0.15s ease;
 }
 
 .feedback-btn:hover {
-  background: #f7fafc;
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+  filter: brightness(1.2);
+  color: var(--osrs-text-gold);
 }
 
-@media (max-width: 992px) {
+/* ─── Responsive ─────────────────────────────────────────────────────────── */
+@media (max-width: 900px) {
   .bingo-layout {
     flex-direction: column;
   }
+
+  .bingo-previews {
+    max-width: 100%;
+    flex-direction: row;
+  }
+
+  .preview-img {
+    flex: 1;
+  }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 600px) {
   .app-header {
-    flex-direction: column;
-    text-align: center;
-    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .header-content h1 {
+    font-size: 1.5rem;
   }
 
   .bingo-section {
-    padding: 1.5rem;
+    padding: 1.2rem;
+  }
+
+  .bingo-previews {
+    flex-direction: column;
   }
 }

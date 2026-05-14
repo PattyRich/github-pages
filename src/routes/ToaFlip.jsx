@@ -6,7 +6,7 @@ import './ToaFlip.css';
 
 //1 less than actual size for 0 index
 let boardSize = 2
-let box = { border: '1px black solid', width: '125px', height: '125px', margin: '20px', justifyContent: 'center', alignItems: 'center', display: 'flex', userSelect: 'none', touchAction: 'manipulation' }
+let box = { border: '3px black solid', width: '125px', height: '125px', margin: '20px', justifyContent: 'center', alignItems: 'center', display: 'flex', userSelect: 'none', touchAction: 'manipulation' }
 let startBoard = [
   [0, 0, 0],
   [0, 1, 0],
@@ -76,7 +76,7 @@ class ToaFlip extends React.Component {
 
   render() {
     return (
-      <>
+      <div className="route-dark-bg">
         <Button style={{ position: 'absolute', right: '10px', top: '10px' }} click={() => this.props.navigate('/')} text="Home" variant="primary" />
         <div style={{ 'display': 'flex', 'flexDirection': 'column', 'justifyContent': 'center', 'alignItems': 'center', 'marginTop': '12%' }}>
           {this.state.board.map((row, index1) => {
@@ -123,7 +123,7 @@ class ToaFlip extends React.Component {
             <span> Puzzle can be solved in {this.state.hintTile.length} moves </span>
           }
         </div>
-      </>
+      </div>
     )
   }
 }
