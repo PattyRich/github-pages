@@ -12,7 +12,7 @@ The official OSRS Community Toolbox. Create, manage, and share customizable Bing
 
 - **OS**: Ubuntu 24.04 LTS (Noble Numbat)
 - **Backend**: Python 3.13 (Flask + uWSGI)
-- **Frontend**: React 18 (pinned for compatibility)
+- **Frontend**: React 19
 - **Database**: MongoDB 7.0
 - **Cache/Task Queue**: Redis 7 + RQ worker
 - **Reverse Proxy**: Nginx (with Cloudflare optimization)
