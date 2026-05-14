@@ -3,7 +3,7 @@ import Button from './BootStrap/Button'
 
 const Teams = (props) => {
   return (
-    <div style={{marginTop: '20px', display: 'flex', 'justifyContent': 'center', alignItems: 'center', flexDirection: 'column'}}>
+    <div style={{marginTop: '20px', display: 'flex', 'justifyContent': 'center', alignItems: 'center', flexDirection: 'column', color: 'var(--osrs-text-beige)'}}>
       Join a recent board.    
       {props.recent && props.recent.map((item, i)=>{
         return (

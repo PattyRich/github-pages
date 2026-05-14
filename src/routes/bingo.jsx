@@ -10,15 +10,15 @@ import FormControl from "react-bootstrap/FormControl";
 import Dropdown from 'react-bootstrap/Dropdown'
 import DropdownButton from 'react-bootstrap/DropdownButton'
 import Alert from 'react-bootstrap/Alert'
-import {fetchGet, fetchPost} from '../utils/utils'
+import { fetchGet, fetchPost } from '../utils/utils'
 import { useNavigate } from "react-router-dom";
 import RecentBoards from '../components/RecentBoards'
 
 
 class Bingo extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {
+	constructor(props) {
+		super(props);
+		this.state = {
 			screen: 1,
 			rows: 5,
 			columns: 5,
@@ -29,7 +29,7 @@ class Bingo extends React.Component {
 			joinPwTitle: 'general',
 			joinPw: '',
 			teams: 5
-    }
+		}
 
 		if (this.props.screenSkip) {
 			this.state.screen = this.props.screenSkip
@@ -41,15 +41,15 @@ class Bingo extends React.Component {
 		this.alert = this.alert.bind(this);
 		this.auth = this.auth.bind(this);
 		this.removeRecent = this.removeRecent.bind(this)
-  }
+	}
 
 	componentDidMount() {
-		if (localStorage.getItem('recentBoards') !== undefined && localStorage.getItem('recentBoards')!== null) {
+		if (localStorage.getItem('recentBoards') !== undefined && localStorage.getItem('recentBoards') !== null) {
 			let recentBoards = JSON.parse(localStorage.getItem('recentBoards'))
-			this.setState({recentBoards: recentBoards})
+			this.setState({ recentBoards: recentBoards })
 		}
 	}
-	
+
 	inputState(e, target) {
 		let stateChange = {}
 		stateChange[target] = e.target.value
@@ -60,7 +60,7 @@ class Bingo extends React.Component {
 		let currValue = this.state[target]
 		currValue += value
 		let stateChange = {}
-		if(currValue < 1) {
+		if (currValue < 1) {
 			currValue = 1
 		}
 		if (currValue > 10) {
@@ -68,16 +68,16 @@ class Bingo extends React.Component {
 		}
 		stateChange[target] = currValue
 
- 		this.setState(stateChange)
+		this.setState(stateChange)
 	}
 
-	removeRecent(name){
-		let index = this.state.recentBoards.findIndex((thing)=> {
+	removeRecent(name) {
+		let index = this.state.recentBoards.findIndex((thing) => {
 			return thing.boardName === name
 		})
 		let x = this.state.recentBoards
 		x.splice(index, 1)
-		this.setState({recentBoards: x})
+		this.setState({ recentBoards: x })
 		localStorage.setItem('recentBoards', JSON.stringify(x))
 	}
 
@@ -104,15 +104,16 @@ class Bingo extends React.Component {
 		}
 		if (['join', 'create'].includes(this.state.boardName.toLowerCase())) {
 			this.alert('danger', 'Name can\'t be join or create for routing purposes. This probably a rare message to ever see. Congrats')
-			return;		
+			return;
 		}
 
 		this.alert('loading')
-		const [data, err] = await fetchPost('createBoard', {...this.state })
+		const [data, err] = await fetchPost('createBoard', { ...this.state })
 		if (data) {
 			this.addToRecent(this.state.recentBoards, this.state.boardName, this.state.adminPassword, 'admin')
-			this.props.navigate('/bingo/' + this.state.boardName, { state: 
-				{ 
+			this.props.navigate('/bingo/' + this.state.boardName, {
+				state:
+				{
 					adminPassword: this.state.adminPassword,
 					generalPassword: this.state.generalPassword,
 					teams: this.state.teams,
@@ -124,28 +125,28 @@ class Bingo extends React.Component {
 		}
 		if (err) {
 			this.alert('danger', err.message)
-			this.setState({isLoading: false})
+			this.setState({ isLoading: false })
 			return
 		}
 	}
 
-	alert(variant, message, skipTimeout=false) {
-    if (variant === 'loading') {
-      this.setState({alertVariant: 'warning', isLoading: true, alert: 'Loading...'})
-    } else {
-      this.setState({alertVariant: variant, alert: message}) 
-      if (this.alertTimeout) {
-        clearTimeout(this.alertTimeout)
-      }
-      if (skipTimeout) { return; }
-      this.alertTimeout = setTimeout(()=> {
-        this.setState({alert: ''})
-      },5000)
-    }
-  }
+	alert(variant, message, skipTimeout = false) {
+		if (variant === 'loading') {
+			this.setState({ alertVariant: 'warning', isLoading: true, alert: 'Loading...' })
+		} else {
+			this.setState({ alertVariant: variant, alert: message })
+			if (this.alertTimeout) {
+				clearTimeout(this.alertTimeout)
+			}
+			if (skipTimeout) { return; }
+			this.alertTimeout = setTimeout(() => {
+				this.setState({ alert: '' })
+			}, 5000)
+		}
+	}
 
-	async auth(recentSkip = false) {		
-		if(recentSkip && recentSkip.boardName) {
+	async auth(recentSkip = false) {
+		if (recentSkip && recentSkip.boardName) {
 			let obj = {}
 			obj.generalPassword = recentSkip.password
 			obj.adminPassword = recentSkip.password
@@ -155,7 +156,7 @@ class Bingo extends React.Component {
 			return
 		}
 
-    let [data, err] = await fetchGet(`auth/${this.state.boardName}/${this.state.joinPw}/${this.state.joinPwTitle}`)
+		let [data, err] = await fetchGet(`auth/${this.state.boardName}/${this.state.joinPw}/${this.state.joinPwTitle}`)
 		if (err) {
 			this.alert('danger', err.message)
 			return;
@@ -174,22 +175,22 @@ class Bingo extends React.Component {
 		this.props.navigate('/bingo/' + this.state.boardName, { state });
 	}
 
-	addToRecent(recentBoards, boardName, joinPw, priv){
+	addToRecent(recentBoards, boardName, joinPw, priv) {
 		if (!recentBoards) {
 			let obj = [{
-				'boardName': boardName, 
+				'boardName': boardName,
 				'password': joinPw,
 				'priv': priv
 			}]
 			localStorage.setItem('recentBoards', JSON.stringify(obj))
 		} else {
-			let find = this.state.recentBoards.find((item)=> {
+			let find = this.state.recentBoards.find((item) => {
 				return (item.boardName === this.state.boardName && priv === item.priv)
 			})
 			if (!find) {
 				let x = recentBoards
 				let obj = {
-					'boardName': boardName, 
+					'boardName': boardName,
 					'password': joinPw,
 					'priv': priv
 				}
@@ -199,20 +200,20 @@ class Bingo extends React.Component {
 		}
 	}
 
-  render() {
-  	return (
+	render() {
+		return (
 			<>
-			  { this.state.alert && 
-          <Alert style={{'position' : 'absolute', 'width': '100%', 'zIndex' : '10000'}} variant={this.state.alertVariant}>
-            {this.state.alert}
-          </Alert>   
-        } 
+				{this.state.alert &&
+					<Alert style={{ 'position': 'absolute', 'width': '100%', 'zIndex': '10000' }} variant={this.state.alertVariant}>
+						{this.state.alert}
+					</Alert>
+				}
 				{/* {	this.state.showToast && 
 					<Toast variant='danger' message={'uh ohohhh'} />
 				} */}
-				{this.state.screen === 1 && 
+				{this.state.screen === 1 &&
 					<div className='start-screen'>
-						<div className='start-menu' onClick={() => this.props.navigate('/bingo/create')}> 
+						<div className='start-menu' onClick={() => this.props.navigate('/bingo/create')}>
 							<h1 className='osrs-header'>
 								Create Bingo Board
 							</h1>
@@ -224,91 +225,91 @@ class Bingo extends React.Component {
 						</div>
 					</div>
 				}
-				{this.state.screen === 2 && 
+				{this.state.screen === 2 &&
 					<div className='create-menu'>
-						<div style={{'margin': '5px'}}>
+						<div style={{ 'margin': '5px' }}>
 							<Alert variant="warning">
 								***NOTE do NOT use "REAL" passwords. I DON'T ENCRYPT this data, make it fun passwords that don't mean anything
-								<br/>
+								<br />
 								boards auto delete after 1 YEAR do NOT reuse boards
 							</Alert>
 						</div>
 						<EditableInput title='Board Name' stateKey='boardName' change={this.inputState} value={this.state.boardName} />
-						<div style={{'margin': '5px'}}>
-						<Alert variant="primary">
-							Admins have the ability to edit board specifics like point values, images, descriptions, team count / names.
-						</Alert>
+						<div style={{ 'margin': '5px' }}>
+							<Alert variant="primary">
+								Admins have the ability to edit board specifics like point values, images, descriptions, team count / names.
+							</Alert>
 						</div>
 						<EditableInput title='Admin Password' stateKey='adminPassword' change={this.inputState} value={this.state.adminPassword} />
-						<div style={{'margin': '5px'}}>
-						<Alert variant="primary">
-							General users will only be able to change team data.
-						</Alert>
+						<div style={{ 'margin': '5px' }}>
+							<Alert variant="primary">
+								General users will only be able to change team data.
+							</Alert>
 						</div>
 						<EditableInput title='General Password' stateKey='generalPassword' change={this.inputState} value={this.state.generalPassword} />
-						<h3 className="osrs-header" style={{marginTop: '15px', marginBottom: 0}}>Board Size</h3>
-						<div className="board-controls" style={{ color: 'var(--osrs-text-gold)', textShadow: '1px 1px 0px black', fontFamily: 'osrsFont, sans-serif', fontSize: '1.2rem' }}> 
-							<Button click={()=> this.changeNum(-1, 'rows')} text="-"></Button>
-							<span style={{margin: '0 10px'}}>Row: {this.state.rows}</span>
-							<Button click={()=> this.changeNum(1, 'rows')} text="+"></Button>
-							<Button click={()=> this.changeNum(-1, 'columns')} text="-"></Button>
-							<span style={{margin: '0 10px'}}>Column: {this.state.columns}</span>
-							<Button click={()=> this.changeNum(1, 'columns')} text="+"></Button>
+						<h3 className="osrs-header" style={{ marginTop: '15px', marginBottom: 0 }}>Board Size</h3>
+						<div className="board-controls" style={{ color: 'var(--osrs-text-gold)', textShadow: '1px 1px 0px black', fontFamily: 'osrsFont, sans-serif', fontSize: '1.2rem' }}>
+							<Button click={() => this.changeNum(-1, 'rows')} text="-"></Button>
+							<span style={{ margin: '0 10px' }}>Row: {this.state.rows}</span>
+							<Button click={() => this.changeNum(1, 'rows')} text="+"></Button>
+							<Button click={() => this.changeNum(-1, 'columns')} text="-"></Button>
+							<span style={{ margin: '0 10px' }}>Column: {this.state.columns}</span>
+							<Button click={() => this.changeNum(1, 'columns')} text="+"></Button>
 						</div>
-						<div className='margin-15 osrs-container' style={{padding: '10px', display: 'flex', flexDirection: 'column'}}>
-							{[...Array(this.state.columns)].map((x,i) => (
-								<span key={i} className='flex' style={{justifyContent: 'center'}}>
-										{[...Array(this.state.rows)].map((x,j) => (
-											<BoardTile bare={true} key={j} br={this.state.rows === j+1} bb={this.state.columns=== i+1} dem="40px" />
-										)
+						<div className='margin-15 osrs-container' style={{ padding: '10px', display: 'flex', flexDirection: 'column', pointerEvents: 'none', userSelect: 'none' }}>
+							{[...Array(this.state.columns)].map((x, i) => (
+								<span key={i} className='flex' style={{ justifyContent: 'center' }}>
+									{[...Array(this.state.rows)].map((x, j) => (
+										<BoardTile bare={true} key={j} br={this.state.rows === j + 1} bb={this.state.columns === i + 1} dem="40px" />
+									)
 									)}
 								</span>
-								)
+							)
 							)}
 						</div>
 						<Button variant="success" click={this.continue} text="Create Board"></Button>
 					</div>
 				}
-				{this.state.screen === 4 && 
+				{this.state.screen === 4 &&
 					<span className='flex join-wrapper'>
 						<h1 className='margin-15 osrs-header'> Join a Bingo Board </h1>
 						<EditableInput id="boardName" title='Board Name' stateKey='boardName' change={this.inputState} value={this.state.boardName} />
-						<div style={{display: 'flex', width: '500px', justifyContent: 'space-between', marginBottom: '15px'}}>
-							<Button 
-								style={{border: this.state.joinPwTitle === 'general' ? '2px solid var(--osrs-text-gold)' : '', color: this.state.joinPwTitle === 'general' ? 'var(--osrs-text-gold)' : 'var(--osrs-text-normal)'}} 
-								click={()=> this.setState({joinPwTitle: 'general'})} text="Join as General" />
-							<Button 
-								style={{border: this.state.joinPwTitle === 'admin' ? '2px solid var(--osrs-text-gold)' : '', color: this.state.joinPwTitle === 'admin' ? 'var(--osrs-text-gold)' : 'var(--osrs-text-normal)'}} 
-								click={()=> this.setState({joinPwTitle: 'admin'})} text="Join as Admin" />
+						<div style={{ display: 'flex', width: '500px', justifyContent: 'space-between', marginBottom: '15px' }}>
+							<Button
+								style={{ border: this.state.joinPwTitle === 'general' ? '2px solid var(--osrs-text-gold)' : '', color: this.state.joinPwTitle === 'general' ? 'var(--osrs-text-gold)' : 'var(--osrs-text-normal)' }}
+								click={() => this.setState({ joinPwTitle: 'general' })} text="Join as General" />
+							<Button
+								style={{ border: this.state.joinPwTitle === 'admin' ? '2px solid var(--osrs-text-gold)' : '', color: this.state.joinPwTitle === 'admin' ? 'var(--osrs-text-gold)' : 'var(--osrs-text-normal)' }}
+								click={() => this.setState({ joinPwTitle: 'admin' })} text="Join as Admin" />
 						</div>
-						<InputGroup style={{width: '500px'}} className="mb-3">
-							<InputGroup.Text style={{width: '150px'}}>{this.state.joinPwTitle === 'general' ? 'General' : 'Admin'} Pw</InputGroup.Text>
-							<FormControl     
-								id="bingo-pw"    
+						<InputGroup style={{ width: '500px' }} className="mb-3">
+							<InputGroup.Text style={{ width: '150px' }}>{this.state.joinPwTitle === 'general' ? 'General' : 'Admin'} Pw</InputGroup.Text>
+							<FormControl
+								id="bingo-pw"
 								value={this.state.joinPw}
-            		onChange={(e)=>{this.setState({joinPw: e.target.value})}} 
-								onKeyUp={(e)=> {
-									let code = e.keyCode || e .which
+								onChange={(e) => { this.setState({ joinPw: e.target.value }) }}
+								onKeyUp={(e) => {
+									let code = e.keyCode || e.which
 									//if enter was pressed
 									if (code === 13) {
 										this.auth()
 									}
 								}}
 							/>
-						</InputGroup>		
+						</InputGroup>
 						<Button variant="success" click={this.auth} text="Join"></Button>
-						{ this.state.recentBoards && this.state.recentBoards.length > 0 &&
+						{this.state.recentBoards && this.state.recentBoards.length > 0 &&
 							<RecentBoards click={this.auth} removeRecent={this.removeRecent} recent={this.state.recentBoards} />
 						}
-					</span>		
+					</span>
 				}
 			</>
-    )
-  }
+		)
+	}
 }
 
 function withHooks(Component) {
-  return props => <Component {...props} navigate={useNavigate()} />;
+	return props => <Component {...props} navigate={useNavigate()} />;
 }
 
 export default withHooks(Bingo)

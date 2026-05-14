@@ -506,3 +506,51 @@ button:focus {
 .route-dark-bg div {
   color: var(--osrs-text-beige);
 }
+
+/* ─── Toast Notifications ────────────────────────────────────────────────── */
+.toast {
+  background-color: var(--osrs-glass-bg-raised) !important;
+  backdrop-filter: var(--osrs-glass-blur) !important;
+  -webkit-backdrop-filter: var(--osrs-glass-blur) !important;
+  border: 2px solid var(--osrs-border-dark) !important;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow) !important;
+  border-radius: var(--osrs-radius-lg) !important;
+  overflow: hidden;
+}
+
+.toast-header {
+  background-color: rgba(43, 38, 30, 0.9) !important;
+  color: var(--osrs-text-gold) !important;
+  border-bottom: 1px solid var(--osrs-border-dark) !important;
+  font-family: 'osrsFont', sans-serif !important;
+}
+
+.toast-body {
+  color: var(--osrs-text-beige) !important;
+  padding: 12px 16px !important;
+}
+
+.toast-header .btn-close {
+  filter: invert(0.8) sepia(1) saturate(5) hue-rotate(-15deg) !important;
+  /* Gold-ish close button */
+}
+
+.osrs-toast-success .toast-header {
+  background-color: rgba(36, 70, 26, 0.95) !important;
+  border-bottom: 1px solid #1a3212 !important;
+}
+
+.osrs-toast-danger .toast-header {
+  background-color: rgba(92, 27, 27, 0.95) !important;
+  border-bottom: 1px solid #3d1212 !important;
+}
+
+.osrs-toast-warning .toast-header {
+  background-color: rgba(99, 67, 22, 0.95) !important;
+  border-bottom: 1px solid #4a3210 !important;
+}
+
+.osrs-toast-info .toast-header {
+  background-color: rgba(43, 38, 30, 0.95) !important;
+  border-bottom: 1px solid var(--osrs-border-dark) !important;
+}

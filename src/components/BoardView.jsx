@@ -302,26 +302,30 @@ class BoardView extends React.Component {
     //let dem = width < height ? (width / this.rows)-40 : (height / this.columns)-40;
     return (
       <div className='flex-wrapper-create'>
-        <div className='top-bar'>
-          <h2 style={{'marginTop': '0px'}}> {this.state.boardName} </h2>
-          <div className='flex bingo-edit'>
-          <Button click={()=> this.props.navigate('/')} text="Go Home" variant="primary"/>
-          <Button click={()=> this.setState({showSettings: true})} text="Settings" variant="primary"/>
-          {(this.state.privilage === 'admin' || this.state.canSwitchPriv) &&
-            <>
-              { this.state.privilage === 'admin' &&
+        <div className='top-bar-container'>
+          <div className='title-bar'>
+            <h2 style={{ 'marginTop': '0px' }}> {this.state.boardName} </h2>
+          </div>
+          <div className='settings-bar'>
+            <div className='flex bingo-edit'>
+              <Button click={() => this.props.navigate('/')} text="Go Home" variant="primary" />
+              <Button click={() => this.setState({ showSettings: true })} text="Settings" variant="primary" />
+              {(this.state.privilage === 'admin' || this.state.canSwitchPriv) &&
                 <>
-                  <Button click={this.toggleTeamEdit} text="Edit Board" variant="primary"/>
-                  <Button style={{'marginRight': '10px'}} click={this.clipboard} variant='warning' text={'Auto Signin Link 📋'} />
+                  {this.state.privilage === 'admin' &&
+                    <>
+                      <Button click={this.toggleTeamEdit} text="Edit Board" variant="primary" />
+                      <Button style={{ 'marginRight': '10px' }} click={this.clipboard} variant='warning' text={'Auto Signin Link 📋'} />
+                    </>
+                  }
+                  {this.state.privilage === 'admin' ?
+                    <Button click={this.switchPrivilage} text="Admin Mode" variant="warning" />
+                    :
+                    <Button click={this.switchPrivilage} text="General Mode" variant="primary" />
+                  }
                 </>
               }
-              { this.state.privilage === 'admin' ? 
-                <Button click={this.switchPrivilage} text="Admin Mode" variant="warning"/>
-                :
-                <Button click={this.switchPrivilage} text="General Mode" variant="primary"/>
-              }     
-            </>    
-          }
+            </div>
           </div>
         </div>
         { this.state.alert && 

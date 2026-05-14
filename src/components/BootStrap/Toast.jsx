@@ -13,11 +13,14 @@ class ToastCls extends React.Component {
   render() {
   	return ( 
       <ToastContainer className="p-3" position={this.props.position}>
-        <Toast onClose={this.props.onClose} className="d-inline-block m-1" bg={this.props.variant} autohide delay={this.props.timeout || 6000}>
+        <Toast 
+          onClose={this.props.onClose} 
+          className={`d-inline-block m-1 osrs-toast-${this.props.variant || 'info'}`} 
+          autohide 
+          delay={this.props.timeout || 6000}
+        >
           <Toast.Header>
-            <img src="holder.js/20x20?text=%20" className="rounded me-2" alt="" />
             <strong className="me-auto">{this.props.title}</strong>
-            {/* <small>11 mins ago</small> */}
           </Toast.Header>
           <Toast.Body className={this.props.variant === 'Dark' && 'text-white'}>
             {this.props.message}
