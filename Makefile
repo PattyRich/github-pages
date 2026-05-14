@@ -3,12 +3,12 @@
 # -----------------------
 FRONTEND_DIR=apps/frontend
 SERVER_DIR=services/api
-DOCKER_COMPOSE=docker-compose
+DOCKER_COMPOSE=docker compose
 
 # -----------------------
 # HELP
 # -----------------------
-.PHONY: help install dev frontend backend backend-logs build deploy clean up down restart logs ps shell-api test
+.PHONY: help install dev frontend backend backend-logs build deploy clean up down restart logs ps shell-api shell-worker test
 
 help:
 	@echo "Available commands:"
@@ -32,17 +32,13 @@ help:
 # -----------------------
 install:
 	cd $(FRONTEND_DIR) && npm install
-	@if [ -f $(SERVER_DIR)/requirements.txt ]; then \
-		pip install -r $(SERVER_DIR)/requirements.txt || echo "Pip install skipped (local python not found or error)"; \
-	fi
 
 # -----------------------
 # DEVELOPMENT
 # -----------------------
-# Runs both frontend and backend logs in parallel
 dev:
-	@echo "Starting dev environment (PowerShell wrapper)..."
-	powershell -ExecutionPolicy Bypass -Command "try { $(DOCKER_COMPOSE) up -d --build; cd $(FRONTEND_DIR); npm start } finally { $(DOCKER_COMPOSE) stop }"
+	$(DOCKER_COMPOSE) up -d --build
+	cd $(FRONTEND_DIR) && npm start
 
 frontend:
 	cd $(FRONTEND_DIR) && npm start
@@ -93,6 +89,8 @@ deploy:
 # CLEAN
 # -----------------------
 clean:
+	@echo "WARNING: This will remove all build artifacts, node_modules, and docker volumes."
+	@read -p "Are you sure? [y/N] " confirm && [ "$$confirm" = "y" ] || [ "$$confirm" = "Y" ] || (echo "Aborted."; exit 1)
 	$(DOCKER_COMPOSE) down -v
 	rm -rf $(FRONTEND_DIR)/dist
 	rm -rf $(FRONTEND_DIR)/node_modules
