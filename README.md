@@ -5,6 +5,7 @@ The official OSRS Community Toolbox. Create, manage, and share customizable Bing
 - **Frontend**: [pattyrich.github.io/github-pages](https://pattyrich.github.io/github-pages/)
 - **Main Site**: [praynr.com](https://praynr.com)
 - **API**: [praynr.com](https://praynr.com)
+- **Monitoring (Dozzle)**: [dozzle.praynr.com](https://dozzle.praynr.com)
 
 ---
 
@@ -65,6 +66,16 @@ docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
 
 > [!CAUTION]
 > **Data Persistence**: Never use `docker compose down -v` in production. It will permanently delete your MongoDB and Redis volumes.
+
+---
+
+## 📊 Monitoring
+
+We use **Dozzle** for real-time monitoring of container logs. This is essential for debugging production issues without needing SSH access.
+
+- **URL**: [dozzle.praynr.com](https://dozzle.praynr.com)
+- **Auth**: Secured via simple authentication (see `dozzle/users.yml`).
+- **Features**: Live streaming logs, container stats, and log searching.
 
 ---
 
