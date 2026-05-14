@@ -17,13 +17,13 @@ services:
 
   api:
     build:
-      context: ./server
+      context: ./services/api
     ports:
       - "8000:8000"
     env_file:
-      - ./server/.env
+      - ./services/api/.env
     volumes:
-      - ./server:/app
+      - ./services/api:/app
     depends_on:
       - mongo
       - redis
@@ -32,11 +32,11 @@ services:
 
   worker:
     build:
-      context: ./server
+      context: ./services/api
     env_file:
-      - ./server/.env
+      - ./services/api/.env
     volumes:
-      - ./server:/app
+      - ./services/api:/app
     depends_on:
       - redis
     command: rq worker --url redis://redis:6379/0 default

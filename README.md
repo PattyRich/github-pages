@@ -3,52 +3,49 @@
 The official OSRS Community Toolbox. Create, manage, and share customizable Bingo boards, simulate boss loot, and more.
 
 - **Frontend**: [pattyrich.github.io/github-pages](https://pattyrich.github.io/github-pages/)
-- **Frontend also at**: [praynr.com](https://praynr.com)
+- **Main Site**: [praynr.com](https://praynr.com)
 - **API**: [praynr.com](https://praynr.com)
+
+---
+
+## 🏗️ Repository Architecture
+
+This project is a monorepo organized for clarity and scale. See [Architecture Documentation](docs/architecture.md) for a deep dive into the system design.
+
+- **`apps/frontend/`**: React 19 + Vite application.
+- **`services/api/`**: Python backend + RQ worker + MongoDB.
+- **`scripts/`**: Utility scripts and data management.
+
+---
+
+## 🛠️ Quick Start (Local Development)
+
+The project is managed via a root-level `Makefile`.
+
+### 1. Install Everything
+```bash
+make install
+```
+
+### 2. Configure Environment
+Create `services/api/.env` with your API keys and configuration (see [services/api/.env.example](services/api/.env.example) for a template).
+
+### 3. Run the Development Environment
+This starts the backend (Docker) and frontend (Vite) concurrently with a robust cleanup hook.
+```bash
+make dev
+```
 
 ---
 
 ## 📡 Technology Stack
 
-- **OS**: Ubuntu 24.04 LTS (Noble Numbat)
-- **Backend**: Python 3.13 (Flask + uWSGI)
-- **Frontend**: React 19
+- **Frontend**: React 19, Vite, Bootstrap 5
+- **Backend**: Python 3.13 (uWSGI + RQ Worker)
 - **Database**: MongoDB 7.0
-- **Cache/Task Queue**: Redis 7 + RQ worker
+- **Cache**: Redis 7
 - **Reverse Proxy**: Nginx (with Cloudflare optimization)
-- **Monitoring**: Dozzle (real-time log viewer)
 - **Infrastructure**: AWS Lightsail + Docker Compose
-
----
-
-## 🛠️ Setup & Development
-
-### 1. Frontend
-```bash
-npm i && npm start
-```
-
-### 2. Backend Environment (`server/.env`)
-Create `server/.env` with the following variables:
-```env
-FEEDBACK_WEBHOOK=...
-CREATION_WEBHOOK=...
-DEBUG_WEBHOOK=...
-RIOT_API_KEY=...
-MONGO_URI=mongodb://mongo:27017/
-REDIS_HOST=redis
-REDIS_PORT=6379
-REDIS_DB=0
-DOZZLE_PASSWORD=... (not needed here I just put it for my own memory)
-DOZZLE_USERNAME=... (same as above)
-```
-
-### 3. Monitoring (Dozzle)
-Generate a bcrypt hash for `data/users.yml`:
-```bash
-python3 -c "import bcrypt; print(bcrypt.hashpw(b'yourpassword', bcrypt.gensalt()).decode().replace('\$2b\$', '\$2a\$'))"
-```
-or just use https://bcrypt-generator.com/
 
 ---
 
@@ -73,16 +70,18 @@ docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
 
 ## 🔄 CI/CD Pipeline
 
-- **Frontend**: Deployed to `gh-pages` via manual command `npm run deploy`.
-- **Frontend & Backend (Production)**: Automatically built and deployed to AWS Lightsail (`praynr.com`) via GitHub Actions on push to `main`.
-  - Requires `LIGHTSAIL_HOST`, `LIGHTSAIL_USER`, and `LIGHTSAIL_KEY` secrets.
+The project uses **GitHub Actions** for fully automated deployments:
+
+- **Frontend**: Automatically built and deployed to `/var/www/frontend` on `praynr.com`.
+- **Backend**: Automatically updated on the AWS Lightsail server via SSH.
+- **Maintenance**: Weekly automated container image updates and pruning.
 
 ---
 
 ## 💾 Maintenance & Backups
 
 ### Maintenance Mode
-Toggle maintenance mode for Bingo and LoL-Beat routes in `src/index.jsx` via the `IS_MAINTENANCE` boolean. This displays a premium styled maintenance screen to users.
+Toggle maintenance mode for Bingo and LoL-Beat routes in `apps/frontend/src/index.jsx` via the `IS_MAINTENANCE` boolean.
 
 ### Automated Backups
 We use an **SSH Streaming** script to pull daily backups from the server directly to local storage.

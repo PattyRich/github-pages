@@ -1,11 +1,24 @@
-build
-node_modules
+# Build Artifacts
+**/build
+**/dist
+**/node_modules
 *.DS_Store
-server/health.py
-server/.env
-server/__pycache__
-old-files/*
-dozzle/*
-scripts/backup_config.ps1
-dist
 vite-dev*.log
+
+# Secrets & Environment
+**/.env
+services/api/.env
+scripts/backup_config.ps1
+
+# Backend
+**/__pycache__
+services/api/server.ini
+
+# Monitoring & Backups
+dozzle/*
+old-files/*
+backups/*
+
+# Local IDE
+.vscode/
+.idea/

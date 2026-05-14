@@ -8,10 +8,10 @@ on:
     branches:
       - main
     paths:
-      - 'src/**'
-      - 'public/**'
-      - 'package.json'
-      - 'package-lock.json'
+      - 'apps/frontend/src/**'
+      - 'apps/frontend/public/**'
+      - 'apps/frontend/package.json'
+      - 'apps/frontend/package-lock.json'
       - '.github/workflows/deploy-frontend.yml'
 
 jobs:
@@ -25,8 +25,10 @@ jobs:
         with:
           node-version: 22
           cache: 'npm'
+          cache-dependency-path: apps/frontend/package-lock.json
           
       - name: Build Frontend
+        working-directory: apps/frontend
         run: |
           npm install
           CI=false npm run build
@@ -46,6 +48,6 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
-          source: "dist/*"
+          source: "apps/frontend/dist/*"
           target: "/var/www/frontend"
-          strip_components: 1
+          strip_components: 3
