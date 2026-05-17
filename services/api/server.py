@@ -104,7 +104,7 @@ def clearBadData(data, acceptableKeys):
   return data
 
 @app.route('/createBoard', methods=['POST'])
-@limiter.limit("5 per hour")
+@limiter.limit("10 per hour")
 def createBoard():
   data = json.loads(request.data.decode(), parse_float=float)
   cache = mycol.find_one({'boardName': data['boardName']})
@@ -146,7 +146,7 @@ def createBoard():
   return jsonify(success=True)
 
 @app.route('/getBoard/<boardName>/<password>/<pwtype>', methods=['GET'])
-@limiter.limit("1000 per hour")
+@limiter.limit("5000 per hour")
 def getBoard(boardName, password, pwtype):
   cache, err = auth(boardName, password, pwtype)
   if err:
@@ -375,7 +375,7 @@ def postFeedbackToDiscord():
   
 
 @app.route('/auth/<boardName>/<password>/<pwtype>', methods=['GET'])
-@limiter.limit("200 per hour")
+@limiter.limit("1000 per hour")
 def authMethod(boardName, password, pwtype):
   cache, err = auth(boardName, password, pwtype)
   if err:
