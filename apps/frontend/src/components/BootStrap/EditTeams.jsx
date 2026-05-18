@@ -86,7 +86,6 @@ class EditTeams extends React.Component {
               <div style={{ 'alignItems': 'center', 'paddingRight': '100px' }}>
                 <div>
                   Rows (left and right)
-                  Columns (up and down)
                   <Form.Select onChange={(e) => { this.inputState(e, 'columns') }} value={this.state.columns} style={{ 'marginLeft': '10px' }}>
                     {boardSizeOptions.map(num => <option key={num} value={num}>{num}</option>)}
                   </Form.Select>
