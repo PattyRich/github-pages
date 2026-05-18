@@ -1,4 +1,4 @@
-import React, {useEffect} from 'react';
+import React, { useEffect } from 'react';
 import Button from "react-bootstrap/Button";
 import BSButton from './Button';
 import Modal from "react-bootstrap/Modal"
@@ -6,7 +6,7 @@ import EditableInput from './EditableInput';
 import Alert from "react-bootstrap/Alert"
 import Form from 'react-bootstrap/Form';
 
-const boardSizeOptions = [1,2,3,4,5,6,7,8,9,10];
+const boardSizeOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
 class EditTeams extends React.Component {
   constructor(props) {
@@ -27,21 +27,21 @@ class EditTeams extends React.Component {
   }
 
   inputState(e, target) {
-		let stateChange = {}
-		stateChange[target] = e.target.value
-		this.setState(stateChange)
-	}
-
-  editName(e, index){
-    let x = this.state.teams
-    x[index].data.name = e.target.value
-    this.setState({teams: x})
+    let stateChange = {}
+    stateChange[target] = e.target.value
+    this.setState(stateChange)
   }
 
-  editPassword(e, index){
+  editName(e, index) {
+    let x = this.state.teams
+    x[index].data.name = e.target.value
+    this.setState({ teams: x })
+  }
+
+  editPassword(e, index) {
     let x = this.state.teams
     x[index].data.password = e.target.value
-    this.setState({teams: x})
+    this.setState({ teams: x })
   }
 
   handleSave() {
@@ -53,17 +53,17 @@ class EditTeams extends React.Component {
     this.props.handleClose()
   }
 
-  removeTeam(){
+  removeTeam() {
     let x = this.state.teams
     x.pop()
-    this.setState({teams: x})
+    this.setState({ teams: x })
   }
-  
-  addTeam(){
+
+  addTeam() {
     let x = this.state.teams
     x.push(JSON.parse(JSON.stringify(x[0])))
-    x[x.length-1].data.name = `team-${x.length-1}` 
-    this.setState({teams: x})
+    x[x.length - 1].data.name = `team-${x.length - 1}`
+    this.setState({ teams: x })
   }
 
   render() {
@@ -77,22 +77,23 @@ class EditTeams extends React.Component {
       >
         <Modal.Header closeButton>
           <Modal.Title id="contained-modal-title-vcenter">
-            <div className='flex edit-teams' style={{'justifyContent': 'space-between'}}>
-              <div className='flex-center' style={{'alignItems': 'center', 'width': '300px', 'marginRight': '50px'}}>
+            <div className='flex edit-teams' style={{ 'justifyContent': 'space-between' }}>
+              <div className='flex-center' style={{ 'alignItems': 'center', 'width': '300px', 'marginRight': '50px' }}>
                 <BSButton click={this.removeTeam} text="-"></BSButton>
-                  # of Teams : {this.state.teams.length}
+                # of Teams : {this.state.teams.length}
                 <BSButton click={this.addTeam} text="+"></BSButton>
               </div>
-              <div style={{'alignItems': 'center',  'paddingRight': '100px'}}>
+              <div style={{ 'alignItems': 'center', 'paddingRight': '100px' }}>
                 <div>
+                  Rows (left and right)
                   Columns (up and down)
-                  <Form.Select onChange={(e) => {this.inputState(e, 'columns')}} value={this.state.columns} style={{'marginLeft': '10px'}}>
+                  <Form.Select onChange={(e) => { this.inputState(e, 'columns') }} value={this.state.columns} style={{ 'marginLeft': '10px' }}>
                     {boardSizeOptions.map(num => <option key={num} value={num}>{num}</option>)}
                   </Form.Select>
                 </div>
-                <div style={{'marginTop': '15px'}}>
-                  Rows (left and right)
-                  <Form.Select onChange={(e) => {this.inputState(e, 'rows')}} value={this.state.rows} style={{'marginLeft': '10px'}}>
+                <div style={{ 'marginTop': '15px' }}>
+                  Columns (up and down)
+                  <Form.Select onChange={(e) => { this.inputState(e, 'rows') }} value={this.state.rows} style={{ 'marginLeft': '10px' }}>
                     {boardSizeOptions.map(num => <option key={num} value={num}>{num}</option>)}
                   </Form.Select>
                 </div>
@@ -102,26 +103,26 @@ class EditTeams extends React.Component {
         </Modal.Header>
         <Modal.Body>
           <Alert variant={'danger'}>***NOTE removing teams or columns/rows will delete all their current data.</Alert>
-          <hr/>
-          <div style={{marginBottom: '15px'}}> 
+          <hr />
+          <div style={{ marginBottom: '15px' }}>
             <Form.Check // prettier-ignore
               type="switch"
               id="custom-switch"
               label="Require teams to enter a password to make edits?"
-              onChange={() => this.setState({passwordRequired: !this.state.passwordRequired})}
+              onChange={() => this.setState({ passwordRequired: !this.state.passwordRequired })}
               checked={this.state.passwordRequired}
             />
           </div>
-          { this.state.teams.map((team, i) => {
+          {this.state.teams.map((team, i) => {
             const password = team.data.password || ''
             return (
               <div key={i}>
-                <EditableInput change={(e) => this.editName(e, i)} value={team.data.name}/>
-                { this.state.passwordRequired && 
-                  <EditableInput title={`${team.data.name}'s password`} change={(e) => this.editPassword(e, i)} value={password}/>
+                <EditableInput change={(e) => this.editName(e, i)} value={team.data.name} />
+                {this.state.passwordRequired &&
+                  <EditableInput title={`${team.data.name}'s password`} change={(e) => this.editPassword(e, i)} value={password} />
                 }
               </div>
-           )
+            )
           })}
         </Modal.Body>
         <Modal.Footer>
