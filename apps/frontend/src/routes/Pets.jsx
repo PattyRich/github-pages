@@ -109,7 +109,7 @@ class Pets extends React.Component {
 
   render() {
     const petPicturePath = !this.state.usePixelImages ? 'detailed_pets' : 'pets_pixel';
-    return <div className='route-dark-bg' style={{ padding: '20px' }}>
+    return <div className='route-dark-bg osrs-theme' style={{ padding: '20px' }}>
       <h4 style={{ 'textAlign': 'center' }}>Create a Pet Picture</h4>
       <p style={{ 'textAlign': 'center' }}>Mark the checkbox if the pet is obtained and fill the input with either kc or exp / anything else you want</p>
       <div className='pet-user-input' style={{ 'textAlign': 'center', 'marginBottom': '10px' }}>

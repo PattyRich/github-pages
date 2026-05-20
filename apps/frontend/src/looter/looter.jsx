@@ -68,7 +68,7 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 						if (['Always', 'Common'].includes(itemJson['Rarity'])) {
 							return;
 						}
-						let evall = eval(itemJson['Rarity'].replace(',',''));
+						let evall = evaluateRateExpression(itemJson['Rarity']);
 						//slightly more common that beginner rares to weed out common items
 						if (evall > .0028) {
 							return;
@@ -113,8 +113,8 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 					//toa uses an equation for rate fit since the calculations are too confusing otherwise.
 					//i got this equation by plotting calculator data in wolfram 
 					if (data.eq) {
-						data.chance = eval(data.eq.replaceAll('x',options.invocation))
-						data.pet.rate = Math.round(1/(eval(data.pet.rate.replaceAll('x',options.invocation))/100))
+						data.chance = evaluateRateExpression(data.eq, options.invocation)
+						data.pet.rate = Math.round(1/(evaluateRateExpression(data.pet.rate, options.invocation)/100))
 					} else {
 						let sum = 0
 						data.items.forEach((item)=> {
@@ -147,6 +147,84 @@ export function loot(rolls, place, options = {points: 30000, runCompletion: fals
 	});
 }
 
+function evaluateRateExpression(expression, xValue = 0) {
+	const normalized = String(expression)
+		.replaceAll(',', '')
+		.replaceAll(' ', '')
+		.replaceAll('x', String(Number(xValue)))
+		.replaceAll('**', '^');
+
+	const tokens = normalized.match(/\d*\.?\d+(?:e[+-]?\d+)?|[()+\-*/^]/gi);
+	if (!tokens || tokens.join('') !== normalized) {
+		throw new Error(`Unsupported rate expression: ${expression}`);
+	}
+
+	let index = 0;
+
+	function parseExpression() {
+		let value = parseTerm();
+		while (tokens[index] === '+' || tokens[index] === '-') {
+			const operator = tokens[index++];
+			const right = parseTerm();
+			value = operator === '+' ? value + right : value - right;
+		}
+		return value;
+	}
+
+	function parseTerm() {
+		let value = parsePower();
+		while (tokens[index] === '*' || tokens[index] === '/') {
+			const operator = tokens[index++];
+			const right = parsePower();
+			value = operator === '*' ? value * right : value / right;
+		}
+		return value;
+	}
+
+	function parsePower() {
+		let value = parseUnary();
+		if (tokens[index] === '^') {
+			index++;
+			value = value ** parsePower();
+		}
+		return value;
+	}
+
+	function parseUnary() {
+		if (tokens[index] === '+') {
+			index++;
+			return parseUnary();
+		}
+		if (tokens[index] === '-') {
+			index++;
+			return -parseUnary();
+		}
+		return parsePrimary();
+	}
+
+	function parsePrimary() {
+		const token = tokens[index++];
+		if (token === '(') {
+			const value = parseExpression();
+			if (tokens[index++] !== ')') {
+				throw new Error(`Invalid rate expression: ${expression}`);
+			}
+			return value;
+		}
+		const value = Number(token);
+		if (!Number.isFinite(value)) {
+			throw new Error(`Invalid rate expression: ${expression}`);
+		}
+		return value;
+	}
+
+	const result = parseExpression();
+	if (index !== tokens.length || !Number.isFinite(result)) {
+		throw new Error(`Invalid rate expression: ${expression}`);
+	}
+	return result;
+}
+
 
 function random_generator(max, min) {
 	return Math.random() * (max - min) + min
@@ -162,7 +240,6 @@ function getRandomInt(max) {
 
 
 function looter(rolls, data, clueType) {
-	console.log(data)
 	let rewards = []
 	let finish = rolls === 'f'
 	let checkList = []

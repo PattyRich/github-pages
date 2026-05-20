@@ -63,6 +63,15 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
 
+.route-loading {
+  display: grid;
+  min-height: 100vh;
+  place-items: center;
+  color: var(--osrs-text-gold);
+  font-family: 'osrsFont', sans-serif;
+  text-shadow: 1px 1px 0 black;
+}
+
 hr {
   border-top: 2px solid var(--osrs-border-dark);
   opacity: 1;
@@ -95,7 +104,7 @@ hr {
 }
 
 /* ─── Raw <button> elements (no class) ──────────────────────────────────── */
-button:not([class]) {
+.osrs-theme button:not([class]) {
   background-color: var(--osrs-button-bg);
   color: var(--osrs-text-normal);
   border: 2px solid var(--osrs-border-dark);
@@ -109,24 +118,24 @@ button:not([class]) {
   transition: background-color 0.15s, color 0.15s;
 }
 
-button:not([class]):hover {
+.osrs-theme button:not([class]):hover {
   background-color: var(--osrs-button-hover);
   color: var(--osrs-text-gold);
 }
 
-button:not([class]):active {
+.osrs-theme button:not([class]):active {
   background-color: var(--osrs-button-active);
 }
 
-button:not([class]):focus-visible {
+.osrs-theme button:not([class]):focus-visible {
   outline: 2px solid var(--osrs-border-light);
   outline-offset: 2px;
   color: var(--osrs-text-gold);
 }
 
 /* ─── Raw <input> / <select> elements ───────────────────────────────────── */
-input[type="text"]:not([class]),
-input[type="number"]:not([class]) {
+.osrs-theme input[type="text"]:not([class]),
+.osrs-theme input[type="number"]:not([class]) {
   background-color: var(--osrs-bg-brown-dark);
   color: var(--osrs-text-normal);
   border: 1px solid var(--osrs-border-dark);
@@ -139,7 +148,7 @@ input[type="number"]:not([class]) {
 
 
 
-select:not([class]) {
+.osrs-theme select:not([class]) {
   background-color: var(--osrs-bg-brown-dark);
   color: var(--osrs-text-normal);
   border: 1px solid var(--osrs-border-dark);
@@ -150,21 +159,22 @@ select:not([class]) {
   cursor: pointer;
 }
 
-input[type="radio"]:not([class]),
-input[type="checkbox"]:not([class]) {
+.osrs-theme input[type="radio"]:not([class]),
+.osrs-theme input[type="checkbox"]:not([class]) {
   accent-color: var(--osrs-text-gold);
   cursor: pointer;
 }
 
 /* ─── Bootstrap button overrides ────────────────────────────────────────── */
-.osrs-btn,
-.btn-primary,
-.btn-secondary,
-.btn-success,
-.btn-warning,
-.btn-danger,
-.btn-info,
-.btn {
+.osrs-theme .osrs-btn,
+.osrs-theme .btn-primary,
+.osrs-theme .btn-secondary,
+.osrs-theme .btn-success,
+.osrs-theme .btn-warning,
+.osrs-theme .btn-danger,
+.osrs-theme .btn-info,
+.osrs-theme .btn,
+.modal-content .btn {
   background-color: var(--osrs-button-bg) !important;
   color: var(--osrs-text-normal) !important;
   border: 2px solid var(--osrs-border-dark) !important;
@@ -174,68 +184,93 @@ input[type="checkbox"]:not([class]) {
   border-radius: var(--osrs-radius) !important;
 }
 
-.osrs-btn:hover,
-.btn:hover {
+.osrs-theme .osrs-btn:hover,
+.osrs-theme .btn:hover,
+.modal-content .btn:hover {
   background-color: var(--osrs-button-hover) !important;
   color: var(--osrs-text-gold) !important;
 }
 
-.osrs-btn:active,
-.btn:active {
+.osrs-theme .osrs-btn:active,
+.osrs-theme .btn:active,
+.modal-content .btn:active {
   background-color: var(--osrs-button-active) !important;
 }
 
-.osrs-btn:focus,
-.osrs-btn:focus-visible,
-.btn:focus,
-.btn:focus-visible {
+.osrs-theme .osrs-btn:focus,
+.osrs-theme .osrs-btn:focus-visible,
+.osrs-theme .btn:focus,
+.osrs-theme .btn:focus-visible,
+.modal-content .btn:focus,
+.modal-content .btn:focus-visible {
   outline: 2px solid var(--osrs-border-light) !important;
   outline-offset: 2px !important;
   box-shadow: none !important;
   color: var(--osrs-text-gold) !important;
 }
 
-.btn-success,
-.btn-outline-success {
+.osrs-theme .btn-success,
+.osrs-theme .btn-outline-success,
+.modal-content .btn-success,
+.modal-content .btn-outline-success {
   background-color: #24461a !important;
 }
 
-.btn-success:hover,
-.btn-outline-success:hover,
-.btn-success:focus,
-.btn-outline-success:focus {
+.osrs-theme .btn-success:hover,
+.osrs-theme .btn-outline-success:hover,
+.osrs-theme .btn-success:focus,
+.osrs-theme .btn-outline-success:focus,
+.modal-content .btn-success:hover,
+.modal-content .btn-outline-success:hover,
+.modal-content .btn-success:focus,
+.modal-content .btn-outline-success:focus {
   background-color: #2c541e !important;
   color: var(--osrs-text-gold) !important;
 }
 
-.btn-danger,
-.btn-outline-danger {
+.osrs-theme .btn-danger,
+.osrs-theme .btn-outline-danger,
+.modal-content .btn-danger,
+.modal-content .btn-outline-danger {
   background-color: #5c1b1b !important;
 }
 
-.btn-danger:hover,
-.btn-outline-danger:hover,
-.btn-danger:focus,
-.btn-outline-danger:focus {
+.osrs-theme .btn-danger:hover,
+.osrs-theme .btn-outline-danger:hover,
+.osrs-theme .btn-danger:focus,
+.osrs-theme .btn-outline-danger:focus,
+.modal-content .btn-danger:hover,
+.modal-content .btn-outline-danger:hover,
+.modal-content .btn-danger:focus,
+.modal-content .btn-outline-danger:focus {
   background-color: #6e2020 !important;
 }
 
-.btn-warning,
-.btn-outline-warning {
+.osrs-theme .btn-warning,
+.osrs-theme .btn-outline-warning,
+.modal-content .btn-warning,
+.modal-content .btn-outline-warning {
   background-color: #634316 !important;
 }
 
-.btn-warning:hover,
-.btn-outline-warning:hover,
-.btn-warning:focus,
-.btn-outline-warning:focus {
+.osrs-theme .btn-warning:hover,
+.osrs-theme .btn-outline-warning:hover,
+.osrs-theme .btn-warning:focus,
+.osrs-theme .btn-outline-warning:focus,
+.modal-content .btn-warning:hover,
+.modal-content .btn-outline-warning:hover,
+.modal-content .btn-warning:focus,
+.modal-content .btn-outline-warning:focus {
   background-color: #734e19 !important;
 }
 
 /* ─── Bootstrap form control overrides ──────────────────────────────────── */
-.form-control,
-.input-group-text,
-.dropdown-toggle {
+.osrs-theme .form-control,
+.osrs-theme .input-group-text,
+.osrs-theme .dropdown-toggle,
+.modal-content .form-control,
+.modal-content .input-group-text,
+.modal-content .dropdown-toggle {
   background-color: var(--osrs-bg-brown-dark) !important;
   color: var(--osrs-text-normal) !important;
   border: 1px solid var(--osrs-border-dark) !important;
@@ -243,14 +278,18 @@ input[type="checkbox"]:not([class]) {
   box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
 }
 
-.form-control::placeholder {
+.osrs-theme .form-control::placeholder,
+.modal-content .form-control::placeholder {
   color: var(--osrs-text-beige) !important;
   opacity: 0.8 !important;
 }
 
-.form-control:focus,
-input:not([type="checkbox"]):not([type="radio"]):focus,
-textarea:focus {
+.osrs-theme .form-control:focus,
+.osrs-theme input:not([type="checkbox"]):not([type="radio"]):focus,
+.osrs-theme textarea:focus,
+.modal-content .form-control:focus,
+.modal-content input:not([type="checkbox"]):not([type="radio"]):focus,
+.modal-content textarea:focus {
   background-color: var(--osrs-bg-brown) !important;
   color: var(--osrs-text-beige) !important;
   box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.8) !important;
@@ -258,8 +297,10 @@ textarea:focus {
   outline: none !important;
 }
 
-.form-control:disabled,
-.form-control[readonly] {
+.osrs-theme .form-control:disabled,
+.osrs-theme .form-control[readonly],
+.modal-content .form-control:disabled,
+.modal-content .form-control[readonly] {
   background-color: #2b2318 !important;
   color: #8c7e6a !important;
   opacity: 0.7 !important;
@@ -268,7 +309,7 @@ textarea:focus {
 }
 
 /* ─── Nav pills ──────────────────────────────────────────────────────────── */
-.nav-pills .nav-link {
+.osrs-theme .nav-pills .nav-link {
   background-color: var(--osrs-button-bg);
   color: var(--osrs-text-normal);
   border: 2px solid var(--osrs-border-dark);
@@ -279,12 +320,12 @@ textarea:focus {
   box-shadow: inset 0 0 0 1px var(--osrs-border-light);
 }
 
-.nav-pills .nav-link:hover {
+.osrs-theme .nav-pills .nav-link:hover {
   background-color: var(--osrs-button-hover);
   color: var(--osrs-text-gold);
 }
 
-.nav-pills .nav-link.active {
+.osrs-theme .nav-pills .nav-link.active {
   background-color: var(--osrs-bg-brown-dark) !important;
   color: var(--osrs-text-gold) !important;
   border-color: var(--osrs-border-dark) !important;
@@ -318,49 +359,58 @@ textarea:focus {
 }
 
 /* ─── List groups ────────────────────────────────────────────────────────── */
-.list-group-item {
+.osrs-theme .list-group-item,
+.modal-content .list-group-item {
   background-color: var(--osrs-bg-inventory) !important;
   color: var(--osrs-text-normal) !important;
   border: 1px solid var(--osrs-border-dark) !important;
 }
 
-.list-group-item:hover {
+.osrs-theme .list-group-item:hover,
+.modal-content .list-group-item:hover {
   background-color: var(--osrs-bg-brown) !important;
   color: var(--osrs-text-gold) !important;
   cursor: pointer;
 }
 
 /* ─── Alerts ─────────────────────────────────────────────────────────────── */
-.alert {
+.osrs-theme .alert,
+.modal-content .alert {
   background-color: var(--osrs-bg-brown);
   color: #fffac9 !important;
   border: 4px solid var(--osrs-border-light) !important;
   box-shadow: inset 0 0 0 2px var(--osrs-border-dark) !important;
 }
 
-.alert-danger {
+.osrs-theme .alert-danger,
+.modal-content .alert-danger {
   background-color: #5c1b1b !important;
 }
 
-.alert-warning {
+.osrs-theme .alert-warning,
+.modal-content .alert-warning {
   background-color: #634316 !important;
 }
 
-.alert-success {
+.osrs-theme .alert-success,
+.modal-content .alert-success {
   background-color: #24461a !important;
 }
 
-.alert-primary {
+.osrs-theme .alert-primary,
+.modal-content .alert-primary {
   background-color: #1a3152 !important;
 }
 
 /* ─── Checkboxes ─────────────────────────────────────────────────────────── */
-.form-check-label {
+.osrs-theme .form-check-label,
+.modal-content .form-check-label {
   color: var(--osrs-text-gold);
   font-weight: bold;
 }
 
-.form-check-input {
+.osrs-theme .form-check-input,
+.modal-content .form-check-input {
   background-color: var(--osrs-bg-inventory) !important;
   border: 2px solid var(--osrs-border-dark) !important;
   border-radius: 0 !important;
@@ -369,12 +419,14 @@ textarea:focus {
   transition: none !important;
 }
 
-.form-check-input:checked {
+.osrs-theme .form-check-input:checked,
+.modal-content .form-check-input:checked {
   background-color: #24461a !important;
   border-color: #1d1813 !important;
 }
 
-.form-check-input:focus {
+.osrs-theme .form-check-input:focus,
+.modal-content .form-check-input:focus {
   box-shadow: none !important;
   border-color: var(--osrs-text-gold) !important;
   outline: none !important;
@@ -460,9 +512,12 @@ textarea:focus {
 }
 
 /* Inputs with OSRS theme (brown background, beige text) */
-input:not([type="checkbox"]):not([type="radio"]),
-.form-control,
-.input-group-text {
+.osrs-theme input:not([type="checkbox"]):not([type="radio"]),
+.osrs-theme .form-control,
+.osrs-theme .input-group-text,
+.modal-content input:not([type="checkbox"]):not([type="radio"]),
+.modal-content .form-control,
+.modal-content .input-group-text {
   background-color: var(--osrs-bg-brown-dark) !important;
   color: var(--osrs-text-beige) !important;
   border: 2px solid var(--osrs-border-dark) !important;
@@ -471,19 +526,29 @@ input:not([type="checkbox"]):not([type="radio"]),
 
 
 
-input,
-textarea,
-select,
-.form-control,
-.form-check-input {
+.osrs-theme input,
+.osrs-theme textarea,
+.osrs-theme select,
+.osrs-theme .form-control,
+.osrs-theme .form-check-input,
+.modal-content input,
+.modal-content textarea,
+.modal-content select,
+.modal-content .form-control,
+.modal-content .form-check-input {
   transition: none !important;
 }
 
-input:focus,
-textarea:focus,
-select:focus,
-.form-check-input:focus,
-button:focus {
+.osrs-theme input:focus,
+.osrs-theme textarea:focus,
+.osrs-theme select:focus,
+.osrs-theme .form-check-input:focus,
+.osrs-theme button:focus,
+.modal-content input:focus,
+.modal-content textarea:focus,
+.modal-content select:focus,
+.modal-content .form-check-input:focus,
+.modal-content button:focus {
   box-shadow: none !important;
   outline: none !important;
 }

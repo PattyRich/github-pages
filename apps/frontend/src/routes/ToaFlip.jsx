@@ -76,7 +76,7 @@ class ToaFlip extends React.Component {
 
   render() {
     return (
-      <div className="route-dark-bg">
+      <div className="route-dark-bg osrs-theme">
         <Button style={{ position: 'absolute', right: '10px', top: '10px' }} click={() => this.props.navigate('/')} text="Home" variant="primary" />
         <div style={{ 'display': 'flex', 'flexDirection': 'column', 'justifyContent': 'center', 'alignItems': 'center', 'marginTop': '12%' }}>
           {this.state.board.map((row, index1) => {

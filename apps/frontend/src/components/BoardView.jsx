@@ -301,7 +301,7 @@ class BoardView extends React.Component {
     let dem = maxHeight < maxWidth ? maxHeight : maxWidth
     //let dem = width < height ? (width / this.rows)-40 : (height / this.columns)-40;
     return (
-      <div className='flex-wrapper-create'>
+      <div className='flex-wrapper-create osrs-theme'>
         <div className='top-bar-container'>
           <div className='title-bar'>
             <h2 style={{ 'marginTop': '0px' }}> {this.state.boardName} </h2>

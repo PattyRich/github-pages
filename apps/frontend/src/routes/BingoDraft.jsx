@@ -159,7 +159,7 @@ class BingoDraft extends React.Component {
   render() {
     return (
       <DndProvider backend={HTML5Backend}>
-      <div className='draft-wrap route-dark-bg'>
+      <div className='draft-wrap route-dark-bg osrs-theme'>
         <h2 className='draft-title osrs-header' style={{'paddingTop': '15px'}}>
           Bingo Draft
         </h2>

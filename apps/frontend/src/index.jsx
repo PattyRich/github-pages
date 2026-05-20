@@ -1,22 +1,25 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
-import App from './App';
-import Osrs from './routes/osrs';
-import Magerun from './routes/magerun'
-import Bingo from './routes/bingo'
-import BoardView from './components/BoardView'
 import reportWebVitals from './reportWebVitals';
-import BingoDraft from './routes/BingoDraft';
-import ToaFlip from './routes/ToaFlip';
-import Pets from './routes/Pets';
-import AllPets from './routes/AllPets';
-import LolBeat from './routes/LolBeat';
 import { HashRouter, Routes, Route } from "react-router-dom";
+
+const App = lazy(() => import('./App'));
+const Osrs = lazy(() => import('./routes/osrs'));
+const Magerun = lazy(() => import('./routes/magerun'));
+const Bingo = lazy(() => import('./routes/bingo'));
+const BoardView = lazy(() => import('./components/BoardView'));
+const BingoDraft = lazy(() => import('./routes/BingoDraft'));
+const ToaFlip = lazy(() => import('./routes/ToaFlip'));
+const Pets = lazy(() => import('./routes/Pets'));
+const AllPets = lazy(() => import('./routes/AllPets'));
+const LolBeat = lazy(() => import('./routes/LolBeat'));
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
 const IS_MAINTENANCE = false;
+
+window.API = import.meta.env.DEV ? 'http://localhost:8000' : 'https://praynr.com'
 
 const Maintenance = (
 	<main style={{
@@ -60,39 +63,41 @@ const Maintenance = (
 
 root.render(
 	<HashRouter>
-		<Routes>
-			<Route path="/" element={<App />} />
-			<Route path="/osrs" element={<Osrs />} />
-			<Route path="/github-pages/osrs" element={<Osrs />} />
-			<Route path="/mage-run" element={<Magerun />} />
-			<Route path="/github-pages/mage-run" element={<Magerun />} />
-			<Route path="/toa-flip" element={<ToaFlip />} />
-			<Route path="/github-pages/toa-flip" element={<ToaFlip />} />
-			<Route path="/bingo/create" element={IS_MAINTENANCE ? Maintenance : <Bingo key='create' screenSkip={2} />} />
-			<Route path="/github-pages/bingo/create" element={IS_MAINTENANCE ? Maintenance : <Bingo key='create' screenSkip={2} />} />
-			<Route path="/bingo/join" element={IS_MAINTENANCE ? Maintenance : <Bingo key='join' screenSkip={4} />} />
-			<Route path="/github-pages/bingo/join" element={IS_MAINTENANCE ? Maintenance : <Bingo key='join' screenSkip={4} />} />
-			<Route path="/bingo" element={IS_MAINTENANCE ? Maintenance : <Bingo />} />
-			<Route path="/github-pages/bingo" element={IS_MAINTENANCE ? Maintenance : <Bingo />} />
-			<Route path="/bingo/:boardName" element={IS_MAINTENANCE ? Maintenance : <BoardView />} />
-			<Route path="/github-pages/bingo/:boardName" element={IS_MAINTENANCE ? Maintenance : <BoardView />} />
-			<Route path="/bingo-draft" element={<BingoDraft />} />
-			<Route path="/github-pages/bingo-draft" element={<BingoDraft />} />
-			<Route path="/pets" element={<Pets />} />
-			<Route path="/github-pages/pets" element={<Pets />} />
-			<Route path="/all-pets" element={<AllPets />} />
-			<Route path="/github-pages/all-pets" element={<AllPets />} />
-			<Route path="/lol-beat" element={IS_MAINTENANCE ? Maintenance : <LolBeat />} />
-			<Route path="/github-pages/lol-beat" element={IS_MAINTENANCE ? Maintenance : <LolBeat />} />
-			<Route
-				path="*"
-				element={
-					<main style={{ padding: "1rem" }}>
-						<p>There's nothing here!</p>
-					</main>
-				}
-			/>
-		</Routes>
+		<Suspense fallback={<main className="route-loading">Loading...</main>}>
+			<Routes>
+				<Route path="/" element={<App />} />
+				<Route path="/osrs" element={<Osrs />} />
+				<Route path="/github-pages/osrs" element={<Osrs />} />
+				<Route path="/mage-run" element={<Magerun />} />
+				<Route path="/github-pages/mage-run" element={<Magerun />} />
+				<Route path="/toa-flip" element={<ToaFlip />} />
+				<Route path="/github-pages/toa-flip" element={<ToaFlip />} />
+				<Route path="/bingo/create" element={IS_MAINTENANCE ? Maintenance : <Bingo key='create' screenSkip={2} />} />
+				<Route path="/github-pages/bingo/create" element={IS_MAINTENANCE ? Maintenance : <Bingo key='create' screenSkip={2} />} />
+				<Route path="/bingo/join" element={IS_MAINTENANCE ? Maintenance : <Bingo key='join' screenSkip={4} />} />
+				<Route path="/github-pages/bingo/join" element={IS_MAINTENANCE ? Maintenance : <Bingo key='join' screenSkip={4} />} />
+				<Route path="/bingo" element={IS_MAINTENANCE ? Maintenance : <Bingo />} />
+				<Route path="/github-pages/bingo" element={IS_MAINTENANCE ? Maintenance : <Bingo />} />
+				<Route path="/bingo/:boardName" element={IS_MAINTENANCE ? Maintenance : <BoardView />} />
+				<Route path="/github-pages/bingo/:boardName" element={IS_MAINTENANCE ? Maintenance : <BoardView />} />
+				<Route path="/bingo-draft" element={<BingoDraft />} />
+				<Route path="/github-pages/bingo-draft" element={<BingoDraft />} />
+				<Route path="/pets" element={<Pets />} />
+				<Route path="/github-pages/pets" element={<Pets />} />
+				<Route path="/all-pets" element={<AllPets />} />
+				<Route path="/github-pages/all-pets" element={<AllPets />} />
+				<Route path="/lol-beat" element={IS_MAINTENANCE ? Maintenance : <LolBeat />} />
+				<Route path="/github-pages/lol-beat" element={IS_MAINTENANCE ? Maintenance : <LolBeat />} />
+				<Route
+					path="*"
+					element={
+						<main style={{ padding: "1rem" }}>
+							<p>There's nothing here!</p>
+						</main>
+					}
+				/>
+			</Routes>
+		</Suspense>
 	</HashRouter>
 );
 

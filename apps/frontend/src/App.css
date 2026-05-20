@@ -14,6 +14,120 @@
   gap: 2.5rem;
 }
 
+.portfolio-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1.25fr) minmax(280px, 0.75fr);
+  gap: 1.25rem;
+  align-items: stretch;
+  margin-bottom: 2rem;
+}
+
+.portfolio-hero-copy,
+.portfolio-proof {
+  background: var(--osrs-glass-bg-raised);
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
+  border-radius: var(--osrs-radius-lg);
+}
+
+.portfolio-hero-copy {
+  padding: 1.6rem 1.8rem;
+}
+
+.portfolio-kicker {
+  margin: 0 0 0.5rem;
+  color: var(--osrs-text-gold);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 0.85rem;
+  text-shadow: 1px 1px 0 black;
+}
+
+.portfolio-hero h1 {
+  margin: 0;
+  color: var(--osrs-text-gold);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 2.4rem;
+  line-height: 1;
+  text-shadow: 2px 2px 0 black;
+}
+
+.portfolio-hero-copy > p:not(.portfolio-kicker) {
+  max-width: 68ch;
+  margin: 0.85rem 0 0;
+  color: var(--osrs-text-beige);
+  font-size: 1rem;
+  line-height: 1.55;
+}
+
+.portfolio-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.7rem;
+  margin-top: 1.15rem;
+}
+
+.portfolio-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 38px;
+  padding: 0.45rem 0.9rem;
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  border-radius: var(--osrs-radius);
+  background: var(--osrs-button-bg);
+  color: var(--osrs-text-normal);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 0.82rem;
+  text-decoration: none;
+  text-shadow: 1px 1px 0 black;
+}
+
+.portfolio-action:hover {
+  color: var(--osrs-text-gold);
+  filter: brightness(1.15);
+}
+
+.portfolio-action.primary {
+  background: linear-gradient(160deg, rgba(164, 64, 24, 0.9), rgba(58, 38, 24, 0.95));
+  color: var(--osrs-text-gold);
+}
+
+.portfolio-proof {
+  display: grid;
+  align-content: center;
+  gap: 0.9rem;
+  padding: 1.35rem;
+}
+
+.portfolio-proof div {
+  padding-bottom: 0.8rem;
+  border-bottom: 1px solid var(--osrs-border-dark);
+  box-shadow: 0 1px 0 var(--osrs-border-light);
+}
+
+.portfolio-proof div:last-child {
+  padding-bottom: 0;
+  border-bottom: 0;
+  box-shadow: none;
+}
+
+.portfolio-proof span {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: var(--osrs-text-normal);
+  font-size: 0.76rem;
+  opacity: 0.75;
+}
+
+.portfolio-proof strong {
+  color: var(--osrs-text-beige);
+  font-size: 0.95rem;
+  line-height: 1.35;
+}
+
 /* ─── Header ─────────────────────────────────────────────────────────────── */
 .app-header {
   display: flex;
@@ -216,6 +330,10 @@
 
 /* ─── Responsive ─────────────────────────────────────────────────────────── */
 @media (max-width: 900px) {
+  .portfolio-hero {
+    grid-template-columns: 1fr;
+  }
+
   .bingo-layout {
     flex-direction: column;
   }
@@ -231,6 +349,22 @@
 }
 
 @media (max-width: 600px) {
+  .App {
+    padding: 1.2rem 1rem 4rem;
+  }
+
+  .portfolio-hero-copy {
+    padding: 1.25rem;
+  }
+
+  .portfolio-hero h1 {
+    font-size: 1.85rem;
+  }
+
+  .portfolio-actions {
+    flex-direction: column;
+  }
+
   .app-header {
     padding: 1rem;
   }

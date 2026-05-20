@@ -1,14 +1,17 @@
 .start-screen {
   display:         flex;
-  height:          100vh;
-  width:           100vw;
-  justify-content: space-around;
+  min-height:      100vh;
+  width:           100%;
+  justify-content: center;
   align-items:     center;
+  gap:             clamp(16px, 5vw, 64px);
+  padding:         clamp(18px, 5vw, 56px);
+  box-sizing:      border-box;
 }
 
 .start-menu {
-  height:          60vh;
-  width:           40vw;
+  min-height:      clamp(260px, 54vh, 560px);
+  width:           min(420px, 42vw);
   justify-content: center;
   align-items:     center;
   display:         flex;
@@ -21,8 +24,31 @@
   border-radius:   var(--osrs-radius-lg);
   user-select:     none;
   flex-direction:  column;
-  margin:          20px;
+  margin:          0;
+  padding:         clamp(18px, 4vw, 34px);
+  text-align:      center;
   transition:      filter 0.2s ease, box-shadow 0.2s ease;
+}
+
+.start-menu h1 {
+  margin: 0.4rem 0 0.65rem;
+  font-size: clamp(1.45rem, 4vw, 2.4rem);
+  line-height: 1.2;
+}
+
+.start-menu p {
+  max-width: 24ch;
+  margin: 0;
+  color: var(--osrs-text-beige);
+  font-size: 0.95rem;
+  line-height: 1.45;
+  opacity: 0.86;
+}
+
+.start-menu-kicker {
+  color: var(--osrs-text-normal);
+  font-size: 0.78rem;
+  opacity: 0.75;
 }
 
 .start-menu:hover {
@@ -81,4 +107,35 @@
   border-radius:   var(--osrs-radius-lg);
   padding:         20px;
   margin:          15px;
+}
+
+@media (max-width: 720px) {
+  .start-screen {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    padding: 18px;
+  }
+
+  .start-menu {
+    width: 100%;
+    min-height: 220px;
+  }
+
+  .board-controls {
+    flex-wrap: wrap;
+    max-width: min(100%, 520px);
+  }
+
+  .join-wrapper {
+    height: auto;
+    min-height: 100vh;
+    padding: 20px;
+    box-sizing: border-box;
+  }
+
+  .join-wrapper > div,
+  .join-wrapper .input-group {
+    max-width: 100%;
+  }
 }

@@ -7,12 +7,11 @@ import EditableInput from '../components/BootStrap/EditableInput'
 import Button from '../components/BootStrap/Button'
 import InputGroup from "react-bootstrap/InputGroup";
 import FormControl from "react-bootstrap/FormControl";
-import Dropdown from 'react-bootstrap/Dropdown'
-import DropdownButton from 'react-bootstrap/DropdownButton'
 import Alert from 'react-bootstrap/Alert'
 import { fetchGet, fetchPost } from '../utils/utils'
 import { useNavigate } from "react-router-dom";
 import RecentBoards from '../components/RecentBoards'
+import '../components/BoardView.css'
 
 
 class Bingo extends React.Component {
@@ -202,7 +201,7 @@ class Bingo extends React.Component {
 
 	render() {
 		return (
-			<>
+			<div className="osrs-theme">
 				{this.state.alert &&
 					<Alert style={{ 'position': 'absolute', 'width': '100%', 'zIndex': '10000' }} variant={this.state.alertVariant}>
 						{this.state.alert}
@@ -214,14 +213,18 @@ class Bingo extends React.Component {
 				{this.state.screen === 1 &&
 					<div className='start-screen'>
 						<div className='start-menu' onClick={() => this.props.navigate('/bingo/create')}>
+							<span className="start-menu-kicker">Start a new event</span>
 							<h1 className='osrs-header'>
 								Create Bingo Board
 							</h1>
+							<p>Set board size, team count, and admin access.</p>
 						</div>
 						<div className='start-menu' onClick={() => this.props.navigate('/bingo/join')}>
+							<span className="start-menu-kicker">Open an existing event</span>
 							<h1 className='osrs-header'>
 								Join Bingo Board
 							</h1>
+							<p>Enter a board name and shared board secret.</p>
 						</div>
 					</div>
 				}
@@ -303,7 +306,7 @@ class Bingo extends React.Component {
 						}
 					</span>
 				}
-			</>
+			</div>
 		)
 	}
 }

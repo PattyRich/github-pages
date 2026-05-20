@@ -43,7 +43,6 @@ const AllPets = (props) => {
     let currRate = '0';
     let groups = []
     let tmpGroup = []
-    console.log(data)
     for (let i = 0; i < data.length; i++) {
       if (data[i][0].rate.toString()[0] !== currRate) {
         groups.push({rate: currRate, data: tmpGroup})
@@ -60,7 +59,7 @@ const AllPets = (props) => {
   
 
 	return (
-    <div className='main-all-pets route-dark-bg pets-theme'>
+    <div className='main-all-pets route-dark-bg pets-theme osrs-theme'>
       <Button style={{position: 'absolute', right: '10px', top: '10px'}} click={() => navigate('/')} text="Home" variant="primary"/>
       
       <div className='osrs-container' style={{ maxWidth: '1000px', margin: '0 auto', padding: '10px' }}>
