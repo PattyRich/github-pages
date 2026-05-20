@@ -17,6 +17,4 @@ test('renders app tool links', () => {
 
   expect(screen.getByText(/Tools & Simulators/i)).toBeInTheDocument();
   expect(screen.getByText(/Featured: Bingo Tools/i)).toBeInTheDocument();
-  expect(screen.getByRole('heading', { name: /Praynr/i })).toBeInTheDocument();
-  expect(screen.getByText(/React 19 \+ Vite/i)).toBeInTheDocument();
 });

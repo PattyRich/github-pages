@@ -5,7 +5,6 @@ import Image from 'react-bootstrap/Image'
 import FeedbackModal from './components/BootStrap/FeedbackModal'
 
 window.API = import.meta.env.DEV ? 'http://localhost:8000' : 'https://praynr.com'
-console.log('here')
 
 const ROUTES = [
   { path: "/bingo-draft", name: "📝 Bingo Draft", desc: "Draft teams and items for your next big bingo event." },
@@ -31,35 +30,6 @@ export default function App() {
     <div className="App osrs-theme">
       <div className="app-container">
         <main className="app-main">
-          <section className="portfolio-hero">
-            <div className="portfolio-hero-copy">
-              <p className="portfolio-kicker">Full-stack community tools</p>
-              <h1>Praynr</h1>
-              <p>
-                OSRS clan bingo, loot simulators, pet trackers, and a Redis-backed League graph search, built as one deployed React and Flask monorepo.
-              </p>
-              <div className="portfolio-actions">
-                <Link to="/bingo" className="portfolio-action primary">Try Bingo</Link>
-                <a href="https://github.com/PattyRich/github-pages/blob/main/docs/architecture.md" target="_blank" rel="noreferrer" className="portfolio-action">Architecture</a>
-                <a href="https://github.com/PattyRich/github-pages" target="_blank" rel="noreferrer" className="portfolio-action">GitHub</a>
-              </div>
-            </div>
-            <div className="portfolio-proof" aria-label="Project highlights">
-              <div>
-                <span>Frontend</span>
-                <strong>React 19 + Vite</strong>
-              </div>
-              <div>
-                <span>Backend</span>
-                <strong>Flask, MongoDB, Redis, RQ</strong>
-              </div>
-              <div>
-                <span>Production</span>
-                <strong>Docker, Nginx, GitHub Actions</strong>
-              </div>
-            </div>
-          </section>
-
           <section className="other-routes-section">
             <h2 className="section-title">Tools &amp; Simulators</h2>
             <div className="route-grid">
