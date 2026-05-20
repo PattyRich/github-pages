@@ -11,7 +11,7 @@ services/api/.env
 scripts/backup_config.ps1
 
 # Backend
-**/__pycache__
+**/__pycache__/
 services/api/server.ini
 
 # Monitoring & Backups
