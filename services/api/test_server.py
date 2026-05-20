@@ -27,6 +27,14 @@ _mock_col = MagicMock()
 _mock_col.index_information.return_value = {"_id_": {}}   # 1 index → skip creation
 mock_mongo_cls.return_value.__getitem__.return_value.__getitem__.return_value = _mock_col
 
+# Force flask_limiter to use in-memory storage during unit tests
+import flask_limiter
+_original_init = flask_limiter.Limiter.__init__
+def _mock_init(self, *args, **kwargs):
+    kwargs["storage_uri"] = "memory://"
+    _original_init(self, *args, **kwargs)
+flask_limiter.Limiter.__init__ = _mock_init
+
 import server  # noqa: E402  (must come after patch)
 
 # Point server's module-level `mycol` at our controllable mock

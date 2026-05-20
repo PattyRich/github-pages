@@ -10,7 +10,10 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 
+from logger import get_logger
 from lol_server import lol_api
+
+log = get_logger(__name__)
 
 app = Flask(__name__, static_folder='build')
 CORS(app)
@@ -52,14 +55,40 @@ defaultBoardObj = {
   'rowBingo': 0,
   'colBingo': 0
 }
+
 def setup_indexes(collection):
     try:
         collection.create_index([("boardName", 1)])
         collection.create_index([("date", 1)], expireAfterSeconds=100000000)
-    except:
-        pass
+        log.info("MongoDB indexes created/verified successfully")
+    except Exception as e:
+        log.error("Failed to set up MongoDB indexes: %s", e)
 
 setup_indexes(mycol)
+
+
+# ---------------------------------------------------------------------------
+# Request / response logging middleware
+# ---------------------------------------------------------------------------
+
+@app.before_request
+def log_request():
+    log.info("→ %s %s  ip=%s", request.method, request.path, request.remote_addr)
+
+@app.after_request
+def log_response(response):
+    log.info("← %s %s  status=%d", request.method, request.path, response.status_code)
+    return response
+
+@app.errorhandler(429)
+def rate_limit_handler(e):
+    log.warning("Rate limit exceeded  ip=%s  path=%s", request.remote_addr, request.path)
+    return jsonify(error="Rate limit exceeded", message=str(e.description)), 429
+
+
+# ---------------------------------------------------------------------------
+# Helpers
+# ---------------------------------------------------------------------------
 
 def initEmptyTeamData(row, col):
   teamData = []
@@ -77,23 +106,28 @@ def bad_request(message):
 
 def auth(boardName, password, pwtype, mustBeAdmin = False):
   if (pwtype not in allowedAuthTypes):
+    log.warning("Auth failed — invalid auth type '%s'  board=%s", pwtype, boardName)
     return [None, bad_request('Invalid auth type.')]
   if (pwtype == 'admin'):
     pwtype = 'adminPassword'
   if (mustBeAdmin):
     if (pwtype != 'adminPassword'):
-      return [None, bad_request('Must be an admin to make this call.')]  
+      log.warning("Auth failed — non-admin attempted admin action  board=%s", boardName)
+      return [None, bad_request('Must be an admin to make this call.')]
   if (pwtype == 'general'):
     pwtype = 'generalPassword'
   cache = mycol.find_one({'boardName': boardName})
   if (not cache):
+    log.warning("Auth failed — board not found  board=%s", boardName)
     return [None, bad_request('Board with that name does not exist.')]
   ##admins can do general and admin actions, so we accept a match on either
   if (pwtype == 'generalPassword'):
     if (password != cache['adminPassword'] and password != cache['generalPassword']):
+      log.warning("Auth failed — wrong password  board=%s  type=general  ip=%s", boardName, request.remote_addr)
       return [None, bad_request('Your password was incorrect.')]
   else:
     if (password != cache[pwtype]):
+      log.warning("Auth failed — wrong password  board=%s  type=admin  ip=%s", boardName, request.remote_addr)
       return [None, bad_request('Your password was incorrect.')]
   return [cache, None]
 
@@ -103,12 +137,30 @@ def clearBadData(data, acceptableKeys):
       data.pop(key, None)
   return data
 
+def postToDiscord(message, webhook_env_var):
+  webhook_url = os.getenv(webhook_env_var)
+  payload = {
+    "content": message
+  }
+  try:
+    requests.post(webhook_url, json=payload)
+    return True
+  except Exception as e:
+    log.error("Failed to post to Discord  webhook=%s  error=%s", webhook_env_var, e)
+    return False
+
+
+# ---------------------------------------------------------------------------
+# Routes
+# ---------------------------------------------------------------------------
+
 @app.route('/createBoard', methods=['POST'])
 @limiter.limit("10 per hour")
 def createBoard():
   data = json.loads(request.data.decode(), parse_float=float)
   cache = mycol.find_one({'boardName': data['boardName']})
   if (cache):
+    log.warning("createBoard — name already taken  board=%s  ip=%s", data['boardName'], request.remote_addr)
     return bad_request('Board Name Already Taken!!')
 
   data = clearBadData(data, boardCreationKeys)
@@ -137,7 +189,10 @@ def createBoard():
   data['date'] = isodate
   insert = mycol.insert_one(data)
   if (not insert):
+    log.error("createBoard — MongoDB insert failed  board=%s", data['boardName'])
     return bad_request('Failed to create bingo board in Mongo.')
+
+  log.info("createBoard — success  board=%s  teams=%d  ip=%s", data['boardName'], data['teams'], request.remote_addr)
 
   board_url = 'https://pattyrich.github.io/github-pages/#/bingo/{}?password={}'.format(data["boardName"].replace(' ', '%20'), data.get('generalPassword', ''))
   discord_message = 'New bingo board created: **[{}]({})**'.format(data["boardName"], board_url)
@@ -166,6 +221,7 @@ def getBoard(boardName, password, pwtype):
       'data': cache[team]
     })
 
+  log.info("getBoard — success  board=%s  pwtype=%s", boardName, pwtype)
   return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired)
 
 @app.route('/updateBoard/<boardName>/<password>/<pwtype>', defaults={'teampw': ''}, methods=['PUT'])
@@ -188,12 +244,12 @@ def updateBoard(boardName, password, pwtype, teampw):
         reduced_image = reduce_image_size(image_url, 20)
         boardData[data['row']][data['col']]['image']['url'] = reduced_image
       except Exception as e:
-        postToDiscord('Image reduction failed: {} for {}'.format(str(e), boardName), 'DEBUG_WEBHOOK')
+        log.error("updateBoard — image reduction failed  board=%s  error=%s", boardName, e)
         pass
-
 
     newvalue = { "$set": {'boardData': boardData}}
     mycol.update_one({"boardName": boardName}, newvalue)
+    log.info("updateBoard — admin tile update  board=%s  row=%s  col=%s", boardName, data.get('row'), data.get('col'))
 
   if (pwtype == 'general'):
     teamKey = 'team-' + str(data['info']['teamId'])
@@ -201,6 +257,7 @@ def updateBoard(boardName, password, pwtype, teampw):
 
     if cache.get('requirePassword', False): 
       if (teampw != cache[teamKey]['password']):
+        log.warning("updateBoard — wrong team password  board=%s  team=%s  ip=%s", boardName, teamKey, request.remote_addr)
         return bad_request('Your team password was incorrect.')
     
     teamData = cache[teamKey]
@@ -208,6 +265,7 @@ def updateBoard(boardName, password, pwtype, teampw):
     
     newvalue = { "$set": {teamKey: teamData}}
     update = mycol.update_one({"boardName": boardName}, newvalue)
+    log.info("updateBoard — general tile update  board=%s  team=%s  row=%s  col=%s", boardName, teamKey, data.get('row'), data.get('col'))
 
   return jsonify(success=True)
 
@@ -227,12 +285,15 @@ def updateTeams(boardName, password, pwtype):
 
   changed = changeBoardSize(data, rows, cols, cache, boardName)
   if changed:
+    log.info("updateTeams — board resized  board=%s  rows=%d  cols=%d", boardName, rows, cols)
     cache = auth(boardName, password, pwtype)[0]
 
   updateOlderTeams = data[:cache['teams']]
   ## adding a team // init an empty one here and we overwrite it with relevant data at end
   if (size) > cache['teams']:
-    for i in range(size - cache['teams']):
+    added = size - cache['teams']
+    log.info("updateTeams — adding %d team(s)  board=%s", added, boardName)
+    for i in range(added):
       teamKey = 'team-' + str(cache['teams'] + i)
       teamData = initEmptyTeamData(cols, rows)
       teamData = {
@@ -243,7 +304,9 @@ def updateTeams(boardName, password, pwtype):
       update = mycol.update_one({"boardName": boardName}, newvalue)
   ## removing a team
   elif size < cache['teams']:
-    for i in range(cache['teams'] - size):
+    removed = cache['teams'] - size
+    log.info("updateTeams — removing %d team(s)  board=%s", removed, boardName)
+    for i in range(removed):
       teamKey = 'team-' + str(cache['teams'] -1 -i)
       newvalue = { "$unset": {teamKey: ''}}
       update = mycol.update_one({"boardName": boardName}, newvalue)
@@ -276,6 +339,7 @@ def updateTeams(boardName, password, pwtype):
       newvalue = { "$set": {'requirePassword': requirePassword}}
       update = mycol.update_one({"boardName": boardName}, newvalue)
 
+  log.info("updateTeams — complete  board=%s  teams=%d", boardName, size)
   return jsonify(success=True)
 
 def changeBoardSize(teamData, rows, cols, cache, boardName):
@@ -369,10 +433,12 @@ def postFeedbackToDiscord():
 
   result = postToDiscord(message, 'FEEDBACK_WEBHOOK')
   if not result:
+    log.error("postFeedbackToDiscord — failed to post  ip=%s", request.remote_addr)
     return bad_request('Failed to post message to Discord.')
 
+  log.info("postFeedbackToDiscord — success  ip=%s", request.remote_addr)
   return jsonify(success=True)
-  
+
 
 @app.route('/auth/<boardName>/<password>/<pwtype>', methods=['GET'])
 @limiter.limit("1000 per hour")
@@ -380,19 +446,10 @@ def authMethod(boardName, password, pwtype):
   cache, err = auth(boardName, password, pwtype)
   if err:
     return err
+  log.info("auth — success  board=%s  pwtype=%s", boardName, pwtype)
   return jsonify(success=True)
 
-def postToDiscord(message, webhook_env_var):
-  webhook_url = os.getenv(webhook_env_var)
-  payload = {
-    "content": message
-  }
-  try:
-    requests.post(webhook_url, json=payload)
-    return True
-  except Exception as e:
-    postToDiscord('Failed to post message to Discord: {}'.format(str(e)), 'DEBUG_WEBHOOK')
-    return False
 
 if __name__ == "__main__":
-  app.run(host='0.0.0.0',port=8000, debug=True)
+  log.info("Starting Flask server on 0.0.0.0:8000")
+  app.run(host='0.0.0.0', port=8000, debug=True)
