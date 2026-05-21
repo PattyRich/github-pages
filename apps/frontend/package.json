@@ -9,7 +9,6 @@
     "bootstrap": "^5.3.3",
     "gh-pages": "^6.3.0",
     "html-to-image": "1.11.13",
-    "plotly.js-dist-min": "^2.30.0",
     "react": "^19.0.0",
     "react-bootstrap": "^2.10.2",
     "react-dnd": "^16.0.1",

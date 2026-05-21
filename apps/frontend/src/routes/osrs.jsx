@@ -4,7 +4,6 @@ import './osrs.css';
 import { loot } from '../looter/looter'
 import { totalLooter } from '../looter/totalLooter'
 import TotalLoot from '../components/TotalLoot'
-import Plotly from 'plotly.js-dist-min'
 import { assetUrl } from '../utils/assetUrl';
 
 const imageModules = import.meta.glob('../assets/*.png', {
@@ -13,6 +12,26 @@ const imageModules = import.meta.glob('../assets/*.png', {
 	import: 'default',
 });
 const lootDataModules = import.meta.glob('../looter/*.js');
+let plotlyPromise;
+
+function getPlotly() {
+	if (!plotlyPromise) {
+		plotlyPromise = new Promise((resolve, reject) => {
+			if (window.Plotly) {
+				resolve(window.Plotly);
+				return;
+			}
+
+			const script = document.createElement('script');
+			script.src = 'https://cdn.plot.ly/plotly-2.30.0.min.js';
+			script.async = true;
+			script.onload = () => resolve(window.Plotly);
+			script.onerror = () => reject(new Error('Failed to load Plotly.'));
+			document.head.appendChild(script);
+		});
+	}
+	return plotlyPromise;
+}
 
 export const cluesLvl = ['beginner', 'easy', 'medium', 'hard', 'elite', 'master'];
 let failedImages = [];
@@ -138,7 +157,8 @@ class Osrs extends React.Component {
 		}
 	}
 
-	clearPlots() {
+	async clearPlots() {
+		const Plotly = await getPlotly();
 		Plotly.deleteTraces('histogram', 0)
 		Plotly.deleteTraces('scatter', 0)
 		this.setState({ bestRewards: null, worstRewards: null })
@@ -298,6 +318,7 @@ class Osrs extends React.Component {
 		this.setState({ progress: 100, bestRewards: best, worstRewards: worst })
 		if (skipGraph) { return; }
 
+		const Plotly = await getPlotly()
 		let layout = {
 			xaxis: { title: { text: 'KC' } },
 			yaxis: { title: { text: '# of people' } }
@@ -346,27 +367,27 @@ class Osrs extends React.Component {
 
 	render() {
 		const bossModes = [
-			{ value: 'cox',      label: 'Cox' },
-			{ value: 'tob',      label: 'ToB' },
-			{ value: 'toa',      label: 'ToA' },
-			{ value: 'cg',       label: 'Corrupted Gauntlet' },
-			{ value: 'corp',     label: 'Corp' },
-			{ value: 'pnm',      label: "Phosani's Nightmare" },
-			{ value: 'nex',      label: 'Nex' },
-			{ value: 'zulrah',   label: 'Zulrah' },
-			{ value: 'vorkath',  label: 'Vorkath' },
-			{ value: 'arma',     label: 'Arma' },
-			{ value: 'bandos',   label: 'Bandos' },
-			{ value: 'sara',     label: 'Sara' },
-			{ value: 'zammy',    label: 'Zammy' },
-			{ value: 'duke',     label: 'Duke' },
-			{ value: 'araxxor',  label: 'Araxxor' },
-			{ value: 'yama',     label: 'Yama' },
-			{ value: 'leviathan',label: 'Leviathan' },
-			{ value: 'vardorvis',label: 'Vardorvis' },
-			{ value: 'whisperer',label: 'Whisperer' },
-			{ value: 'create',   label: 'Create Your Own Boss' },
-			{ value: 'clues',    label: 'Clues' }
+			{ value: 'cox', label: 'Cox' },
+			{ value: 'tob', label: 'ToB' },
+			{ value: 'toa', label: 'ToA' },
+			{ value: 'cg', label: 'Corrupted Gauntlet' },
+			{ value: 'corp', label: 'Corp' },
+			{ value: 'pnm', label: "Phosani's Nightmare" },
+			{ value: 'nex', label: 'Nex' },
+			{ value: 'zulrah', label: 'Zulrah' },
+			{ value: 'vorkath', label: 'Vorkath' },
+			{ value: 'arma', label: 'Arma' },
+			{ value: 'bandos', label: 'Bandos' },
+			{ value: 'sara', label: 'Sara' },
+			{ value: 'zammy', label: 'Zammy' },
+			{ value: 'duke', label: 'Duke' },
+			{ value: 'araxxor', label: 'Araxxor' },
+			{ value: 'yama', label: 'Yama' },
+			{ value: 'leviathan', label: 'Leviathan' },
+			{ value: 'vardorvis', label: 'Vardorvis' },
+			{ value: 'whisperer', label: 'Whisperer' },
+			{ value: 'create', label: 'Create Your Own Boss' },
+			{ value: 'clues', label: 'Clues' }
 		];
 
 		return (

@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request
+from flask import Flask, jsonify, request, has_request_context
 from flask_cors import CORS
 import json, datetime
 import time, requests
@@ -104,6 +104,9 @@ def bad_request(message):
   response.status_code = 400
   return response
 
+def request_ip():
+  return request.remote_addr if has_request_context() else None
+
 def auth(boardName, password, pwtype, mustBeAdmin = False):
   if (pwtype not in allowedAuthTypes):
     log.warning("Auth failed - invalid auth type '%s'  board=%s", pwtype, boardName)
@@ -123,11 +126,11 @@ def auth(boardName, password, pwtype, mustBeAdmin = False):
   ##admins can do general and admin actions, so we accept a match on either
   if (pwtype == 'generalPassword'):
     if (password != cache['adminPassword'] and password != cache['generalPassword']):
-      log.warning("Auth failed - wrong password  board=%s  type=general  ip=%s", boardName, request.remote_addr)
+      log.warning("Auth failed - wrong password  board=%s  type=general  ip=%s", boardName, request_ip())
       return [None, bad_request('Your password was incorrect.')]
   else:
     if (password != cache[pwtype]):
-      log.warning("Auth failed - wrong password  board=%s  type=admin  ip=%s", boardName, request.remote_addr)
+      log.warning("Auth failed - wrong password  board=%s  type=admin  ip=%s", boardName, request_ip())
       return [None, bad_request('Your password was incorrect.')]
   return [cache, None]
 

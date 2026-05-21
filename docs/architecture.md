@@ -41,7 +41,7 @@ A unified Python service exposing both synchronous HTTP routes and a background 
 
 Handles all Bingo product logic:
 
-- **Board CRUD** — Create, read, and update boards stored as documents in MongoDB. Each board has independent authentication for Admin and General team roles via hashed passwords.
+- **Board CRUD** — Create, read, and update boards stored as documents in MongoDB. Each board uses lightweight Admin and General shared secrets for event access. These are intentionally casual board secrets, not user-account passwords.
 - **Tile Updates** — Board state is a 2D array of tile objects (title, image URL, points). Updates are applied as targeted array patches, not full document replacements.
 - **Image Optimization** — User-uploaded images are passed through `imgSizeReducer` before persisting to MongoDB, keeping document sizes manageable.
 - **Rate Limiting** — `flask-limiter` with a Redis backend enforces per-IP request limits across all endpoints to prevent abuse.
@@ -95,7 +95,7 @@ Document shape:
 {
   boardName:  string,          // unique identifier (indexed)
   boardData:  Tile[][],        // 2D array of { title, image, points }
-  "team-1":   TeamState,       // { name, password (hashed), progress: bool[][] }
+  "team-1":   TeamState,       // { name, optional team secret, progress: bool[][] }
   "team-2":   TeamState,
   expiresAt:  Date             // TTL index, ~3 years from creation
 }
