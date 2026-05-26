@@ -15,8 +15,11 @@ load_dotenv()
 
 from logger import get_logger
 from lol_server import lol_api
+from rq import Worker
 
 log = get_logger(__name__)
+
+_START_TIME = time.time()
 
 app = Flask(__name__, static_folder='build')
 CORS(app)
@@ -169,6 +172,65 @@ def publish_board_update(board_name):
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+@app.route('/health', methods=['GET'])
+@limiter.limit("120 per minute")
+def health():
+  result = {}
+  all_ok = True
+
+  # --- MongoDB ---
+  try:
+    t0 = time.time()
+    myclient.admin.command('ping')
+    mongo_ms = round((time.time() - t0) * 1000)
+    boards_count = mycol.count_documents({})
+    result['mongo'] = {'status': 'ok', 'latency_ms': mongo_ms, 'boards_count': boards_count}
+  except Exception as e:
+    log.error("health - mongo check failed: %s", e)
+    result['mongo'] = {'status': 'error', 'error': str(e)}
+    all_ok = False
+
+  # --- Redis ---
+  try:
+    t0 = time.time()
+    _redis.ping()
+    redis_ms = round((time.time() - t0) * 1000)
+    result['redis'] = {'status': 'ok', 'latency_ms': redis_ms}
+  except Exception as e:
+    log.error("health - redis check failed: %s", e)
+    result['redis'] = {'status': 'error', 'error': str(e)}
+    all_ok = False
+
+  # --- RQ workers + queue ---
+  try:
+    from rq.registry import StartedJobRegistry, FailedJobRegistry
+    from rq import Queue as RQueue
+    rq_conn = _redis
+    q = RQueue(connection=rq_conn)
+    workers = Worker.all(connection=rq_conn)
+    failed_count = FailedJobRegistry(queue=q).count
+    result['rq'] = {
+      'status': 'ok' if workers else 'degraded',
+      'workers': len(workers),
+      'queued': len(q),
+      'started': StartedJobRegistry(queue=q).count,
+      'failed': failed_count,
+    }
+    if not workers:
+      all_ok = False
+  except Exception as e:
+    log.error("health - rq check failed: %s", e)
+    result['rq'] = {'status': 'error', 'error': str(e)}
+    all_ok = False
+
+  result['uptime_seconds'] = round(time.time() - _START_TIME)
+  result['status'] = 'ok' if all_ok else 'degraded'
+
+  status_code = 200 if all_ok else 503
+  log.info("health - status=%s  mongo=%s  redis=%s", result['status'], result['mongo']['status'], result['redis']['status'])
+  return jsonify(result), status_code
+
 
 @app.route('/createBoard', methods=['POST'])
 @limiter.limit("10 per hour")
