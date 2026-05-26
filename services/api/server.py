@@ -1,4 +1,7 @@
-from flask import Flask, jsonify, request, has_request_context
+from gevent import monkey
+monkey.patch_all()
+
+from flask import Flask, jsonify, request, has_request_context, Response, stream_with_context
 from flask_cors import CORS
 import json, datetime
 import time, requests
@@ -32,6 +35,9 @@ limiter = Limiter(
     storage_uri=redis_url,
     default_limits=["10000 per hour"]
 )
+
+import redis as redis_lib
+_redis = redis_lib.from_url(redis_url, decode_responses=True)
 
 mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
 myclient = pymongo.MongoClient(mongo_uri)
@@ -152,6 +158,12 @@ def postToDiscord(message, webhook_env_var):
     log.error("Failed to post to Discord  webhook=%s  error=%s", webhook_env_var, e)
     return False
 
+def publish_board_update(board_name):
+  try:
+    _redis.publish(f"board:{board_name}", "refresh")
+  except Exception as e:
+    log.warning("publish_board_update failed  board=%s  error=%s", board_name, e)
+
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -227,6 +239,42 @@ def getBoard(boardName, password, pwtype):
   log.info("getBoard - success  board=%s  pwtype=%s", boardName, pwtype)
   return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired)
 
+@app.route('/events/<boardName>/<password>/<pwtype>')
+@limiter.limit("200 per hour")
+def board_events(boardName, password, pwtype):
+  cache, err = auth(boardName, password, pwtype)
+  if err:
+    return err
+
+  def event_stream():
+    pubsub = _redis.pubsub()
+    pubsub.subscribe(f"board:{boardName}")
+    log.info("SSE open  board=%s  pwtype=%s  ip=%s", boardName, pwtype, request.remote_addr)
+    try:
+      last_heartbeat = time.time()
+      while True:
+        message = pubsub.get_message(timeout=25)
+        if message and message['type'] == 'message':
+          yield "data: refresh\n\n"
+        now = time.time()
+        if now - last_heartbeat > 25:
+          yield ": heartbeat\n\n"
+          last_heartbeat = now
+    finally:
+      pubsub.unsubscribe()
+      pubsub.close()
+      log.info("SSE closed  board=%s", boardName)
+
+  return Response(
+    stream_with_context(event_stream()),
+    mimetype='text/event-stream',
+    headers={
+      'Cache-Control': 'no-cache',
+      'X-Accel-Buffering': 'no',
+      'Connection': 'keep-alive',
+    }
+  )
+
 @app.route('/updateBoard/<boardName>/<password>/<pwtype>', defaults={'teampw': ''}, methods=['PUT'])
 @app.route('/updateBoard/<boardName>/<password>/<pwtype>/<teampw>', methods=['PUT'])
 def updateBoard(boardName, password, pwtype, teampw):
@@ -270,6 +318,7 @@ def updateBoard(boardName, password, pwtype, teampw):
     update = mycol.update_one({"boardName": boardName}, newvalue)
     log.info("updateBoard - general tile update  board=%s  team=%s  row=%s  col=%s", boardName, teamKey, data.get('row'), data.get('col'))
 
+  publish_board_update(boardName)
   return jsonify(success=True)
 
 @app.route('/updateTeams/<boardName>/<password>/<pwtype>', methods=['PUT'])
@@ -343,6 +392,7 @@ def updateTeams(boardName, password, pwtype):
       update = mycol.update_one({"boardName": boardName}, newvalue)
 
   log.info("updateTeams - complete  board=%s  teams=%d", boardName, size)
+  publish_board_update(boardName)
   return jsonify(success=True)
 
 def changeBoardSize(teamData, rows, cols, cache, boardName):
