@@ -9,6 +9,7 @@ import pymongo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from imgSizeReducer import reduce_image_size
+from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -31,6 +32,15 @@ redis_host = os.environ.get("REDIS_HOST", "localhost")
 redis_port = os.environ.get("REDIS_PORT", "6379")
 redis_db = os.environ.get("REDIS_DB", "0")
 redis_url = f"redis://{redis_host}:{redis_port}/{redis_db}"
+
+
+# Apply ProxyFix to trust the headers Nginx is sending
+app.wsgi_app = ProxyFix(
+    app.wsgi_app, 
+    x_for=1,      # Trusts the X-Forwarded-For header from Nginx
+    x_proto=1,    # Trusts the X-Forwarded-Proto header from Nginx
+    x_host=1      # Trusts the Host header from Nginx,
+)
 
 limiter = Limiter(
     key_func=get_remote_address,
