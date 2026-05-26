@@ -12,6 +12,7 @@ import ToaFlip from './routes/ToaFlip';
 import Pets from './routes/Pets';
 import AllPets from './routes/AllPets';
 import LolBeat from './routes/LolBeat';
+import Status from './routes/Status';
 import { HashRouter, Routes, Route } from "react-router-dom";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -62,6 +63,8 @@ root.render(
 	<HashRouter>
 		<Routes>
 			<Route path="/" element={<App />} />
+			<Route path="/status" element={<Status />} />
+			<Route path="/github-pages/status" element={<Status />} />
 			<Route path="/osrs" element={<Osrs />} />
 			<Route path="/github-pages/osrs" element={<Osrs />} />
 			<Route path="/mage-run" element={<Magerun />} />

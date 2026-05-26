@@ -15,6 +15,7 @@ const ROUTES = [
   { path: "/toa-flip", name: "🧩 ToA Flip Puzzle", desc: "Master the Tombs of Amascut memory puzzle." },
   { path: "/pets", name: "📸 Pet Picture Creator", desc: "Generate an image showcasing your current pets." },
   { path: "/lol-beat", name: "⚔️ LoL Beat #1 (NA)", desc: "Six Degrees to Challenger — League of Legends pathfinding." },
+  { path: "/status", name: "🟢 System Status", desc: "Live health of the API, database, and background workers." },
   { path: "https://github.com/PattyRich/github-pages", name: "🐙 GitHub Repository", desc: "View the source code for this site.", external: true },
 ];
 
