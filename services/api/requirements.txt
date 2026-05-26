@@ -7,3 +7,4 @@ python-dotenv==1.2.2
 pillow==12.2.0
 redis>=7.4.0
 rq>=2.8.0
+gevent>=24.0.0

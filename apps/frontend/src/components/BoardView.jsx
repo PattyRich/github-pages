@@ -32,6 +32,7 @@ class BoardView extends React.Component {
     }
 
     this.alertTimeout = null;
+    this.eventSource = null;
     this.inputState = this.inputState.bind(this)
     this.handleResize = this.handleResize.bind(this)
     this.changeBoardTileInfo = this.changeBoardTileInfo.bind(this)
@@ -45,12 +46,8 @@ class BoardView extends React.Component {
     this.refreshData = this.refreshData.bind(this)
     this.clearAlert = this.clearAlert.bind(this)
     this.clipboard = this.clipboard.bind(this)
+    this.connectSSE = this.connectSSE.bind(this)
     window.addEventListener('resize', this.handleResize)
-    
-    //poll every 1 min for data
-    this.refreshInterval = setInterval(()=> {
-      this.refreshData()
-    }, 60000)
   }
 
 
@@ -74,12 +71,32 @@ class BoardView extends React.Component {
       this.alert('success', 'Board Successfully Created!')
       this.setState({boardJustCreated: null })
     }
+    this.connectSSE()
   }
 
   componentWillUnmount(){
-    if (this.refreshInterval)
-      clearInterval(this.refreshInterval)
+    if (this.eventSource) {
+      this.eventSource.close()
     }
+    window.removeEventListener('resize', this.handleResize)
+  }
+
+  connectSSE() {
+    if (this.eventSource) {
+      this.eventSource.close()
+    }
+    const url = `${window.API}/events/${pwUrlBuilder(this.state)}`
+    this.eventSource = new EventSource(url)
+
+    this.eventSource.onmessage = () => {
+      this.refreshData()
+    }
+
+    this.eventSource.onerror = () => {
+      this.eventSource.close()
+      setTimeout(() => this.connectSSE(), 5000)
+    }
+  }
 
   async refreshData(firstLoad = false, changeTeam=false) {
     if(!this.state.adminPassword && !this.state.generalPassword) {
