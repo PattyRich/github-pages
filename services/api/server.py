@@ -79,7 +79,8 @@ setup_indexes(mycol)
 
 @app.before_request
 def log_request():
-    log.info("--> %s %s  ip=%s", request.method, request.path, request.remote_addr)
+    origin = request.headers.get('Origin', request.host)
+    log.info("--> %s %s  ip=%s  origin=%s", request.method, request.path, request.remote_addr, origin)
 
 @app.after_request
 def log_response(response):
