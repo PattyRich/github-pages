@@ -392,6 +392,7 @@ def updateTeams(boardName, password, pwtype):
       update = mycol.update_one({"boardName": boardName}, newvalue)
 
   log.info("updateTeams - complete  board=%s  teams=%d", boardName, size)
+  publish_board_update(boardName)
   return jsonify(success=True)
 
 def changeBoardSize(teamData, rows, cols, cache, boardName):
