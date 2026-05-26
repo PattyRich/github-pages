@@ -435,6 +435,8 @@ class TestChangeBoardSize(unittest.TestCase):
 class TestHealthEndpoint(unittest.TestCase):
     def setUp(self):
         self.client = _client(server.app)
+        server.mycol.count_documents.return_value = 5
+
 
     @patch("server._redis")
     @patch("server.Worker")
@@ -450,8 +452,8 @@ class TestHealthEndpoint(unittest.TestCase):
         mock_queue.return_value.__len__.return_value = 0
         
         # We also want to mock myclient.admin.command
-        with patch.object(server.myclient.admin, "command") as mock_ping:
-            mock_ping.return_value = {"ok": 1.0}
+        with patch.object(server.myclient, "admin", create=True) as mock_admin:
+            mock_admin.command.return_value = {"ok": 1.0}
             
             resp = self.client.get("/health")
             self.assertEqual(resp.status_code, 200)
@@ -463,12 +465,18 @@ class TestHealthEndpoint(unittest.TestCase):
 
     @patch("server._redis")
     @patch("server.Worker")
-    def test_health_redis_failure(self, mock_worker, mock_redis):
+    @patch("rq.Queue")
+    @patch("rq.registry.FailedJobRegistry")
+    @patch("rq.registry.StartedJobRegistry")
+    def test_health_redis_failure(self, mock_started_registry, mock_failed_registry, mock_queue, mock_worker, mock_redis):
         mock_redis.ping.side_effect = Exception("Redis connection refused")
         mock_worker.all.return_value = [MagicMock()]
+        mock_failed_registry.return_value.count = 0
+        mock_started_registry.return_value.count = 0
+        mock_queue.return_value.__len__.return_value = 0
         
-        with patch.object(server.myclient.admin, "command") as mock_ping:
-            mock_ping.return_value = {"ok": 1.0}
+        with patch.object(server.myclient, "admin", create=True) as mock_admin:
+            mock_admin.command.return_value = {"ok": 1.0}
             
             resp = self.client.get("/health")
             self.assertEqual(resp.status_code, 503)
@@ -476,6 +484,8 @@ class TestHealthEndpoint(unittest.TestCase):
             self.assertEqual(data["status"], "degraded")
             self.assertEqual(data["redis"]["status"], "error")
             self.assertIn("Redis connection refused", data["redis"]["error"])
+
+
 
 
 # ---------------------------------------------------------------------------

@@ -56,10 +56,14 @@ except ImportError:
 
 def run_health_check():
     health_url = os.environ.get("HEALTH_CHECK_URL")
-    webhook_var = os.environ.get("DEBUG_WEBHOOK")
-    if not health_url or not webhook_var:
-        print("Missing required environment variables: HEALTH_CHECK_URL and DEBUG_WEBHOOK")
+    if not health_url:
+        log.error("Missing required environment variable: HEALTH_CHECK_URL")
         sys.exit(1)
+    
+    if not os.environ.get("DEBUG_WEBHOOK"):
+        log.error("Missing required environment variable: DEBUG_WEBHOOK")
+        sys.exit(1)
+    webhook_var = "DEBUG_WEBHOOK"
     
     log.info("Starting health check against: %s", health_url)
     
