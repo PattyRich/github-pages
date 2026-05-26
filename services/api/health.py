@@ -11,10 +11,11 @@ Usage:
 
 import os
 import sys
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 import requests
 from dotenv import load_dotenv
+
 
 # Load .env file from the script's directory (robust execution context)
 script_dir = Path(__file__).resolve().parent
@@ -37,21 +38,19 @@ except ImportError:
     )
     log = logging.getLogger(__name__)
 
-try:
-    from server import postToDiscord
-except ImportError:
-    # Standalone fallback if server.py is not in PYTHONPATH
-    def postToDiscord(message: str, webhook_env_var: str) -> bool:
-        webhook_url = os.getenv(webhook_env_var)
-        if not webhook_url:
-            log.error("Failed to post to Discord: %s is not set in environment.", webhook_env_var)
-            return False
-        try:
-            requests.post(webhook_url, json={"content": message}, timeout=10)
-            return True
-        except Exception as e:
-            log.error("Failed to post to Discord webhook=%s error=%s", webhook_env_var, e)
-            return False
+# Helper to post to Discord (matching server.py implementation)
+def postToDiscord(message: str, webhook_env_var: str) -> bool:
+    webhook_url = os.getenv(webhook_env_var)
+    if not webhook_url:
+        log.error("Failed to post to Discord: %s is not set in environment.", webhook_env_var)
+        return False
+    try:
+        requests.post(webhook_url, json={"content": message}, timeout=10)
+        return True
+    except Exception as e:
+        log.error("Failed to post to Discord webhook=%s error=%s", webhook_env_var, e)
+        return False
+
 
 
 def run_health_check():
@@ -121,8 +120,9 @@ def run_health_check():
         postToDiscord(f"Cron health error: {error_msg}", webhook_var)
         sys.exit(1)
 
-    current_time = datetime.utcnow().strftime("%H:%M:%S")
+    current_time = datetime.now(timezone.utc).strftime("%H:%M:%S")
     print(f"Bingo health check complete: UTC time {current_time}")
+
 
 
 if __name__ == "__main__":

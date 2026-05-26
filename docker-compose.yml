@@ -42,6 +42,15 @@ services:
     command: rq worker --url redis://redis:6379/0 default
     restart: unless-stopped
 
+  dozzle:
+    image: amir20/dozzle:latest
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - "127.0.0.1:8080:8080"
+    restart: unless-stopped
+
 volumes:
   mongo_data:
   redis_data:
+
