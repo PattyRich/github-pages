@@ -260,7 +260,7 @@ class TileModal extends React.Component {
                       > Remove Tile Background Image </Button> :
                       <img
                         src={this.state.image.url}
-                        style={{ 'maxWidth': '60px', 'opacity': this.state.image.opacity + '%' }}
+                        style={{ 'maxWidth': '80px', 'maxHeight': '80px', 'opacity': this.state.image.opacity + '%', 'objectFit': 'contain' }}
                       />
                     </>
                     :
@@ -283,7 +283,7 @@ class TileModal extends React.Component {
                   }
                 </>
               }
-              <InputGroup className="mb-3" style={{ 'width': '240px' }}>
+              <InputGroup className="mb-3" style={{ 'width': '100%', 'maxWidth': '320px' }}>
                 <InputGroup.Text id="basic-addon1">Points</InputGroup.Text>
                 <FormControl placeholder={!disabled ? '0' : null} value={this.state.currPoints} disabled={!disabled || this.state.checked} onChange={(e) => this.inputState(e, 'currPoints')} />
                 <InputGroup.Text>/</InputGroup.Text>

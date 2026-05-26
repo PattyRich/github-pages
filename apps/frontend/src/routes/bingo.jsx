@@ -256,7 +256,7 @@ class Bingo extends React.Component {
 							<span style={{ margin: '0 10px' }}>Column: {this.state.columns}</span>
 							<Button click={() => this.changeNum(1, 'columns')} text="+"></Button>
 						</div>
-						<div className='margin-15 osrs-container' style={{ padding: '10px', display: 'flex', flexDirection: 'column', pointerEvents: 'none', userSelect: 'none' }}>
+						<div className='margin-15 osrs-container' style={{ padding: '10px', display: 'flex', flexDirection: 'column', pointerEvents: 'none', userSelect: 'none', overflowX: 'auto', maxWidth: '100%' }}>
 							{[...Array(this.state.columns)].map((x, i) => (
 								<span key={i} className='flex' style={{ justifyContent: 'center' }}>
 									{[...Array(this.state.rows)].map((x, j) => (
@@ -274,7 +274,7 @@ class Bingo extends React.Component {
 					<span className='flex join-wrapper'>
 						<h1 className='margin-15 osrs-header'> Join a Bingo Board </h1>
 						<EditableInput id="boardName" title='Board Name' stateKey='boardName' change={this.inputState} value={this.state.boardName} />
-						<div style={{ display: 'flex', width: '500px', justifyContent: 'space-between', marginBottom: '15px' }}>
+						<div style={{ display: 'flex', width: '100%', maxWidth: '500px', justifyContent: 'space-between', marginBottom: '15px', gap: '8px' }}>
 							<Button
 								style={{ border: this.state.joinPwTitle === 'general' ? '2px solid var(--osrs-text-gold)' : '', color: this.state.joinPwTitle === 'general' ? 'var(--osrs-text-gold)' : 'var(--osrs-text-normal)' }}
 								click={() => this.setState({ joinPwTitle: 'general' })} text="Join as General" />
@@ -282,7 +282,7 @@ class Bingo extends React.Component {
 								style={{ border: this.state.joinPwTitle === 'admin' ? '2px solid var(--osrs-text-gold)' : '', color: this.state.joinPwTitle === 'admin' ? 'var(--osrs-text-gold)' : 'var(--osrs-text-normal)' }}
 								click={() => this.setState({ joinPwTitle: 'admin' })} text="Join as Admin" />
 						</div>
-						<InputGroup style={{ width: '500px' }} className="mb-3">
+						<InputGroup style={{ width: '100%', maxWidth: '500px' }} className="mb-3">
 							<InputGroup.Text style={{ width: '150px' }}>{this.state.joinPwTitle === 'general' ? 'General' : 'Admin'} Pw</InputGroup.Text>
 							<FormControl
 								id="bingo-pw"

@@ -22,7 +22,7 @@ class EditableInput extends React.Component {
 
   render() {
   	return (
-      <InputGroup className="mb-3" style={this.props.width ? {width : this.props.width} : {width: '500px'}}>
+      <InputGroup className="mb-3" style={this.props.width ? {width : this.props.width} : {width: '100%', maxWidth: '500px'}}>
         <InputGroup.Text id="basic-addon1">{this.props.title}</InputGroup.Text>
         <FormControl
           placeholder={this.props.placeholder}
