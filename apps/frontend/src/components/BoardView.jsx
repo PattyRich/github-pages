@@ -254,7 +254,6 @@ class BoardView extends React.Component {
       return
     }
     this.setState({isLoading: false})
-    this.refreshData()
     this.alert("success", 'Teams Successfully Updated!') 
   }
 
@@ -308,7 +307,6 @@ class BoardView extends React.Component {
     if (needToAddTeamPassword) {
       setTeamPassword(this.state.boardName, this.state.teamData[this.state.activeTeamIndex].data.name, pw)
     }
-    this.refreshData();
     this.setState({isLoading: false})
     this.alert("success", 'Board Successfully Updated!')
   }
