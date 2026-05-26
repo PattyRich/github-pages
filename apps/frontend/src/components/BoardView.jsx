@@ -88,13 +88,17 @@ class BoardView extends React.Component {
     const url = `${window.API}/events/${pwUrlBuilder(this.state)}`
     this.eventSource = new EventSource(url)
 
+    this.eventSource.onopen = () => {
+      this.refreshData()
+    }
+
     this.eventSource.onmessage = () => {
       this.refreshData()
     }
 
     this.eventSource.onerror = () => {
       this.eventSource.close()
-      setTimeout(() => this.connectSSE(), 5000)
+      setTimeout(() => this.connectSSE(), 20000)
     }
   }
 
