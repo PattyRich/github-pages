@@ -313,7 +313,7 @@ def getBoard(boardName, password, pwtype):
   return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired)
 
 @app.route('/events/<boardName>/<password>/<pwtype>')
-@limiter.limit("200 per hour")
+@limiter.limit("2000 per hour")
 def board_events(boardName, password, pwtype):
   cache, err = auth(boardName, password, pwtype)
   if err:
