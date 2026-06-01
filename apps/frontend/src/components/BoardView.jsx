@@ -5,7 +5,7 @@ import BoardTile from './BoardTile'
 import EditableInput from './BootStrap/EditableInput'
 import Button from './BootStrap/Button'
 import Alert from 'react-bootstrap/Alert'
-import { fetchPost, fetchGet, fetchPut, pwUrlBuilder }  from '../utils/utils.js'
+import { fetchPost, fetchGet, fetchPut, pwUrlBuilder } from '../utils/utils.js'
 import { useLocation, useNavigate } from "react-router-dom";
 import Teams from './Teams'
 import Toast from './BootStrap/Toast'
@@ -17,15 +17,15 @@ class BoardView extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      privilage : 'general',
-      isLoading : false,
-      alert : '',
+      privilage: 'general',
+      isLoading: false,
+      alert: '',
       teams: 5,
       showEditTeams: false,
       generalPasswordCopy: ''
     }
 
-    const {state} = this.props.location
+    const { state } = this.props.location
     this.state = {
       ...this.state,
       ...state
@@ -58,23 +58,23 @@ class BoardView extends React.Component {
     const pw = params.get('password');
     if (pw) {
       const path = window.location.href.replace(/^https?:\/\//, '').split('/');
-      await this.promisedSetState({privilage: 'general', generalPassword: pw, boardName: decodeURI(path[path.length-1].split('?')[0])})
+      await this.promisedSetState({ privilage: 'general', generalPassword: pw, boardName: decodeURI(path[path.length - 1].split('?')[0]) })
     }
 
     const tileHint = localStorage.getItem('tile-hint');
     if (!tileHint) {
       localStorage.setItem('tile-hint', true);
-      this.setState({showToast: true})
+      this.setState({ showToast: true })
     }
-    this.refreshData(!this.state.cameFromCreate, true )
+    this.refreshData(!this.state.cameFromCreate, true)
     if (this.state.boardJustCreated) {
       this.alert('success', 'Board Successfully Created!')
-      this.setState({boardJustCreated: null })
+      this.setState({ boardJustCreated: null })
     }
     this.connectSSE()
   }
 
-  componentWillUnmount(){
+  componentWillUnmount() {
     if (this.eventSource) {
       this.eventSource.close()
     }
@@ -84,6 +84,10 @@ class BoardView extends React.Component {
   connectSSE() {
     if (this.eventSource) {
       this.eventSource.close()
+    }
+    if (!(this.state.generalPassword || this.state.adminPassword) || !this.state.boardName) {
+      setTimeout(() => this.connectSSE(), 2000)
+      return
     }
     const url = `${window.API}/events/${pwUrlBuilder(this.state)}`
     this.eventSource = new EventSource(url)
@@ -102,8 +106,8 @@ class BoardView extends React.Component {
     }
   }
 
-  async refreshData(firstLoad = false, changeTeam=false) {
-    if(!this.state.adminPassword && !this.state.generalPassword) {
+  async refreshData(firstLoad = false, changeTeam = false) {
+    if (!this.state.adminPassword && !this.state.generalPassword) {
       this.alert('danger', 'No Password is set, return to main page and start again.', true)
       return;
     }
@@ -114,19 +118,19 @@ class BoardView extends React.Component {
       return
     }
     let activeTeamValue = 0;
-    if (changeTeam){
+    if (changeTeam) {
       let activeTeam = localStorage.getItem('activeTeam')
       if (activeTeam) {
         activeTeam = Number(activeTeam)
-        if (activeTeam <= data.teamData.length -1 && activeTeam >= 0) {
+        if (activeTeam <= data.teamData.length - 1 && activeTeam >= 0) {
           activeTeamValue = activeTeam
         }
       }
     }
-    
+
     this.setState({
-      boardData: data.boardData, 
-      teams: data.teamData.length, 
+      boardData: data.boardData,
+      teams: data.teamData.length,
       teamData: data.teamData,
       activeTeamIndex: this.state.activeTeamIndex || activeTeamValue,
       generalPasswordCopy: data.generalPassword,
@@ -148,38 +152,38 @@ class BoardView extends React.Component {
     if (this.alertTimeout) {
       clearTimeout(this.alertTimeout)
     }
-    this.setState({alert: ''})
+    this.setState({ alert: '' })
   }
 
-  alert(variant, message, skipTimeout=false) {
+  alert(variant, message, skipTimeout = false) {
     if (variant === 'loading') {
-      this.setState({alertVariant: 'warning', isLoading: true, alert: 'Loading...'})
+      this.setState({ alertVariant: 'warning', isLoading: true, alert: 'Loading...' })
     } else {
-      this.setState({alertVariant: variant, alert: message}) 
+      this.setState({ alertVariant: variant, alert: message })
       if (this.alertTimeout) {
         clearTimeout(this.alertTimeout)
       }
       if (skipTimeout) { return; }
-      this.alertTimeout = setTimeout(()=> {
-        this.setState({alert: ''})
-      },5000)
+      this.alertTimeout = setTimeout(() => {
+        this.setState({ alert: '' })
+      }, 5000)
     }
   }
 
   calculateTeamPoints() {
     if (!this.state.teamData)
-      return 
+      return
     let x = JSON.parse(JSON.stringify(this.state.teamData))
-    x.forEach((team)=> {
+    x.forEach((team) => {
       let pointTotal = 0
-      team.data.teamData.forEach((row,i)=> {
+      team.data.teamData.forEach((row, i) => {
         let addBonusRow = true
-        row.forEach((tile,j)=> {
+        row.forEach((tile, j) => {
           if (addBonusRow && !tile.checked) {
             addBonusRow = false
           }
           pointTotal += tile.checked ? Number(tile.currPoints) : 0
-          if (j === this.rows-1)
+          if (j === this.rows - 1)
             if (addBonusRow) {
               pointTotal += Number(this.state.boardData[i][j].rowBingo)
             }
@@ -187,15 +191,15 @@ class BoardView extends React.Component {
       })
       team.pointTotal = pointTotal
     })
-    x.forEach((team)=> {
+    x.forEach((team) => {
       let pointTotal = 0
-      transpose(team.data.teamData).forEach((row,i)=> {
+      transpose(team.data.teamData).forEach((row, i) => {
         let addBonusRow = true
-        row.forEach((tile,j)=> {
+        row.forEach((tile, j) => {
           if (addBonusRow && !tile.checked) {
             addBonusRow = false
           }
-          if (j === this.columns-1)
+          if (j === this.columns - 1)
             if (addBonusRow) {
               pointTotal += Number(this.state.boardData[j][i].colBingo)
             }
@@ -203,81 +207,81 @@ class BoardView extends React.Component {
       })
       team.pointTotal += pointTotal
     })
-    this.setState({teamData: x})
+    this.setState({ teamData: x })
   }
 
   toggleTeamEdit() {
-    this.setState({showEditTeams: !this.state.showEditTeams})
+    this.setState({ showEditTeams: !this.state.showEditTeams })
   }
 
-  handleResize() {  
-    this.forceUpdate()  
+  handleResize() {
+    this.forceUpdate()
   }
 
   inputState(e, target) {
-		let stateChange = {}
-    if (target === 'teams' && e.target.value !=='') {
+    let stateChange = {}
+    if (target === 'teams' && e.target.value !== '') {
       this.alert('warning', 'If you lower team size you could delete a team with data. Be CAREFUL')
       if (isNaN(e.target.value)) {
         e.target.value = 1
       }
       if (e.target.value <= 0) {
         e.target.value = 1
-      } 
+      }
       if (e.target.value > 10) {
         e.target.value = 10
       }
       e.target.value = Number(e.target.value)
     }
-		stateChange[target] = e.target.value
-		this.setState(stateChange)
-	}
+    stateChange[target] = e.target.value
+    this.setState(stateChange)
+  }
 
   async changeBoardTileInfo(row, col, data) {
     data.teamId = this.state.teamData[this.state.activeTeamIndex].team
-    await this.updateBoard(row,col, data)  
+    await this.updateBoard(row, col, data)
   }
 
-  async updateTeams(info, passwordRequired, rows, columns) { 
+  async updateTeams(info, passwordRequired, rows, columns) {
     const dataToSend = {
       teamData: info,
       passwordRequired,
-      rows, 
+      rows,
       columns
     }
     this.alert('loading')
     let url = pwUrlBuilder(this.state)
-    let [data, err] = await fetchPut(`updateTeams/${url}`, {dataToSend})
+    let [data, err] = await fetchPut(`updateTeams/${url}`, { dataToSend })
     if (err) {
       this.alert('danger', err.message)
-      this.setState({isLoading: false})
+      this.setState({ isLoading: false })
       return
     }
-    this.setState({isLoading: false})
-    this.alert("success", 'Teams Successfully Updated!') 
+    this.setState({ isLoading: false })
+    this.alert("success", 'Teams Successfully Updated!')
   }
 
   changeTeam(teamId) {
-    this.setState({activeTeamIndex: teamId})
+    this.setState({ activeTeamIndex: teamId })
   }
 
   async switchPrivilage() {
     if (this.state.privilage === 'admin') {
-      this.setState({privilage: 'general', canSwitchPriv: true})
+      this.setState({ privilage: 'general', canSwitchPriv: true })
     } else {
-      await this.promisedSetState({privilage: 'admin'})
+      await this.promisedSetState({ privilage: 'admin' })
       await this.refreshData();
     }
   }
 
   clipboard() {
-    navigator.clipboard.writeText(`${window.location.href}?password=${encodeURIComponent(this.state.generalPasswordCopy)}`).then(function() {
-    }, function(err) {
+    navigator.clipboard.writeText(`${window.location.href}?password=${encodeURIComponent(this.state.generalPasswordCopy)}`).then(function () {
+    }, function (err) {
     });
-    this.setState({showToast2: true})
+    this.setState({ showToast2: true })
   }
 
-  async updateBoard(row,col,info, forcePrompt=false) {
+  async updateBoard(row, col, info, forcePrompt = false) {
     this.alert('loading')
     let needToAddTeamPassword = false
     let pw;
@@ -294,20 +298,20 @@ class BoardView extends React.Component {
       }
     }
     let url = pwUrlBuilder(this.state, pw)
-    let [data, err] = await fetchPut(`updateBoard/${url}`, {row, col, info})
+    let [data, err] = await fetchPut(`updateBoard/${url}`, { row, col, info })
     if (err) {
       this.alert('danger', err.message)
-      this.setState({isLoading: false})
+      this.setState({ isLoading: false })
 
       if (err.message === 'Your team password was incorrect.') {
-        this.updateBoard(row,col,info,true)
+        this.updateBoard(row, col, info, true)
       }
       return
     }
     if (needToAddTeamPassword) {
       setTeamPassword(this.state.boardName, this.state.teamData[this.state.activeTeamIndex].data.name, pw)
     }
-    this.setState({isLoading: false})
+    this.setState({ isLoading: false })
     this.alert("success", 'Board Successfully Updated!')
   }
 
@@ -315,8 +319,8 @@ class BoardView extends React.Component {
     const showFeedback = localStorage.getItem('showFeedback') === 'true'
     let height = document.documentElement.clientHeight
     let width = document.documentElement.clientWidth
-    let maxWidth = (width * .75 / this.rows) 
-    let maxHeight = (height * .75 / this.columns) 
+    let maxWidth = (width * .75 / this.rows)
+    let maxHeight = (height * .75 / this.columns)
     let dem = maxHeight < maxWidth ? maxHeight : maxWidth
     //let dem = width < height ? (width / this.rows)-40 : (height / this.columns)-40;
     return (
@@ -347,48 +351,48 @@ class BoardView extends React.Component {
             </div>
           </div>
         </div>
-        { this.state.alert && 
-          <Alert onClick={this.clearAlert} style={{'position' : 'absolute', 'width': '100%'}} className='' variant={this.state.alertVariant}>
+        {this.state.alert &&
+          <Alert onClick={this.clearAlert} style={{ 'position': 'absolute', 'width': '100%' }} className='' variant={this.state.alertVariant}>
             {this.state.alert}
-          </Alert>   
-        }     
-        {(this.state.teamData && !(this.state.privilage === 'admin')) && 
-          <div style={{'alignItems': 'center'}} className='flex-center osrs-header'>
-            <h3 className='flex-center' style={{marginBottom: 0}}> {this.state.teamData[this.state.activeTeamIndex].data.name}</h3>
-            <span style={{'marginLeft': '10px', fontSize: '1.2rem'}}> (Points: {this.state.teamData[this.state.activeTeamIndex].pointTotal}) </span>
+          </Alert>
+        }
+        {(this.state.teamData && !(this.state.privilage === 'admin')) &&
+          <div style={{ 'alignItems': 'center' }} className='flex-center osrs-header'>
+            <h3 className='flex-center' style={{ marginBottom: 0 }}> {this.state.teamData[this.state.activeTeamIndex].data.name}</h3>
+            <span style={{ 'marginLeft': '10px', fontSize: '1.2rem' }}> (Points: {this.state.teamData[this.state.activeTeamIndex].pointTotal}) </span>
           </div>
         }
         {this.state.boardData &&
           <div className='center-board'>
-            {this.state.boardData.map((row,i) => (
+            {this.state.boardData.map((row, i) => (
               <span key={i} className='flex'>
-                  {row.map((tile,j) => (
-                    <BoardTile 
-                      cord={[i,j]}
-                      change={this.changeBoardTileInfo} 
-                      info={this.state.boardData[i][j]} 
-                      teamInfo={(this.state.teamData && this.state.privilage !== 'admin') ? this.state.teamData[this.state.activeTeamIndex].data.teamData[i][j] : null}
-                      key={j} 
-                      dem={dem} 
-                      br={this.state.boardData[0].length === j+1} 
-                      bb={this.state.boardData.length === i+1} 
-                      privilage={this.state.privilage} 
-                    />
-                  )
+                {row.map((tile, j) => (
+                  <BoardTile
+                    cord={[i, j]}
+                    change={this.changeBoardTileInfo}
+                    info={this.state.boardData[i][j]}
+                    teamInfo={(this.state.teamData && this.state.privilage !== 'admin') ? this.state.teamData[this.state.activeTeamIndex].data.teamData[i][j] : null}
+                    key={j}
+                    dem={dem}
+                    br={this.state.boardData[0].length === j + 1}
+                    bb={this.state.boardData.length === i + 1}
+                    privilage={this.state.privilage}
+                  />
+                )
                 )}
               </span>
-              )
+            )
             )}
           </div>
         }
-        { (this.state.teamData && this.state.privilage === 'general') && 
-          <Teams 
-            changeTeam={this.changeTeam} 
+        {(this.state.teamData && this.state.privilage === 'general') &&
+          <Teams
+            changeTeam={this.changeTeam}
             teams={this.state.teamData}
             activeTeam={this.state.teamData[this.state.activeTeamIndex]}
           />
         }
-        { this.state.showEditTeams &&
+        {this.state.showEditTeams &&
           <EditTeams
             show={true}
             handleClose={this.toggleTeamEdit}
@@ -399,34 +403,34 @@ class BoardView extends React.Component {
             rows={this.rows}
           />
         }
-        {	this.state.showToast && 
-					<Toast 
-          onClose={()=> this.setState({showToast: false})} 
-          title="How to Use" position="middle-center" 
-          variant='info' 
-          message={'Click on the bingo tiles to edit them!'} />
-				}
-        {	this.state.showToast2 && 
+        {this.state.showToast &&
           <Toast
-            onClose={() => this.setState({showToast2: false})}
+            onClose={() => this.setState({ showToast: false })}
+            title="How to Use" position="middle-center"
+            variant='info'
+            message={'Click on the bingo tiles to edit them!'} />
+        }
+        {this.state.showToast2 &&
+          <Toast
+            onClose={() => this.setState({ showToast2: false })}
             message={'Copied to Clipboard. If you want to sign in as the admin again you\'ll need to auth from the main page.'}
             variant={'success'}
             position={'top-end'}
             title={'Success'}
             timeout={5000}
           />
-				}
-        {	this.state.showSettings && 
-          <SettingsModal handleClose={()=> this.setState({showSettings: false})} />
-				}
-        { !showFeedback && width > 1000 ? 
-          <div className='feedback' onClick={()=>this.setState({showFeedback: true})}>
+        }
+        {this.state.showSettings &&
+          <SettingsModal handleClose={() => this.setState({ showSettings: false })} />
+        }
+        {!showFeedback && width > 1000 ?
+          <div className='feedback' onClick={() => this.setState({ showFeedback: true })}>
             feedback
           </div> : ''
         }
-        {	this.state.showFeedback && 
-          <FeedbackModal handleClose={()=> this.setState({showFeedback: false})} />
-				}
+        {this.state.showFeedback &&
+          <FeedbackModal handleClose={() => this.setState({ showFeedback: false })} />
+        }
       </div>
     )
   }
@@ -440,21 +444,21 @@ export default withHooks(BoardView)
 
 function transpose(matrix) {
   return matrix[0].map((col, i) => matrix.map(row => row[i]));
-} 
+}
 
 
-function getTeamPassword(boardName, teamName){
+function getTeamPassword(boardName, teamName) {
   let pws = localStorage.getItem(`${boardName}-teamPasswords`)
   if (pws) {
     pws = JSON.parse(pws)
     if (teamName in pws) {
       return pws[teamName]
-    } 
+    }
   }
   return null
 }
 
-function setTeamPassword(boardName, teamName, password){
+function setTeamPassword(boardName, teamName, password) {
   let pws = localStorage.getItem(`${boardName}-teamPasswords`)
   if (pws) {
     pws = JSON.parse(pws)

@@ -141,7 +141,7 @@ def auth(boardName, password, pwtype, mustBeAdmin = False):
     pwtype = 'generalPassword'
   cache = mycol.find_one({'boardName': boardName})
   if (not cache):
-    log.warning("Auth failed - board not found  board=%s", boardName)
+    log.warning("Auth failed - board not found  board=%s  ip=%s", boardName, request_ip())
     return [None, bad_request('Board with that name does not exist.')]
   ##admins can do general and admin actions, so we accept a match on either
   if (pwtype == 'generalPassword'):
