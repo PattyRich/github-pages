@@ -4,7 +4,7 @@ set -euo pipefail
 CONTAINER="github-pages-api-1"
 UPLOAD_BASE="/app/static/uploads"
 DAYS=730
-LOGFILE="$(dirname "${BASH_SOURCE[0]}")/delete_old_images.log"
+LOGFILE="/var/www/server/delete_old_images.log"
 
 TOTAL=0
 for SUBDIR in proofs board-images; do
@@ -17,6 +17,4 @@ for SUBDIR in proofs board-images; do
     TOTAL=$((TOTAL + COUNT))
 done
 
-if [ "$TOTAL" -gt 0 ]; then
-    echo "$(date '+%F %T') deleted $TOTAL file(s) older than ${DAYS} days" >> "$LOGFILE"
-fi
+echo "$(date '+%F %T') deleted ${TOTAL} file(s) older than ${DAYS} days" >> "$LOGFILE"
