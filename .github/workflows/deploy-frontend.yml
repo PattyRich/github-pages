@@ -33,21 +33,28 @@ jobs:
           npm install
           CI=false npm run build
           
-      # Clean the old files first
-      - name: Clean old frontend
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.LIGHTSAIL_HOST }}
-          username: ${{ secrets.LIGHTSAIL_USER }}
-          key: ${{ secrets.LIGHTSAIL_KEY }}
-          script: rm -rf /var/www/frontend/*
-
-      - name: Upload to Server
+      - name: Upload to Temp Directory
         uses: appleboy/scp-action@v0.1.7
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
           source: "apps/frontend/dist/*"
-          target: "/var/www/frontend"
+          target: "/tmp/frontend-release-${{ github.sha }}"
           strip_components: 3
+
+      - name: Deploy Frontend Safely
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_KEY }}
+          script: |
+            # Ensure the target directory exists
+            mkdir -p /var/www/frontend
+            
+            # Sync new files to production seamlessly, deleting removed files
+            rsync -a --delete /tmp/frontend-release-${{ github.sha }}/ /var/www/frontend/
+            
+            # Clean up temp directory
+            rm -rf /tmp/frontend-release-${{ github.sha }}

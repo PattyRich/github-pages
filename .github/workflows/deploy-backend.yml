@@ -25,13 +25,30 @@ jobs:
           key: ${{ secrets.LIGHTSAIL_KEY }}
           script: |
             cd /var/www/server/github-pages
+            
+            # Backup current state in case of failure
+            CURRENT_COMMIT=$(git rev-parse HEAD)
+            
             git fetch origin main
             git reset --hard origin/main
             
-            # 1. Update Nginx Config
+            # 1. Update Nginx Config safely
+            sudo cp /etc/nginx/cloudflare.conf /etc/nginx/cloudflare.conf.backup || true
+            sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.backup || true
+            
             sudo cp nginx/cloudflare.conf /etc/nginx/cloudflare.conf
             sudo cp nginx/praynr.conf /etc/nginx/sites-available/default
-            sudo nginx -t && sudo systemctl reload nginx
+            
+            if sudo nginx -t; then
+              sudo systemctl reload nginx
+            else
+              echo "Nginx configuration test failed. Rolling back..."
+              sudo cp /etc/nginx/cloudflare.conf.backup /etc/nginx/cloudflare.conf
+              sudo cp /etc/nginx/sites-available/default.backup /etc/nginx/sites-available/default
+              sudo nginx -t
+              git reset --hard $CURRENT_COMMIT
+              exit 1
+            fi
             
             # 2. Update Docker Containers
             docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
