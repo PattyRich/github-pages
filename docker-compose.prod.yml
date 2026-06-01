@@ -20,6 +20,8 @@ services:
       - "127.0.0.1:8000:8000"
     env_file:
       - ./services/api/.env
+    volumes:
+      - proof_uploads:/app/static/uploads
     depends_on:
       - mongo
       - redis
@@ -52,3 +54,4 @@ volumes:
   mongo_data:
   redis_data:
   dozzle_data:
+  proof_uploads:

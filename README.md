@@ -10,7 +10,7 @@ A full-stack, production-deployed web application for the Old School RuneScape c
 
 ## What It Does
 
-**Bingo Boards** — Create, share, and collaboratively track customizable OSRS bingo boards. Teams authenticate independently, mark tiles with images and points, and see each other's progress in real time. Boards are stored in MongoDB with a 3-year TTL and auto-expire to keep the database lean.
+**Bingo Boards** — Create, share, and collaboratively track customizable OSRS bingo boards. Teams authenticate independently, mark tiles with proof text, proof images, and points, and see each other's progress in real time. Board state is stored in MongoDB with a 3-year TTL, while uploaded proof images are compressed to WebP files and saved outside MongoDB so board payloads stay lean.
 
 **LoL-Beat** — Given any two League of Legends summoners, find the shortest "beat chain" connecting them: a path of players who defeated each other in ranked games, all the way up to the #1 Challenger. Built on a Redis-backed player graph crawled from the Riot API, with BFS pathfinding and background job processing via RQ. See [docs/lol-beat.md](docs/lol-beat.md) for a full breakdown of the graph schema, crawl strategy, and API.
 
@@ -24,6 +24,7 @@ A full-stack, production-deployed web application for the Old School RuneScape c
 | Backend | Python 3.13, Flask, uWSGI |
 | Background Jobs | Redis Queue (RQ) |
 | Database | MongoDB 7.0 |
+| File Storage | Docker volume-backed local filesystem for Bingo proof images |
 | Cache / Graph Store | Redis 7 |
 | Reverse Proxy | Nginx + Cloudflare |
 | Infrastructure | AWS Lightsail, Docker Compose |
@@ -90,7 +91,11 @@ docker compose -f docker-compose.prod.yml down
 ```
 
 > [!CAUTION]
-> **Never** use `docker compose down -v` in production — it destroys MongoDB and Redis volumes permanently.
+> **Never** use `docker compose down -v` in production — it destroys MongoDB, Redis, Dozzle, and proof image upload volumes permanently.
+
+Production stores uploaded Bingo proof images in the Docker named volume `proof_uploads`, mounted into the API container at `/app/static/uploads`. The API writes proof files under `/app/static/uploads/proofs` and serves them from `/static/uploads/proofs/<filename>`. MongoDB stores only the proof image path, not the image bytes.
+
+Local development uses the bind mount `./services/api:/app`, so proof uploads are written to `services/api/static/uploads/proofs` on your machine. That directory is ignored by Git.
 
 ---
 
@@ -121,6 +126,9 @@ docker cp your_backup.gz github-pages-mongo-1:/tmp/backup.gz
 # Restore
 docker exec github-pages-mongo-1 mongorestore --archive=/tmp/backup.gz --gzip
 ```
+
+### Proof Image Uploads
+Proof images are not part of MongoDB backups. In production they live in the Docker named volume `proof_uploads`; include that volume in any full-server backup or migration plan.
 
 ### Maintenance Mode
 Toggle the `IS_MAINTENANCE` boolean in `apps/frontend/src/index.jsx` to enable maintenance mode for Bingo and LoL-Beat routes.

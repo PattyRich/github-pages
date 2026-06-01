@@ -42,8 +42,8 @@ A unified Python service exposing both synchronous HTTP routes and a background 
 Handles all Bingo product logic:
 
 - **Board CRUD** — Create, read, and update boards stored as documents in MongoDB. Each board uses lightweight Admin and General shared secrets for event access. These are intentionally casual board secrets, not user-account passwords.
-- **Tile Updates** — Board state is a 2D array of tile objects (title, image URL, points). Updates are applied as targeted array patches, not full document replacements.
-- **Image Optimization** — User-uploaded images are passed through `imgSizeReducer` before persisting to MongoDB, keeping document sizes manageable.
+- **Tile Updates** — Board state is a 2D array of tile objects (title, image URL, points). Team progress includes checked state, proof text, current points, and proof image references.
+- **Proof Image Storage** — Uploaded Bingo proof images are compressed through `imgSizeReducer`, saved as files by `proof_images.py`, and stored in MongoDB as URL paths instead of base64 image blobs. Existing legacy base64 proof images are still returned so older board data remains readable.
 - **Rate Limiting** — `flask-limiter` with a Redis backend enforces per-IP request limits across all endpoints to prevent abuse.
 
 ### League API & Crawler (`lol_server.py` + `crawler.py`)
@@ -95,13 +95,41 @@ Document shape:
 {
   boardName:  string,          // unique identifier (indexed)
   boardData:  Tile[][],        // 2D array of { title, image, points }
-  "team-1":   TeamState,       // { name, optional team secret, progress: bool[][] }
+  "team-1":   TeamState,       // { name, optional team secret, teamData: TeamTile[][] }
   "team-2":   TeamState,
   expiresAt:  Date             // TTL index, ~3 years from creation
 }
 ```
 
 The TTL index keeps the database self-pruning — abandoned boards expire without any manual cleanup job. The `boardName` index makes lookups O(log n) as the collection grows.
+
+Team tiles store proof metadata, not proof image bytes:
+
+```
+TeamTile {
+  checked:      bool,
+  proof:        string,
+  proofImages:  string[],      // /static/uploads/proofs/<uuid>.webp or legacy data URI
+  currPoints:   number
+}
+```
+
+### Local Filesystem — Bingo Proof Images
+
+New proof uploads are stored on disk instead of inside MongoDB:
+
+```
+services/api/static/uploads/proofs/<uuid>.webp   # local dev bind mount
+/app/static/uploads/proofs/<uuid>.webp           # path inside the API container
+```
+
+The public URL shape is:
+
+```
+/static/uploads/proofs/<uuid>.webp
+```
+
+`proof_images.py` normalizes these paths so MongoDB keeps portable relative paths, while API responses return absolute URLs such as `https://praynr.com/static/uploads/proofs/<uuid>.webp`. This matters because the production frontend may be served from GitHub Pages while the API and images are served from `praynr.com`.
 
 ### Redis — Cache, Graph, and Queue
 
@@ -122,9 +150,9 @@ Separating concerns across key namespaces keeps Redis operationally simple — y
 
 **Hosting** — AWS Lightsail (Ubuntu 24.04). Lightsail gives predictable billing on a low-traffic community app without the operational overhead of EC2 + ALB + RDS.
 
-**Containers** — Docker Compose manages five services: `mongo`, `redis`, `api`, `worker`, `dozzle`. The API and worker share the same image but run different entry points — this avoids image drift between the two processes.
+**Containers** — Docker Compose manages five services: `mongo`, `redis`, `api`, `worker`, `dozzle`. The API and worker share the same image but run different entry points — this avoids image drift between the two processes. Production also defines the named volume `proof_uploads`, mounted into the API container at `/app/static/uploads`, so uploaded proof images survive container rebuilds and restarts.
 
-**Networking** — Nginx terminates SSL and acts as the single entry point. It proxies API requests to uWSGI and serves the React SPA's static files from `/var/www/frontend`. Cloudflare sits in front for DDoS mitigation and CDN.
+**Networking** — Nginx terminates SSL and acts as the single entry point. It proxies API requests to uWSGI and serves the React SPA's static files from `/var/www/frontend`. Proof images are currently served by Flask from `/static/uploads/proofs/...` with long cache headers; they could be moved behind a direct Nginx `alias` later if image traffic grows. Cloudflare sits in front for DDoS mitigation and CDN.
 
 **CI/CD** — GitHub Actions runs on push to `main`. The frontend workflow builds the Vite bundle and SCPs the dist to the server. The backend workflow SSHes in and restarts only the `api` and `worker` containers — other services stay running. A weekly scheduled workflow prunes dangling images and updates base images.
 
@@ -138,10 +166,10 @@ Separating concerns across key namespaces keeps Redis operationally simple — y
 
 **Unified API + Worker image** — A single Docker image for both the Flask API and the RQ worker means one Dockerfile to maintain. The trade-off is a slightly larger image than strictly necessary for each role.
 
-**No WebSockets** — Bingo board updates and job status polling both use short-poll HTTP. Given the low concurrency this app targets, the simplicity of polling outweighs the efficiency of a persistent connection.
+**SSE for Bingo, polling for jobs** — Bingo board updates use Server-Sent Events backed by Redis pub/sub so open boards can refresh quickly after changes. LoL-Beat job status still uses simple HTTP polling because crawl jobs are long-running and low-frequency.
 
 **Flask over FastAPI** — Flask's synchronous model is straightforward for this workload. The async work (crawling) is offloaded to RQ workers anyway, so async-native routing doesn't add meaningful value here.
 
 ---
 
-*Last updated: 2026-05-13*
+*Last updated: 2026-06-01*

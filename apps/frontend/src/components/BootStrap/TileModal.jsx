@@ -6,7 +6,6 @@ import InputGroup from "react-bootstrap/InputGroup";
 import FormControl from "react-bootstrap/FormControl";
 import Alert from "react-bootstrap/Alert"
 import ListGroup from 'react-bootstrap/ListGroup';
-import Spinner from 'react-bootstrap/Spinner';
 
 
 const numInputs = ['points', 'currPoints', 'rowBingo', 'colBingo']
@@ -23,8 +22,11 @@ class TileModal extends React.Component {
       wikiSearch: '',
       ...props.info,
       ...props.teamInfo,
+      proofImages: props.teamInfo?.proofImages || [],
+      proofImagesChanged: false,
       suggestions: [],
-      storedSuggestions: {}
+      storedSuggestions: {},
+      lightboxIndex: null
     }
 
     this.listOfImages = []
@@ -40,6 +42,12 @@ class TileModal extends React.Component {
     this.setCurrSuggestions = this.setCurrSuggestions.bind(this)
     this.setSuggestions = this.setSuggestions.bind(this)
     this.handleCustomImage = this.handleCustomImage.bind(this)
+    this.handleProofImage = this.handleProofImage.bind(this)
+    this.removeProofImage = this.removeProofImage.bind(this)
+    this.openLightbox = this.openLightbox.bind(this)
+    this.closeLightbox = this.closeLightbox.bind(this)
+    this.cycleImage = this.cycleImage.bind(this)
+    this.handleKeyDown = this.handleKeyDown.bind(this)
 
     const debounce = (func, delay) => {
       let debounceTimer;
@@ -51,6 +59,26 @@ class TileModal extends React.Component {
     };
 
     this.setCurrSuggestions = debounce(this.setCurrSuggestions, 600);
+  }
+
+  componentDidMount() {
+    window.addEventListener('keydown', this.handleKeyDown);
+  }
+
+  componentWillUnmount() {
+    window.removeEventListener('keydown', this.handleKeyDown);
+  }
+
+  handleKeyDown(e) {
+    if (this.state.lightboxIndex !== null) {
+      if (e.key === 'ArrowLeft') {
+        this.cycleImage(-1);
+      } else if (e.key === 'ArrowRight') {
+        this.cycleImage(1);
+      } else if (e.key === 'Escape') {
+        this.closeLightbox();
+      }
+    }
   }
 
   handleCustomImage(e) {
@@ -205,9 +233,56 @@ class TileModal extends React.Component {
         proof: state.proof,
         currPoints: state.currPoints
       }
+      if (this.state.proofImagesChanged) {
+        state.proofImages = this.state.proofImages || []
+      }
     }
-    this.props.change(this.props.cord[0], this.props.cord[1], this.state)
+    this.props.change(this.props.cord[0], this.props.cord[1], state)
     this.props.handleClose()
+  }
+
+  handleProofImage(e) {
+    const files = Array.from(e.target.files);
+    const MAX_PROOF_IMAGES = 10;
+    files.forEach(file => {
+      if (file && (file.type === 'image/png' || file.type === 'image/jpeg' || file.type === 'image/webp' || file.type === 'image/gif')) {
+        const reader = new FileReader();
+        reader.onload = (event) => {
+          this.setState(prev => {
+            const current = prev.proofImages || [];
+            if (current.length >= MAX_PROOF_IMAGES) return null;
+            return { proofImages: [...current, event.target.result], proofImagesChanged: true };
+          });
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+    // reset so same file can be re-uploaded
+    e.target.value = '';
+  }
+
+  removeProofImage(index) {
+    this.setState(prev => ({
+      proofImages: prev.proofImages.filter((_, i) => i !== index),
+      lightboxIndex: null,
+      proofImagesChanged: true
+    }));
+  }
+
+  openLightbox(index) {
+    this.setState({ lightboxIndex: index });
+  }
+
+  closeLightbox() {
+    this.setState({ lightboxIndex: null });
+  }
+
+  cycleImage(direction) {
+    const len = (this.state.proofImages || []).length;
+    if (len === 0) return;
+    this.setState(prev => ({
+      lightboxIndex: (prev.lightboxIndex + direction + len) % len
+    }));
   }
 
   handleClose() {
@@ -300,6 +375,119 @@ class TileModal extends React.Component {
                       }
                     </div>
                   </div>
+
+                  {/* Proof image upload */}
+                  <div style={{ marginTop: '10px', marginBottom: '6px' }}>
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      multiple
+                      onChange={this.handleProofImage}
+                      style={{ display: 'none' }}
+                      ref={(input) => this.proofFileInput = input}
+                    />
+                    {(this.state.proofImages || []).length < 10
+                      ? <Button variant="secondary" size="sm" onClick={() => this.proofFileInput.click()}>
+                        📷 Upload Proof Image
+                      </Button>
+                      : <small style={{ color: 'var(--osrs-text-normal)', opacity: 0.7 }}>Max 10 images reached</small>
+                    }
+                  </div>
+
+                  {/* Proof image thumbnails */}
+                  {(this.state.proofImages && this.state.proofImages.length > 0) &&
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                    {this.state.proofImages.map((img, i) => (
+                      <div key={i} style={{ position: 'relative', display: 'inline-block' }}>
+                        <img
+                          src={img}
+                          onClick={() => this.openLightbox(i)}
+                          style={{
+                            width: '64px',
+                            height: '64px',
+                            objectFit: 'cover',
+                            cursor: 'pointer',
+                            borderRadius: '4px',
+                            border: '2px solid var(--osrs-border-dark)',
+                            boxSizing: 'border-box'
+                          }}
+                          title="Click to enlarge"
+                        />
+                        <button
+                          onClick={() => this.removeProofImage(i)}
+                          style={{
+                            position: 'absolute',
+                            top: '-6px',
+                            right: '-6px',
+                            background: '#c0392b',
+                            color: 'white',
+                            border: 'none',
+                            borderRadius: '50%',
+                            width: '18px',
+                            height: '18px',
+                            fontSize: '10px',
+                            lineHeight: '18px',
+                            textAlign: 'center',
+                            cursor: 'pointer',
+                            padding: 0,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}
+                          title="Remove image"
+                        >✕</button>
+                      </div>
+                    ))}
+                  </div>
+                  }
+
+                  {/* Lightbox */}
+                  {this.state.lightboxIndex !== null && this.state.proofImages && this.state.proofImages.length > 0 &&
+                    <div
+                      onClick={this.closeLightbox}
+                      style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.85)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                      }}
+                    >
+                      {/* Prev */}
+                      {this.state.proofImages.length > 1 &&
+                        <button
+                          onClick={(e) => { e.stopPropagation(); this.cycleImage(-1); }}
+                          style={lightboxBtnStyle('left')}
+                        >&#8249;</button>
+                      }
+                      <img
+                        src={this.state.proofImages[this.state.lightboxIndex]}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          maxWidth: '90vw',
+                          maxHeight: '85vh',
+                          objectFit: 'contain',
+                          borderRadius: '6px',
+                          boxShadow: '0 4px 32px rgba(0,0,0,0.7)'
+                        }}
+                      />
+                      {/* Next */}
+                      {this.state.proofImages.length > 1 &&
+                        <button
+                          onClick={(e) => { e.stopPropagation(); this.cycleImage(1); }}
+                          style={lightboxBtnStyle('right')}
+                        >&#8250;</button>
+                      }
+                      {/* Counter + close */}
+                      <div style={{ position: 'absolute', top: '16px', right: '20px', color: 'white', fontSize: '1.1rem', display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        <span style={{ opacity: 0.8 }}>{this.state.lightboxIndex + 1} / {this.state.proofImages.length}</span>
+                        <span style={{ cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }} onClick={this.closeLightbox}>✕</span>
+                      </div>
+                    </div>
+                  }
+
                   <div className="form-check" style={{ 'marginTop': '15px' }}>
                     <input className="form-check-input bingo-completed-check" disabled={generalDisabled} checked={this.state.checked} onChange={this.toggleCheck} type="checkbox" value="" id="flexCheckDefault" />
                     <label className="form-check-label" htmlFor="flexCheckDefault">
@@ -418,4 +606,27 @@ function getImageUrl(image) {
   image = image.charAt(0).toUpperCase() + image.slice(1);
   console.log(image)
   return `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`
+}
+
+function lightboxBtnStyle(side) {
+  return {
+    position: 'absolute',
+    [side]: '16px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    background: 'rgba(255,255,255,0.15)',
+    color: 'white',
+    border: 'none',
+    borderRadius: '50%',
+    width: '48px',
+    height: '48px',
+    fontSize: '2rem',
+    lineHeight: 1,
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 10000,
+    backdropFilter: 'blur(4px)'
+  }
 }

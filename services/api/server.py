@@ -9,6 +9,14 @@ import pymongo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from imgSizeReducer import reduce_image_size
+from proof_images import (
+  PROOF_UPLOAD_URL_PREFIX,
+  cleanup_removed_proof_images,
+  proof_image_public_url,
+  proof_image_storage_url,
+  save_proof_image,
+  serve_uploaded_proof_image,
+)
 from werkzeug.middleware.proxy_fix import ProxyFix
 import os
 from dotenv import load_dotenv
@@ -59,11 +67,12 @@ mycol = db['bingo']
 
 allowedAuthTypes = ['admin', 'general']
 adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
-generalTileKeys = ['proof', 'checked', 'currPoints']
+generalTileKeys = ['proof', 'checked', 'currPoints', 'proofImages']
 boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns']
 defaultTeamObj = {
   'checked': False,
   'proof': '',
+  'proofImages': [],
   'currPoints': 0
 }
 defaultBoardObj = {
@@ -115,7 +124,7 @@ def initEmptyTeamData(row, col):
   for i in range(row):
     teamData.append([])
     for j in range(col):
-      teamData[i].append(defaultTeamObj.copy())
+      teamData[i].append({ **defaultTeamObj, 'proofImages': [] })
   return teamData
 
 
@@ -178,10 +187,14 @@ def publish_board_update(board_name):
   except Exception as e:
     log.warning("publish_board_update failed  board=%s  error=%s", board_name, e)
 
-
 # ---------------------------------------------------------------------------
 # Routes
 # ---------------------------------------------------------------------------
+
+@app.route(f'{PROOF_UPLOAD_URL_PREFIX}/<path:filename>', methods=['GET'])
+@limiter.exempt
+def uploaded_proof_image(filename):
+  return serve_uploaded_proof_image(filename)
 
 @app.route('/health', methods=['GET'])
 @limiter.limit("120 per minute")
@@ -304,6 +317,12 @@ def getBoard(boardName, password, pwtype):
     team = 'team-' + str(i)
     if (pwtype != 'admin' and 'password' in cache[team]):
       del cache[team]['password']
+
+    for row in cache[team]['teamData']:
+      for tile in row:
+        if 'proofImages' in tile:
+          tile['proofImages'] = [proof_image_public_url(image) for image in tile['proofImages']]
+          
     teamData.append({
       'team': i,
       'data': cache[team]
@@ -385,10 +404,30 @@ def updateBoard(boardName, password, pwtype, teampw):
         return bad_request('Your team password was incorrect.')
     
     teamData = cache[teamKey]
+    existing_tile = teamData['teamData'][data['row']][data['col']]
+    previous_proof_images = existing_tile.get('proofImages', [])
+
+    # Save newly uploaded proof images to disk and keep MongoDB lightweight.
+    proof_images = data['info'].get('proofImages', [])
+    if proof_images:
+      saved_images = []
+      for img_uri in proof_images:
+        if isinstance(img_uri, str) and img_uri.startswith('data:'):
+          try:
+            saved_images.append(save_proof_image(img_uri))
+          except Exception as e:
+            log.error("updateBoard - proof image save failed  board=%s  error=%s", boardName, e)
+            saved_images.append(img_uri)
+        else:
+          saved_images.append(proof_image_storage_url(img_uri))
+      data['info']['proofImages'] = saved_images
+
     teamData['teamData'][data['row']][data['col']] = { **teamData['teamData'][data['row']][data['col']], **data['info']}
     
     newvalue = { "$set": {teamKey: teamData}}
     update = mycol.update_one({"boardName": boardName}, newvalue)
+    if 'proofImages' in data['info']:
+      cleanup_removed_proof_images(previous_proof_images, data['info']['proofImages'])
     log.info("updateBoard - general tile update  board=%s  team=%s  row=%s  col=%s", boardName, teamKey, data.get('row'), data.get('col'))
 
   publish_board_update(boardName)
