@@ -1,5 +1,6 @@
-# OSRS Bingo - Remote MongoDB Backup Script
-# This script streams a gzipped mongodump from the remote server directly to local storage.
+# OSRS Bingo - Remote MongoDB + Upload Images Backup Script
+# This script streams a gzipped mongodump and uploads tar from the remote server
+# into a single timestamped folder on local storage.
 
 # Configuration (Loaded from backup_config.ps1)
 # $SERVER_HOST       - The IP address of your server
@@ -15,44 +16,49 @@ if (Test-Path $ConfigPath) {
     exit 1
 }
 
-# Create local backup directory if it doesn't exist
-if (!(Test-Path $LOCAL_BACKUP_DIR)) {
-    New-Item -ItemType Directory -Force -Path $LOCAL_BACKUP_DIR | Out-Null
-}
+# Each run gets its own timestamped folder
+$DATE       = Get-Date -Format "yyyy-MM-dd_HHmm"
+$BackupDir  = Join-Path $LOCAL_BACKUP_DIR $DATE
+New-Item -ItemType Directory -Force -Path $BackupDir | Out-Null
 
-# Generate filename with timestamp
-$DATE = Get-Date -Format "yyyy-MM-dd_HHmm"
-$FILENAME = "bingo_backup_$DATE.gz"
-$FULL_PATH = Join-Path $LOCAL_BACKUP_DIR $FILENAME
+$MongoFile  = Join-Path $BackupDir "mongo.gz"
+$ImagesFile = Join-Path $BackupDir "uploads.tar.gz"
 
 Write-Host "--- Starting Remote Backup ---" -ForegroundColor Cyan
-Write-Host "Source: $SERVER_HOST (Docker Container: mongo)"
-Write-Host "Target: $FULL_PATH"
+Write-Host "Folder: $BackupDir"
 
-# Execute SSH Streaming Backup
-# 1. SSH into server using .pem key
-# 2. Find the mongo container ID dynamically
-# 3. Run mongodump inside the container and stream archive to stdout
-# 4. Redirect stdout to local file on Windows
-ssh -i "$PEM_PATH" -o StrictHostKeyChecking=accept-new "$SERVER_USER@$SERVER_HOST" "docker exec `$(docker ps -qf name=mongo) mongodump --archive --gzip" > "$FULL_PATH"
+# --- 1. MongoDB dump ---
+Write-Host "`n[1/2] MongoDB..." -ForegroundColor Cyan
+$MongoCmd = 'docker exec $(docker ps -qf name=mongo) mongodump --archive --gzip'
+ssh -i "$PEM_PATH" -o StrictHostKeyChecking=accept-new "${SERVER_USER}@${SERVER_HOST}" $MongoCmd > "$MongoFile"
 
-# Check if the command succeeded
 if ($LASTEXITCODE -eq 0) {
-    $FILE_SIZE = (Get-Item $FULL_PATH).Length / 1KB
-    Write-Host "`n[SUCCESS] Backup completed successfully!" -ForegroundColor Green
-    Write-Host "File Size: $([Math]::Round($FILE_SIZE, 2)) KB"
-
-    # Cleanup: Keep only the 5 most recent backups
-    $Backups = Get-ChildItem -Path $LOCAL_BACKUP_DIR -Filter "bingo_backup_*.gz" | Sort-Object CreationTime -Descending
-    if ($Backups.Count -gt 5) {
-        $OldBackups = $Backups[5..($Backups.Count - 1)]
-        $OldBackups | Remove-Item -Force
-        Write-Host "Cleaned up $($OldBackups.Count) old backup(s)." -ForegroundColor Yellow
-    }
+    $SIZE = [Math]::Round((Get-Item $MongoFile).Length / 1KB, 2)
+    Write-Host "[SUCCESS] mongo.gz ($SIZE KB)" -ForegroundColor Green
 } else {
-    Write-Host "`n[ERROR] Backup failed! Check your SSH connection or if the mongo container is running." -ForegroundColor Red
-    # Remove empty file if failed
-    if (Test-Path $FULL_PATH) { Remove-Item $FULL_PATH }
+    Write-Host "[ERROR] MongoDB backup failed!" -ForegroundColor Red
+    if (Test-Path $MongoFile) { Remove-Item $MongoFile }
 }
 
-Write-Host "-----------------------------"
+# --- 2. Upload images (proof + board-images) ---
+Write-Host "`n[2/2] Upload images..." -ForegroundColor Cyan
+$SshArgs = "-i `"$PEM_PATH`" `"${SERVER_USER}@${SERVER_HOST}`" docker exec `$(docker ps -qf name=api) tar czf - -C /app/static/uploads ."
+cmd /c "ssh $SshArgs > `"$ImagesFile`""
+
+if ($LASTEXITCODE -eq 0) {
+    $SIZE = [Math]::Round((Get-Item $ImagesFile).Length / 1KB, 2)
+    Write-Host "[SUCCESS] uploads.tar.gz ($SIZE KB)" -ForegroundColor Green
+} else {
+    Write-Host "[ERROR] Image backup failed!" -ForegroundColor Red
+    if (Test-Path $ImagesFile) { Remove-Item $ImagesFile }
+}
+
+# Cleanup: keep only the 5 most recent backup folders
+$AllBackups = Get-ChildItem -Path $LOCAL_BACKUP_DIR -Directory | Sort-Object CreationTime -Descending
+if ($AllBackups.Count -gt 5) {
+    $OldBackups = $AllBackups[5..($AllBackups.Count - 1)]
+    $OldBackups | Remove-Item -Recurse -Force
+    Write-Host "`nCleaned up $($OldBackups.Count) old backup folder(s)." -ForegroundColor Yellow
+}
+
+Write-Host "`n-----------------------------"
