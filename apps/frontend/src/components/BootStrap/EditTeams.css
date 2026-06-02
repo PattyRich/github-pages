@@ -1,0 +1,116 @@
+.edit-board-layout {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 20px;
+  align-items: start;
+}
+
+.edit-board-size-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+}
+
+.edit-board-size-grid .form-label,
+.layer-control .form-label,
+.layer-preview-title {
+  color: var(--osrs-text-beige);
+  text-shadow: 1px 1px 0 black;
+}
+
+.edit-board-size-grid .form-select {
+  background-color: var(--osrs-bg-brown-dark) !important;
+  color: var(--osrs-text-beige) !important;
+  border: 2px solid var(--osrs-border-dark) !important;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
+}
+
+.layer-control {
+  margin-top: 12px;
+}
+
+.layer-control.is-disabled {
+  opacity: 0.65;
+}
+
+.layer-control .form-range {
+  height: 1.25rem;
+}
+
+.layer-control .form-range::-webkit-slider-runnable-track {
+  background: var(--osrs-bg-brown-dark);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  height: 0.65rem;
+}
+
+.layer-control .form-range::-webkit-slider-thumb {
+  background: var(--osrs-text-gold);
+  border: 2px solid var(--osrs-border-dark);
+  margin-top: -0.35rem;
+}
+
+.layer-control .form-range::-moz-range-track {
+  background: var(--osrs-bg-brown-dark);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  height: 0.65rem;
+}
+
+.layer-control .form-range::-moz-range-thumb {
+  background: var(--osrs-text-gold);
+  border: 2px solid var(--osrs-border-dark);
+}
+
+.layer-help,
+.layer-preview-help {
+  color: var(--osrs-text-normal);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  text-shadow: 1px 1px 0 black;
+}
+
+.layer-preview-board {
+  display: inline-flex;
+  flex-direction: column;
+  background: var(--osrs-bg-brown-dark);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  padding: 6px;
+  gap: 3px;
+}
+
+.layer-preview-row {
+  display: flex;
+  gap: 3px;
+}
+
+.layer-preview-cell {
+  border-top: 2px solid var(--osrs-border-light);
+  border-left: 2px solid var(--osrs-border-light);
+  border-right: 2px solid var(--osrs-border-dark);
+  border-bottom: 2px solid var(--osrs-border-dark);
+  box-sizing: border-box;
+}
+
+.layer-preview-cell.is-visible {
+  background: #8b6f3d;
+}
+
+.layer-preview-cell.is-hidden {
+  background: #171410;
+  opacity: 0.55;
+}
+
+.layer-preview-help {
+  margin-top: 8px;
+  font-size: 0.85rem;
+}
+
+.edit-team-count {
+  align-items: center;
+  justify-content: flex-start;
+  gap: 12px;
+  margin-bottom: 16px;
+}

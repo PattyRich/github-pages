@@ -22,7 +22,8 @@ class BoardView extends React.Component {
       alert: '',
       teams: 5,
       showEditTeams: false,
-      generalPasswordCopy: ''
+      generalPasswordCopy: '',
+      visibleRows: null
     }
 
     const { state } = this.props.location
@@ -47,6 +48,7 @@ class BoardView extends React.Component {
     this.clearAlert = this.clearAlert.bind(this)
     this.clipboard = this.clipboard.bind(this)
     this.connectSSE = this.connectSSE.bind(this)
+    this.visibleBoardData = this.visibleBoardData.bind(this)
     window.addEventListener('resize', this.handleResize)
   }
 
@@ -134,7 +136,8 @@ class BoardView extends React.Component {
       teamData: data.teamData,
       activeTeamIndex: this.state.activeTeamIndex || activeTeamValue,
       generalPasswordCopy: data.generalPassword,
-      teamPasswordsRequired: data.teamPasswordsRequired
+      teamPasswordsRequired: data.teamPasswordsRequired,
+      visibleRows: data.visibleRows
     }, () => {
       this.calculateTeamPoints()
       if (firstLoad) {
@@ -173,19 +176,25 @@ class BoardView extends React.Component {
   calculateTeamPoints() {
     if (!this.state.teamData)
       return
+    const boardData = this.visibleBoardData()
+    const columns = boardData.length
+    const rows = boardData[0]?.length || 0
     let x = JSON.parse(JSON.stringify(this.state.teamData))
     x.forEach((team) => {
       let pointTotal = 0
       team.data.teamData.forEach((row, i) => {
+        if (!boardData[i]) {
+          return
+        }
         let addBonusRow = true
-        row.forEach((tile, j) => {
+        row.slice(0, rows).forEach((tile, j) => {
           if (addBonusRow && !tile.checked) {
             addBonusRow = false
           }
           pointTotal += tile.checked ? Number(tile.currPoints) : 0
-          if (j === this.rows - 1)
+          if (j === rows - 1)
             if (addBonusRow) {
-              pointTotal += Number(this.state.boardData[i][j].rowBingo)
+              pointTotal += Number(boardData[i][j].rowBingo)
             }
         })
       })
@@ -193,21 +202,35 @@ class BoardView extends React.Component {
     })
     x.forEach((team) => {
       let pointTotal = 0
-      transpose(team.data.teamData).forEach((row, i) => {
+      const visibleTeamData = team.data.teamData
+        .slice(0, columns)
+        .map((row) => row.slice(0, rows))
+      transpose(visibleTeamData).forEach((row, i) => {
         let addBonusRow = true
         row.forEach((tile, j) => {
           if (addBonusRow && !tile.checked) {
             addBonusRow = false
           }
-          if (j === this.columns - 1)
+          if (j === columns - 1)
             if (addBonusRow) {
-              pointTotal += Number(this.state.boardData[j][i].colBingo)
+              pointTotal += Number(boardData[j][i].colBingo)
             }
         })
       })
       team.pointTotal += pointTotal
     })
     this.setState({ teamData: x })
+  }
+
+  visibleBoardData() {
+    if (!this.state.boardData) {
+      return []
+    }
+    if (this.state.privilage !== 'general') {
+      return this.state.boardData
+    }
+    const visibleRows = Number(this.state.visibleRows) || this.state.boardData.length
+    return this.state.boardData.slice(0, visibleRows)
   }
 
   toggleTeamEdit() {
@@ -242,12 +265,13 @@ class BoardView extends React.Component {
     await this.updateBoard(row, col, data)
   }
 
-  async updateTeams(info, passwordRequired, rows, columns) {
+  async updateTeams(info, passwordRequired, rows, columns, visibleRows) {
     const dataToSend = {
       teamData: info,
       passwordRequired,
       rows,
-      columns
+      columns,
+      visibleRows
     }
     this.alert('loading')
     let url = pwUrlBuilder(this.state)
@@ -267,7 +291,8 @@ class BoardView extends React.Component {
 
   async switchPrivilage() {
     if (this.state.privilage === 'admin') {
-      this.setState({ privilage: 'general', canSwitchPriv: true })
+      await this.promisedSetState({ privilage: 'general', canSwitchPriv: true })
+      await this.refreshData()
     } else {
       await this.promisedSetState({ privilage: 'admin' })
       await this.refreshData();
@@ -319,8 +344,11 @@ class BoardView extends React.Component {
     const showFeedback = localStorage.getItem('showFeedback') === 'true'
     let height = document.documentElement.clientHeight
     let width = document.documentElement.clientWidth
-    let maxWidth = (width * .75 / this.rows)
-    let maxHeight = (height * .75 / this.columns)
+    const boardDataToShow = this.visibleBoardData()
+    const renderColumns = boardDataToShow.length || this.columns || 1
+    const renderRows = boardDataToShow[0]?.length || this.rows || 1
+    let maxWidth = (width * .75 / renderRows)
+    let maxHeight = (height * .75 / renderColumns)
     let dem = maxHeight < maxWidth ? maxHeight : maxWidth
     //let dem = width < height ? (width / this.rows)-40 : (height / this.columns)-40;
     return (
@@ -364,18 +392,18 @@ class BoardView extends React.Component {
         }
         {this.state.boardData &&
           <div className='center-board'>
-            {this.state.boardData.map((row, i) => (
+            {boardDataToShow.map((row, i) => (
               <span key={i} className='flex'>
                 {row.map((tile, j) => (
                   <BoardTile
                     cord={[i, j]}
                     change={this.changeBoardTileInfo}
-                    info={this.state.boardData[i][j]}
+                    info={boardDataToShow[i][j]}
                     teamInfo={(this.state.teamData && this.state.privilage !== 'admin') ? this.state.teamData[this.state.activeTeamIndex].data.teamData[i][j] : null}
                     key={j}
                     dem={dem}
-                    br={this.state.boardData[0].length === j + 1}
-                    bb={this.state.boardData.length === i + 1}
+                    br={boardDataToShow[0].length === j + 1}
+                    bb={boardDataToShow.length === i + 1}
                     privilage={this.state.privilage}
                   />
                 )
@@ -401,6 +429,7 @@ class BoardView extends React.Component {
             passwordRequired={this.state.teamPasswordsRequired}
             columns={this.columns}
             rows={this.rows}
+            visibleRows={this.state.visibleRows}
           />
         }
         {this.state.showToast &&

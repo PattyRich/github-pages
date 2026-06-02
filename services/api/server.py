@@ -61,7 +61,7 @@ mycol = db['bingo']
 allowedAuthTypes = ['admin', 'general']
 adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
 generalTileKeys = ['proof', 'checked', 'currPoints', 'proofImages']
-boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns']
+boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns', 'visibleRows']
 defaultTeamObj = {
   'checked': False,
   'proof': '',
@@ -161,6 +161,25 @@ def clearBadData(data, acceptableKeys):
     if key not in acceptableKeys:
       data.pop(key, None)
   return data
+
+def clamp_visible_rows(value, rows):
+  try:
+    visible_rows = int(value)
+  except (TypeError, ValueError):
+    visible_rows = rows
+  return max(1, min(visible_rows, rows))
+
+def board_visual_rows(cache):
+  if cache.get('columns'):
+    return int(cache['columns'])
+  board_data = cache.get('boardData', [])
+  return len(board_data) if board_data else 1
+
+def board_visible_rows(cache):
+  return clamp_visible_rows(cache.get('visibleRows'), board_visual_rows(cache))
+
+def slice_board_rows(board_data, visible_rows):
+  return board_data[:visible_rows]
 
 def postToDiscord(message, webhook_env_var):
   webhook_url = os.getenv(webhook_env_var)
@@ -263,6 +282,7 @@ def createBoard():
     return bad_request('Board Name Already Taken!!')
 
   data = clearBadData(data, boardCreationKeys)
+  data['visibleRows'] = clamp_visible_rows(data.get('visibleRows'), int(data['columns']))
 
   boardData = []
   for i in range(data['columns']):
@@ -307,10 +327,13 @@ def getBoard(boardName, password, pwtype):
     return err
 
   boardData = cache['boardData']
+  visibleRows = board_visible_rows(cache)
   for row in boardData:
     for tile in row:
       if isinstance(tile.get('image'), dict):
         tile['image']['url'] = board_images.public_url(tile['image']['url'])
+  if pwtype == 'general':
+    boardData = slice_board_rows(boardData, visibleRows)
   teamData = []
   generalPassword = cache['generalPassword']
   passwordRequired = cache.get('requirePassword', False)
@@ -331,7 +354,7 @@ def getBoard(boardName, password, pwtype):
     })
 
   log.info("getBoard - success  board=%s  pwtype=%s", boardName, pwtype)
-  return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired)
+  return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired, visibleRows=visibleRows)
 
 @app.route('/events/<boardName>/<password>/<pwtype>')
 @limiter.limit("2000 per hour")
@@ -400,6 +423,10 @@ def updateBoard(boardName, password, pwtype, teampw):
     log.info("updateBoard - admin tile update  board=%s  row=%s  col=%s", boardName, data.get('row'), data.get('col'))
 
   if (pwtype == 'general'):
+    if int(data['row']) >= board_visible_rows(cache):
+      log.warning("updateBoard - hidden row update rejected  board=%s  row=%s  ip=%s", boardName, data.get('row'), request.remote_addr)
+      return bad_request('That row has not been revealed yet.')
+
     teamKey = 'team-' + str(data['info']['teamId'])
     data['info'] = clearBadData(data['info'], generalTileKeys)
 
@@ -449,6 +476,7 @@ def updateTeams(boardName, password, pwtype):
   requirePassword = data['dataToSend']['passwordRequired']
   rows = int(data['dataToSend']['rows'])
   cols = int(data['dataToSend']['columns'])
+  visibleRows = clamp_visible_rows(data['dataToSend'].get('visibleRows'), cols)
   data = data['dataToSend']['teamData']
   size = len(data)
 
@@ -507,6 +535,8 @@ def updateTeams(boardName, password, pwtype):
     elif ('requirePassword' not in cache):
       newvalue = { "$set": {'requirePassword': requirePassword}}
       update = mycol.update_one({"boardName": boardName}, newvalue)
+
+  mycol.update_one({"boardName": boardName}, { "$set": {'requirePassword': requirePassword, 'visibleRows': visibleRows}})
 
   log.info("updateTeams - complete  board=%s  teams=%d", boardName, size)
   publish_board_update(boardName)

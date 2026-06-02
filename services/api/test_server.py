@@ -47,7 +47,7 @@ server.mycol = _mock_col
 
 def _make_board(rows=2, cols=2, teams=2,
                 admin_pw="admin123", general_pw="gen123",
-                board_name="TestBoard"):
+                board_name="TestBoard", visible_rows=None):
     """Return a minimal board document as MongoDB would return it."""
     board_data = [[server.defaultBoardObj.copy() for _ in range(rows)] for _ in range(cols)]
     doc = {
@@ -58,6 +58,7 @@ def _make_board(rows=2, cols=2, teams=2,
         "teams": teams,
         "rows": rows,
         "columns": cols,
+        "visibleRows": visible_rows if visible_rows is not None else rows,
     }
     for i in range(teams):
         key = f"team-{i}"
@@ -210,6 +211,8 @@ class TestCreateBoard(unittest.TestCase):
         })
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(json.loads(resp.data)["success"])
+        inserted = _mock_col.insert_one.call_args[0][0]
+        self.assertEqual(inserted["visibleRows"], 3)
 
     @patch("server.postToDiscord", return_value=True)
     def test_duplicate_board_name_returns_400(self, _):
@@ -264,6 +267,32 @@ class TestGetBoard(unittest.TestCase):
         resp = self.client.get("/getBoard/TestBoard/admin123/admin")
         data = json.loads(resp.data)
         self.assertEqual(len(data["teamData"]), self.board["teams"])
+
+    def test_general_only_receives_visible_board_rows(self):
+        self.board = _make_board(rows=4, cols=3, visible_rows=2)
+        _mock_col.find_one.return_value = self.board
+        resp = self.client.get("/getBoard/TestBoard/gen123/general")
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual(data["visibleRows"], 2)
+        self.assertEqual(len(data["boardData"]), 2)
+        self.assertTrue(all(len(row) == 4 for row in data["boardData"]))
+
+    def test_general_still_receives_full_team_data(self):
+        self.board = _make_board(rows=4, cols=3, visible_rows=2)
+        _mock_col.find_one.return_value = self.board
+        resp = self.client.get("/getBoard/TestBoard/gen123/general")
+        data = json.loads(resp.data)
+        self.assertEqual(len(data["teamData"][0]["data"]["teamData"]), 3)
+        self.assertEqual(len(data["teamData"][0]["data"]["teamData"][0]), 4)
+
+    def test_admin_receives_all_board_rows_on_layered_board(self):
+        self.board = _make_board(rows=4, cols=3, visible_rows=2)
+        _mock_col.find_one.return_value = self.board
+        resp = self.client.get("/getBoard/TestBoard/admin123/admin")
+        data = json.loads(resp.data)
+        self.assertEqual(len(data["boardData"]), 3)
+        self.assertTrue(all(len(row) == 4 for row in data["boardData"]))
 
 
 class TestAuthEndpoint(unittest.TestCase):
@@ -333,6 +362,17 @@ class TestUpdateBoard(unittest.TestCase):
                                            "currPoints": 5, "teamId": 0}},
         )
         self.assertEqual(resp.status_code, 200)
+
+    def test_general_cannot_update_hidden_row(self):
+        board = _make_board(rows=4, cols=3, visible_rows=2)
+        _mock_col.find_one.return_value = board
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 2, "col": 0, "info": {"checked": True, "proof": "",
+                                           "currPoints": 0, "teamId": 0}},
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("not been revealed", json.loads(resp.data)["message"])
 
     def test_wrong_password_rejected(self):
         resp = self._put(
@@ -528,4 +568,3 @@ class TestHealthEndpoint(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-
