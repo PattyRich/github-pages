@@ -227,47 +227,85 @@ class Bingo extends React.Component {
 				}
 				{this.state.screen === 2 &&
 					<div className='create-menu'>
-						<div style={{ 'margin': '5px' }}>
-							<Alert variant="warning">
-								***NOTE do NOT use "REAL" passwords. I DON'T ENCRYPT this data, make it fun passwords that don't mean anything
-								<br />
-								boards auto delete after 3 YEARS
-							</Alert>
+						<div className="create-board-shell">
+							<div className="create-board-header">
+								<div>
+									<h1 className="osrs-header">Create Bingo Board</h1>
+									<p>Set the event basics now. Tiles, teams, passwords, and layered row reveals can be adjusted from Edit Board after creation.</p>
+								</div>
+								<div className="create-board-badge">Auto-deletes after 3 years</div>
+							</div>
+
+							<div className="create-board-grid">
+								<section className="create-board-panel">
+									<h2 className="osrs-header">Board Details</h2>
+									<p className="create-board-copy">Pick a board name and casual access words for your clan. Do not use "real" passwords here, I don't encrypt them on the backend.</p>
+									<EditableInput title='Board Name' stateKey='boardName' change={this.inputState} value={this.state.boardName} />
+									<EditableInput title='Admin Password' stateKey='adminPassword' change={this.inputState} value={this.state.adminPassword} />
+									<EditableInput title='General Password' stateKey='generalPassword' change={this.inputState} value={this.state.generalPassword} />
+									<div className="create-board-note">
+										<strong>Admin:</strong> edit tiles, points, images, teams, board size, and layered rows.
+										<br />
+										<strong>General:</strong> submit team proof and mark revealed tiles complete.
+									</div>
+								</section>
+
+								<section className="create-board-panel">
+									<h2 className="osrs-header">Event Shape</h2>
+									<p className="create-board-copy">Start with the rough shape. You can resize later, but shrinking removes saved row, column, or team data.</p>
+									<div className="create-stepper-grid">
+										<div className="create-stepper">
+											<span>Rows</span>
+											<div>
+												<Button click={() => this.changeNum(-1, 'columns')} text="-"></Button>
+												<strong>{this.state.columns}</strong>
+												<Button click={() => this.changeNum(1, 'columns')} text="+"></Button>
+											</div>
+											<small>up and down</small>
+										</div>
+										<div className="create-stepper">
+											<span>Columns</span>
+											<div>
+												<Button click={() => this.changeNum(-1, 'rows')} text="-"></Button>
+												<strong>{this.state.rows}</strong>
+												<Button click={() => this.changeNum(1, 'rows')} text="+"></Button>
+											</div>
+											<small>left and right</small>
+										</div>
+										<div className="create-stepper">
+											<span>Teams</span>
+											<div>
+												<Button click={() => this.changeNum(-1, 'teams')} text="-"></Button>
+												<strong>{this.state.teams}</strong>
+												<Button click={() => this.changeNum(1, 'teams')} text="+"></Button>
+											</div>
+											<small>competing groups</small>
+										</div>
+									</div>
+
+									<div className="create-layer-callout">
+										<h3 className="osrs-header">Layered boards</h3>
+										<p>After creation, admins can reveal only the first few rows to general users, then unlock more rows as the event progresses.</p>
+									</div>
+
+									<div className='create-board-preview'>
+										{[...Array(this.state.columns)].map((x, i) => (
+											<span key={i} className='flex'>
+												{[...Array(this.state.rows)].map((x, j) => (
+													<BoardTile bare={true} key={j} br={this.state.rows === j + 1} bb={this.state.columns === i + 1} dem="34px" />
+												)
+												)}
+											</span>
+										)
+										)}
+									</div>
+								</section>
+							</div>
+
+							<div className="create-board-actions">
+								<Button variant="success" click={this.continue} text="Create Board"></Button>
+							</div>
 						</div>
-						<EditableInput title='Board Name' stateKey='boardName' change={this.inputState} value={this.state.boardName} />
-						<div style={{ 'margin': '5px' }}>
-							<Alert variant="primary">
-								Admins have the ability to edit board specifics like point values, images, descriptions, team count / names.
-							</Alert>
-						</div>
-						<EditableInput title='Admin Password' stateKey='adminPassword' change={this.inputState} value={this.state.adminPassword} />
-						<div style={{ 'margin': '5px' }}>
-							<Alert variant="primary">
-								General users will only be able to change team data.
-							</Alert>
-						</div>
-						<EditableInput title='General Password' stateKey='generalPassword' change={this.inputState} value={this.state.generalPassword} />
-						<h3 className="osrs-header" style={{ marginTop: '15px', marginBottom: 0 }}>Board Size</h3>
-						<div className="board-controls" style={{ color: 'var(--osrs-text-gold)', textShadow: '1px 1px 0px black', fontFamily: 'osrsFont, sans-serif', fontSize: '1.2rem' }}>
-							<Button click={() => this.changeNum(-1, 'rows')} text="-"></Button>
-							<span style={{ margin: '0 10px' }}>Row: {this.state.rows}</span>
-							<Button click={() => this.changeNum(1, 'rows')} text="+"></Button>
-							<Button click={() => this.changeNum(-1, 'columns')} text="-"></Button>
-							<span style={{ margin: '0 10px' }}>Column: {this.state.columns}</span>
-							<Button click={() => this.changeNum(1, 'columns')} text="+"></Button>
-						</div>
-						<div className='margin-15 osrs-container' style={{ padding: '10px', display: 'flex', flexDirection: 'column', pointerEvents: 'none', userSelect: 'none', overflowX: 'auto', maxWidth: '100%' }}>
-							{[...Array(this.state.columns)].map((x, i) => (
-								<span key={i} className='flex' style={{ justifyContent: 'center' }}>
-									{[...Array(this.state.rows)].map((x, j) => (
-										<BoardTile bare={true} key={j} br={this.state.rows === j + 1} bb={this.state.columns === i + 1} dem="40px" />
-									)
-									)}
-								</span>
-							)
-							)}
-						</div>
-						<Button variant="success" click={this.continue} text="Create Board"></Button>
 					</div>
 				}
 				{this.state.screen === 4 &&
