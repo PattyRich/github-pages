@@ -507,7 +507,7 @@ class TileModal extends React.Component {
                     key={i}
                     title={imageName}
                     src={this.listOfImages[image]}
-                    onClick={() => this.setImage(imageName)}
+                    onClick={() => this.setImage(this.listOfImages[image], true)}
                   />
                 )
               })

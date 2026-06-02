@@ -4,6 +4,7 @@
 FRONTEND_DIR=apps/frontend
 SERVER_DIR=services/api
 DOCKER_COMPOSE=docker compose
+PYTHON?=.venv/Scripts/python.exe
 
 # -----------------------
 # HELP
@@ -17,7 +18,7 @@ help:
 	@echo "  make frontend     - Run frontend only (Vite)"
 	@echo "  make backend      - Start backend services in background"
 	@echo "  make backend-logs - Start backend services and tail logs"
-	@echo "  make test         - Run frontend tests"
+	@echo "  make test         - Run backend + frontend tests"
 	@echo "  make build        - Build frontend for production"
 	@echo "  make deploy       - Build and deploy to GitHub Pages"
 	@echo "  make clean        - Remove build artifacts, node_modules, and docker volumes"
@@ -77,7 +78,8 @@ shell-worker:
 # TEST, BUILD & DEPLOY
 # -----------------------
 test:
-	cd $(FRONTEND_DIR) && npm test
+	$(PYTHON) -m pytest $(SERVER_DIR)/test_server.py -q
+	cd $(FRONTEND_DIR) && npm test -- --run
 
 build:
 	cd $(FRONTEND_DIR) && npm run build
