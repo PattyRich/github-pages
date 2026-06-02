@@ -368,8 +368,9 @@ class TestUpdateBoard(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         _mock_col.find_one.return_value = self.board  # restore
 
-    @patch("server.save_proof_image", return_value="/static/uploads/proofs/test.webp")
-    def test_general_upload_saves_proof_image_path(self, _):
+    @patch.object(server.proof_images, "save", return_value="/static/uploads/proofs/test.webp")
+    @patch.object(server.proof_images, "cleanup_removed")
+    def test_general_upload_saves_proof_image_path(self, _cleanup, _save):
         resp = self._put(
             "/updateBoard/TestBoard/gen123/general",
             {"row": 0, "col": 0, "info": {"checked": True, "proof": "",

@@ -12,7 +12,7 @@ for SUBDIR in proofs board-images; do
         find "$UPLOAD_BASE/$SUBDIR" \
         -type f \
         \( -name '*.webp' -o -name '*.jpg' -o -name '*.png' -o -name '*.gif' \) \
-        -mtime +$DAYS \
+        \( -atime +$DAYS -a -mtime +$DAYS \) \
         -delete -print | wc -l)
     TOTAL=$((TOTAL + COUNT))
 done

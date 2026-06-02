@@ -7,7 +7,7 @@ down to a target file size in kilobytes using Pillow.
 
 import base64
 import io
-from PIL import Image
+from PIL import Image, ImageOps
 
 
 def reduce_image_size(
@@ -53,6 +53,9 @@ def reduce_image_size(
 
     # ── 2. Open with Pillow ───────────────────────────────────────────────────
     img = Image.open(io.BytesIO(image_bytes))
+
+    # Honour EXIF orientation (iOS camera images are commonly rotated 90°)
+    img = ImageOps.exif_transpose(img)
 
     # Convert RGBA → RGB for JPEG (JPEG has no alpha channel)
     if output_format.upper() == "JPEG" and img.mode in ("RGBA", "P"):
