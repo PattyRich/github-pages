@@ -13,25 +13,11 @@ import Alert from "react-bootstrap/Alert";
 class BingoDraft extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-      editMode: true,
-      teams: [],
-      players: '',
-      filter: '',
-      showToast: false
-    }
+    this.state = getDefaultState()
     if (localStorage.getItem('bingo-draft')){
       this.state = {
+        ...getDefaultState(),
         ...JSON.parse(localStorage.getItem('bingo-draft'))
-      }
-    } else {
-      for (let i = 0; i < 4; i++) {
-        this.state.teams.push(
-          {
-            name: 'team-' + i,
-            members: []
-          }
-        )
       }
     }
     this.editName = this.editName.bind(this)
@@ -43,6 +29,7 @@ class BingoDraft extends React.Component {
     this.clipboard = this.clipboard.bind(this)
     this.toggleToast = this.toggleToast.bind(this)    
     this.resetData = this.resetData.bind(this)
+    this.persistDraft = this.persistDraft.bind(this)
   }
 
   componentDidMount(){
@@ -52,22 +39,11 @@ class BingoDraft extends React.Component {
   }
   
   resetData() {
-    let teams = []
-    for (let i = 0; i < 4; i++) {
-      teams.push(
-        {
-          name: 'team-' + i,
-          members: []
-        }
-      )
-    }
-    this.setState({
-      editMode: true,
-      teams: teams,
-      players: '',
-      filter: '',
-      showToast: false
-    })
+    this.setState(getDefaultState(), this.persistDraft)
+  }
+
+  persistDraft() {
+    localStorage.setItem('bingo-draft', JSON.stringify(this.state))
   }
 
   clipboard() {
@@ -88,7 +64,10 @@ class BingoDraft extends React.Component {
 
   movePlayer(player, team) {
     let players = this.state.players.split(',')
-    let teams = this.state.teams
+    let teams = this.state.teams.map((team) => ({
+      ...team,
+      members: [...team.members]
+    }))
     let index = players.findIndex((person)=> person === player)
     if (index < 0) {
       for (let i=0; i<teams.length; i++){
@@ -107,15 +86,18 @@ class BingoDraft extends React.Component {
     } else {
       players.push(player)
     }
-    this.setState({players: players.join(','), teams: teams})
-    localStorage.setItem('bingo-draft', JSON.stringify(this.state))
+    this.setState({players: players.join(','), teams: teams}, this.persistDraft)
   }
 
   toggleEdit() {
-    if (this.state.editMode === true) {
-      this.setState({showToastTwo: true})
+    const stateChange = {
+      editMode: !this.state.editMode,
+      players: this.state.players.split(',').map((name)=>name.trim()).join(',')
     }
-    this.setState({editMode: !this.state.editMode, players: this.state.players.split(',').map((name)=>name.trim()).join(',')})
+    if (this.state.editMode === true) {
+      stateChange.showToastTwo = true
+    }
+    this.setState(stateChange, this.persistDraft)
   }
 
   toggleToast(key) {
@@ -130,30 +112,30 @@ class BingoDraft extends React.Component {
   inputState(e, target) {
 		let stateChange = {}
 		stateChange[target] = e.target.value
-		this.setState(stateChange)
-    localStorage.setItem('bingo-draft', JSON.stringify(this.state))
+		this.setState(stateChange, this.persistDraft)
 	}
 
   editName(e,index) {
-    let x = this.state.teams
-    x[index].name = e.target.value
-    this.setState({teams: x})
+    let x = this.state.teams.map((team, i) => (
+      i === index ? {...team, name: e.target.value} : team
+    ))
+    this.setState({teams: x}, this.persistDraft)
   }
 
   shuffle() {
-    let x = this.state.teams
+    let x = [...this.state.teams]
     shuffle(x)
-    this.setState({teams: x})
+    this.setState({teams: x}, this.persistDraft)
   }
 
   changeTeamCount(addTeam){
-    let x = this.state.teams
+    let x = [...this.state.teams]
     if (addTeam) {
       x.push({name: 'team-' + x.length, members: []})
     } else {
       x.pop()
     }
-    this.setState({teams: x})
+    this.setState({teams: x}, this.persistDraft)
   }
 
   render() {
@@ -189,7 +171,7 @@ class BingoDraft extends React.Component {
         <div className='draft-teams'>
           { this.state.teams.map((team, i)=>{
             return(
-              <Dustbin dropped={this.movePlayer} editMode={this.state.editMode} key={i+team.name} team={team} />
+              <Dustbin dropped={this.movePlayer} editMode={this.state.editMode} editName={(e)=>this.editName(e, i)} key={i+team.name} team={team} />
             )
           })
           }
@@ -246,6 +228,26 @@ class BingoDraft extends React.Component {
 }
 
 export default BingoDraft
+
+function getDefaultState() {
+  let teams = []
+  for (let i = 0; i < 4; i++) {
+    teams.push(
+      {
+        name: 'team-' + i,
+        members: []
+      }
+    )
+  }
+
+  return {
+    editMode: true,
+    teams: teams,
+    players: '',
+    filter: '',
+    showToast: false
+  }
+}
 
 function shuffle(array) {
   let currentIndex = array.length,  randomIndex;
