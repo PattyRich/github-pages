@@ -3,15 +3,19 @@ import Button from './BootStrap/Button'
 
 const Teams = (props) => {
   return (
-    <div style={{marginTop: '20px', display: 'flex', 'justifyContent': 'center', alignItems: 'center', flexDirection: 'column', color: 'var(--osrs-text-beige)'}}>
-      Join a recent board.    
+    <div className="recent-board-list">
+      <h2 className="osrs-header">Recent Boards</h2>
       {props.recent && props.recent.map((item, i)=>{
         return (
-          <div key={i} className='flex-center' style={{'alignItems': 'center'}}>
-            <div style={{margin: '5px'}}>
-              <Button variant="outline-primary" click={() => props.click(item)} text={`${item.boardName}-${item.priv}`} />
+          <div key={i} className='recent-board-row'>
+            <div className="recent-board-meta">
+              <strong>{item.boardName}</strong>
+              <span>{item.priv}</span>
             </div>
-            <Button variant="outline-danger" click={() => props.removeRecent(item.boardName)} text={'X'} />
+            <div className="recent-board-actions">
+              <Button variant="outline-primary" click={() => props.click(item)} text="Join" />
+              <Button variant="outline-danger" click={() => props.removeRecent(item.boardName)} text="Remove" />
+            </div>
           </div>
         )
       })}

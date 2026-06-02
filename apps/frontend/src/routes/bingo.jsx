@@ -309,37 +309,76 @@ class Bingo extends React.Component {
 					</div>
 				}
 				{this.state.screen === 4 &&
-					<span className='flex join-wrapper'>
-						<h1 className='margin-15 osrs-header'> Join a Bingo Board </h1>
-						<EditableInput id="boardName" title='Board Name' stateKey='boardName' change={this.inputState} value={this.state.boardName} />
-						<div style={{ display: 'flex', width: '100%', maxWidth: '500px', justifyContent: 'space-between', marginBottom: '15px', gap: '8px' }}>
-							<Button
-								style={{ border: this.state.joinPwTitle === 'general' ? '2px solid var(--osrs-text-gold)' : '', color: this.state.joinPwTitle === 'general' ? 'var(--osrs-text-gold)' : 'var(--osrs-text-normal)' }}
-								click={() => this.setState({ joinPwTitle: 'general' })} text="Join as General" />
-							<Button
-								style={{ border: this.state.joinPwTitle === 'admin' ? '2px solid var(--osrs-text-gold)' : '', color: this.state.joinPwTitle === 'admin' ? 'var(--osrs-text-gold)' : 'var(--osrs-text-normal)' }}
-								click={() => this.setState({ joinPwTitle: 'admin' })} text="Join as Admin" />
+					<div className='join-wrapper'>
+						<div className="join-board-shell">
+							<div className="join-board-header">
+								<div>
+									<h1 className='osrs-header'>Join Bingo Board</h1>
+									<p>Enter the board name and the access word your event organizer shared.</p>
+								</div>
+								<Button variant="primary" click={() => this.props.navigate('/bingo/create')} text="Create New" />
+							</div>
+
+							<div className="join-board-grid">
+								<section className="join-board-panel">
+									<h2 className="osrs-header">Access</h2>
+									<EditableInput id="boardName" title='Board Name' stateKey='boardName' change={this.inputState} value={this.state.boardName} />
+
+									<div className="join-mode-grid">
+										<button
+											type="button"
+											className={`join-mode-card ${this.state.joinPwTitle === 'general' ? 'is-active' : ''}`}
+											onClick={() => this.setState({ joinPwTitle: 'general' })}
+										>
+											<span>General</span>
+											<small>Submit proof and track team progress.</small>
+										</button>
+										<button
+											type="button"
+											className={`join-mode-card ${this.state.joinPwTitle === 'admin' ? 'is-active' : ''}`}
+											onClick={() => this.setState({ joinPwTitle: 'admin' })}
+										>
+											<span>Admin</span>
+											<small>Edit board setup, teams, layers, and tiles.</small>
+										</button>
+									</div>
+
+									<InputGroup className="mb-3 join-password-input">
+										<InputGroup.Text>{this.state.joinPwTitle === 'general' ? 'General Pw' : 'Admin Pw'}</InputGroup.Text>
+										<FormControl
+											id="bingo-pw"
+											value={this.state.joinPw}
+											onChange={(e) => { this.setState({ joinPw: e.target.value }) }}
+											onKeyUp={(e) => {
+												let code = e.keyCode || e.which
+												if (code === 13) {
+													this.auth()
+												}
+											}}
+										/>
+									</InputGroup>
+
+									<div className="join-board-actions">
+										<Button variant="success" click={this.auth} text="Join Board"></Button>
+									</div>
+								</section>
+
+								<section className="join-board-panel join-board-help">
+									<h2 className="osrs-header">What You Need</h2>
+									<ul>
+										<li><strong>Board name</strong> from the event organizer.</li>
+										<li><strong>General password</strong> for normal team participation.</li>
+										<li><strong>Admin password</strong> only if you are managing the board.</li>
+									</ul>
+									<p>Layered boards may reveal only part of the board at first. More rows unlock when an admin opens them.</p>
+								</section>
+							</div>
+
+							{this.state.recentBoards && this.state.recentBoards.length > 0 &&
+								<RecentBoards click={this.auth} removeRecent={this.removeRecent} recent={this.state.recentBoards} />
+							}
 						</div>
-						<InputGroup style={{ width: '100%', maxWidth: '500px' }} className="mb-3">
-							<InputGroup.Text style={{ width: '150px' }}>{this.state.joinPwTitle === 'general' ? 'General' : 'Admin'} Pw</InputGroup.Text>
-							<FormControl
-								id="bingo-pw"
-								value={this.state.joinPw}
-								onChange={(e) => { this.setState({ joinPw: e.target.value }) }}
-								onKeyUp={(e) => {
-									let code = e.keyCode || e.which
-									//if enter was pressed
-									if (code === 13) {
-										this.auth()
-									}
-								}}
-							/>
-						</InputGroup>
-						<Button variant="success" click={this.auth} text="Join"></Button>
-						{this.state.recentBoards && this.state.recentBoards.length > 0 &&
-							<RecentBoards click={this.auth} removeRecent={this.removeRecent} recent={this.state.recentBoards} />
-						}
-					</span>
+					</div>
 				}
 			</>
 		)
