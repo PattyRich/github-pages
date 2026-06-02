@@ -1,12 +1,10 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
 import './LolBeat.css';
 
 const DDRAGON_BASE = 'https://ddragon.leagueoflegends.com/cdn';
 const DDRAGON_FALLBACK = '16.9.1';
 
 function LolBeat() {
-  const navigate = useNavigate();
   const [riotId, setRiotId] = useState('');
   const [loading, setLoading] = useState(false);
   const [crawling, setCrawling] = useState(false);
@@ -185,8 +183,6 @@ function LolBeat() {
 
   return (
     <div className="lol-container">
-      <button className="lol-home-btn" onClick={() => navigate('/')}>← Home</button>
-
       <header className="lol-header">
         <h1>League of Legends Six Degrees</h1>
         <p>Find the exact sequence of games connecting you to the #1 Challenger player.</p>

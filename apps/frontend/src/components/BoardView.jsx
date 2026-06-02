@@ -359,7 +359,6 @@ class BoardView extends React.Component {
           </div>
           <div className='settings-bar'>
             <div className='flex bingo-edit'>
-              <Button click={() => this.props.navigate('/')} text="Go Home" variant="primary" />
               <Button click={() => this.setState({ showSettings: true })} text="Settings" variant="primary" />
               {(this.state.privilage === 'admin' || this.state.canSwitchPriv) &&
                 <>

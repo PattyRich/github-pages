@@ -13,6 +13,7 @@ import Pets from './routes/Pets';
 import AllPets from './routes/AllPets';
 import LolBeat from './routes/LolBeat';
 import Status from './routes/Status';
+import HomeButton from './components/HomeButton';
 import { HashRouter, Routes, Route } from "react-router-dom";
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -61,6 +62,7 @@ const Maintenance = (
 
 root.render(
 	<HashRouter>
+		<HomeButton />
 		<Routes>
 			<Route path="/" element={<App />} />
 			<Route path="/status" element={<Status />} />

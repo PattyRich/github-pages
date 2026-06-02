@@ -1,6 +1,4 @@
 import React from 'react';
-import Button from '../components/BootStrap/Button'
-import { useNavigate } from "react-router-dom";
 import './ToaFlip.css';
 
 
@@ -77,7 +75,6 @@ class ToaFlip extends React.Component {
   render() {
     return (
       <div className="route-dark-bg">
-        <Button style={{ position: 'absolute', right: '10px', top: '10px' }} click={() => this.props.navigate('/')} text="Home" variant="primary" />
         <div style={{ 'display': 'flex', 'flexDirection': 'column', 'justifyContent': 'center', 'alignItems': 'center', 'marginTop': '12%' }}>
           {this.state.board.map((row, index1) => {
             return (
@@ -199,10 +196,4 @@ function checkWin(board) {
   })
   return win
 }
-
-
-function withHooks(Component) {
-  return props => <Component {...props} navigate={useNavigate()} />;
-}
-
-export default withHooks(ToaFlip)
+export default ToaFlip

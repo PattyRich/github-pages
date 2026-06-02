@@ -1,13 +1,10 @@
 import React, {useEffect, useState} from 'react';
-import Button from '../components/BootStrap/Button'
-import { useNavigate } from "react-router-dom";
 import { loot } from '../looter/looter'
 import './AllPets.css'
 import { assetUrl } from '../utils/assetUrl';
 
 
 const AllPets = (props) => {
-  const navigate = useNavigate();
   const [petList, setPetList] = useState([]);
   const [petData, setPetData] = useState([]);
 
@@ -61,8 +58,6 @@ const AllPets = (props) => {
 
 	return (
     <div className='main-all-pets route-dark-bg pets-theme'>
-      <Button style={{position: 'absolute', right: '10px', top: '10px'}} click={() => navigate('/')} text="Home" variant="primary"/>
-      
       <div className='osrs-container' style={{ maxWidth: '1000px', margin: '0 auto', padding: '10px' }}>
         <h3 className='osrs-header' style={{ textAlign: 'center', marginBottom: '10px' }}>All Pets Simulator</h3>
         
