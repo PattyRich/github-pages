@@ -1,4 +1,4 @@
-import React from 'react';
+import { useState } from 'react';
 import Button from 'react-bootstrap/Button';
 import BSButton from './Button';
 import Modal from 'react-bootstrap/Modal';
@@ -11,243 +11,250 @@ import './EditTeams.css';
 
 const boardSizeOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 
-class EditTeams extends React.Component {
-  constructor(props) {
-    super(props);
-    const rows = Number(props.rows);
-    const columns = Number(props.columns);
-    const visibleRows = clampVisibleRows(props.visibleRows, columns);
-    this.state = {
-      teams: JSON.parse(JSON.stringify(props.teams)),
-      passwordRequired: props.passwordRequired || false,
-      columns,
-      rows,
-      visibleRows,
-      layeredBoard: visibleRows < columns,
+function EditTeams({ show, handleClose, handleSave, teams, passwordRequired, rows, columns, visibleRows }) {
+  const [state, setState] = useState(() => {
+    const rowCount = Number(rows);
+    const columnCount = Number(columns);
+    const visibleRowCount = clampVisibleRows(visibleRows, columnCount);
+    return {
+      teams: JSON.parse(JSON.stringify(teams)),
+      passwordRequired: passwordRequired || false,
+      columns: columnCount,
+      rows: rowCount,
+      visibleRows: visibleRowCount,
+      layeredBoard: visibleRowCount < columnCount,
       activeTab: 'board',
     };
-    this.inputState = this.inputState.bind(this);
-    this.handleSave = this.handleSave.bind(this);
-    this.handleClose = this.handleClose.bind(this);
-    this.editName = this.editName.bind(this);
-    this.removeTeam = this.removeTeam.bind(this);
-    this.addTeam = this.addTeam.bind(this);
-    this.editPassword = this.editPassword.bind(this);
+  });
+
+  function inputState(e, target) {
+    const value = Number(e.target.value);
+    setState((currentState) => {
+      const stateChange = {
+        [target]: value,
+      };
+      if (target === 'columns') {
+        stateChange.visibleRows = clampVisibleRows(currentState.visibleRows, value);
+        stateChange.layeredBoard = stateChange.visibleRows < value;
+      }
+      if (target === 'visibleRows') {
+        stateChange.visibleRows = clampVisibleRows(e.target.value, currentState.columns);
+      }
+      return {
+        ...currentState,
+        ...stateChange,
+      };
+    });
   }
 
-  inputState(e, target) {
-    let stateChange = {};
-    stateChange[target] = Number(e.target.value);
-    if (target === 'columns') {
-      stateChange.visibleRows = clampVisibleRows(this.state.visibleRows, stateChange[target]);
-      stateChange.layeredBoard = stateChange.visibleRows < stateChange[target];
-    }
-    if (target === 'visibleRows') {
-      stateChange.visibleRows = clampVisibleRows(e.target.value, this.state.columns);
-    }
-    this.setState(stateChange);
+  function editName(e, index) {
+    const name = e.target.value;
+    setState((currentState) => ({
+      ...currentState,
+      teams: currentState.teams.map((team, teamIndex) =>
+        teamIndex === index ? { ...team, data: { ...team.data, name } } : team
+      ),
+    }));
   }
 
-  editName(e, index) {
-    let x = this.state.teams;
-    x[index].data.name = e.target.value;
-    this.setState({ teams: x });
+  function editPassword(e, index) {
+    const password = e.target.value;
+    setState((currentState) => ({
+      ...currentState,
+      teams: currentState.teams.map((team, teamIndex) =>
+        teamIndex === index ? { ...team, data: { ...team.data, password } } : team
+      ),
+    }));
   }
 
-  editPassword(e, index) {
-    let x = this.state.teams;
-    x[index].data.password = e.target.value;
-    this.setState({ teams: x });
+  function save() {
+    const rowsToShow = state.layeredBoard ? state.visibleRows : state.columns;
+    handleSave(state.teams, state.passwordRequired, state.rows, state.columns, rowsToShow);
+    handleClose();
   }
 
-  handleSave() {
-    const visibleRows = this.state.layeredBoard ? this.state.visibleRows : this.state.columns;
-    this.props.handleSave(
-      this.state.teams,
-      this.state.passwordRequired,
-      this.state.rows,
-      this.state.columns,
-      visibleRows
-    );
-    this.props.handleClose();
+  function removeTeam() {
+    setState((currentState) => {
+      if (currentState.teams.length <= 1) {
+        return currentState;
+      }
+      return {
+        ...currentState,
+        teams: currentState.teams.slice(0, -1),
+      };
+    });
   }
 
-  handleClose() {
-    this.props.handleClose();
+  function addTeam() {
+    setState((currentState) => {
+      const newTeam = JSON.parse(JSON.stringify(currentState.teams[0]));
+      newTeam.data.name = `team-${currentState.teams.length}`;
+      return {
+        ...currentState,
+        teams: [...currentState.teams, newTeam],
+      };
+    });
   }
 
-  removeTeam() {
-    let x = this.state.teams;
-    if (x.length <= 1) {
-      return;
-    }
-    x.pop();
-    this.setState({ teams: x });
+  function toggleLayeredBoard() {
+    setState((currentState) => ({
+      ...currentState,
+      layeredBoard: !currentState.layeredBoard,
+      visibleRows: currentState.layeredBoard
+        ? currentState.columns
+        : clampVisibleRows(currentState.visibleRows, currentState.columns),
+    }));
   }
 
-  addTeam() {
-    let x = this.state.teams;
-    x.push(JSON.parse(JSON.stringify(x[0])));
-    x[x.length - 1].data.name = `team-${x.length - 1}`;
-    this.setState({ teams: x });
-  }
-
-  render() {
-    return (
-      <Modal
-        show={this.props.show}
-        onHide={this.handleClose}
-        size="lg"
-        aria-labelledby="contained-modal-title-vcenter"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title id="contained-modal-title-vcenter">Edit Board</Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <Alert variant={'danger'}>
-            ***NOTE removing teams or columns/rows will delete all their current data.
-          </Alert>
-          <Tabs
-            activeKey={this.state.activeTab}
-            onSelect={(key) => this.setState({ activeTab: key })}
-            variant="pills"
-            className="mb-3"
-          >
-            <Tab eventKey="board" title="Board">
-              <div className="edit-board-layout">
-                <div>
-                  <div className="edit-board-size-grid">
-                    <Form.Group>
-                      <Form.Label>Rows (up and down)</Form.Label>
-                      <Form.Select
-                        onChange={(e) => {
-                          this.inputState(e, 'columns');
-                        }}
-                        value={this.state.columns}
-                      >
-                        {boardSizeOptions.map((num) => (
-                          <option key={num} value={num}>
-                            {num}
-                          </option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                    <Form.Group>
-                      <Form.Label>Columns (left and right)</Form.Label>
-                      <Form.Select
-                        onChange={(e) => {
-                          this.inputState(e, 'rows');
-                        }}
-                        value={this.state.rows}
-                      >
-                        {boardSizeOptions.map((num) => (
-                          <option key={num} value={num}>
-                            {num}
-                          </option>
-                        ))}
-                      </Form.Select>
-                    </Form.Group>
-                  </div>
-                  <Form.Check
-                    type="switch"
-                    id="layered-board-switch"
-                    label="Layered board"
-                    onChange={() =>
-                      this.setState((state) => ({
-                        layeredBoard: !state.layeredBoard,
-                        visibleRows: state.layeredBoard
-                          ? state.columns
-                          : clampVisibleRows(state.visibleRows, state.columns),
-                      }))
-                    }
-                    checked={this.state.layeredBoard}
-                  />
-                  <div className={`layer-control ${this.state.layeredBoard ? '' : 'is-disabled'}`}>
-                    <Form.Label>
-                      Visible rows:{' '}
-                      {this.state.layeredBoard ? this.state.visibleRows : this.state.columns} /{' '}
-                      {this.state.columns}
-                    </Form.Label>
-                    <Form.Range
-                      min={1}
-                      max={this.state.columns}
-                      value={this.state.layeredBoard ? this.state.visibleRows : this.state.columns}
-                      disabled={!this.state.layeredBoard}
-                      onChange={(e) => this.inputState(e, 'visibleRows')}
-                    />
-                    <div className="layer-help">
-                      General users can only see tile details and submit proof for revealed rows.
-                      Admins can still edit the full board.
-                    </div>
-                  </div>
+  return (
+    <Modal
+      show={show}
+      onHide={handleClose}
+      size="lg"
+      aria-labelledby="contained-modal-title-vcenter"
+      centered
+    >
+      <Modal.Header closeButton>
+        <Modal.Title id="contained-modal-title-vcenter">Edit Board</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        <Alert variant={'danger'}>
+          ***NOTE removing teams or columns/rows will delete all their current data.
+        </Alert>
+        <Tabs
+          activeKey={state.activeTab}
+          onSelect={(key) => setState((currentState) => ({ ...currentState, activeTab: key }))}
+          variant="pills"
+          className="mb-3"
+        >
+          <Tab eventKey="board" title="Board">
+            <div className="edit-board-layout">
+              <div>
+                <div className="edit-board-size-grid">
+                  <Form.Group>
+                    <Form.Label>Rows (up and down)</Form.Label>
+                    <Form.Select
+                      onChange={(e) => {
+                        inputState(e, 'columns');
+                      }}
+                      value={state.columns}
+                    >
+                      {boardSizeOptions.map((num) => (
+                        <option key={num} value={num}>
+                          {num}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
+                  <Form.Group>
+                    <Form.Label>Columns (left and right)</Form.Label>
+                    <Form.Select
+                      onChange={(e) => {
+                        inputState(e, 'rows');
+                      }}
+                      value={state.rows}
+                    >
+                      {boardSizeOptions.map((num) => (
+                        <option key={num} value={num}>
+                          {num}
+                        </option>
+                      ))}
+                    </Form.Select>
+                  </Form.Group>
                 </div>
-                <LayerPreview
-                  rows={this.state.columns}
-                  columns={this.state.rows}
-                  visibleRows={
-                    this.state.layeredBoard ? this.state.visibleRows : this.state.columns
-                  }
-                />
-              </div>
-            </Tab>
-            <Tab eventKey="teams" title="Teams">
-              <div className="flex-center edit-team-count">
-                <BSButton click={this.removeTeam} text="-"></BSButton>
-                <strong># of Teams: {this.state.teams.length}</strong>
-                <BSButton click={this.addTeam} text="+"></BSButton>
-              </div>
-              {this.state.teams.map((team, i) => (
-                <EditableInput
-                  key={i}
-                  title={`Team ${i + 1}`}
-                  change={(e) => this.editName(e, i)}
-                  value={team.data.name}
-                />
-              ))}
-            </Tab>
-            <Tab eventKey="access" title="Access">
-              <div style={{ marginBottom: '15px' }}>
                 <Form.Check
                   type="switch"
-                  id="custom-switch"
-                  label="Require teams to enter a password to make edits?"
-                  onChange={() => this.setState({ passwordRequired: !this.state.passwordRequired })}
-                  checked={this.state.passwordRequired}
+                  id="layered-board-switch"
+                  label="Layered board"
+                  onChange={toggleLayeredBoard}
+                  checked={state.layeredBoard}
                 />
+                <div className={`layer-control ${state.layeredBoard ? '' : 'is-disabled'}`}>
+                  <Form.Label>
+                    Visible rows: {state.layeredBoard ? state.visibleRows : state.columns} /{' '}
+                    {state.columns}
+                  </Form.Label>
+                  <Form.Range
+                    min={1}
+                    max={state.columns}
+                    value={state.layeredBoard ? state.visibleRows : state.columns}
+                    disabled={!state.layeredBoard}
+                    onChange={(e) => inputState(e, 'visibleRows')}
+                  />
+                  <div className="layer-help">
+                    General users can only see tile details and submit proof for revealed rows.
+                    Admins can still edit the full board.
+                  </div>
+                </div>
               </div>
-              {this.state.passwordRequired ? (
-                this.state.teams.map((team, i) => {
-                  const password = team.data.password || '';
-                  return (
-                    <EditableInput
-                      key={i}
-                      title={`${team.data.name}'s password`}
-                      change={(e) => this.editPassword(e, i)}
-                      value={password}
-                    />
-                  );
-                })
-              ) : (
-                <Alert variant="primary">
-                  Team passwords are off. Anyone with the general board password can submit proof
-                  for any team.
-                </Alert>
-              )}
-            </Tab>
-          </Tabs>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="danger" onClick={this.handleClose}>
-            Close
-          </Button>
-          <Button variant="success" onClick={this.handleSave}>
-            Save
-          </Button>
-        </Modal.Footer>
-      </Modal>
-    );
-  }
+              <LayerPreview
+                rows={state.columns}
+                columns={state.rows}
+                visibleRows={state.layeredBoard ? state.visibleRows : state.columns}
+              />
+            </div>
+          </Tab>
+          <Tab eventKey="teams" title="Teams">
+            <div className="flex-center edit-team-count">
+              <BSButton click={removeTeam} text="-"></BSButton>
+              <strong># of Teams: {state.teams.length}</strong>
+              <BSButton click={addTeam} text="+"></BSButton>
+            </div>
+            {state.teams.map((team, i) => (
+              <EditableInput
+                key={i}
+                title={`Team ${i + 1}`}
+                change={(e) => editName(e, i)}
+                value={team.data.name}
+              />
+            ))}
+          </Tab>
+          <Tab eventKey="access" title="Access">
+            <div style={{ marginBottom: '15px' }}>
+              <Form.Check
+                type="switch"
+                id="custom-switch"
+                label="Require teams to enter a password to make edits?"
+                onChange={() =>
+                  setState((currentState) => ({
+                    ...currentState,
+                    passwordRequired: !currentState.passwordRequired,
+                  }))
+                }
+                checked={state.passwordRequired}
+              />
+            </div>
+            {state.passwordRequired ? (
+              state.teams.map((team, i) => {
+                const password = team.data.password || '';
+                return (
+                  <EditableInput
+                    key={i}
+                    title={`${team.data.name}'s password`}
+                    change={(e) => editPassword(e, i)}
+                    value={password}
+                  />
+                );
+              })
+            ) : (
+              <Alert variant="primary">
+                Team passwords are off. Anyone with the general board password can submit proof for
+                any team.
+              </Alert>
+            )}
+          </Tab>
+        </Tabs>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="danger" onClick={handleClose}>
+          Close
+        </Button>
+        <Button variant="success" onClick={save}>
+          Save
+        </Button>
+      </Modal.Footer>
+    </Modal>
+  );
 }
 
 export default EditTeams;
