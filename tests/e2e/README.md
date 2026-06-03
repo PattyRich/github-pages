@@ -28,5 +28,6 @@ Then run:
 - `MONGO_URI`: Mongo URI used for cleanup, default `mongodb://localhost:27017/`
 - `PLAYWRIGHT_BROWSER`: browser name, default `chromium`
 - `PLAYWRIGHT_HEADLESS`: set to `0` to watch the test run
+- `PLAYWRIGHT_SLOW_MO`: delay each Playwright action by this many milliseconds, for example `500`
 - `PLAYWRIGHT_MOBILE`: set to `1` to run with a mobile-sized touch viewport
 - `PLAYWRIGHT_E2E_BOARD_PREFIX`: board-name prefix that suppresses creation Discord alerts, default `__playwright_e2e__`

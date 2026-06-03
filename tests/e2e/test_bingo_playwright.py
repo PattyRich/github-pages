@@ -86,10 +86,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             open_tile_by_index(page, 1)
             fill_input_group(page, "Title", "Asset Tile")
             page.get_by_role("button", name="Set Tile Background Image").click()
-            asset_icon = page.locator('img[title="Dragon claws"]').first
-            expect(asset_icon).to_be_visible()
-            expect_loaded_image(page, asset_icon)
-            asset_icon.click()
+            select_asset_image(page, "Dragon claws")
             expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
             page.get_by_role("button", name="Save").click()
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
@@ -99,6 +96,20 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             page.get_by_role("button", name="Set Tile Background Image").click()
             page.locator('input[type="file"][accept=".png,.jpeg"]').set_input_files(str(board_image))
             expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
+            page.get_by_role("button", name="Save").click()
+            expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
+
+            open_tile_by_index(page, 3)
+            fill_input_group(page, "Title", "Pixel Asset Tile")
+            page.get_by_role("button", name="Set Tile Background Image").click()
+            select_asset_image(page, "Twisted bow")
+            page.get_by_label("Use pixel image?").check()
+            expect(page.get_by_label("Use pixel image?")).to_be_checked()
+            page.get_by_role("button", name="Save").click()
+            expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
+
+            open_tile_by_index(page, 10)
+            fill_input_group(page, "Title", "Hidden Row Tile")
             page.get_by_role("button", name="Save").click()
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
 
@@ -117,11 +128,15 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
 
             page.get_by_role("button", name="Admin Mode").click()
             expect(page.get_by_role("heading", name=re.compile(r"team-0"))).to_be_visible()
+            expect_board_tile_count(page, 10)
+            expect(page.get_by_text("Hidden Row Tile", exact=True)).not_to_be_visible()
 
             observer = context.new_page()
             observer.goto(f"{FRONTEND_URL}/#/bingo/{board_name}?password={general_password}")
             expect(observer.get_by_role("heading", name=re.compile(r"team-0"))).to_be_visible()
             expect(observer.get_by_text(re.compile(r"Points:\s*0"))).to_be_visible()
+            expect_board_tile_count(observer, 10)
+            expect(observer.get_by_text("Hidden Row Tile", exact=True)).not_to_be_visible()
 
             open_tile(page, "E2E Tile")
             fill_input_group(page, "Proof", "Proof from Playwright")
@@ -142,6 +157,8 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(page.get_by_label("Layered board")).to_be_checked()
             page.get_by_role("button", name="Save").click()
             expect(page.get_by_text("Teams Successfully Updated!")).to_be_visible()
+            expect_board_tile_count(page, 20)
+            expect(page.get_by_text("Hidden Row Tile", exact=True)).to_be_visible()
 
             open_tile(page, "E2E Tile")
             page.locator(".modal-header").get_by_role("button", name="Close").click()
@@ -149,6 +166,11 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
 
             open_tile(page, "Asset Tile")
             expect_input_group_value(page, "Title", "Asset Tile")
+            page.locator(".modal-footer").get_by_role("button", name="Close").click()
+            expect(page.get_by_role("dialog")).not_to_be_visible()
+
+            open_tile(page, "Pixel Asset Tile")
+            expect(page.get_by_label("Use pixel image?")).to_be_checked()
             page.locator(".modal-footer").get_by_role("button", name="Close").click()
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
@@ -166,6 +188,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
         assert any("/static/uploads/board-images/" in url for url in artifact_urls)
         assert any("oldschool.runescape.wiki/images/" in url for url in artifact_urls)
         assert any("/static/uploads/proofs/" in url for url in artifact_urls)
+        assert any(image.get("usePixel") is True for image in collect_tile_images(board))
     finally:
         cleanup_board(collection, board_name)
         shutil.rmtree(run_dir, ignore_errors=True)
@@ -205,6 +228,13 @@ def select_wiki_image(page, search_text, result_text):
     wiki_result.click()
 
 
+def select_asset_image(page, title):
+    asset_icon = page.locator(f'img[title="{title}"]').first
+    expect(asset_icon).to_be_visible()
+    expect_loaded_image(page, asset_icon)
+    asset_icon.click()
+
+
 def expect_loaded_image(page, image):
     handle = image.element_handle()
     page.wait_for_function(
@@ -224,6 +254,10 @@ def open_tile_by_index(page, index):
     expect(page.get_by_role("dialog")).to_be_visible()
 
 
+def expect_board_tile_count(page, count):
+    expect(page.locator(".center-board .box-flex")).to_have_count(count)
+
+
 def edit_board(page):
     page.get_by_role("button", name="Edit Board").click()
     expect(page.get_by_role("dialog", name="Edit Board")).to_be_visible()
@@ -232,11 +266,12 @@ def edit_board(page):
 def launch_browser(p):
     browser_name = os.environ.get("PLAYWRIGHT_BROWSER", "chromium")
     headless = os.environ.get("PLAYWRIGHT_HEADLESS", "1").lower() not in ("0", "false", "no")
+    slow_mo = int(os.environ.get("PLAYWRIGHT_SLOW_MO", "0") or "0")
     browser_type = getattr(p, browser_name, None)
     if browser_type is None:
         pytest.skip(f"Unsupported PLAYWRIGHT_BROWSER={browser_name!r}")
     try:
-        return browser_type.launch(headless=headless)
+        return browser_type.launch(headless=headless, slow_mo=slow_mo)
     except Error as exc:
         pytest.skip(f"Playwright browser is not installed or cannot launch: {exc}")
 
@@ -283,11 +318,9 @@ def cleanup_board(collection, board_name):
 
 def collect_artifact_urls(board):
     urls = []
-    for row in board.get("boardData", []):
-        for tile in row:
-            image = tile.get("image")
-            if isinstance(image, dict) and image.get("url"):
-                urls.append(image["url"])
+    for image in collect_tile_images(board):
+        if image.get("url"):
+            urls.append(image["url"])
 
     for team_index in range(int(board.get("teams", 0))):
         team = board.get(f"team-{team_index}", {})
@@ -295,6 +328,16 @@ def collect_artifact_urls(board):
             for tile in row:
                 urls.extend(tile.get("proofImages") or [])
     return urls
+
+
+def collect_tile_images(board):
+    images = []
+    for row in board.get("boardData", []):
+        for tile in row:
+            image = tile.get("image")
+            if isinstance(image, dict):
+                images.append(image)
+    return images
 
 
 def delete_artifact(image_url):
