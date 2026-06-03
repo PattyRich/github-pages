@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './Status.css';
+import { fetchGet } from '../utils/utils.js';
 
 const POLL_INTERVAL = 30000;
 
@@ -14,9 +15,9 @@ function formatUptime(seconds) {
 
 function StatusBadge({ status }) {
   const map = {
-    ok:       { label: 'healthy',  cls: 'badge-ok' },
+    ok: { label: 'healthy', cls: 'badge-ok' },
     degraded: { label: 'degraded', cls: 'badge-warn' },
-    error:    { label: 'error',    cls: 'badge-err' },
+    error: { label: 'error', cls: 'badge-err' },
   };
   const { label, cls } = map[status] ?? { label: status, cls: 'badge-warn' };
   return <span className={`status-badge ${cls}`}>{label}</span>;
@@ -60,8 +61,8 @@ export default function Status() {
 
   const fetchHealth = useCallback(async () => {
     try {
-      const res = await fetch(`${window.API}/health`);
-      const json = await res.json();
+      const [json, err] = await fetchGet('health', { allowErrorData: true });
+      if (!json) throw err;
       setData(json);
       setError(null);
     } catch (e) {
@@ -81,7 +82,7 @@ export default function Status() {
 
   useEffect(() => {
     const tick = setInterval(() => {
-      setCountdown(c => (c > 0 ? c - 1 : 0));
+      setCountdown((c) => (c > 0 ? c - 1 : 0));
     }, 1000);
     return () => clearInterval(tick);
   }, [lastChecked]);
@@ -92,7 +93,6 @@ export default function Status() {
   return (
     <div className="status-page">
       <div className="status-container">
-
         <div className="status-header osrs-glass-raised">
           <div className="status-header-left">
             <h1 className="osrs-header status-title">System Status</h1>
@@ -115,15 +115,13 @@ export default function Status() {
         {lastChecked && (
           <p className="status-ts">
             Last checked {lastChecked.toLocaleTimeString()} · refreshing in {countdown}s
-            <button className="refresh-btn" onClick={fetchHealth}>↻ Refresh</button>
+            <button className="refresh-btn" onClick={fetchHealth}>
+              ↻ Refresh
+            </button>
           </p>
         )}
 
-        {error && (
-          <div className="status-error-banner">
-            {error}
-          </div>
-        )}
+        {error && <div className="status-error-banner">{error}</div>}
 
         <section className="status-section">
           <h2 className="status-section-label">Services</h2>
@@ -142,14 +140,18 @@ export default function Status() {
                   detail={
                     data.mongo.status === 'ok'
                       ? `ping ok · ${data.mongo.boards_count ?? '?'} boards`
-                      : data.mongo.error ?? 'unreachable'
+                      : (data.mongo.error ?? 'unreachable')
                   }
                   latency={data.mongo.latency_ms}
                   status={data.mongo.status}
                 />
                 <ServiceRow
                   name="Redis"
-                  detail={data.redis.status === 'ok' ? 'PING → PONG · pub/sub active' : data.redis.error ?? 'unreachable'}
+                  detail={
+                    data.redis.status === 'ok'
+                      ? 'PING → PONG · pub/sub active'
+                      : (data.redis.error ?? 'unreachable')
+                  }
                   latency={data.redis.latency_ms}
                   status={data.redis.status}
                 />
@@ -157,7 +159,7 @@ export default function Status() {
                   name="RQ worker"
                   detail={
                     data.rq.status === 'error'
-                      ? data.rq.error ?? 'unavailable'
+                      ? (data.rq.error ?? 'unavailable')
                       : `${data.rq.workers} worker${data.rq.workers !== 1 ? 's' : ''} online · ${data.rq.failed} failed`
                   }
                   latency={null}
@@ -196,11 +198,7 @@ export default function Status() {
               value={data ? String(data.rq?.workers ?? '?') : null}
               sub={data?.rq?.failed > 0 ? `${data.rq.failed} failed jobs` : 'no failed jobs'}
             />
-            <StatCard
-              label="Rate limiting"
-              value="Redis"
-              sub="flask-limiter backend"
-            />
+            <StatCard label="Rate limiting" value="Redis" sub="flask-limiter backend" />
           </div>
         </section>
 
@@ -215,7 +213,6 @@ export default function Status() {
             </pre>
           </div>
         </section>
-
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './LolBeat.css';
+import { fetchGet, fetchPost } from '../utils/utils.js';
 
 const DDRAGON_BASE = 'https://ddragon.leagueoflegends.com/cdn';
 const DDRAGON_FALLBACK = '16.9.1';
@@ -25,7 +26,7 @@ function LolBeat() {
           setDdVersion(versions[0]);
         }
       })
-      .catch(() => { });
+      .catch(() => {});
   }, []);
 
   // Cleanup intervals on unmount
@@ -41,45 +42,55 @@ function LolBeat() {
   const stopCrawling = useCallback(() => {
     setCrawling(false);
     setCountdown(0);
-    if (countdownRef.current) { clearInterval(countdownRef.current); countdownRef.current = null; }
-    if (retryRef.current) { clearTimeout(retryRef.current); retryRef.current = null; }
+    if (countdownRef.current) {
+      clearInterval(countdownRef.current);
+      countdownRef.current = null;
+    }
+    if (retryRef.current) {
+      clearTimeout(retryRef.current);
+      retryRef.current = null;
+    }
   }, []);
 
-  const startCountdownCycle = useCallback((rid) => {
-    setCountdown(60);
-    if (countdownRef.current) clearInterval(countdownRef.current);
+  const startCountdownCycle = useCallback(
+    (rid) => {
+      setCountdown(60);
+      if (countdownRef.current) clearInterval(countdownRef.current);
 
-    countdownRef.current = setInterval(() => {
-      setCountdown((prev) => {
-        if (prev <= 1) {
-          clearInterval(countdownRef.current);
-          countdownRef.current = null;
+      countdownRef.current = setInterval(() => {
+        setCountdown((prev) => {
+          if (prev <= 1) {
+            clearInterval(countdownRef.current);
+            countdownRef.current = null;
 
-          // Auto-search when countdown hits 0
-          (async () => {
-            try {
-              const resp = await fetch(`${window.API}/lol/api/chain?riot_id=${encodeURIComponent(rid)}`);
-              const data = await resp.json();
-              if (resp.ok && data.found && data.chain?.length > 0) {
-                setFound(true);
-                setChain(data.chain);
-                setError('');
-                stopCrawling();
-              } else {
-                // Not found yet — restart countdown
+            // Auto-search when countdown hits 0
+            (async () => {
+              try {
+                const [data, err] = await fetchGet(
+                  `lol/api/chain?riot_id=${encodeURIComponent(rid)}`
+                );
+                if (!err && data?.found && data.chain?.length > 0) {
+                  setFound(true);
+                  setChain(data.chain);
+                  setError('');
+                  stopCrawling();
+                } else {
+                  // Not found yet — restart countdown
+                  retryRef.current = setTimeout(() => startCountdownCycle(rid), 500);
+                }
+              } catch {
                 retryRef.current = setTimeout(() => startCountdownCycle(rid), 500);
               }
-            } catch {
-              retryRef.current = setTimeout(() => startCountdownCycle(rid), 500);
-            }
-          })();
+            })();
 
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-  }, [stopCrawling]);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    },
+    [stopCrawling]
+  );
 
   const startCrawl = async () => {
     if (!riotId.trim()) return;
@@ -90,17 +101,12 @@ function LolBeat() {
     setJobId(null);
 
     try {
-      const resp = await fetch(`${window.API}/lol/api/crawl`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ riot_id: riotId.trim() }),
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'Failed to enqueue crawl');
+      const [data, err] = await fetchPost('lol/api/crawl', { riot_id: riotId.trim() });
+      if (err) throw err;
       setJobId(data.job_id);
       startCountdownCycle(riotId.trim());
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to enqueue crawl');
       setCrawling(false);
     }
   };
@@ -113,14 +119,15 @@ function LolBeat() {
     setLoading(true);
 
     try {
-      const resp = await fetch(`${window.API}/lol/api/chain?riot_id=${encodeURIComponent(riotId.trim())}`);
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'Failed to fetch chain');
+      const [data, err] = await fetchGet(
+        `lol/api/chain?riot_id=${encodeURIComponent(riotId.trim())}`
+      );
+      if (err) throw err;
       setFound(data.found);
       setChain(data.chain || []);
       if (!data.found) setError(`No path found yet from ${riotId} to #1. Try crawling first.`);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to fetch chain');
     } finally {
       setLoading(false);
     }
@@ -146,8 +153,7 @@ function LolBeat() {
   };
 
   const renderTeamRow = (player, step) => {
-    const isChainPlayer =
-      player.puuid === step.winner_puuid || player.puuid === step.loser_puuid;
+    const isChainPlayer = player.puuid === step.winner_puuid || player.puuid === step.loser_puuid;
     const isWinner = player.puuid === step.winner_puuid;
     const isLoser = player.puuid === step.loser_puuid;
 
@@ -156,16 +162,15 @@ function LolBeat() {
     else if (isLoser) highlightClass = 'lol-highlight-loser';
 
     return (
-      <div
-        className={`lol-team-player ${highlightClass}`}
-        key={player.puuid}
-      >
+      <div className={`lol-team-player ${highlightClass}`} key={player.puuid}>
         <img
           className="lol-champ-icon"
           src={champIcon(player.champion)}
           alt={player.champion}
           title={player.champion}
-          onError={(e) => { e.target.style.display = 'none'; }}
+          onError={(e) => {
+            e.target.style.display = 'none';
+          }}
         />
         <span className={`lol-team-player-name ${isChainPlayer ? 'lol-chain-player' : ''}`}>
           {player.summoner_name.split('#')[0]}
@@ -211,7 +216,9 @@ function LolBeat() {
               <circle className="lol-ring-bg" cx="36" cy="36" r="30" />
               <circle
                 className="lol-ring-progress"
-                cx="36" cy="36" r="30"
+                cx="36"
+                cy="36"
+                r="30"
                 style={{
                   strokeDasharray: `${2 * Math.PI * 30}`,
                   strokeDashoffset: `${2 * Math.PI * 30 * (1 - countdown / 60)}`,
@@ -223,13 +230,13 @@ function LolBeat() {
           <div className="lol-countdown-text">
             Crawling in progress… checking for path in <strong>{countdown}s</strong>
           </div>
-          <button className="lol-stop-btn" onClick={stopCrawling}>Stop</button>
+          <button className="lol-stop-btn" onClick={stopCrawling}>
+            Stop
+          </button>
         </div>
       )}
 
-      {loading && (
-        <div className="lol-loading">Searching the beat graph…</div>
-      )}
+      {loading && <div className="lol-loading">Searching the beat graph…</div>}
 
       {error && <div className="lol-error">{error}</div>}
 
@@ -267,19 +274,11 @@ function LolBeat() {
                 {hasDetail ? (
                   <div className="lol-match-teams">
                     <div className="lol-team lol-team-blue">
-                      {!isArena && (
-                        <div className="lol-team-label">
-                          Victory
-                        </div>
-                      )}
+                      {!isArena && <div className="lol-team-label">Victory</div>}
                       {winners.map((p) => renderTeamRow(p, step))}
                     </div>
                     <div className="lol-team lol-team-red">
-                      {!isArena && (
-                        <div className="lol-team-label">
-                          Defeat
-                        </div>
-                      )}
+                      {!isArena && <div className="lol-team-label">Defeat</div>}
                       {losers.map((p) => renderTeamRow(p, step))}
                     </div>
                   </div>
@@ -291,9 +290,7 @@ function LolBeat() {
                   </div>
                 )}
 
-                {step.match_id && (
-                  <div className="lol-match-id">{step.match_id}</div>
-                )}
+                {step.match_id && <div className="lol-match-id">{step.match_id}</div>}
               </div>
             );
           })}

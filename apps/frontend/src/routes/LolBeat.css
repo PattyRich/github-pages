@@ -205,7 +205,9 @@
   font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: background 0.2s, border-color 0.2s;
+  transition:
+    background 0.2s,
+    border-color 0.2s;
 }
 
 .lol-stop-btn:hover {
@@ -230,7 +232,9 @@
   position: relative;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
   overflow: hidden;
-  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  transition:
+    transform 0.15s ease,
+    box-shadow 0.15s ease;
 }
 
 .lol-match-card:hover {
@@ -390,10 +394,19 @@
   flex-shrink: 0;
 }
 
-.lol-k { color: var(--lol-text); }
-.lol-d { color: var(--lol-defeat-red); }
-.lol-a { color: var(--lol-text-secondary); }
-.lol-slash { color: #555; margin: 0 1px; }
+.lol-k {
+  color: var(--lol-text);
+}
+.lol-d {
+  color: var(--lol-defeat-red);
+}
+.lol-a {
+  color: var(--lol-text-secondary);
+}
+.lol-slash {
+  color: #555;
+  margin: 0 1px;
+}
 
 /* ---- Fallback simple layout (no detail data) ---- */
 

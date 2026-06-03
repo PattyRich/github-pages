@@ -24,7 +24,9 @@
   backdrop-filter: var(--osrs-glass-blur);
   -webkit-backdrop-filter: var(--osrs-glass-blur);
   border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    var(--osrs-glass-shadow);
   border-radius: var(--osrs-radius-lg);
 }
 
@@ -77,20 +79,22 @@
   border: 2px solid var(--osrs-border-dark);
   box-shadow: inset 0 0 0 1px var(--osrs-border-light);
   border-radius: var(--osrs-radius-lg);
-  transition: filter 0.18s ease, box-shadow 0.18s ease;
+  transition:
+    filter 0.18s ease,
+    box-shadow 0.18s ease;
 }
 
 .route-card:hover {
   filter: brightness(1.18);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light), 0 8px 28px rgba(0, 0, 0, 0.65);
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    0 8px 28px rgba(0, 0, 0, 0.65);
   color: var(--osrs-text-normal);
 }
 
 .route-card.premium-card {
   border-color: #a85f00;
-  background: linear-gradient(160deg,
-      rgba(255, 25, 25, 0.8) 0%,
-      rgba(12, 12, 12, 0.8) 55%);
+  background: linear-gradient(160deg, rgba(255, 25, 25, 0.8) 0%, rgba(12, 12, 12, 0.8) 55%);
   box-shadow:
     inset 0 0 0 1px rgba(255, 152, 31, 0.45),
     0 4px 20px rgba(180, 90, 0, 0.35),
@@ -98,7 +102,9 @@
 }
 
 .route-card.premium-card:hover {
-  box-shadow: inset 0 0 0 1px rgba(255, 152, 31, 0.6), 0 8px 28px rgba(0, 0, 0, 0.65);
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 152, 31, 0.6),
+    0 8px 28px rgba(0, 0, 0, 0.65);
 }
 
 .route-card h4 {
@@ -136,7 +142,9 @@
   backdrop-filter: var(--osrs-glass-blur);
   -webkit-backdrop-filter: var(--osrs-glass-blur);
   border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    var(--osrs-glass-shadow);
   border-radius: var(--osrs-radius-lg);
   padding: 1.8rem 2rem;
   margin-top: 2rem;
@@ -177,7 +185,9 @@
 .preview-img {
   border-radius: var(--osrs-radius-lg);
   border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light), 0 4px 16px rgba(0, 0, 0, 0.5);
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    0 4px 16px rgba(0, 0, 0, 0.5);
   width: 100%;
   object-fit: cover;
   display: block;
@@ -206,7 +216,9 @@
   text-shadow: 1px 1px 0px black;
   cursor: pointer;
   z-index: 100;
-  transition: filter 0.15s ease, color 0.15s ease;
+  transition:
+    filter 0.15s ease,
+    color 0.15s ease;
 }
 
 .feedback-btn:hover {

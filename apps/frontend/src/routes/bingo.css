@@ -1,37 +1,35 @@
 .start-screen {
-  display:         flex;
-  height:          100vh;
-  width:           100vw;
+  display: flex;
+  height: 100vh;
+  width: 100vw;
   justify-content: space-around;
-  align-items:     center;
-  flex-wrap:       wrap;
-  padding:         20px;
-  box-sizing:      border-box;
-  gap:             16px;
+  align-items: center;
+  flex-wrap: wrap;
+  padding: 20px;
+  box-sizing: border-box;
+  gap: 16px;
 }
 
 .start-menu {
-  height:          clamp(140px, 35vh, 60vh);
-  width:           clamp(140px, 40vw, 600px);
-  min-width:       140px;
+  height: clamp(140px, 35vh, 60vh);
+  width: clamp(140px, 40vw, 600px);
+  min-width: 140px;
   justify-content: center;
-  align-items:     center;
-  display:         flex;
-  cursor:          pointer;
-  background:      var(--osrs-glass-bg);
-  backdrop-filter: var(--osrs-glass-blur);
-  -webkit-backdrop-filter: var(--osrs-glass-blur);
-  border:          2px solid var(--osrs-border-dark);
-  box-shadow:      inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
-  border-radius:   var(--osrs-radius-lg);
-  user-select:     none;
-  flex-direction:  column;
-  transition:      filter 0.2s ease, box-shadow 0.2s ease;
+  align-items: center;
+  display: flex;
+  cursor: pointer;
+  user-select: none;
+  flex-direction: column;
+  transition:
+    filter 0.2s ease,
+    box-shadow 0.2s ease;
 }
 
 .start-menu:hover {
-  filter:     brightness(1.2);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light), 0 12px 36px rgba(0,0,0,0.7);
+  filter: brightness(1.2);
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    0 12px 36px rgba(0, 0, 0, 0.7);
 }
 
 .start-menu:active {
@@ -39,23 +37,16 @@
 }
 
 .create-menu {
-  display:         flex;
-  flex-direction:  column;
-  align-items:     center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   justify-content: center;
-  min-height:      100vh;
+  min-height: 100vh;
   padding: 20px;
 }
 
 .create-board-shell {
   width: min(1040px, calc(100vw - 32px));
-  background: var(--osrs-glass-bg-raised);
-  backdrop-filter: var(--osrs-glass-blur);
-  -webkit-backdrop-filter: var(--osrs-glass-blur);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
-  border-radius: var(--osrs-radius-lg);
-  padding: 22px;
 }
 
 .create-board-header {
@@ -99,14 +90,6 @@
   grid-template-columns: minmax(280px, 1fr) minmax(320px, 1fr);
   gap: 18px;
   margin-top: 18px;
-}
-
-.create-board-panel {
-  background: rgba(43, 38, 30, 0.72);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
-  border-radius: var(--osrs-radius);
-  padding: 18px;
 }
 
 .create-board-panel h2 {
@@ -208,48 +191,49 @@
   padding-top: 18px;
 }
 
-.margin-15 { margin: 15px; }
-.margin-5  { margin: 5px; }
-
-.board-controls {
-  display:         flex;
-  align-items:     center;
-  justify-content: center;
-  flex-wrap:       wrap;
-  background:      var(--osrs-glass-bg);
-  backdrop-filter: var(--osrs-glass-blur);
-  -webkit-backdrop-filter: var(--osrs-glass-blur);
-  border:          2px solid var(--osrs-border-dark);
-  box-shadow:      inset 0 0 0 1px var(--osrs-border-light);
-  border-radius:   var(--osrs-radius);
-  padding:         10px;
-  margin-top:      10px;
-  max-width:       100%;
+.margin-15 {
+  margin: 15px;
+}
+.margin-5 {
+  margin: 5px;
 }
 
-.board-controls button { margin: 5px; }
+.board-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  background: var(--osrs-glass-bg);
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  border-radius: var(--osrs-radius);
+  padding: 10px;
+  margin-top: 10px;
+  max-width: 100%;
+}
 
-.flex { display: flex; }
+.board-controls button {
+  margin: 5px;
+}
+
+.flex {
+  display: flex;
+}
 
 .join-wrapper {
-  display:         flex;
-  align-items:     center;
+  display: flex;
+  align-items: center;
   justify-content: center;
-  min-height:      100vh;
-  padding:         20px;
-  box-sizing:      border-box;
-  width:           100%;
+  min-height: 100vh;
+  padding: 20px;
+  box-sizing: border-box;
+  width: 100%;
 }
 
 .join-board-shell {
   width: min(920px, calc(100vw - 32px));
-  background: var(--osrs-glass-bg-raised);
-  backdrop-filter: var(--osrs-glass-blur);
-  -webkit-backdrop-filter: var(--osrs-glass-blur);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
-  border-radius: var(--osrs-radius-lg);
-  padding: 22px;
 }
 
 .join-board-header {
@@ -280,14 +264,6 @@
   grid-template-columns: minmax(280px, 1.25fr) minmax(240px, 0.75fr);
   gap: 18px;
   margin-top: 18px;
-}
-
-.join-board-panel {
-  background: rgba(43, 38, 30, 0.72);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
-  border-radius: var(--osrs-radius);
-  padding: 18px;
 }
 
 .join-board-panel h2 {
@@ -361,6 +337,35 @@
 
 .recent-board-list {
   margin-top: 18px;
+}
+
+.start-menu,
+.osrs-container {
+  background: var(--osrs-glass-bg);
+}
+
+.create-board-shell,
+.join-board-shell {
+  background: var(--osrs-glass-bg-raised);
+  padding: 22px;
+}
+
+.start-menu,
+.create-board-shell,
+.join-board-shell,
+.osrs-container {
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    var(--osrs-glass-shadow);
+  border-radius: var(--osrs-radius-lg);
+}
+
+.create-board-panel,
+.join-board-panel,
+.recent-board-list {
   background: rgba(43, 38, 30, 0.72);
   border: 2px solid var(--osrs-border-dark);
   box-shadow: inset 0 0 0 1px var(--osrs-border-light);
@@ -412,14 +417,8 @@
 }
 
 .osrs-container {
-  background:      var(--osrs-glass-bg);
-  backdrop-filter: var(--osrs-glass-blur);
-  -webkit-backdrop-filter: var(--osrs-glass-blur);
-  border:          2px solid var(--osrs-border-dark);
-  box-shadow:      inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
-  border-radius:   var(--osrs-radius-lg);
-  padding:         20px;
-  margin:          15px;
+  padding: 20px;
+  margin: 15px;
 }
 
 @media (max-width: 820px) {

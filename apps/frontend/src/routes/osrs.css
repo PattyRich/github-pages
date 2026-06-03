@@ -35,15 +35,17 @@
 }
 
 .box {
-  border:           2px solid var(--osrs-border-dark);
-  box-shadow:       inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
-  background:       var(--osrs-glass-bg);
-  backdrop-filter:  var(--osrs-glass-blur);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    var(--osrs-glass-shadow);
+  background: var(--osrs-glass-bg);
+  backdrop-filter: var(--osrs-glass-blur);
   -webkit-backdrop-filter: var(--osrs-glass-blur);
-  padding:          var(--osrs-padding-panel);
-  margin:           5px;
-  border-radius:    var(--osrs-radius-lg);
-  line-height:      1.9;
+  padding: var(--osrs-padding-panel);
+  margin: 5px;
+  border-radius: var(--osrs-radius-lg);
+  line-height: 1.9;
 }
 
 .flexCol {

@@ -1,6 +1,8 @@
 @font-face {
   font-family: 'osrsFont';
-  src: local('osrsFont'), url('./assets/fonts/osrs.ttf') format('truetype');
+  src:
+    local('osrsFont'),
+    url('./assets/fonts/osrs.ttf') format('truetype');
 }
 
 /* ─── Design Tokens ──────────────────────────────────────────────────────── */
@@ -45,8 +47,9 @@
 /* ─── Base ───────────────────────────────────────────────────────────────── */
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family:
+    -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell',
+    'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--osrs-page-bg);
@@ -76,22 +79,23 @@ hr {
 }
 
 /* ─── Glass utility classes ──────────────────────────────────────────────── */
-.osrs-glass {
-  background: var(--osrs-glass-bg);
+.osrs-glass,
+.osrs-glass-raised {
   backdrop-filter: var(--osrs-glass-blur);
   -webkit-backdrop-filter: var(--osrs-glass-blur);
   border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    var(--osrs-glass-shadow);
   border-radius: var(--osrs-radius-lg);
+}
+
+.osrs-glass {
+  background: var(--osrs-glass-bg);
 }
 
 .osrs-glass-raised {
   background: var(--osrs-glass-bg-raised);
-  backdrop-filter: var(--osrs-glass-blur);
-  -webkit-backdrop-filter: var(--osrs-glass-blur);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow);
-  border-radius: var(--osrs-radius-lg);
 }
 
 /* ─── Raw <button> elements (no class) ──────────────────────────────────── */
@@ -106,7 +110,9 @@ button:not([class]) {
   border-radius: var(--osrs-radius);
   padding: 4px 12px;
   cursor: pointer;
-  transition: background-color 0.15s, color 0.15s;
+  transition:
+    background-color 0.15s,
+    color 0.15s;
 }
 
 button:not([class]):hover {
@@ -125,8 +131,8 @@ button:not([class]):focus-visible {
 }
 
 /* ─── Raw <input> / <select> elements ───────────────────────────────────── */
-input[type="text"]:not([class]),
-input[type="number"]:not([class]) {
+input[type='text']:not([class]),
+input[type='number']:not([class]) {
   background-color: var(--osrs-bg-brown-dark);
   color: var(--osrs-text-normal);
   border: 1px solid var(--osrs-border-dark);
@@ -136,8 +142,6 @@ input[type="number"]:not([class]) {
   font-family: inherit;
   font-size: 0.9rem;
 }
-
-
 
 select:not([class]) {
   background-color: var(--osrs-bg-brown-dark);
@@ -150,8 +154,8 @@ select:not([class]) {
   cursor: pointer;
 }
 
-input[type="radio"]:not([class]),
-input[type="checkbox"]:not([class]) {
+input[type='radio']:not([class]),
+input[type='checkbox']:not([class]) {
   accent-color: var(--osrs-text-gold);
   cursor: pointer;
 }
@@ -249,7 +253,7 @@ input[type="checkbox"]:not([class]) {
 }
 
 .form-control:focus,
-input:not([type="checkbox"]):not([type="radio"]):focus,
+input:not([type='checkbox']):not([type='radio']):focus,
 textarea:focus {
   background-color: var(--osrs-bg-brown) !important;
   color: var(--osrs-text-beige) !important;
@@ -371,7 +375,7 @@ textarea:focus {
 }
 
 .osrs-alert-banner::before {
-  content: "";
+  content: '';
   flex: 0 0 auto;
   width: 8px;
   height: 8px;
@@ -477,7 +481,9 @@ textarea:focus {
   height: 1.15em !important;
   background-color: #f7e6c1 !important;
   border-color: var(--osrs-text-gold) !important;
-  box-shadow: inset 0 0 0 1px var(--osrs-border-dark), 0 0 0 1px var(--osrs-border-light) !important;
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-dark),
+    0 0 0 1px var(--osrs-border-light) !important;
 }
 
 .bingo-completed-check:checked {
@@ -552,7 +558,7 @@ textarea:focus {
 }
 
 /* Inputs with OSRS theme (brown background, beige text) */
-input:not([type="checkbox"]):not([type="radio"]),
+input:not([type='checkbox']):not([type='radio']),
 .form-control,
 .input-group-text {
   background-color: var(--osrs-bg-brown-dark) !important;
@@ -560,8 +566,6 @@ input:not([type="checkbox"]):not([type="radio"]),
   border: 2px solid var(--osrs-border-dark) !important;
   box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
 }
-
-
 
 input,
 textarea,
@@ -605,7 +609,9 @@ button:focus {
   backdrop-filter: var(--osrs-glass-blur) !important;
   -webkit-backdrop-filter: var(--osrs-glass-blur) !important;
   border: 2px solid var(--osrs-border-dark) !important;
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light), var(--osrs-glass-shadow) !important;
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    var(--osrs-glass-shadow) !important;
   border-radius: var(--osrs-radius-lg) !important;
   overflow: hidden;
 }
