@@ -62,6 +62,7 @@ allowedAuthTypes = ['admin', 'general']
 adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
 generalTileKeys = ['proof', 'checked', 'currPoints', 'proofImages']
 boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns', 'visibleRows']
+testBoardPrefix = os.environ.get("PLAYWRIGHT_E2E_BOARD_PREFIX", os.environ.get("SELENIUM_E2E_BOARD_PREFIX", "__playwright_e2e__"))
 defaultTeamObj = {
   'checked': False,
   'proof': '',
@@ -189,6 +190,16 @@ def board_visible_rows(cache):
 def slice_board_rows(board_data, visible_rows):
   return board_data[:visible_rows]
 
+def is_test_board(board_name):
+  return isinstance(board_name, str) and board_name.startswith(testBoardPrefix)
+
+def is_test_board_request():
+  try:
+    data = request.get_json(silent=True) or {}
+  except Exception:
+    return False
+  return is_test_board(data.get('boardName'))
+
 def postToDiscord(message, webhook_env_var):
   webhook_url = os.getenv(webhook_env_var)
   payload = {
@@ -281,7 +292,7 @@ def health():
 
 
 @app.route('/createBoard', methods=['POST'])
-@limiter.limit("10 per hour")
+@limiter.limit("10 per hour", exempt_when=is_test_board_request)
 def createBoard():
   data = json.loads(request.data.decode(), parse_float=float)
   cache = mycol.find_one({'boardName': data['boardName']})
@@ -321,9 +332,12 @@ def createBoard():
 
   log.info("createBoard - success  board=%s  teams=%d  ip=%s", data['boardName'], data['teams'], request.remote_addr)
 
-  board_url = 'https://pattyrich.github.io/github-pages/#/bingo/{}?password={}'.format(data["boardName"].replace(' ', '%20'), data.get('generalPassword', ''))
-  discord_message = 'New bingo board created: **[{}]({})**'.format(data["boardName"], board_url)
-  postToDiscord(discord_message, 'CREATION_WEBHOOK')
+  if not is_test_board(data["boardName"]):
+    board_url = 'https://pattyrich.github.io/github-pages/#/bingo/{}?password={}'.format(data["boardName"].replace(' ', '%20'), data.get('generalPassword', ''))
+    discord_message = 'New bingo board created: **[{}]({})**'.format(data["boardName"], board_url)
+    postToDiscord(discord_message, 'CREATION_WEBHOOK')
+  else:
+    log.info("createBoard - creation webhook skipped for test board  board=%s", data['boardName'])
 
   return jsonify(success=True)
 

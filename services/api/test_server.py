@@ -215,6 +215,27 @@ class TestCreateBoard(unittest.TestCase):
         self.assertEqual(inserted["visibleRows"], 3)
 
     @patch("server.postToDiscord", return_value=True)
+    def test_test_board_prefix_skips_creation_discord_alert(self, post_to_discord):
+        resp = self._post({
+            "boardName": f"{server.testBoardPrefix} smoke",
+            "adminPassword": "a",
+            "generalPassword": "g",
+            "teams": 2,
+            "rows": 3,
+            "columns": 3,
+        })
+        self.assertEqual(resp.status_code, 200)
+        post_to_discord.assert_not_called()
+
+    def test_test_board_request_is_detected_for_rate_limit_exemption(self):
+        with server.app.test_request_context(
+            "/createBoard",
+            method="POST",
+            json={"boardName": f"{server.testBoardPrefix} rate-limit"},
+        ):
+            self.assertTrue(server.is_test_board_request())
+
+    @patch("server.postToDiscord", return_value=True)
     def test_duplicate_board_name_returns_400(self, _):
         _mock_col.find_one.return_value = _make_board()  # board already exists
         resp = self._post({

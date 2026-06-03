@@ -301,11 +301,22 @@ textarea:focus {
   border: 4px solid var(--osrs-border-dark) !important;
   box-shadow: inset 0 0 0 2px var(--osrs-border-light) !important;
   border-radius: 0 !important;
+  max-height: calc(100dvh - 2rem);
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-body {
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .modal-header,
 .modal-footer {
   border-color: var(--osrs-border-dark) !important;
+  flex-shrink: 0;
+  position: relative;
+  z-index: 1;
 }
 
 .modal-header .btn-close,

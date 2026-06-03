@@ -5,15 +5,17 @@ FRONTEND_DIR=apps/frontend
 SERVER_DIR=services/api
 DOCKER_COMPOSE=docker compose
 PYTHON?=.venv/Scripts/python.exe
+PYTHON_WIN?=.venv\Scripts\python.exe
 
 # -----------------------
 # HELP
 # -----------------------
-.PHONY: help install dev frontend backend backend-logs build deploy clean up down restart logs ps shell-api shell-worker test
+.PHONY: help install install-hooks dev frontend backend backend-logs build deploy clean up down restart logs ps shell-api shell-worker test e2e e2e-headed
 
 help:
 	@echo "Available commands:"
 	@echo "  make install      - Install frontend + backend dependencies"
+	@echo "  make install-hooks - Configure Git hooks for this checkout"
 	@echo "  make dev          - Run frontend and backend concurrently (logs combined)"
 	@echo "  make frontend     - Run frontend only (Vite)"
 	@echo "  make backend      - Start backend services in background"
@@ -27,12 +29,18 @@ help:
 	@echo "  make shell-api    - Open a shell in the API container"
 	@echo "  make shell-worker - Open a shell in the Worker container"
 	@echo "  make down         - Stop all docker services"
+	@echo "  make e2e          - Run Playwright browser E2E tests"
+	@echo "  make e2e-headed   - Run Playwright browser E2E tests with the browser visible"
 
 # -----------------------
 # INSTALL
 # -----------------------
 install:
 	cd $(FRONTEND_DIR) && npm install
+
+install-hooks:
+	git config core.hooksPath .githooks
+	@echo "Git hooks enabled from .githooks"
 
 # -----------------------
 # DEVELOPMENT
@@ -80,6 +88,13 @@ shell-worker:
 test:
 	$(PYTHON) -m pytest $(SERVER_DIR)/test_server.py -q
 	cd $(FRONTEND_DIR) && npm test
+	$(PYTHON) tests/e2e/run_e2e.py
+
+e2e:
+	$(PYTHON) tests/e2e/run_e2e.py
+
+e2e-headed:
+	$(PYTHON) tests/e2e/run_e2e.py --headed
 
 build:
 	cd $(FRONTEND_DIR) && npm run build
