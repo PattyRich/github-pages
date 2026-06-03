@@ -1,10 +1,10 @@
 import { Component } from 'react';
-import Button from "react-bootstrap/Button";
-import Modal from "react-bootstrap/Modal";
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
 import EditableInput from './EditableInput';
-import InputGroup from "react-bootstrap/InputGroup";
-import FormControl from "react-bootstrap/FormControl";
-import Alert from "react-bootstrap/Alert";
+import InputGroup from 'react-bootstrap/InputGroup';
+import FormControl from 'react-bootstrap/FormControl';
+import Alert from 'react-bootstrap/Alert';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Spinner from 'react-bootstrap/Spinner';
 
@@ -99,7 +99,7 @@ class TileModal extends Component {
 
     const url = `https://oldschool.runescape.wiki/rest.php/v1/search/title?q=${encodeURIComponent(this.state.wikiSearch)}&limit=5`;
     fetch(url)
-      .then(res => res.json())
+      .then((res) => res.json())
       .then(async (data) => {
         const fetchPromises = (data.pages || []).map(async (item) => {
           if (!item.thumbnail || this.badTitles.includes(item.title)) return null;
@@ -116,15 +116,21 @@ class TileModal extends Component {
 
         const results = (await Promise.all(fetchPromises)).filter(Boolean);
         const storedSuggestions = { ...this.state.storedSuggestions };
-        results.forEach(item => { storedSuggestions[item.title] = item; });
+        results.forEach((item) => {
+          storedSuggestions[item.title] = item;
+        });
         this.setState({ storedSuggestions }, () => this.setSuggestions(results));
       });
   }
 
   setSuggestions(curr) {
-    if (!curr) { this.setState({ suggestions: [] }); return; }
-    const data = curr.filter(item => this.state.storedSuggestions[item.title])
-      .map(item => this.state.storedSuggestions[item.title]);
+    if (!curr) {
+      this.setState({ suggestions: [] });
+      return;
+    }
+    const data = curr
+      .filter((item) => this.state.storedSuggestions[item.title])
+      .map((item) => this.state.storedSuggestions[item.title]);
     this.setState({ suggestions: data, triedToSearch: true, loading: false });
   }
 
@@ -139,18 +145,18 @@ class TileModal extends Component {
   }
 
   toggleUsePixel() {
-    this.setState(prev => ({ image: { ...prev.image, usePixel: !prev.image.usePixel } }));
+    this.setState((prev) => ({ image: { ...prev.image, usePixel: !prev.image.usePixel } }));
   }
 
   changeOpacity(e) {
     let val = Number(e.target.value);
     if (isNaN(val)) val = 100;
     val = Math.min(100, Math.max(1, val));
-    this.setState(prev => ({ image: { ...prev.image, opacity: val } }));
+    this.setState((prev) => ({ image: { ...prev.image, opacity: val } }));
   }
 
   toggleCheck() {
-    this.setState(prev => ({ checked: !prev.checked, currPoints: this.state.points }));
+    this.setState((prev) => ({ checked: !prev.checked, currPoints: this.state.points }));
   }
 
   handleSave() {
@@ -169,11 +175,11 @@ class TileModal extends Component {
 
   handleProofImage(e) {
     const MAX = 10;
-    Array.from(e.target.files).forEach(file => {
+    Array.from(e.target.files).forEach((file) => {
       if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) return;
       const reader = new FileReader();
       reader.onload = (event) => {
-        this.setState(prev => {
+        this.setState((prev) => {
           const current = prev.proofImages || [];
           if (current.length >= MAX) return null;
           return { proofImages: [...current, event.target.result], proofImagesChanged: true };
@@ -185,36 +191,55 @@ class TileModal extends Component {
   }
 
   removeProofImage(index) {
-    this.setState(prev => ({
+    this.setState((prev) => ({
       proofImages: prev.proofImages.filter((_, i) => i !== index),
       lightboxIndex: null,
       proofImagesChanged: true,
     }));
   }
 
-  openLightbox(index) { this.setState({ lightboxIndex: index }); }
-  closeLightbox() { this.setState({ lightboxIndex: null }); }
+  openLightbox(index) {
+    this.setState({ lightboxIndex: index });
+  }
+  closeLightbox() {
+    this.setState({ lightboxIndex: null });
+  }
 
   cycleImage(direction) {
     const len = (this.state.proofImages || []).length;
     if (!len) return;
-    this.setState(prev => ({ lightboxIndex: (prev.lightboxIndex + direction + len) % len }));
+    this.setState((prev) => ({ lightboxIndex: (prev.lightboxIndex + direction + len) % len }));
   }
 
-  handleClose() { this.props.handleClose(); }
+  handleClose() {
+    this.props.handleClose();
+  }
 
   render() {
     const isAdmin = this.props.privilage === 'admin';
     const isGeneral = !isAdmin;
 
     return (
-      <Modal show={this.props.show} onHide={this.handleClose} size="lg" aria-labelledby="tile-modal-title" centered>
+      <Modal
+        show={this.props.show}
+        onHide={this.handleClose}
+        size="lg"
+        aria-labelledby="tile-modal-title"
+        centered
+      >
         <Modal.Header closeButton>
           <Modal.Title id="tile-modal-title">
             {!this.state.chooseImage ? (
-              isAdmin
-                ? <EditableInput value={this.state.title} stateKey='title' change={this.inputState} title='Title' />
-                : <h2>{this.state.title || 'Info'}</h2>
+              isAdmin ? (
+                <EditableInput
+                  value={this.state.title}
+                  stateKey="title"
+                  change={this.inputState}
+                  title="Title"
+                />
+              ) : (
+                <h2>{this.state.title || 'Info'}</h2>
+              )
             ) : (
               <h3>Set Tile Background Image</h3>
             )}
@@ -224,30 +249,85 @@ class TileModal extends Component {
         <Modal.Body>
           {!this.state.chooseImage ? (
             <>
-              <EditableInput value={this.state.description} textArea stateKey='description' change={this.inputState} title='Description' disabled={isGeneral} />
-              {this.props.br && <EditableInput value={this.state.rowBingo} stateKey='rowBingo' change={this.inputState} title='Row Bonus' disabled={isGeneral} />}
-              {this.props.bb && <EditableInput value={this.state.colBingo} stateKey='colBingo' change={this.inputState} title='Column Bonus' disabled={isGeneral} />}
+              <EditableInput
+                value={this.state.description}
+                textArea
+                stateKey="description"
+                change={this.inputState}
+                title="Description"
+                disabled={isGeneral}
+              />
+              {this.props.br && (
+                <EditableInput
+                  value={this.state.rowBingo}
+                  stateKey="rowBingo"
+                  change={this.inputState}
+                  title="Row Bonus"
+                  disabled={isGeneral}
+                />
+              )}
+              {this.props.bb && (
+                <EditableInput
+                  value={this.state.colBingo}
+                  stateKey="colBingo"
+                  change={this.inputState}
+                  title="Column Bonus"
+                  disabled={isGeneral}
+                />
+              )}
 
               {isAdmin && (
                 <>
                   {this.state.image ? (
                     <>
-                      <Button style={{ marginBottom: '10px' }} variant="primary" onClick={() => this.setState({ image: null })}>
+                      <Button
+                        style={{ marginBottom: '10px' }}
+                        variant="primary"
+                        onClick={() => this.setState({ image: null })}
+                      >
                         Remove Tile Background Image
                       </Button>
-                      <img src={this.state.image.url} style={{ maxWidth: '80px', maxHeight: '80px', opacity: this.state.image.opacity + '%', objectFit: 'contain' }} alt="Tile background" />
+                      <img
+                        src={this.state.image.url}
+                        style={{
+                          maxWidth: '80px',
+                          maxHeight: '80px',
+                          opacity: this.state.image.opacity + '%',
+                          objectFit: 'contain',
+                        }}
+                        alt="Tile background"
+                      />
                     </>
                   ) : (
-                    <Button style={{ marginBottom: '10px' }} variant="primary" onClick={this.toggleImageSelect}>
+                    <Button
+                      style={{ marginBottom: '10px' }}
+                      variant="primary"
+                      onClick={this.toggleImageSelect}
+                    >
                       Set Tile Background Image
                     </Button>
                   )}
                   {this.state.image && (
                     <>
-                      <EditableInput value={this.state.image.opacity} change={this.changeOpacity} title='Image Opacity (1-100)' />
-                      <div className="form-check" style={{ marginTop: '15px', marginBottom: '10px' }}>
-                        <input className="form-check-input" checked={this.state.image.usePixel} onChange={this.toggleUsePixel} type="checkbox" id="pixelImageCheckbox" />
-                        <label className="form-check-label" htmlFor="pixelImageCheckbox">Use pixel image?</label>
+                      <EditableInput
+                        value={this.state.image.opacity}
+                        change={this.changeOpacity}
+                        title="Image Opacity (1-100)"
+                      />
+                      <div
+                        className="form-check"
+                        style={{ marginTop: '15px', marginBottom: '10px' }}
+                      >
+                        <input
+                          className="form-check-input"
+                          checked={this.state.image.usePixel}
+                          onChange={this.toggleUsePixel}
+                          type="checkbox"
+                          id="pixelImageCheckbox"
+                        />
+                        <label className="form-check-label" htmlFor="pixelImageCheckbox">
+                          Use pixel image?
+                        </label>
                       </div>
                     </>
                   )}
@@ -256,58 +336,206 @@ class TileModal extends Component {
 
               <InputGroup className="mb-3" style={{ width: '100%', maxWidth: '320px' }}>
                 <InputGroup.Text>Points</InputGroup.Text>
-                <FormControl aria-label="Current Points" value={this.state.currPoints} disabled={!isGeneral || this.state.checked} onChange={(e) => this.inputState(e, 'currPoints')} />
+                <FormControl
+                  aria-label="Current Points"
+                  value={this.state.currPoints}
+                  disabled={!isGeneral || this.state.checked}
+                  onChange={(e) => this.inputState(e, 'currPoints')}
+                />
                 <InputGroup.Text>/</InputGroup.Text>
-                <FormControl aria-label="Total Points" value={this.state.points} disabled={!isAdmin} onChange={(e) => this.inputState(e, 'points')} />
+                <FormControl
+                  aria-label="Total Points"
+                  value={this.state.points}
+                  disabled={!isAdmin}
+                  onChange={(e) => this.inputState(e, 'points')}
+                />
               </InputGroup>
 
               {isGeneral && (
                 <>
-                  <div className='flex'>
-                    <EditableInput placeholder="Paste imgur or any link" value={this.state.proof} textArea stateKey='proof' change={this.inputState} title='Proof' />
-                    <div className='flex' style={{ flexWrap: 'wrap' }}>
+                  <div className="flex">
+                    <EditableInput
+                      placeholder="Paste imgur or any link"
+                      value={this.state.proof}
+                      textArea
+                      stateKey="proof"
+                      change={this.inputState}
+                      title="Proof"
+                    />
+                    <div className="flex" style={{ flexWrap: 'wrap' }}>
                       {detectURLs(this.state.proof).map((url, i) => (
                         <div key={url} style={{ margin: '5px' }}>
-                          <a target="_blank" href={url} rel="noreferrer">Link-{i}</a>
+                          <a target="_blank" href={url} rel="noreferrer">
+                            Link-{i}
+                          </a>
                         </div>
                       ))}
                     </div>
                   </div>
 
                   <div style={{ marginTop: '10px', marginBottom: '6px' }}>
-                    <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" multiple onChange={this.handleProofImage} style={{ display: 'none' }} ref={(el) => { this.proofFileInput = el; }} />
-                    {(this.state.proofImages || []).length < 10
-                      ? <Button variant="secondary" size="sm" onClick={() => this.proofFileInput.click()}>📷 Upload Proof Image</Button>
-                      : <small style={{ color: 'var(--osrs-text-normal)', opacity: 0.7 }}>Max 10 images reached</small>
-                    }
+                    <input
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp,image/gif"
+                      multiple
+                      onChange={this.handleProofImage}
+                      style={{ display: 'none' }}
+                      ref={(el) => {
+                        this.proofFileInput = el;
+                      }}
+                    />
+                    {(this.state.proofImages || []).length < 10 ? (
+                      <Button
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => this.proofFileInput.click()}
+                      >
+                        📷 Upload Proof Image
+                      </Button>
+                    ) : (
+                      <small style={{ color: 'var(--osrs-text-normal)', opacity: 0.7 }}>
+                        Max 10 images reached
+                      </small>
+                    )}
                   </div>
 
                   {this.state.proofImages?.length > 0 && (
-                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginBottom: '10px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexWrap: 'wrap',
+                        gap: '8px',
+                        marginBottom: '10px',
+                      }}
+                    >
                       {this.state.proofImages.map((img, i) => (
                         <div key={i} style={{ position: 'relative', display: 'inline-block' }}>
-                          <img src={img} onClick={() => this.openLightbox(i)} style={{ width: '64px', height: '64px', objectFit: 'cover', cursor: 'pointer', borderRadius: '4px', border: '2px solid var(--osrs-border-dark)', boxSizing: 'border-box' }} title="Click to enlarge" alt="proof" />
-                          <button onClick={() => this.removeProofImage(i)} style={{ position: 'absolute', top: '-6px', right: '-6px', background: '#c0392b', color: 'white', border: 'none', borderRadius: '50%', width: '18px', height: '18px', fontSize: '10px', cursor: 'pointer', padding: 0, display: 'flex', alignItems: 'center', justifyContent: 'center' }} title="Remove image">✕</button>
+                          <img
+                            src={img}
+                            onClick={() => this.openLightbox(i)}
+                            style={{
+                              width: '64px',
+                              height: '64px',
+                              objectFit: 'cover',
+                              cursor: 'pointer',
+                              borderRadius: '4px',
+                              border: '2px solid var(--osrs-border-dark)',
+                              boxSizing: 'border-box',
+                            }}
+                            title="Click to enlarge"
+                            alt="proof"
+                          />
+                          <button
+                            onClick={() => this.removeProofImage(i)}
+                            style={{
+                              position: 'absolute',
+                              top: '-6px',
+                              right: '-6px',
+                              background: '#c0392b',
+                              color: 'white',
+                              border: 'none',
+                              borderRadius: '50%',
+                              width: '18px',
+                              height: '18px',
+                              fontSize: '10px',
+                              cursor: 'pointer',
+                              padding: 0,
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                            title="Remove image"
+                          >
+                            ✕
+                          </button>
                         </div>
                       ))}
                     </div>
                   )}
 
                   {this.state.lightboxIndex !== null && this.state.proofImages?.length > 0 && (
-                    <div onClick={this.closeLightbox} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                      {this.state.proofImages.length > 1 && <button onClick={(e) => { e.stopPropagation(); this.cycleImage(-1); }} style={lightboxBtnStyle('left')}>&#8249;</button>}
-                      <img src={this.state.proofImages[this.state.lightboxIndex]} onClick={(e) => e.stopPropagation()} style={{ maxWidth: '90vw', maxHeight: '85vh', objectFit: 'contain', borderRadius: '6px', boxShadow: '0 4px 32px rgba(0,0,0,0.7)' }} alt="proof enlarged" />
-                      {this.state.proofImages.length > 1 && <button onClick={(e) => { e.stopPropagation(); this.cycleImage(1); }} style={lightboxBtnStyle('right')}>&#8250;</button>}
-                      <div style={{ position: 'absolute', top: '16px', right: '20px', color: 'white', fontSize: '1.1rem', display: 'flex', gap: '16px', alignItems: 'center' }}>
-                        <span style={{ opacity: 0.8 }}>{this.state.lightboxIndex + 1} / {this.state.proofImages.length}</span>
-                        <span style={{ cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }} onClick={this.closeLightbox}>✕</span>
+                    <div
+                      onClick={this.closeLightbox}
+                      style={{
+                        position: 'fixed',
+                        inset: 0,
+                        background: 'rgba(0,0,0,0.85)',
+                        zIndex: 9999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {this.state.proofImages.length > 1 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            this.cycleImage(-1);
+                          }}
+                          style={lightboxBtnStyle('left')}
+                        >
+                          &#8249;
+                        </button>
+                      )}
+                      <img
+                        src={this.state.proofImages[this.state.lightboxIndex]}
+                        onClick={(e) => e.stopPropagation()}
+                        style={{
+                          maxWidth: '90vw',
+                          maxHeight: '85vh',
+                          objectFit: 'contain',
+                          borderRadius: '6px',
+                          boxShadow: '0 4px 32px rgba(0,0,0,0.7)',
+                        }}
+                        alt="proof enlarged"
+                      />
+                      {this.state.proofImages.length > 1 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            this.cycleImage(1);
+                          }}
+                          style={lightboxBtnStyle('right')}
+                        >
+                          &#8250;
+                        </button>
+                      )}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '16px',
+                          right: '20px',
+                          color: 'white',
+                          fontSize: '1.1rem',
+                          display: 'flex',
+                          gap: '16px',
+                          alignItems: 'center',
+                        }}
+                      >
+                        <span style={{ opacity: 0.8 }}>
+                          {this.state.lightboxIndex + 1} / {this.state.proofImages.length}
+                        </span>
+                        <span
+                          style={{ cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }}
+                          onClick={this.closeLightbox}
+                        >
+                          ✕
+                        </span>
                       </div>
                     </div>
                   )}
 
                   <div className="form-check" style={{ marginTop: '15px' }}>
-                    <input className="form-check-input bingo-completed-check" checked={this.state.checked} onChange={this.toggleCheck} type="checkbox" id="tileCompleted" />
-                    <label className="form-check-label" htmlFor="tileCompleted">Completed?</label>
+                    <input
+                      className="form-check-input bingo-completed-check"
+                      checked={this.state.checked}
+                      onChange={this.toggleCheck}
+                      type="checkbox"
+                      id="tileCompleted"
+                    />
+                    <label className="form-check-label" htmlFor="tileCompleted">
+                      Completed?
+                    </label>
                   </div>
                 </>
               )}
@@ -315,26 +543,54 @@ class TileModal extends Component {
           ) : (
             <>
               {Object.keys(this.listOfImages).map((image, i) => {
-                const imageName = image.split('/').pop()?.replace(/\.png$/i, '') || image;
-                return <img key={i} title={imageName} src={this.listOfImages[image]} onClick={() => this.setImage(imageName)} alt={imageName} />;
+                const imageName =
+                  image
+                    .split('/')
+                    .pop()
+                    ?.replace(/\.png$/i, '') || image;
+                return (
+                  <img
+                    key={i}
+                    title={imageName}
+                    src={this.listOfImages[image]}
+                    onClick={() => this.setImage(imageName)}
+                    alt={imageName}
+                  />
+                );
               })}
               <hr />
               <Alert>
-                Click any image above to set it or type an item's name below as it would appear on the wiki.
+                Click any image above to set it or type an item's name below as it would appear on
+                the wiki.
                 <br />
                 Examples: Coins, Infernal cape, Bucket of milk, Beaver, Plank
               </Alert>
               <div style={{ display: 'flex' }}>
-                <EditableInput value={this.state.wikiSearch} stateKey='wikiSearch' change={this.inputState} title="Item Search" />
+                <EditableInput
+                  value={this.state.wikiSearch}
+                  stateKey="wikiSearch"
+                  change={this.inputState}
+                  title="Item Search"
+                />
               </div>
-              {this.state.loading && <Spinner animation="border" role="status"><span className="visually-hidden">Loading...</span></Spinner>}
-              {this.state.triedToSearch && this.state.suggestions?.length === 0 && <Alert>No results found, try searching something else</Alert>}
+              {this.state.loading && (
+                <Spinner animation="border" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </Spinner>
+              )}
+              {this.state.triedToSearch && this.state.suggestions?.length === 0 && (
+                <Alert>No results found, try searching something else</Alert>
+              )}
               {this.state.suggestions?.length > 0 && (
                 <ListGroup>
                   {this.state.suggestions.map((item, i) => (
                     <ListGroup.Item key={i} action onClick={() => this.setImage(item.url, true)}>
                       <div style={{ display: 'flex', alignItems: 'center' }}>
-                        <img src={item.thumbnail?.url} style={{ maxWidth: '40px', maxHeight: '40px', paddingRight: '10px' }} alt={item.title} />
+                        <img
+                          src={item.thumbnail?.url}
+                          style={{ maxWidth: '40px', maxHeight: '40px', paddingRight: '10px' }}
+                          alt={item.title}
+                        />
                         {item.title}
                       </div>
                     </ListGroup.Item>
@@ -342,15 +598,29 @@ class TileModal extends Component {
                 </ListGroup>
               )}
               <br />
-              <input type="file" accept=".png,.jpeg" onChange={this.handleCustomImage} style={{ display: 'none' }} ref={(el) => { this.fileInput = el; }} />
-              <Button style={{ marginTop: '10px' }} onClick={() => this.fileInput.click()}>Custom image</Button>
+              <input
+                type="file"
+                accept=".png,.jpeg"
+                onChange={this.handleCustomImage}
+                style={{ display: 'none' }}
+                ref={(el) => {
+                  this.fileInput = el;
+                }}
+              />
+              <Button style={{ marginTop: '10px' }} onClick={() => this.fileInput.click()}>
+                Custom image
+              </Button>
             </>
           )}
         </Modal.Body>
 
         <Modal.Footer>
-          <Button variant="danger" onClick={this.handleClose}>Close</Button>
-          <Button variant="success" onClick={this.handleSave}>Save</Button>
+          <Button variant="danger" onClick={this.handleClose}>
+            Close
+          </Button>
+          <Button variant="success" onClick={this.handleSave}>
+            Save
+          </Button>
         </Modal.Footer>
       </Modal>
     );

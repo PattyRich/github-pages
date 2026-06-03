@@ -1,27 +1,74 @@
 import './App.css';
 import React, { useState } from 'react';
-import { Link } from "react-router-dom";
-import Image from 'react-bootstrap/Image'
-import FeedbackModal from './components/BootStrap/FeedbackModal'
+import { Link } from 'react-router-dom';
+import Image from 'react-bootstrap/Image';
+import FeedbackModal from './components/BootStrap/FeedbackModal';
 
-window.API = import.meta.env.DEV ? 'http://localhost:8000' : 'https://praynr.com'
+window.API = import.meta.env.DEV ? 'http://localhost:8000' : 'https://praynr.com';
 
 const ROUTES = [
-  { path: "/bingo-draft", name: "📝 Bingo Draft", desc: "Draft teams and items for your next big bingo event." },
-  { path: "/bingo", name: "🎲 OSRS Bingo", desc: "Interactive bingo boards for your clan events.", premium: true },
-  { path: "/osrs", name: "💰 OSRS Loot Simulator", desc: "Simulate drops from Old School RuneScape bosses.", premium: true },
-  { path: "/all-pets", name: "🐾 All Pets Simulator", desc: "See how long it takes to get every pet." },
-  { path: "/mage-run", name: "🧙 Olm Mage Run", desc: "Practice your Olm Mage hand running." },
-  { path: "/toa-flip", name: "🧩 ToA Flip Puzzle", desc: "Master the Tombs of Amascut memory puzzle." },
-  { path: "/pets", name: "📸 Pet Picture Creator", desc: "Generate an image showcasing your current pets." },
-  { path: "/lol-beat", name: "⚔️ LoL Beat #1 (NA)", desc: "Six Degrees to Challenger — League of Legends pathfinding." },
-  { path: "/status", name: "🟢 System Status", desc: "Live health of the API, database, and background workers." },
-  { path: "https://github.com/PattyRich/github-pages", name: "🐙 GitHub Repository", desc: "View the source code for this site.", external: true },
+  {
+    path: '/bingo-draft',
+    name: '📝 Bingo Draft',
+    desc: 'Draft teams and items for your next big bingo event.',
+  },
+  {
+    path: '/bingo',
+    name: '🎲 OSRS Bingo',
+    desc: 'Interactive bingo boards for your clan events.',
+    premium: true,
+  },
+  {
+    path: '/osrs',
+    name: '💰 OSRS Loot Simulator',
+    desc: 'Simulate drops from Old School RuneScape bosses.',
+    premium: true,
+  },
+  {
+    path: '/all-pets',
+    name: '🐾 All Pets Simulator',
+    desc: 'See how long it takes to get every pet.',
+  },
+  { path: '/mage-run', name: '🧙 Olm Mage Run', desc: 'Practice your Olm Mage hand running.' },
+  {
+    path: '/toa-flip',
+    name: '🧩 ToA Flip Puzzle',
+    desc: 'Master the Tombs of Amascut memory puzzle.',
+  },
+  {
+    path: '/pets',
+    name: '📸 Pet Picture Creator',
+    desc: 'Generate an image showcasing your current pets.',
+  },
+  {
+    path: '/lol-beat',
+    name: '⚔️ LoL Beat #1 (NA)',
+    desc: 'Six Degrees to Challenger — League of Legends pathfinding.',
+  },
+  {
+    path: '/status',
+    name: '🟢 System Status',
+    desc: 'Live health of the API, database, and background workers.',
+  },
+  {
+    path: 'https://github.com/PattyRich/github-pages',
+    name: '🐙 GitHub Repository',
+    desc: 'View the source code for this site.',
+    external: true,
+  },
 ];
 
 const BINGO_ROUTES = [
-  { path: "/bingo", name: "🎲 OSRS Bingo", desc: "Interactive bingo boards for your clan events. Track all teams in one place." },
-  { path: "/bingo-draft", name: "📝 Bingo Draft", desc: "Draft teams and items for your next big bingo event." },
+  {
+    path: '/bingo',
+    name: '🎲 OSRS Bingo',
+    desc: 'Interactive bingo boards for your clan events. Track all teams in one place.',
+  },
+  {
+    path: '/bingo-draft',
+    name: '📝 Bingo Draft',
+    desc: 'Draft teams and items for your next big bingo event.',
+  },
 ];
 
 export default function App() {
@@ -31,7 +78,6 @@ export default function App() {
     <div className="App">
       <div className="app-container">
         <main className="app-main">
-
           <section className="other-routes-section">
             <h2 className="section-title">Tools &amp; Simulators</h2>
             <div className="route-grid">
@@ -90,7 +136,6 @@ export default function App() {
               </div>
             </div>
           </section>
-
         </main>
       </div>
 
@@ -98,9 +143,7 @@ export default function App() {
         Feedback
       </button>
 
-      {showFeedback && (
-        <FeedbackModal handleClose={() => setShowFeedback(false)} />
-      )}
+      {showFeedback && <FeedbackModal handleClose={() => setShowFeedback(false)} />}
     </div>
   );
 }

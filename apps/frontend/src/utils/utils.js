@@ -12,9 +12,9 @@ async function fetchRequest(url, method, body) {
   }
 }
 
-export const fetchGet  = (url)        => fetchRequest(url, 'GET');
-export const fetchPost = (url, body)  => fetchRequest(url, 'POST', body);
-export const fetchPut  = (url, body)  => fetchRequest(url, 'PUT', body);
+export const fetchGet = (url) => fetchRequest(url, 'GET');
+export const fetchPost = (url, body) => fetchRequest(url, 'POST', body);
+export const fetchPut = (url, body) => fetchRequest(url, 'PUT', body);
 
 export function getStoredBool(key, fallback = false) {
   const value = localStorage.getItem(key);
@@ -28,7 +28,7 @@ export function setStoredBool(key, value) {
 
 export function pwUrlBuilder(state, teamPassword = null) {
   const isAdmin = state.privilage === 'admin';
-  const pw   = isAdmin ? state.adminPassword : (state.generalPassword || state.adminPassword);
+  const pw = isAdmin ? state.adminPassword : state.generalPassword || state.adminPassword;
   const type = isAdmin ? 'admin' : 'general';
   let url = `${state.boardName}/${pw}/${type}`;
   if (state.teamPasswordsRequired && teamPassword) url += `/${teamPassword}`;

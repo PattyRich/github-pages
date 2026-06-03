@@ -1,14 +1,14 @@
-import { useState } from "react";
-import Button from "react-bootstrap/Button";
-import Modal from "react-bootstrap/Modal";
-import { getStoredBool, setStoredBool } from "../../utils/utils";
+import { useState } from 'react';
+import Button from 'react-bootstrap/Button';
+import Modal from 'react-bootstrap/Modal';
+import { getStoredBool, setStoredBool } from '../../utils/utils';
 
 const SETTINGS_KEYS = [
-  { key: 'completeStyle',  label: 'Use alternative tile complete style?' },
-  { key: 'showPoints',     label: 'Hide current points on bingo board?' },
+  { key: 'completeStyle', label: 'Use alternative tile complete style?' },
+  { key: 'showPoints', label: 'Hide current points on bingo board?' },
   { key: 'showTeamPoints', label: 'Hide team points on team tabs?' },
-  { key: 'showTitleTile',  label: 'Hide tile title on board?' },
-  { key: 'showFeedback',   label: 'Hide feedback button?' },
+  { key: 'showTitleTile', label: 'Hide tile title on board?' },
+  { key: 'showFeedback', label: 'Hide feedback button?' },
 ];
 
 export default function SettingsModal({ handleClose }) {
@@ -19,7 +19,7 @@ export default function SettingsModal({ handleClose }) {
   function toggle(key) {
     const newVal = !settings[key];
     setStoredBool(key, newVal);
-    setSettings(prev => ({ ...prev, [key]: newVal }));
+    setSettings((prev) => ({ ...prev, [key]: newVal }));
   }
 
   return (
@@ -37,12 +37,16 @@ export default function SettingsModal({ handleClose }) {
               checked={settings[key]}
               onChange={() => toggle(key)}
             />
-            <label className="form-check-label" htmlFor={`setting-${i}`}>{label}</label>
+            <label className="form-check-label" htmlFor={`setting-${i}`}>
+              {label}
+            </label>
           </div>
         ))}
       </Modal.Body>
       <Modal.Footer>
-        <Button variant="danger" onClick={handleClose}>Close</Button>
+        <Button variant="danger" onClick={handleClose}>
+          Close
+        </Button>
       </Modal.Footer>
     </Modal>
   );

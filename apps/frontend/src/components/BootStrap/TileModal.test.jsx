@@ -91,7 +91,9 @@ test('shows bundled tile images but saves the selected object as a wiki detail i
   fireEvent.click(tileImages[0]);
 
   await waitFor(() => {
-    expect(screen.getByRole('button', { name: /Remove Tile Background Image/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole('button', { name: /Remove Tile Background Image/i })
+    ).toBeInTheDocument();
   });
   expect(screen.getByRole('img')).toHaveAttribute('src', expectedWikiUrl);
 

@@ -1,15 +1,15 @@
 import React from 'react';
 //import { Link } from "react-router-dom";
 import './BoardView.css';
-import BoardTile from './BoardTile'
-import EditableInput from './BootStrap/EditableInput'
-import Button from './BootStrap/Button'
-import Alert from 'react-bootstrap/Alert'
-import { fetchPost, fetchGet, fetchPut, pwUrlBuilder } from '../utils/utils.js'
-import { useLocation, useNavigate } from "react-router-dom";
-import Teams from './Teams'
-import Toast from './BootStrap/Toast'
-import EditTeams from './BootStrap/EditTeams'
+import BoardTile from './BoardTile';
+import EditableInput from './BootStrap/EditableInput';
+import Button from './BootStrap/Button';
+import Alert from 'react-bootstrap/Alert';
+import { fetchPost, fetchGet, fetchPut, pwUrlBuilder } from '../utils/utils.js';
+import { useLocation, useNavigate } from 'react-router-dom';
+import Teams from './Teams';
+import Toast from './BootStrap/Toast';
+import EditTeams from './BootStrap/EditTeams';
 import SettingsModal from './BootStrap/SettingsModal';
 import FeedbackModal from './BootStrap/FeedbackModal';
 
@@ -23,246 +23,251 @@ class BoardView extends React.Component {
       teams: 5,
       showEditTeams: false,
       generalPasswordCopy: '',
-      visibleRows: null
-    }
+      visibleRows: null,
+    };
 
-    const { state } = this.props.location
+    const { state } = this.props.location;
     this.state = {
       ...this.state,
-      ...state
-    }
+      ...state,
+    };
 
     this.alertTimeout = null;
     this.eventSource = null;
-    this.inputState = this.inputState.bind(this)
-    this.handleResize = this.handleResize.bind(this)
-    this.changeBoardTileInfo = this.changeBoardTileInfo.bind(this)
-    this.updateBoard = this.updateBoard.bind(this)
-    this.alert = this.alert.bind(this)
-    this.switchPrivilage = this.switchPrivilage.bind(this)
-    this.changeTeam = this.changeTeam.bind(this)
-    this.toggleTeamEdit = this.toggleTeamEdit.bind(this)
-    this.updateTeams = this.updateTeams.bind(this)
-    this.calculateTeamPoints = this.calculateTeamPoints.bind(this)
-    this.refreshData = this.refreshData.bind(this)
-    this.clearAlert = this.clearAlert.bind(this)
-    this.clipboard = this.clipboard.bind(this)
-    this.connectSSE = this.connectSSE.bind(this)
-    this.visibleBoardData = this.visibleBoardData.bind(this)
-    window.addEventListener('resize', this.handleResize)
+    this.inputState = this.inputState.bind(this);
+    this.handleResize = this.handleResize.bind(this);
+    this.changeBoardTileInfo = this.changeBoardTileInfo.bind(this);
+    this.updateBoard = this.updateBoard.bind(this);
+    this.alert = this.alert.bind(this);
+    this.switchPrivilage = this.switchPrivilage.bind(this);
+    this.changeTeam = this.changeTeam.bind(this);
+    this.toggleTeamEdit = this.toggleTeamEdit.bind(this);
+    this.updateTeams = this.updateTeams.bind(this);
+    this.calculateTeamPoints = this.calculateTeamPoints.bind(this);
+    this.refreshData = this.refreshData.bind(this);
+    this.clearAlert = this.clearAlert.bind(this);
+    this.clipboard = this.clipboard.bind(this);
+    this.connectSSE = this.connectSSE.bind(this);
+    this.visibleBoardData = this.visibleBoardData.bind(this);
+    window.addEventListener('resize', this.handleResize);
   }
 
-
-  promisedSetState = (newState) => new Promise(resolve => this.setState(newState, resolve));
+  promisedSetState = (newState) => new Promise((resolve) => this.setState(newState, resolve));
 
   async componentDidMount() {
     const params = new URLSearchParams(this.props.location.search);
     const pw = params.get('password');
     if (pw) {
       const path = window.location.href.replace(/^https?:\/\//, '').split('/');
-      await this.promisedSetState({ privilage: 'general', generalPassword: pw, boardName: decodeURI(path[path.length - 1].split('?')[0]) })
+      await this.promisedSetState({
+        privilage: 'general',
+        generalPassword: pw,
+        boardName: decodeURI(path[path.length - 1].split('?')[0]),
+      });
     }
 
     const tileHint = localStorage.getItem('tile-hint');
     if (!tileHint) {
       localStorage.setItem('tile-hint', true);
-      this.setState({ showToast: true })
+      this.setState({ showToast: true });
     }
-    this.refreshData(!this.state.cameFromCreate, true)
+    this.refreshData(!this.state.cameFromCreate, true);
     if (this.state.boardJustCreated) {
-      this.alert('success', 'Board Successfully Created!')
-      this.setState({ boardJustCreated: null })
+      this.alert('success', 'Board Successfully Created!');
+      this.setState({ boardJustCreated: null });
     }
-    this.connectSSE()
+    this.connectSSE();
   }
 
   componentWillUnmount() {
     if (this.eventSource) {
-      this.eventSource.close()
+      this.eventSource.close();
     }
-    window.removeEventListener('resize', this.handleResize)
+    window.removeEventListener('resize', this.handleResize);
   }
 
   connectSSE() {
     if (this.eventSource) {
-      this.eventSource.close()
+      this.eventSource.close();
     }
     if (!(this.state.generalPassword || this.state.adminPassword) || !this.state.boardName) {
-      setTimeout(() => this.connectSSE(), 2000)
-      return
+      setTimeout(() => this.connectSSE(), 2000);
+      return;
     }
-    const url = `${window.API}/events/${pwUrlBuilder(this.state)}`
-    this.eventSource = new EventSource(url)
+    const url = `${window.API}/events/${pwUrlBuilder(this.state)}`;
+    this.eventSource = new EventSource(url);
 
     this.eventSource.onopen = () => {
-      this.refreshData()
-    }
+      this.refreshData();
+    };
 
     this.eventSource.onmessage = () => {
-      this.refreshData()
-    }
+      this.refreshData();
+    };
 
     this.eventSource.onerror = () => {
-      this.eventSource.close()
-      setTimeout(() => this.connectSSE(), 20000)
-    }
+      this.eventSource.close();
+      setTimeout(() => this.connectSSE(), 20000);
+    };
   }
 
   async refreshData(firstLoad = false, changeTeam = false) {
     if (!this.state.adminPassword && !this.state.generalPassword) {
-      this.alert('danger', 'No Password is set, return to main page and start again.', true)
+      this.alert('danger', 'No Password is set, return to main page and start again.', true);
       return;
     }
-    let url = pwUrlBuilder(this.state)
-    let [data, err] = await fetchGet(`getBoard/${url}`)
+    let url = pwUrlBuilder(this.state);
+    let [data, err] = await fetchGet(`getBoard/${url}`);
     if (err) {
-      this.alert('danger', err.message)
-      return
+      this.alert('danger', err.message);
+      return;
     }
     let activeTeamValue = 0;
     if (changeTeam) {
-      let activeTeam = localStorage.getItem('activeTeam')
+      let activeTeam = localStorage.getItem('activeTeam');
       if (activeTeam) {
-        activeTeam = Number(activeTeam)
+        activeTeam = Number(activeTeam);
         if (activeTeam <= data.teamData.length - 1 && activeTeam >= 0) {
-          activeTeamValue = activeTeam
+          activeTeamValue = activeTeam;
         }
       }
     }
 
-    this.setState({
-      boardData: data.boardData,
-      teams: data.teamData.length,
-      teamData: data.teamData,
-      activeTeamIndex: this.state.activeTeamIndex || activeTeamValue,
-      generalPasswordCopy: data.generalPassword,
-      teamPasswordsRequired: data.teamPasswordsRequired,
-      visibleRows: data.visibleRows
-    }, () => {
-      this.calculateTeamPoints()
-      if (firstLoad) {
-        if (this.state.privilage === 'admin') {
-          this.switchPrivilage()
+    this.setState(
+      {
+        boardData: data.boardData,
+        teams: data.teamData.length,
+        teamData: data.teamData,
+        activeTeamIndex: this.state.activeTeamIndex || activeTeamValue,
+        generalPasswordCopy: data.generalPassword,
+        teamPasswordsRequired: data.teamPasswordsRequired,
+        visibleRows: data.visibleRows,
+      },
+      () => {
+        this.calculateTeamPoints();
+        if (firstLoad) {
+          if (this.state.privilage === 'admin') {
+            this.switchPrivilage();
+          }
         }
       }
-    })
+    );
 
-    this.rows = data.boardData[0].length
-    this.columns = data.boardData.length
+    this.rows = data.boardData[0].length;
+    this.columns = data.boardData.length;
   }
 
   clearAlert() {
     if (this.alertTimeout) {
-      clearTimeout(this.alertTimeout)
+      clearTimeout(this.alertTimeout);
     }
-    this.setState({ alert: '' })
+    this.setState({ alert: '' });
   }
 
   alert(variant, message, skipTimeout = false) {
     if (variant === 'loading') {
-      this.setState({ alertVariant: 'warning', isLoading: true, alert: 'Loading...' })
+      this.setState({ alertVariant: 'warning', isLoading: true, alert: 'Loading...' });
     } else {
-      this.setState({ alertVariant: variant, alert: message })
+      this.setState({ alertVariant: variant, alert: message });
       if (this.alertTimeout) {
-        clearTimeout(this.alertTimeout)
+        clearTimeout(this.alertTimeout);
       }
-      if (skipTimeout) { return; }
+      if (skipTimeout) {
+        return;
+      }
       this.alertTimeout = setTimeout(() => {
-        this.setState({ alert: '' })
-      }, 5000)
+        this.setState({ alert: '' });
+      }, 5000);
     }
   }
 
   calculateTeamPoints() {
-    if (!this.state.teamData)
-      return
-    const boardData = this.visibleBoardData()
-    const columns = boardData.length
-    const rows = boardData[0]?.length || 0
-    let x = JSON.parse(JSON.stringify(this.state.teamData))
+    if (!this.state.teamData) return;
+    const boardData = this.visibleBoardData();
+    const columns = boardData.length;
+    const rows = boardData[0]?.length || 0;
+    let x = JSON.parse(JSON.stringify(this.state.teamData));
     x.forEach((team) => {
-      let pointTotal = 0
+      let pointTotal = 0;
       team.data.teamData.forEach((row, i) => {
         if (!boardData[i]) {
-          return
+          return;
         }
-        let addBonusRow = true
+        let addBonusRow = true;
         row.slice(0, rows).forEach((tile, j) => {
           if (addBonusRow && !tile.checked) {
-            addBonusRow = false
+            addBonusRow = false;
           }
-          pointTotal += tile.checked ? Number(tile.currPoints) : 0
+          pointTotal += tile.checked ? Number(tile.currPoints) : 0;
           if (j === rows - 1)
             if (addBonusRow) {
-              pointTotal += Number(boardData[i][j].rowBingo)
+              pointTotal += Number(boardData[i][j].rowBingo);
             }
-        })
-      })
-      team.pointTotal = pointTotal
-    })
+        });
+      });
+      team.pointTotal = pointTotal;
+    });
     x.forEach((team) => {
-      let pointTotal = 0
-      const visibleTeamData = team.data.teamData
-        .slice(0, columns)
-        .map((row) => row.slice(0, rows))
+      let pointTotal = 0;
+      const visibleTeamData = team.data.teamData.slice(0, columns).map((row) => row.slice(0, rows));
       transpose(visibleTeamData).forEach((row, i) => {
-        let addBonusRow = true
+        let addBonusRow = true;
         row.forEach((tile, j) => {
           if (addBonusRow && !tile.checked) {
-            addBonusRow = false
+            addBonusRow = false;
           }
           if (j === columns - 1)
             if (addBonusRow) {
-              pointTotal += Number(boardData[j][i].colBingo)
+              pointTotal += Number(boardData[j][i].colBingo);
             }
-        })
-      })
-      team.pointTotal += pointTotal
-    })
-    this.setState({ teamData: x })
+        });
+      });
+      team.pointTotal += pointTotal;
+    });
+    this.setState({ teamData: x });
   }
 
   visibleBoardData() {
     if (!this.state.boardData) {
-      return []
+      return [];
     }
     if (this.state.privilage !== 'general') {
-      return this.state.boardData
+      return this.state.boardData;
     }
-    const visibleRows = Number(this.state.visibleRows) || this.state.boardData.length
-    return this.state.boardData.slice(0, visibleRows)
+    const visibleRows = Number(this.state.visibleRows) || this.state.boardData.length;
+    return this.state.boardData.slice(0, visibleRows);
   }
 
   toggleTeamEdit() {
-    this.setState({ showEditTeams: !this.state.showEditTeams })
+    this.setState({ showEditTeams: !this.state.showEditTeams });
   }
 
   handleResize() {
-    this.forceUpdate()
+    this.forceUpdate();
   }
 
   inputState(e, target) {
-    let stateChange = {}
+    let stateChange = {};
     if (target === 'teams' && e.target.value !== '') {
-      this.alert('warning', 'If you lower team size you could delete a team with data. Be CAREFUL')
+      this.alert('warning', 'If you lower team size you could delete a team with data. Be CAREFUL');
       if (isNaN(e.target.value)) {
-        e.target.value = 1
+        e.target.value = 1;
       }
       if (e.target.value <= 0) {
-        e.target.value = 1
+        e.target.value = 1;
       }
       if (e.target.value > 10) {
-        e.target.value = 10
+        e.target.value = 10;
       }
-      e.target.value = Number(e.target.value)
+      e.target.value = Number(e.target.value);
     }
-    stateChange[target] = e.target.value
-    this.setState(stateChange)
+    stateChange[target] = e.target.value;
+    this.setState(stateChange);
   }
 
   async changeBoardTileInfo(row, col, data) {
-    data.teamId = this.state.teamData[this.state.activeTeamIndex].team
-    await this.updateBoard(row, col, data)
+    data.teamId = this.state.teamData[this.state.activeTeamIndex].team;
+    await this.updateBoard(row, col, data);
   }
 
   async updateTeams(info, passwordRequired, rows, columns, visibleRows) {
@@ -271,155 +276,190 @@ class BoardView extends React.Component {
       passwordRequired,
       rows,
       columns,
-      visibleRows
-    }
-    this.alert('loading')
-    let url = pwUrlBuilder(this.state)
-    let [data, err] = await fetchPut(`updateTeams/${url}`, { dataToSend })
+      visibleRows,
+    };
+    this.alert('loading');
+    let url = pwUrlBuilder(this.state);
+    let [data, err] = await fetchPut(`updateTeams/${url}`, { dataToSend });
     if (err) {
-      this.alert('danger', err.message)
-      this.setState({ isLoading: false })
-      return
+      this.alert('danger', err.message);
+      this.setState({ isLoading: false });
+      return;
     }
-    this.setState({ isLoading: false })
-    this.alert("success", 'Teams Successfully Updated!')
+    this.setState({ isLoading: false });
+    this.alert('success', 'Teams Successfully Updated!');
   }
 
   changeTeam(teamId) {
-    this.setState({ activeTeamIndex: teamId })
+    this.setState({ activeTeamIndex: teamId });
   }
 
   async switchPrivilage() {
     if (this.state.privilage === 'admin') {
-      await this.promisedSetState({ privilage: 'general', canSwitchPriv: true })
-      await this.refreshData()
+      await this.promisedSetState({ privilage: 'general', canSwitchPriv: true });
+      await this.refreshData();
     } else {
-      await this.promisedSetState({ privilage: 'admin' })
+      await this.promisedSetState({ privilage: 'admin' });
       await this.refreshData();
     }
   }
 
   clipboard() {
-    navigator.clipboard.writeText(`${window.location.href}?password=${encodeURIComponent(this.state.generalPasswordCopy)}`).then(function () {
-    }, function (err) {
-    });
-    this.setState({ showToast2: true })
+    navigator.clipboard
+      .writeText(
+        `${window.location.href}?password=${encodeURIComponent(this.state.generalPasswordCopy)}`
+      )
+      .then(
+        function () {},
+        function (err) {}
+      );
+    this.setState({ showToast2: true });
   }
 
   async updateBoard(row, col, info, forcePrompt = false) {
-    this.alert('loading')
-    let needToAddTeamPassword = false
+    this.alert('loading');
+    let needToAddTeamPassword = false;
     let pw;
     if (this.state.teamPasswordsRequired && this.state.privilage !== 'admin') {
-      pw = getTeamPassword(this.state.boardName, this.state.teamData[this.state.activeTeamIndex].data.name)
+      pw = getTeamPassword(
+        this.state.boardName,
+        this.state.teamData[this.state.activeTeamIndex].data.name
+      );
       if (pw === null || forcePrompt) {
-        needToAddTeamPassword = true
-        const promptText = forcePrompt ? 'Your team password was incorrect. Please try again.' : 'Enter Team Password'
-        pw = prompt(promptText)
+        needToAddTeamPassword = true;
+        const promptText = forcePrompt
+          ? 'Your team password was incorrect. Please try again.'
+          : 'Enter Team Password';
+        pw = prompt(promptText);
         if (pw === null) {
-          this.alert('danger', 'No password entered aborting update.')
+          this.alert('danger', 'No password entered aborting update.');
           return;
         }
       }
     }
-    let url = pwUrlBuilder(this.state, pw)
-    let [data, err] = await fetchPut(`updateBoard/${url}`, { row, col, info })
+    let url = pwUrlBuilder(this.state, pw);
+    let [data, err] = await fetchPut(`updateBoard/${url}`, { row, col, info });
     if (err) {
-      this.alert('danger', err.message)
-      this.setState({ isLoading: false })
+      this.alert('danger', err.message);
+      this.setState({ isLoading: false });
 
       if (err.message === 'Your team password was incorrect.') {
-        this.updateBoard(row, col, info, true)
+        this.updateBoard(row, col, info, true);
       }
-      return
+      return;
     }
     if (needToAddTeamPassword) {
-      setTeamPassword(this.state.boardName, this.state.teamData[this.state.activeTeamIndex].data.name, pw)
+      setTeamPassword(
+        this.state.boardName,
+        this.state.teamData[this.state.activeTeamIndex].data.name,
+        pw
+      );
     }
-    this.setState({ isLoading: false })
-    this.alert("success", 'Board Successfully Updated!')
+    this.setState({ isLoading: false });
+    this.alert('success', 'Board Successfully Updated!');
   }
 
   render() {
-    const showFeedback = localStorage.getItem('showFeedback') === 'true'
-    let height = document.documentElement.clientHeight
-    let width = document.documentElement.clientWidth
-    const boardDataToShow = this.visibleBoardData()
-    const renderColumns = boardDataToShow.length || this.columns || 1
-    const renderRows = boardDataToShow[0]?.length || this.rows || 1
-    let maxWidth = (width * .75 / renderRows)
-    let maxHeight = (height * .75 / renderColumns)
-    let dem = maxHeight < maxWidth ? maxHeight : maxWidth
+    const showFeedback = localStorage.getItem('showFeedback') === 'true';
+    let height = document.documentElement.clientHeight;
+    let width = document.documentElement.clientWidth;
+    const boardDataToShow = this.visibleBoardData();
+    const renderColumns = boardDataToShow.length || this.columns || 1;
+    const renderRows = boardDataToShow[0]?.length || this.rows || 1;
+    let maxWidth = (width * 0.75) / renderRows;
+    let maxHeight = (height * 0.75) / renderColumns;
+    let dem = maxHeight < maxWidth ? maxHeight : maxWidth;
     //let dem = width < height ? (width / this.rows)-40 : (height / this.columns)-40;
     return (
-      <div className='flex-wrapper-create'>
-        <div className='top-bar-container'>
-          <div className='title-bar'>
-            <h2 style={{ 'marginTop': '0px' }}> {this.state.boardName} </h2>
+      <div className="flex-wrapper-create">
+        <div className="top-bar-container">
+          <div className="title-bar">
+            <h2 style={{ marginTop: '0px' }}> {this.state.boardName} </h2>
           </div>
-          <div className='settings-bar'>
-            <div className='flex bingo-edit'>
-              <Button click={() => this.setState({ showSettings: true })} text="Settings" variant="primary" />
-              {(this.state.privilage === 'admin' || this.state.canSwitchPriv) &&
+          <div className="settings-bar">
+            <div className="flex bingo-edit">
+              <Button
+                click={() => this.setState({ showSettings: true })}
+                text="Settings"
+                variant="primary"
+              />
+              {(this.state.privilage === 'admin' || this.state.canSwitchPriv) && (
                 <>
-                  {this.state.privilage === 'admin' &&
+                  {this.state.privilage === 'admin' && (
                     <>
                       <Button click={this.toggleTeamEdit} text="Edit Board" variant="primary" />
-                      <Button style={{ 'marginRight': '10px' }} click={this.clipboard} variant='warning' text={'Auto Signin Link 📋'} />
+                      <Button
+                        style={{ marginRight: '10px' }}
+                        click={this.clipboard}
+                        variant="warning"
+                        text={'Auto Signin Link 📋'}
+                      />
                     </>
-                  }
-                  {this.state.privilage === 'admin' ?
+                  )}
+                  {this.state.privilage === 'admin' ? (
                     <Button click={this.switchPrivilage} text="Admin Mode" variant="warning" />
-                    :
+                  ) : (
                     <Button click={this.switchPrivilage} text="General Mode" variant="primary" />
-                  }
+                  )}
                 </>
-              }
+              )}
             </div>
           </div>
         </div>
-        {this.state.alert &&
-          <Alert onClick={this.clearAlert} className='osrs-alert-banner' variant={this.state.alertVariant}>
+        {this.state.alert && (
+          <Alert
+            onClick={this.clearAlert}
+            className="osrs-alert-banner"
+            variant={this.state.alertVariant}
+          >
             {this.state.alert}
           </Alert>
-        }
-        {(this.state.teamData && !(this.state.privilage === 'admin')) &&
-          <div style={{ 'alignItems': 'center' }} className='flex-center osrs-header'>
-            <h3 className='flex-center' style={{ marginBottom: 0 }}> {this.state.teamData[this.state.activeTeamIndex].data.name}</h3>
-            <span style={{ 'marginLeft': '10px', fontSize: '1.2rem' }}> (Points: {this.state.teamData[this.state.activeTeamIndex].pointTotal}) </span>
+        )}
+        {this.state.teamData && !(this.state.privilage === 'admin') && (
+          <div style={{ alignItems: 'center' }} className="flex-center osrs-header">
+            <h3 className="flex-center" style={{ marginBottom: 0 }}>
+              {' '}
+              {this.state.teamData[this.state.activeTeamIndex].data.name}
+            </h3>
+            <span style={{ marginLeft: '10px', fontSize: '1.2rem' }}>
+              {' '}
+              (Points: {this.state.teamData[this.state.activeTeamIndex].pointTotal}){' '}
+            </span>
           </div>
-        }
-        {this.state.boardData &&
-          <div className='center-board'>
+        )}
+        {this.state.boardData && (
+          <div className="center-board">
             {boardDataToShow.map((row, i) => (
-              <span key={i} className='flex'>
+              <span key={i} className="flex">
                 {row.map((tile, j) => (
                   <BoardTile
                     cord={[i, j]}
                     change={this.changeBoardTileInfo}
                     info={boardDataToShow[i][j]}
-                    teamInfo={(this.state.teamData && this.state.privilage !== 'admin') ? this.state.teamData[this.state.activeTeamIndex].data.teamData[i][j] : null}
+                    teamInfo={
+                      this.state.teamData && this.state.privilage !== 'admin'
+                        ? this.state.teamData[this.state.activeTeamIndex].data.teamData[i][j]
+                        : null
+                    }
                     key={j}
                     dem={dem}
                     br={boardDataToShow[0].length === j + 1}
                     bb={boardDataToShow.length === i + 1}
                     privilage={this.state.privilage}
                   />
-                )
-                )}
+                ))}
               </span>
-            )
-            )}
+            ))}
           </div>
-        }
-        {(this.state.teamData && this.state.privilage === 'general') &&
+        )}
+        {this.state.teamData && this.state.privilage === 'general' && (
           <Teams
             changeTeam={this.changeTeam}
             teams={this.state.teamData}
             activeTeam={this.state.teamData[this.state.activeTeamIndex]}
           />
-        }
-        {this.state.showEditTeams &&
+        )}
+        {this.state.showEditTeams && (
           <EditTeams
             show={true}
             handleClose={this.toggleTeamEdit}
@@ -430,70 +470,75 @@ class BoardView extends React.Component {
             rows={this.rows}
             visibleRows={this.state.visibleRows}
           />
-        }
-        {this.state.showToast &&
+        )}
+        {this.state.showToast && (
           <Toast
             onClose={() => this.setState({ showToast: false })}
-            title="How to Use" position="middle-center"
-            variant='info'
-            message={'Click on the bingo tiles to edit them!'} />
-        }
-        {this.state.showToast2 &&
+            title="How to Use"
+            position="middle-center"
+            variant="info"
+            message={'Click on the bingo tiles to edit them!'}
+          />
+        )}
+        {this.state.showToast2 && (
           <Toast
             onClose={() => this.setState({ showToast2: false })}
-            message={'Copied to Clipboard. If you want to sign in as the admin again you\'ll need to auth from the main page.'}
+            message={
+              "Copied to Clipboard. If you want to sign in as the admin again you'll need to auth from the main page."
+            }
             variant={'success'}
             position={'top-end'}
             title={'Success'}
             timeout={5000}
           />
-        }
-        {this.state.showSettings &&
+        )}
+        {this.state.showSettings && (
           <SettingsModal handleClose={() => this.setState({ showSettings: false })} />
-        }
-        {!showFeedback && width > 1000 ?
-          <div className='feedback' onClick={() => this.setState({ showFeedback: true })}>
+        )}
+        {!showFeedback && width > 1000 ? (
+          <div className="feedback" onClick={() => this.setState({ showFeedback: true })}>
             feedback
-          </div> : ''
-        }
-        {this.state.showFeedback &&
+          </div>
+        ) : (
+          ''
+        )}
+        {this.state.showFeedback && (
           <FeedbackModal handleClose={() => this.setState({ showFeedback: false })} />
-        }
+        )}
       </div>
-    )
+    );
   }
 }
 
 function withHooks(Component) {
-  return props => <Component {...props} navigate={useNavigate()} location={useLocation()} />;
+  return (props) => <Component {...props} navigate={useNavigate()} location={useLocation()} />;
 }
 
-export default withHooks(BoardView)
+export default withHooks(BoardView);
 
 function transpose(matrix) {
-  return matrix[0].map((col, i) => matrix.map(row => row[i]));
+  return matrix[0].map((col, i) => matrix.map((row) => row[i]));
 }
 
-
 function getTeamPassword(boardName, teamName) {
-  let pws = localStorage.getItem(`${boardName}-teamPasswords`)
+  let pws = localStorage.getItem(`${boardName}-teamPasswords`);
   if (pws) {
-    pws = JSON.parse(pws)
+    pws = JSON.parse(pws);
     if (teamName in pws) {
-      return pws[teamName]
+      return pws[teamName];
     }
   }
-  return null
+  return null;
 }
 
 function setTeamPassword(boardName, teamName, password) {
-  let pws = localStorage.getItem(`${boardName}-teamPasswords`)
+  let pws = localStorage.getItem(`${boardName}-teamPasswords`);
   if (pws) {
-    pws = JSON.parse(pws)
-    pws[teamName] = password
+    pws = JSON.parse(pws);
+    pws[teamName] = password;
   } else {
-    pws = {}
-    pws[teamName] = password
+    pws = {};
+    pws[teamName] = password;
   }
-  localStorage.setItem(`${boardName}-teamPasswords`, JSON.stringify(pws))
+  localStorage.setItem(`${boardName}-teamPasswords`, JSON.stringify(pws));
 }

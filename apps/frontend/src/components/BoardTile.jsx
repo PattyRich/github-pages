@@ -4,7 +4,8 @@ import Modal from './BootStrap/TileModal';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
 import { getStoredBool } from '../utils/utils';
 
-const CROSS_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='red' stroke-width='3'/><path d='M0 0 L100 100 ' stroke='red' stroke-width='3'/></svg>";
+const CROSS_SVG =
+  "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='red' stroke-width='3'/><path d='M0 0 L100 100 ' stroke='red' stroke-width='3'/></svg>";
 
 export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, privilage, bare }) {
   const [showModal, setShowModal] = useState(false);
@@ -21,7 +22,7 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
     if (checked) {
       bgHeight = '100%';
     } else if (info?.points > 0) {
-      bgHeight = Math.round(teamInfo.currPoints / info.points * 100) + '%';
+      bgHeight = Math.round((teamInfo.currPoints / info.points) * 100) + '%';
     }
   }
 
@@ -30,26 +31,24 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
       <OverlayTrigger
         placement="top"
         overlay={
-          info?.title
-            ? <Tooltip style={{ position: 'fixed' }}>{info.title}</Tooltip>
-            : <div />
+          info?.title ? <Tooltip style={{ position: 'fixed' }}>{info.title}</Tooltip> : <div />
         }
       >
         <span
           className={`tile-wrapper ${!completeStyle && checked ? 'green-bg' : ''}`}
           style={{ '--bgHeight': bgHeight }}
         >
-          {checked && completeStyle && !bare &&
+          {checked && completeStyle && !bare && (
             <img
               style={{ position: 'absolute', zIndex: 100, maxHeight: '100%', maxWidth: '100%' }}
               src={CROSS_SVG}
               onClick={() => setShowModal(true)}
               alt="completed"
             />
-          }
-          {info?.image &&
+          )}
+          {info?.image && (
             <img
-              className='bg-img'
+              className="bg-img"
               style={{
                 opacity: info.image.opacity + '%',
                 maxWidth: 'calc(100% - 8px)',
@@ -62,36 +61,55 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
               src={info.image.usePixel ? getPixelUrl(info.image.url) : info.image.url}
               alt=""
             />
-          }
+          )}
           <div
             onClick={() => setShowModal(true)}
-            style={{ ...sizeStyle, flexDirection: 'column', justifyContent: showTitleTile ? 'flex-end' : 'space-between', overflow: 'hidden' }}
+            style={{
+              ...sizeStyle,
+              flexDirection: 'column',
+              justifyContent: showTitleTile ? 'flex-end' : 'space-between',
+              overflow: 'hidden',
+            }}
             className={`box-flex box-border ${br ? 'br' : ''} ${bb ? 'bb' : ''}`}
           >
-            {!bare && !showTitleTile &&
+            {!bare && !showTitleTile && (
               <div style={{ height: '20%', textAlign: 'center', fontFamily: 'osrsFont' }}>
                 {info?.title}
               </div>
-            }
-            {!bare &&
+            )}
+            {!bare && (
               <div style={{ width: '100%' }}>
-                {info && teamInfo && info.points > 0 && !showPoints &&
-                  <div style={{ justifyContent: 'flex-end', display: 'flex', height: '100%', alignItems: 'flex-end' }}>
+                {info && teamInfo && info.points > 0 && !showPoints && (
+                  <div
+                    style={{
+                      justifyContent: 'flex-end',
+                      display: 'flex',
+                      height: '100%',
+                      alignItems: 'flex-end',
+                    }}
+                  >
                     {teamInfo.currPoints} / {info.points}
                   </div>
-                }
-                {privilage === 'admin' &&
-                  <div style={{ justifyContent: 'flex-end', display: 'flex', height: '100%', alignItems: 'flex-end' }}>
+                )}
+                {privilage === 'admin' && (
+                  <div
+                    style={{
+                      justifyContent: 'flex-end',
+                      display: 'flex',
+                      height: '100%',
+                      alignItems: 'flex-end',
+                    }}
+                  >
                     {info?.points}
                   </div>
-                }
+                )}
               </div>
-            }
+            )}
           </div>
         </span>
       </OverlayTrigger>
 
-      {showModal &&
+      {showModal && (
         <Modal
           cord={cord}
           change={change}
@@ -103,7 +121,7 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
           br={br}
           bb={bb}
         />
-      }
+      )}
     </>
   );
 }

@@ -1,22 +1,21 @@
 import React from 'react';
 //import { Link } from "react-router-dom";
-import Toast from 'react-bootstrap/Toast'
+import Toast from 'react-bootstrap/Toast';
 import ToastContainer from 'react-bootstrap/ToastContainer';
 
 class ToastCls extends React.Component {
   constructor(props) {
     super(props);
-    this.state = {
-    }
+    this.state = {};
   }
 
   render() {
-  	return ( 
+    return (
       <ToastContainer className="p-3" position={this.props.position}>
-        <Toast 
-          onClose={this.props.onClose} 
-          className={`d-inline-block m-1 osrs-toast-${this.props.variant || 'info'}`} 
-          autohide 
+        <Toast
+          onClose={this.props.onClose}
+          className={`d-inline-block m-1 osrs-toast-${this.props.variant || 'info'}`}
+          autohide
           delay={this.props.timeout || 6000}
         >
           <Toast.Header>
@@ -26,10 +25,9 @@ class ToastCls extends React.Component {
             {this.props.message}
           </Toast.Body>
         </Toast>
-      </ToastContainer> 
-
-      )
+      </ToastContainer>
+    );
   }
 }
 
-export default ToastCls
+export default ToastCls;

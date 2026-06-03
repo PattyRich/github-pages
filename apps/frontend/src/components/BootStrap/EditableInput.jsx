@@ -1,7 +1,17 @@
-import InputGroup from "react-bootstrap/InputGroup";
-import FormControl from "react-bootstrap/FormControl";
+import InputGroup from 'react-bootstrap/InputGroup';
+import FormControl from 'react-bootstrap/FormControl';
 
-export default function EditableInput({ title, placeholder, value, stateKey, change, textArea, disabled, width, enterAction }) {
+export default function EditableInput({
+  title,
+  placeholder,
+  value,
+  stateKey,
+  change,
+  textArea,
+  disabled,
+  width,
+  enterAction,
+}) {
   function handleKeyUp(e) {
     if (!enterAction) return;
     if ((e.keyCode || e.which) === 13) enterAction();
@@ -12,7 +22,7 @@ export default function EditableInput({ title, placeholder, value, stateKey, cha
       <InputGroup.Text id="basic-addon1">{title}</InputGroup.Text>
       <FormControl
         placeholder={placeholder}
-        as={textArea ? "textarea" : undefined}
+        as={textArea ? 'textarea' : undefined}
         value={value}
         aria-describedby="basic-addon1"
         onChange={(e) => change(e, stateKey)}
