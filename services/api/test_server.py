@@ -246,6 +246,13 @@ class TestGetBoard(unittest.TestCase):
         resp = self.client.get("/getBoard/TestBoard/gen123/general")
         self.assertEqual(resp.status_code, 200)
 
+    def test_get_board_tolerates_image_without_url(self):
+        self.board["boardData"][0][0]["image"] = {"opacity": 100}
+        resp = self.client.get("/getBoard/TestBoard/gen123/general")
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertIsNone(data["boardData"][0][0]["image"])
+
     def test_get_board_wrong_password(self):
         resp = self.client.get("/getBoard/TestBoard/wrong/general")
         self.assertEqual(resp.status_code, 400)

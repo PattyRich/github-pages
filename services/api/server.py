@@ -169,6 +169,14 @@ def clamp_visible_rows(value, rows):
     visible_rows = rows
   return max(1, min(visible_rows, rows))
 
+def public_board_image(image):
+  if not isinstance(image, dict):
+    return image
+  image_url = image.get('url')
+  if not image_url:
+    return None
+  return { **image, 'url': board_images.public_url(image_url) }
+
 def board_visual_rows(cache):
   if cache.get('columns'):
     return int(cache['columns'])
@@ -330,8 +338,7 @@ def getBoard(boardName, password, pwtype):
   visibleRows = board_visible_rows(cache)
   for row in boardData:
     for tile in row:
-      if isinstance(tile.get('image'), dict):
-        tile['image']['url'] = board_images.public_url(tile['image']['url'])
+      tile['image'] = public_board_image(tile.get('image'))
   if pwtype == 'general':
     boardData = slice_board_rows(boardData, visibleRows)
   teamData = []
