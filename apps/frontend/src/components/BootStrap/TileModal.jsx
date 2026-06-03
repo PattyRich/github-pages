@@ -605,7 +605,6 @@ function getImageUrl(image) {
   image = decodeURI(image)
   image = image.replaceAll(' ', '_');
   image = image.charAt(0).toUpperCase() + image.slice(1);
-  console.log(image)
   return `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`
 }
 

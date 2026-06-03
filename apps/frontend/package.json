@@ -29,7 +29,7 @@
     "build": "vite build",
     "build:gh": "vite build --mode gh",
     "deploy": "npm run build:gh && gh-pages -d dist",
-    "test": "vitest",
+    "test": "vitest run",
     "preview": "vite preview"
   },
   "browserslist": {

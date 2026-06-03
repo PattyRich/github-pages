@@ -79,7 +79,7 @@ shell-worker:
 # -----------------------
 test:
 	$(PYTHON) -m pytest $(SERVER_DIR)/test_server.py -q
-	cd $(FRONTEND_DIR) && npm test -- --run
+	cd $(FRONTEND_DIR) && npm test
 
 build:
 	cd $(FRONTEND_DIR) && npm run build

@@ -61,7 +61,7 @@ test('toggles completed and saves member progress', async () => {
   expect(props.handleClose).toHaveBeenCalled();
 });
 
-test('shows bundled tile images and saves the selected asset URL', async () => {
+test('shows bundled tile images but saves the selected object as a wiki detail image', async () => {
   const props = renderTileModal({ privilage: 'admin', teamInfo: {} });
 
   fireEvent.click(screen.getByRole('button', { name: /Set Tile Background Image/i }));
@@ -70,11 +70,16 @@ test('shows bundled tile images and saves the selected asset URL', async () => {
   const tileImages = screen.getAllByRole('img').filter((img) => img.getAttribute('title'));
   expect(tileImages.length).toBeGreaterThan(0);
 
+  const selectedTitle = tileImages[0].getAttribute('title');
+  const wikiName = encodeURIComponent(selectedTitle.replaceAll(' ', '_'));
+  const expectedWikiUrl = `https://oldschool.runescape.wiki/images/thumb/${wikiName}_detail.png/180px-${wikiName}_detail.png`;
+
   fireEvent.click(tileImages[0]);
 
   await waitFor(() => {
     expect(screen.getByRole('button', { name: /Remove Tile Background Image/i })).toBeInTheDocument();
   });
+  expect(screen.getByRole('img')).toHaveAttribute('src', expectedWikiUrl);
 
   fireEvent.click(screen.getByRole('button', { name: /Save/i }));
 
@@ -85,8 +90,7 @@ test('shows bundled tile images and saves the selected asset URL', async () => {
     expect.objectContaining({
       opacity: '100',
       usePixel: false,
-      url: expect.stringMatching(/\.png($|\?)/),
+      url: expectedWikiUrl,
     })
   );
-  expect(savedState.image.url).not.toContain('oldschool.runescape.wiki');
 });
