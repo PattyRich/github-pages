@@ -16,6 +16,16 @@ export const fetchGet  = (url)        => fetchRequest(url, 'GET');
 export const fetchPost = (url, body)  => fetchRequest(url, 'POST', body);
 export const fetchPut  = (url, body)  => fetchRequest(url, 'PUT', body);
 
+export function getStoredBool(key, fallback = false) {
+  const value = localStorage.getItem(key);
+  if (value === null) return fallback;
+  return value === 'true';
+}
+
+export function setStoredBool(key, value) {
+  localStorage.setItem(key, String(value));
+}
+
 export function pwUrlBuilder(state, teamPassword = null) {
   const isAdmin = state.privilage === 'admin';
   const pw   = isAdmin ? state.adminPassword : (state.generalPassword || state.adminPassword);

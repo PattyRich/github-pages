@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from 'react';
+import {useEffect, useState} from 'react';
 import { loot } from '../looter/looter'
 import './AllPets.css'
 import { assetUrl } from '../utils/assetUrl';
@@ -9,14 +9,11 @@ const AllPets = (props) => {
   const [petData, setPetData] = useState([]);
 
 	useEffect(()=> {
-		console.log('rerender')
     import('../looter/all-pets.js')
 			.then((data) => {
         let datax = JSON.parse(JSON.stringify(data)).data
         setPetList(datax)
       })
-
-	return () => console.log('tearing down')
 	}, [])
 
   const go = async () => {
@@ -40,7 +37,6 @@ const AllPets = (props) => {
     let currRate = '0';
     let groups = []
     let tmpGroup = []
-    console.log(data)
     for (let i = 0; i < data.length; i++) {
       if (data[i][0].rate.toString()[0] !== currRate) {
         groups.push({rate: currRate, data: tmpGroup})

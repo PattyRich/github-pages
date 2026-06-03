@@ -1,6 +1,7 @@
 import { useState } from "react";
 import Button from "react-bootstrap/Button";
 import Modal from "react-bootstrap/Modal";
+import { getStoredBool, setStoredBool } from "../../utils/utils";
 
 const SETTINGS_KEYS = [
   { key: 'completeStyle',  label: 'Use alternative tile complete style?' },
@@ -12,12 +13,12 @@ const SETTINGS_KEYS = [
 
 export default function SettingsModal({ handleClose }) {
   const [settings, setSettings] = useState(() =>
-    Object.fromEntries(SETTINGS_KEYS.map(({ key }) => [key, localStorage.getItem(key) === 'true']))
+    Object.fromEntries(SETTINGS_KEYS.map(({ key }) => [key, getStoredBool(key)]))
   );
 
   function toggle(key) {
     const newVal = !settings[key];
-    localStorage.setItem(key, newVal);
+    setStoredBool(key, newVal);
     setSettings(prev => ({ ...prev, [key]: newVal }));
   }
 

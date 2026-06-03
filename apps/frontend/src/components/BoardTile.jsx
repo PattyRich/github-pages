@@ -2,6 +2,7 @@ import { useState } from 'react';
 import './BoardTile.css';
 import Modal from './BootStrap/TileModal';
 import { OverlayTrigger, Tooltip } from 'react-bootstrap';
+import { getStoredBool } from '../utils/utils';
 
 const CROSS_SVG = "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='red' stroke-width='3'/><path d='M0 0 L100 100 ' stroke='red' stroke-width='3'/></svg>";
 
@@ -9,9 +10,9 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
   const [showModal, setShowModal] = useState(false);
 
   const checked = teamInfo?.checked;
-  const completeStyle = localStorage.getItem('completeStyle') === 'true';
-  const showPoints   = localStorage.getItem('showPoints') === 'true';
-  const showTitleTile = localStorage.getItem('showTitleTile') === 'true';
+  const completeStyle = getStoredBool('completeStyle');
+  const showPoints = getStoredBool('showPoints');
+  const showTitleTile = getStoredBool('showTitleTile');
 
   const sizeStyle = dem ? { height: dem, width: dem } : {};
 

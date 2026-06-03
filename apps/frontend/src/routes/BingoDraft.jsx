@@ -178,7 +178,7 @@ class BingoDraft extends React.Component {
         </div>
         { this.state.editMode ?
           <div className='flex-center' style={{'flexDirection': 'column', 'alignItems': 'center'}}>
-            <Alert varint={'primary'}>
+            <Alert variant={'primary'}>
               Add player names with a comma seperating them, then get out of edit mode. Drag and drop players to their team for bingo drafts!
             </Alert>
             <EditableInput stateKey='players' change={this.inputState} width={'75%'} title='Players' textArea={true} value={this.state.players} />
@@ -252,14 +252,10 @@ function getDefaultState() {
 function shuffle(array) {
   let currentIndex = array.length,  randomIndex;
 
-  // While there remain elements to shuffle.
-  while (currentIndex != 0) {
-
-    // Pick a remaining element.
+  while (currentIndex !== 0) {
     randomIndex = Math.floor(Math.random() * currentIndex);
     currentIndex--;
 
-    // And swap it with the current element.
     [array[currentIndex], array[randomIndex]] = [
       array[randomIndex], array[currentIndex]];
   }

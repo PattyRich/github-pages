@@ -1,11 +1,11 @@
-import React from 'react';
 import { useState } from 'react';
 //import { Link } from "react-router-dom";
 import { Tab, Tabs } from 'react-bootstrap'
+import { getStoredBool } from '../utils/utils';
 
 const Teams = (props) => {
   const [key, setKey] = useState(props.activeTeam.data.name);
-  const showTeamPoints = localStorage.getItem('showTeamPoints') === 'true';
+  const showTeamPoints = getStoredBool('showTeamPoints');
   function selectTeam(teamName) {
     let teamId = props.teams.find((team)=> {
       return team.data.name === teamName
