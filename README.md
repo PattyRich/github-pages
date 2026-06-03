@@ -67,6 +67,44 @@ make dev
 
 ---
 
+## Testing
+
+Three test layers cover the stack from unit to browser:
+
+| Layer | Tool | What it covers |
+|---|---|---|
+| Backend | pytest | Flask API routes and server logic |
+| Frontend | Vitest + Testing Library | React component rendering |
+| E2E | Playwright (Python) | Full browser flows against a live local stack |
+
+Run all three at once:
+
+```bash
+make test
+```
+
+Or run each layer individually:
+
+```bash
+# Backend — Flask API tests
+.venv/Scripts/python.exe -m pytest services/api/test_server.py -q
+
+# Frontend — Vitest unit tests
+cd apps/frontend && npm test
+
+# E2E — Playwright browser tests (requires make dev to be running)
+make e2e
+
+# E2E with a visible browser window
+make e2e-headed
+```
+
+### Playwright E2E
+
+The Playwright suite drives a real Chromium browser against the running local stack and cleans up any MongoDB documents and uploaded image artifacts it creates afterward. See [tests/e2e/README.md](tests/e2e/README.md) for setup instructions, environment variable options (headless mode, slow-mo, mobile viewport, custom Mongo URI, etc.), and how the board-name prefix suppresses Discord alerts for test boards.
+
+---
+
 ## CI/CD
 
 GitHub Actions handles all deployments automatically on push to `main`:
@@ -132,3 +170,6 @@ Proof images are not part of MongoDB backups. In production they live in the Doc
 
 ### Maintenance Mode
 Toggle the `IS_MAINTENANCE` boolean in `apps/frontend/src/index.jsx` to enable maintenance mode for Bingo and LoL-Beat routes.
+
+
+---
