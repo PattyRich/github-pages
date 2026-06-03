@@ -204,7 +204,7 @@ class Bingo extends React.Component {
 		return (
 			<>
 				{this.state.alert &&
-					<Alert style={{ 'position': 'absolute', 'width': '100%', 'zIndex': '10000' }} variant={this.state.alertVariant}>
+					<Alert className='osrs-alert-banner' variant={this.state.alertVariant}>
 						{this.state.alert}
 					</Alert>
 				}

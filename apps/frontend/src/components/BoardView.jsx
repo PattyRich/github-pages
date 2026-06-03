@@ -379,7 +379,7 @@ class BoardView extends React.Component {
           </div>
         </div>
         {this.state.alert &&
-          <Alert onClick={this.clearAlert} style={{ 'position': 'absolute', 'width': '100%' }} className='' variant={this.state.alertVariant}>
+          <Alert onClick={this.clearAlert} className='osrs-alert-banner' variant={this.state.alertVariant}>
             {this.state.alert}
           </Alert>
         }

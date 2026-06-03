@@ -332,26 +332,118 @@ textarea:focus {
 
 /* ─── Alerts ─────────────────────────────────────────────────────────────── */
 .alert {
-  background-color: var(--osrs-bg-brown);
-  color: #fffac9 !important;
-  border: 4px solid var(--osrs-border-light) !important;
-  box-shadow: inset 0 0 0 2px var(--osrs-border-dark) !important;
+  background: var(--osrs-bg-brown) !important;
+  color: var(--osrs-text-beige) !important;
+  border: 2px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius) !important;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light) !important;
+  line-height: 1.45;
+  text-shadow: 1px 1px 0 black;
+}
+
+.osrs-alert-banner {
+  --osrs-alert-bg: rgba(58, 50, 36, 0.98);
+  --osrs-alert-border: var(--osrs-border-light);
+  position: fixed !important;
+  z-index: 10000;
+  top: 6px !important;
+  left: 50% !important;
+  display: flex !important;
+  align-items: center;
+  gap: 10px;
+  width: fit-content !important;
+  max-width: min(560px, calc(100vw - 32px)) !important;
+  min-height: 40px;
+  margin: 0 !important;
+  padding: 8px 14px 8px 10px;
+  transform: translateX(-50%) !important;
+  background: var(--osrs-alert-bg) !important;
+  color: var(--osrs-text-beige) !important;
+  border-color: var(--osrs-border-dark) !important;
+  border-radius: var(--osrs-radius) !important;
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-alert-border),
+    0 10px 24px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+  cursor: default;
+  animation: osrs-alert-in 140ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.osrs-alert-banner::before {
+  content: "";
+  flex: 0 0 auto;
+  width: 8px;
+  height: 8px;
+  background: var(--osrs-alert-border);
+  border: 1px solid var(--osrs-border-dark);
+  box-shadow: 0 0 0 1px rgba(247, 230, 193, 0.12);
+  transform: rotate(45deg);
+}
+
+.osrs-alert-banner:hover {
+  filter: brightness(1.08);
 }
 
 .alert-danger {
-  background-color: #5c1b1b !important;
+  background: #4a1b18 !important;
+  color: #ffe0d6 !important;
+}
+
+.osrs-alert-banner.alert-danger {
+  --osrs-alert-bg: rgba(74, 27, 24, 0.98);
+  --osrs-alert-border: #bf6a58;
 }
 
 .alert-warning {
-  background-color: #634316 !important;
+  background: #513818 !important;
+  color: #ffe8b8 !important;
+}
+
+.osrs-alert-banner.alert-warning {
+  --osrs-alert-bg: rgba(81, 56, 24, 0.98);
+  --osrs-alert-border: #d49a3c;
 }
 
 .alert-success {
-  background-color: #24461a !important;
+  background: #24401f !important;
+  color: #ddf0ce !important;
+}
+
+.osrs-alert-banner.alert-success {
+  --osrs-alert-bg: rgba(36, 64, 31, 0.98);
+  --osrs-alert-border: #79aa62;
 }
 
 .alert-primary {
-  background-color: #1a3152 !important;
+  background: #24364e !important;
+  color: #d8e6fa !important;
+}
+
+.osrs-alert-banner.alert-primary {
+  --osrs-alert-bg: rgba(36, 54, 78, 0.98);
+  --osrs-alert-border: #7292bd;
+}
+
+@keyframes osrs-alert-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+@media (max-width: 520px) {
+  .osrs-alert-banner {
+    top: 4px !important;
+    align-items: flex-start;
+    width: calc(100vw - 24px) !important;
+    padding-right: 12px;
+  }
 }
 
 /* ─── Checkboxes ─────────────────────────────────────────────────────────── */
