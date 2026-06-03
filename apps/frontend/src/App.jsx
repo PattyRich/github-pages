@@ -4,8 +4,6 @@ import { Link } from 'react-router-dom';
 import Image from 'react-bootstrap/Image';
 import FeedbackModal from './components/BootStrap/FeedbackModal';
 
-window.API = import.meta.env.DEV ? 'http://localhost:8000' : 'https://praynr.com';
-
 const ROUTES = [
   {
     path: '/bingo-draft',

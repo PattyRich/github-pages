@@ -30,7 +30,7 @@ jobs:
       - name: Build Frontend
         working-directory: apps/frontend
         run: |
-          npm install
+          npm ci
           CI=false npm run build
           
       - name: Upload to Temp Directory

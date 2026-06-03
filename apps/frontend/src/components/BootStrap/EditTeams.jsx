@@ -44,7 +44,6 @@ class EditTeams extends React.Component {
     }
     if (target === 'visibleRows') {
       stateChange.visibleRows = clampVisibleRows(e.target.value, this.state.columns);
-      stateChange.layeredBoard = stateChange.visibleRows < this.state.columns;
     }
     this.setState(stateChange);
   }

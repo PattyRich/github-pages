@@ -3,6 +3,10 @@
   "homepage": ".",
   "version": "0.1.0",
   "private": true,
+  "engines": {
+    "node": ">=22",
+    "npm": ">=10"
+  },
   "dependencies": {
     "@testing-library/react": "^16.3.2",
     "@testing-library/user-event": "^13.5.0",
@@ -39,8 +43,10 @@
     "test": "vitest run",
     "preview": "vite preview",
     "lint": "eslint .",
+    "lint:ci": "eslint . --max-warnings=0",
     "format": "prettier . --write",
     "format:check": "prettier . --check",
+    "verify": "npm run lint:ci && npm run format:check && npm test",
     "lint:fix": "eslint . --fix"
   },
   "browserslist": {

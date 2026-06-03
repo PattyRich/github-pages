@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import './Status.css';
+import { fetchGet } from '../utils/utils.js';
 
 const POLL_INTERVAL = 30000;
 
@@ -60,8 +61,8 @@ export default function Status() {
 
   const fetchHealth = useCallback(async () => {
     try {
-      const res = await fetch(`${window.API}/health`);
-      const json = await res.json();
+      const [json, err] = await fetchGet('health', { allowErrorData: true });
+      if (!json) throw err;
       setData(json);
       setError(null);
     } catch (e) {

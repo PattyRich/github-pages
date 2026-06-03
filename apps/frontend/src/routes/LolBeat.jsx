@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import './LolBeat.css';
+import { fetchGet, fetchPost } from '../utils/utils.js';
 
 const DDRAGON_BASE = 'https://ddragon.leagueoflegends.com/cdn';
 const DDRAGON_FALLBACK = '16.9.1';
@@ -65,11 +66,10 @@ function LolBeat() {
             // Auto-search when countdown hits 0
             (async () => {
               try {
-                const resp = await fetch(
-                  `${window.API}/lol/api/chain?riot_id=${encodeURIComponent(rid)}`
+                const [data, err] = await fetchGet(
+                  `lol/api/chain?riot_id=${encodeURIComponent(rid)}`
                 );
-                const data = await resp.json();
-                if (resp.ok && data.found && data.chain?.length > 0) {
+                if (!err && data?.found && data.chain?.length > 0) {
                   setFound(true);
                   setChain(data.chain);
                   setError('');
@@ -101,17 +101,12 @@ function LolBeat() {
     setJobId(null);
 
     try {
-      const resp = await fetch(`${window.API}/lol/api/crawl`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ riot_id: riotId.trim() }),
-      });
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'Failed to enqueue crawl');
+      const [data, err] = await fetchPost('lol/api/crawl', { riot_id: riotId.trim() });
+      if (err) throw err;
       setJobId(data.job_id);
       startCountdownCycle(riotId.trim());
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to enqueue crawl');
       setCrawling(false);
     }
   };
@@ -124,16 +119,15 @@ function LolBeat() {
     setLoading(true);
 
     try {
-      const resp = await fetch(
-        `${window.API}/lol/api/chain?riot_id=${encodeURIComponent(riotId.trim())}`
+      const [data, err] = await fetchGet(
+        `lol/api/chain?riot_id=${encodeURIComponent(riotId.trim())}`
       );
-      const data = await resp.json();
-      if (!resp.ok) throw new Error(data.error || 'Failed to fetch chain');
+      if (err) throw err;
       setFound(data.found);
       setChain(data.chain || []);
       if (!data.found) setError(`No path found yet from ${riotId} to #1. Try crawling first.`);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Failed to fetch chain');
     } finally {
       setLoading(false);
     }

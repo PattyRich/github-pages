@@ -6,6 +6,7 @@ import EditableInput from './BootStrap/EditableInput';
 import Button from './BootStrap/Button';
 import Alert from 'react-bootstrap/Alert';
 import { fetchPost, fetchGet, fetchPut, pwUrlBuilder } from '../utils/utils.js';
+import { apiUrl } from '../config/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Teams from './Teams';
 import Toast from './BootStrap/Toast';
@@ -94,7 +95,7 @@ class BoardView extends React.Component {
       setTimeout(() => this.connectSSE(), 2000);
       return;
     }
-    const url = `${window.API}/events/${pwUrlBuilder(this.state)}`;
+    const url = apiUrl(`events/${pwUrlBuilder(this.state)}`);
     this.eventSource = new EventSource(url);
 
     this.eventSource.onopen = () => {
@@ -286,6 +287,7 @@ class BoardView extends React.Component {
       this.setState({ isLoading: false });
       return;
     }
+    await this.refreshData();
     this.setState({ isLoading: false });
     this.alert('success', 'Teams Successfully Updated!');
   }

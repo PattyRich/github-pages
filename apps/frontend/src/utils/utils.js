@@ -1,20 +1,34 @@
-async function fetchRequest(url, method, body) {
+import { apiUrl } from '../config/api';
+
+async function fetchRequest(url, method, body, requestOptions = {}) {
   try {
-    const options = { method };
-    if (body !== undefined) options.body = JSON.stringify(body);
-    const res = await fetch(`${window.API}/${url}`, options);
-    if (res.status === 400) return [null, await res.json()];
-    if (res.status === 429) return [null, new Error('Too many requests')];
-    return [await res.json(), null];
+    const options = {
+      method,
+      headers: {
+        Accept: 'application/json',
+      },
+    };
+    if (body !== undefined) {
+      options.headers['Content-Type'] = 'application/json';
+      options.body = JSON.stringify(body);
+    }
+
+    const res = await fetch(apiUrl(url), options);
+    const data = await readJson(res);
+    if (!res.ok && requestOptions.allowErrorData && data) {
+      return [data, normalizeApiError(data, res)];
+    }
+    if (!res.ok) return [null, normalizeApiError(data, res)];
+    return [data, null];
   } catch (err) {
     console.error(err);
     return [null, err];
   }
 }
 
-export const fetchGet = (url) => fetchRequest(url, 'GET');
-export const fetchPost = (url, body) => fetchRequest(url, 'POST', body);
-export const fetchPut = (url, body) => fetchRequest(url, 'PUT', body);
+export const fetchGet = (url, options) => fetchRequest(url, 'GET', undefined, options);
+export const fetchPost = (url, body, options) => fetchRequest(url, 'POST', body, options);
+export const fetchPut = (url, body, options) => fetchRequest(url, 'PUT', body, options);
 
 export function getStoredBool(key, fallback = false) {
   const value = localStorage.getItem(key);
@@ -30,7 +44,25 @@ export function pwUrlBuilder(state, teamPassword = null) {
   const isAdmin = state.privilage === 'admin';
   const pw = isAdmin ? state.adminPassword : state.generalPassword || state.adminPassword;
   const type = isAdmin ? 'admin' : 'general';
-  let url = `${state.boardName}/${pw}/${type}`;
-  if (state.teamPasswordsRequired && teamPassword) url += `/${teamPassword}`;
-  return url;
+  const segments = [state.boardName, pw, type];
+  if (state.teamPasswordsRequired && teamPassword) segments.push(teamPassword);
+  return segments.map((segment) => encodeURIComponent(segment)).join('/');
+}
+
+async function readJson(response) {
+  const text = await response.text();
+  if (!text) return null;
+  try {
+    return JSON.parse(text);
+  } catch (err) {
+    if (!response.ok) return null;
+    throw err;
+  }
+}
+
+function normalizeApiError(data, response) {
+  if (data?.message || data?.error) {
+    return { ...data, status: response.status, message: data.message || data.error };
+  }
+  return new Error(response.statusText || `Request failed with status ${response.status}`);
 }
