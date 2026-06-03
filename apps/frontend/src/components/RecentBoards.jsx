@@ -14,7 +14,7 @@ const Teams = (props) => {
                 <span>{item.priv}</span>
               </div>
               <div className="recent-board-actions">
-                <Button variant="outline-primary" click={() => props.click(item)} text="Join" />
+                <Button variant="success" click={() => props.click(item)} text="Join" />
                 <Button
                   variant="outline-danger"
                   click={() => props.removeRecent(item.boardName)}

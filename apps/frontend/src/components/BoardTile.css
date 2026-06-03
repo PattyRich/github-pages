@@ -8,14 +8,6 @@
   box-sizing: border-box;
 }
 
-.br {
-  /* Handled by border settings in .box-border to keep symmetry */
-}
-
-.bb {
-  /* Handled by border settings in .box-border to keep symmetry */
-}
-
 .box-flex {
   display: flex;
   justify-content: space-between;
@@ -59,11 +51,4 @@
   align-items: center;
   position: relative;
   background-color: var(--osrs-bg-inventory);
-}
-
-@font-face {
-  font-family: 'osrsFont';
-  src:
-    local('osrsFont'),
-    url('../assets/fonts/osrs.ttf') format('truetype');
 }

@@ -79,8 +79,8 @@ hr {
 }
 
 /* ─── Glass utility classes ──────────────────────────────────────────────── */
-.osrs-glass {
-  background: var(--osrs-glass-bg);
+.osrs-glass,
+.osrs-glass-raised {
   backdrop-filter: var(--osrs-glass-blur);
   -webkit-backdrop-filter: var(--osrs-glass-blur);
   border: 2px solid var(--osrs-border-dark);
@@ -90,15 +90,12 @@ hr {
   border-radius: var(--osrs-radius-lg);
 }
 
+.osrs-glass {
+  background: var(--osrs-glass-bg);
+}
+
 .osrs-glass-raised {
   background: var(--osrs-glass-bg-raised);
-  backdrop-filter: var(--osrs-glass-blur);
-  -webkit-backdrop-filter: var(--osrs-glass-blur);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow:
-    inset 0 0 0 1px var(--osrs-border-light),
-    var(--osrs-glass-shadow);
-  border-radius: var(--osrs-radius-lg);
 }
 
 /* ─── Raw <button> elements (no class) ──────────────────────────────────── */
