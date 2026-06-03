@@ -82,6 +82,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
             page.get_by_role("button", name="Save").click()
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
+            expect_tile_image_loaded(page, 0)
 
             open_tile_by_index(page, 1)
             fill_input_group(page, "Title", "Asset Tile")
@@ -90,6 +91,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
             page.get_by_role("button", name="Save").click()
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
+            expect_tile_image_loaded(page, 1)
 
             open_tile_by_index(page, 2)
             fill_input_group(page, "Title", "Upload Tile")
@@ -98,6 +100,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
             page.get_by_role("button", name="Save").click()
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
+            expect_tile_image_loaded(page, 2)
 
             open_tile_by_index(page, 3)
             fill_input_group(page, "Title", "Pixel Asset Tile")
@@ -107,6 +110,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(page.get_by_label("Use pixel image?")).to_be_checked()
             page.get_by_role("button", name="Save").click()
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
+            expect_tile_image_loaded(page, 3)
 
             open_tile_by_index(page, 10)
             fill_input_group(page, "Title", "Hidden Row Tile")
@@ -137,6 +141,8 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(observer.get_by_text(re.compile(r"Points:\s*0"))).to_be_visible()
             expect_board_tile_count(observer, 10)
             expect(observer.get_by_text("Hidden Row Tile", exact=True)).not_to_be_visible()
+            for index in range(4):
+                expect_tile_image_loaded(observer, index)
 
             open_tile(page, "E2E Tile")
             fill_input_group(page, "Proof", "Proof from Playwright")
@@ -149,6 +155,14 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
             expect(observer.get_by_text(re.compile(r"Points:\s*75"))).to_be_visible(timeout=15000)
             expect(observer.get_by_role("tab", name=re.compile(r"team-0:\s*\(75\)"))).to_be_visible()
+            open_tile(observer, "E2E Tile")
+            expect_proof_image_loaded(observer)
+            observer.locator(".modal-footer").get_by_role("button", name="Close").click()
+            expect(observer.get_by_role("dialog")).not_to_be_visible()
+            open_tile(page, "E2E Tile")
+            expect_proof_image_loaded(page)
+            page.locator(".modal-footer").get_by_role("button", name="Close").click()
+            expect(page.get_by_role("dialog")).not_to_be_visible()
 
             page.get_by_role("button", name="General Mode").click()
             expect(page.get_by_role("button", name="Edit Board")).to_be_visible()
@@ -166,11 +180,13 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
 
             open_tile(page, "Asset Tile")
             expect_input_group_value(page, "Title", "Asset Tile")
+            expect_tile_image_loaded(page, 1)
             page.locator(".modal-footer").get_by_role("button", name="Close").click()
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
             open_tile(page, "Pixel Asset Tile")
             expect(page.get_by_label("Use pixel image?")).to_be_checked()
+            expect_tile_image_loaded(page, 3)
             page.locator(".modal-footer").get_by_role("button", name="Close").click()
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
@@ -188,6 +204,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
         assert any("/static/uploads/board-images/" in url for url in artifact_urls)
         assert any("oldschool.runescape.wiki/images/" in url for url in artifact_urls)
         assert any("/static/uploads/proofs/" in url for url in artifact_urls)
+        assert_saved_artifacts_exist(artifact_urls)
         assert any(image.get("usePixel") is True for image in collect_tile_images(board))
     finally:
         cleanup_board(collection, board_name)
@@ -242,6 +259,18 @@ def expect_loaded_image(page, image):
         arg=handle,
         timeout=15000,
     )
+
+
+def expect_tile_image_loaded(page, index):
+    image = page.locator(".center-board .tile-wrapper").nth(index).locator("img.bg-img").first
+    expect(image).to_be_visible(timeout=15000)
+    expect_loaded_image(page, image)
+
+
+def expect_proof_image_loaded(page):
+    image = page.locator('img[alt="proof"]').first
+    expect(image).to_be_visible(timeout=15000)
+    expect_loaded_image(page, image)
 
 
 def open_tile(page, title):
@@ -348,6 +377,16 @@ def delete_artifact(image_url):
         path.unlink(missing_ok=True)
     except OSError:
         pass
+
+
+def assert_saved_artifacts_exist(image_urls):
+    artifact_paths = [artifact_path(url) for url in image_urls]
+    artifact_paths = [path for path in artifact_paths if path]
+    assert artifact_paths, "Expected at least one uploaded image artifact"
+    for path in artifact_paths:
+        assert path.exists(), f"Expected uploaded image artifact to exist: {path}"
+        assert path.is_file(), f"Expected uploaded image artifact to be a file: {path}"
+        assert path.stat().st_size > 0, f"Expected uploaded image artifact to have bytes: {path}"
 
 
 def artifact_path(image_url):
