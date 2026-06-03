@@ -1,96 +1,48 @@
-import React from 'react';
+import { useState } from "react";
 import Button from "react-bootstrap/Button";
-import Modal from "react-bootstrap/Modal"
+import Modal from "react-bootstrap/Modal";
 
-class SettingsModal extends React.Component {
-  constructor(props) {
-    super(props);
-    //these should be named hide{Thing} too lazy to change
-    const completeStyle = localStorage.getItem('completeStyle') === 'true';
-    const showPoints = localStorage.getItem('showPoints') === 'true';
-    const showTeamPoints = localStorage.getItem('showTeamPoints') === 'true';
-    const showTitleTile = localStorage.getItem('showTitleTile') === 'true';
-    const showFeedback = localStorage.getItem('showFeedback') === 'true';
-    this.state = { 
-      completeStyle,
-      showPoints,
-      showTeamPoints,
-      showTitleTile,
-      showFeedback
-    }
-    this.handleClose = this.handleClose.bind(this)
-    this.setLocalStorage = this.setLocalStorage.bind(this)
-    this.toggleCheck = this.toggleCheck.bind(this)
+const SETTINGS_KEYS = [
+  { key: 'completeStyle',  label: 'Use alternative tile complete style?' },
+  { key: 'showPoints',     label: 'Hide current points on bingo board?' },
+  { key: 'showTeamPoints', label: 'Hide team points on team tabs?' },
+  { key: 'showTitleTile',  label: 'Hide tile title on board?' },
+  { key: 'showFeedback',   label: 'Hide feedback button?' },
+];
+
+export default function SettingsModal({ handleClose }) {
+  const [settings, setSettings] = useState(() =>
+    Object.fromEntries(SETTINGS_KEYS.map(({ key }) => [key, localStorage.getItem(key) === 'true']))
+  );
+
+  function toggle(key) {
+    const newVal = !settings[key];
+    localStorage.setItem(key, newVal);
+    setSettings(prev => ({ ...prev, [key]: newVal }));
   }
 
-  toggleCheck(key){
-    let newVal = !this.state[key]
-    let obj = {}
-    obj[key] = newVal
-    this.setState(obj)
-    this.setLocalStorage(key, newVal)
-  }
-
-  setLocalStorage(key, value){
-    localStorage.setItem(key, value);
-  }
-
-  handleClose() {
-    this.props.handleClose()
-  }
-
-  render() {
-    return (
-      <Modal
-        show={true}
-        onHide={this.handleClose}
-        size="lg"
-        aria-labelledby="contained-modal-title-vcenter"
-        centered
-      >
-        <Modal.Header closeButton>
-          <Modal.Title id="contained-modal-title-vcenter">
-            Settings
-          </Modal.Title>
-        </Modal.Header>
-        <Modal.Body>
-          <div className="form-check" style={{'marginTop': '15px'}}>
-            <input className="form-check-input" checked={this.state.completeStyle} onChange={() => this.toggleCheck('completeStyle')} type="checkbox" id="flexCheckDefault"/>
-            <label className="form-check-label" htmlFor="flexCheckDefault">
-              Use alternative tile complete style?
-            </label>
-          </div>          
-          <div className="form-check" style={{'marginTop': '15px'}}>
-            <input className="form-check-input" checked={this.state.showPoints} onChange={() => this.toggleCheck('showPoints')} type="checkbox" id="flexCheckDefault2"/>
-            <label className="form-check-label" htmlFor="flexCheckDefault2">
-              Hide current points on bingo board?
-            </label>
+  return (
+    <Modal show onHide={handleClose} size="lg" aria-labelledby="settings-modal-title" centered>
+      <Modal.Header closeButton>
+        <Modal.Title id="settings-modal-title">Settings</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {SETTINGS_KEYS.map(({ key, label }, i) => (
+          <div key={key} className="form-check" style={{ marginTop: '15px' }}>
+            <input
+              className="form-check-input"
+              type="checkbox"
+              id={`setting-${i}`}
+              checked={settings[key]}
+              onChange={() => toggle(key)}
+            />
+            <label className="form-check-label" htmlFor={`setting-${i}`}>{label}</label>
           </div>
-          <div className="form-check" style={{'marginTop': '15px'}}>
-            <input className="form-check-input" checked={this.state.showTeamPoints} onChange={() => this.toggleCheck('showTeamPoints')} type="checkbox" id="flexCheckDefault3"/>
-            <label className="form-check-label" htmlFor="flexCheckDefault3">
-              Hide team points on team tabs?
-            </label>
-          </div>
-          <div className="form-check" style={{'marginTop': '15px'}}>
-            <input className="form-check-input" checked={this.state.showTitleTile} onChange={() => this.toggleCheck('showTitleTile')} type="checkbox" id="flexCheckDefault4"/>
-            <label className="form-check-label" htmlFor="flexCheckDefault4">
-              Hide tile title on board?
-            </label>
-          </div>
-          <div className="form-check" style={{'marginTop': '15px'}}>
-            <input className="form-check-input" checked={this.state.showFeedback} onChange={() => this.toggleCheck('showFeedback')} type="checkbox" id="flexCheckDefault5"/>
-            <label className="form-check-label" htmlFor="flexCheckDefault5">
-              Hide feedback button?
-            </label>
-          </div>
-        </Modal.Body>
-        <Modal.Footer>
-          <Button variant="danger" onClick={this.handleClose}>Close</Button>
-        </Modal.Footer>
-      </Modal>
-    );
-  }
+        ))}
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="danger" onClick={handleClose}>Close</Button>
+      </Modal.Footer>
+    </Modal>
+  );
 }
-
-export default SettingsModal

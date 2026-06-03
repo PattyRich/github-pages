@@ -1,75 +1,26 @@
-async function fetchPost(url, body) {
+async function fetchRequest(url, method, body) {
   try {
-    let data = await fetch(`${window.API}/${url}`, { 
-      method: 'POST',
-      body : JSON.stringify(body)
-    });
-    if (data.status === 400) {
-      return [null, await data.json()]
-    }
-    if (data.status === 429) {
-      return [null, new Error('Too many requests')]
-    }
-    let dataJson = await data.json()
-    return [dataJson, null]
+    const options = { method };
+    if (body !== undefined) options.body = JSON.stringify(body);
+    const res = await fetch(`${window.API}/${url}`, options);
+    if (res.status === 400) return [null, await res.json()];
+    if (res.status === 429) return [null, new Error('Too many requests')];
+    return [await res.json(), null];
   } catch (err) {
-    console.log(err)
-    return [null, err]
+    console.error(err);
+    return [null, err];
   }
-} 
-
-async function fetchPut(url, body) {
-  try {
-    let data = await fetch(`${window.API}/${url}`, { 
-      method: 'PUT',
-      body : JSON.stringify(body)
-    });
-    if (data.status === 400) {
-      return [null, await data.json()]
-    } 
-    if (data.status === 429) {
-      return [null, new Error('Too many requests')]
-    }
-    let dataJson = await data.json()
-    return [dataJson, null]
-  } catch (err) {
-    console.log(err)
-    return [null, err]
-  }
-} 
-
-async function fetchGet(url) {
-  try {
-    let data = await fetch(`${window.API}/${url}`);
-    if (data.status === 400) {
-      return [null, await data.json()]
-    }
-    if (data.status === 429) {
-      return [null, new Error('Too many requests')]
-    }
-    let dataJson = await data.json()
-    return [dataJson, null]
-  } catch (err) {
-    console.log(err)
-    return [null, err]
-  }
-} 
-
-function pwUrlBuilder(state, teamPassword = null) {
-  let pwData = {}
-  if (state.privilage == 'admin') {
-    pwData.pw = state.adminPassword
-    pwData.type = 'admin'
-  } else {
-    pwData.pw = state.generalPassword || state.adminPassword
-    pwData.type = 'general'
-  }
-
-  let pw = `${state.boardName}/${pwData.pw}/${pwData.type}`
-  if (state.teamPasswordsRequired && teamPassword) {
-    pw += `/${teamPassword}`
-  }
-  return pw
 }
 
-export {fetchPost, fetchGet, fetchPut, pwUrlBuilder}
+export const fetchGet  = (url)        => fetchRequest(url, 'GET');
+export const fetchPost = (url, body)  => fetchRequest(url, 'POST', body);
+export const fetchPut  = (url, body)  => fetchRequest(url, 'PUT', body);
+
+export function pwUrlBuilder(state, teamPassword = null) {
+  const isAdmin = state.privilage === 'admin';
+  const pw   = isAdmin ? state.adminPassword : (state.generalPassword || state.adminPassword);
+  const type = isAdmin ? 'admin' : 'general';
+  let url = `${state.boardName}/${pw}/${type}`;
+  if (state.teamPasswordsRequired && teamPassword) url += `/${teamPassword}`;
+  return url;
+}

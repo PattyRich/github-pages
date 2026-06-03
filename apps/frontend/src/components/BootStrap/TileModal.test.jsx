@@ -61,6 +61,20 @@ test('toggles completed and saves member progress', async () => {
   expect(props.handleClose).toHaveBeenCalled();
 });
 
+test('general users can edit current points but not total points', () => {
+  renderTileModal();
+
+  expect(screen.getByLabelText(/Current Points/i)).toBeEnabled();
+  expect(screen.getByLabelText(/Total Points/i)).toBeDisabled();
+});
+
+test('admins can edit total points but not current points', () => {
+  renderTileModal({ privilage: 'admin', teamInfo: {} });
+
+  expect(screen.getByLabelText(/Current Points/i)).toBeDisabled();
+  expect(screen.getByLabelText(/Total Points/i)).toBeEnabled();
+});
+
 test('shows bundled tile images but saves the selected object as a wiki detail image', async () => {
   const props = renderTileModal({ privilage: 'admin', teamInfo: {} });
 
