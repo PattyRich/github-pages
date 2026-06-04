@@ -449,14 +449,18 @@ def updateBoard(boardName, password, pwtype, teampw):
       return bad_request('That row has not been revealed yet.')
 
     teamKey = 'team-' + str(data['info']['teamId'])
+    teamData = cache.get(teamKey)
+    if not teamData:
+      log.warning("updateBoard - team not found  board=%s  team=%s  ip=%s", boardName, teamKey, request.remote_addr)
+      return bad_request('Team does not exist.')
+
     data['info'] = clearBadData(data['info'], generalTileKeys)
 
     if cache.get('requirePassword', False): 
-      if (teampw != cache[teamKey]['password']):
+      if (teampw != teamData.get('password', '')):
         log.warning("updateBoard - wrong team password  board=%s  team=%s  ip=%s", boardName, teamKey, request.remote_addr)
         return bad_request('Your team password was incorrect.')
     
-    teamData = cache[teamKey]
     existing_tile = teamData['teamData'][data['row']][data['col']]
     previous_proof_images = existing_tile.get('proofImages', [])
 
@@ -513,10 +517,12 @@ def updateTeams(boardName, password, pwtype):
     log.info("updateTeams - adding %d team(s)  board=%s", added, boardName)
     for i in range(added):
       teamKey = 'team-' + str(cache['teams'] + i)
+      newTeam = data[cache['teams'] + i]['data']
       teamData = initEmptyTeamData(cols, rows)
       teamData = {
-        'name': data[cache['teams'] + i]['data']['name'],
-        'teamData': teamData
+        'name': newTeam['name'],
+        'teamData': teamData,
+        'password': newTeam.get('password', '')
       }
       newvalue = { "$set": {teamKey: teamData}}
       update = mycol.update_one({"boardName": boardName}, newvalue)

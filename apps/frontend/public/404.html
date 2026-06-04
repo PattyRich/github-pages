@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="refresh" content="0; url=https://praynr.com/" />
+    <title>Redirecting to praynr.com</title>
+    <script>
+      (function () {
+        var projectPath = '/github-pages';
+        var pathname = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+        var routePath = '/';
+
+        if (pathname === projectPath || pathname.indexOf(projectPath + '/') === 0) {
+          routePath = pathname.slice(projectPath.length) || '/';
+        }
+
+        if (hash.indexOf('#/github-pages') === 0) {
+          hash = '#' + hash.slice('#/github-pages'.length);
+          if (hash === '#') {
+            hash = '#/';
+          }
+        }
+
+        if (!hash && routePath !== '/') {
+          hash = '#' + routePath + search;
+          search = '';
+        }
+
+        window.location.replace('https://praynr.com/' + search + hash);
+      })();
+    </script>
+  </head>
+  <body>
+    Redirecting to <a href="https://praynr.com/">praynr.com</a>.
+  </body>
+</html>

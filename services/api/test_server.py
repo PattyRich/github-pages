@@ -436,6 +436,27 @@ class TestUpdateBoard(unittest.TestCase):
         self.assertEqual(resp.status_code, 200)
         _mock_col.find_one.return_value = self.board  # restore
 
+    def test_general_with_team_password_required_missing_password_does_not_error(self):
+        board = _make_board()
+        board["requirePassword"] = True
+        _mock_col.find_one.return_value = board
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 0, "col": 0, "info": {"checked": True, "proof": "",
+                                           "currPoints": 0, "teamId": 0}},
+        )
+        self.assertEqual(resp.status_code, 200)
+        _mock_col.find_one.return_value = self.board  # restore
+
+    def test_general_update_rejects_unknown_team(self):
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 0, "col": 0, "info": {"checked": True, "proof": "",
+                                           "currPoints": 0, "teamId": 99}},
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("Team does not exist", json.loads(resp.data)["message"])
+
     @patch.object(server.proof_images, "save", return_value="/static/uploads/proofs/test.webp")
     @patch.object(server.proof_images, "cleanup_removed")
     def test_general_upload_saves_proof_image_path(self, _cleanup, _save):
@@ -465,6 +486,43 @@ class TestUpdateBoard(unittest.TestCase):
             updated_team["teamData"][0][0]["proofImages"],
             ["/static/uploads/proofs/test.webp"],
         )
+
+
+class TestUpdateTeams(unittest.TestCase):
+    def setUp(self):
+        self.client = _client(server.app)
+        self.board = _make_board(teams=1)
+        self.board["requirePassword"] = True
+        self.board["team-0"]["password"] = "oldsecret"
+        _mock_col.find_one.return_value = self.board
+        _mock_col.update_one.reset_mock()
+        _mock_col.update_one.return_value = MagicMock()
+
+    @patch("server.publish_board_update")
+    def test_adding_team_persists_password(self, _publish):
+        resp = self.client.put(
+            "/updateTeams/TestBoard/admin123/admin",
+            data=json.dumps({
+                "dataToSend": {
+                    "passwordRequired": True,
+                    "rows": 2,
+                    "columns": 2,
+                    "visibleRows": 2,
+                    "teamData": [
+                        {"team": 0, "data": {"name": "team-0", "password": "oldsecret"}},
+                        {"team": 1, "data": {"name": "Boss", "password": "newsecret"}},
+                    ],
+                },
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        added_team_updates = [
+            call_args[0][1]["$set"]["team-1"]
+            for call_args in _mock_col.update_one.call_args_list
+            if "team-1" in call_args[0][1].get("$set", {})
+        ]
+        self.assertEqual(added_team_updates[0]["password"], "newsecret")
 
 
 class TestFeedbackEndpoint(unittest.TestCase):

@@ -9,10 +9,41 @@
       name="description"
       content="Create, manage, and share customizable Bingo boards. Perfect for OSRS, speedruns, and community events."
     />
+    <script>
+      (function () {
+        if (window.location.hostname !== 'pattyrich.github.io') {
+          return;
+        }
+
+        var projectPath = '/github-pages';
+        var pathname = window.location.pathname;
+        var search = window.location.search;
+        var hash = window.location.hash;
+        var routePath = '/';
+
+        if (pathname === projectPath || pathname.indexOf(projectPath + '/') === 0) {
+          routePath = pathname.slice(projectPath.length) || '/';
+        }
+
+        if (hash.indexOf('#/github-pages') === 0) {
+          hash = '#' + hash.slice('#/github-pages'.length);
+          if (hash === '#') {
+            hash = '#/';
+          }
+        }
+
+        if (!hash && routePath !== '/') {
+          hash = '#' + routePath + search;
+          search = '';
+        }
+
+        window.location.replace('https://praynr.com/' + search + hash);
+      })();
+    </script>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://pattyrich.github.io/github-pages/" />
+    <meta property="og:url" content="https://praynr.com/" />
     <meta
       property="og:title"
       content="OSRS Bingo & Community Tools | Custom Clan Bingo Generator"
@@ -25,7 +56,7 @@
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
-    <meta property="twitter:url" content="https://pattyrich.github.io/github-pages/" />
+    <meta property="twitter:url" content="https://praynr.com/" />
     <meta
       property="twitter:title"
       content="OSRS Bingo & Community Tools | Custom Clan Bingo Generator"
