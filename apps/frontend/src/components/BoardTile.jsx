@@ -71,7 +71,7 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
                 width: info.image.usePixel ? '200px' : 'auto',
                 height: info.image.usePixel ? '200px' : 'auto',
                 objectFit: 'contain',
-                maxHeight: showTileTitle ? '72%' : 'calc(100% - 8px)',
+                maxHeight: showTileTitle ? '78%' : 'calc(100% - 8px)',
                 imageRendering: info.image.usePixel ? 'pixelated' : 'auto',
               }}
               src={info.image.usePixel ? getPixelUrl(info.image.url) : info.image.url}
