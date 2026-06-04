@@ -551,7 +551,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
                         style={{ cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }}
                         onClick={closeLightbox}
                       >
-                        âœ•
+                        ✖
                       </span>
                     </div>
                   </div>
