@@ -4,9 +4,9 @@ import './BoardView.css';
 import BoardTile from './BoardTile';
 import Button from './BootStrap/Button';
 import Alert from 'react-bootstrap/Alert';
-import { fetchGet, fetchPut, pwUrlBuilder } from '../utils/utils.js';
+import { fetchGet, fetchPut, pwUrlBuilder, addToRecent } from '../utils/utils.js';
 import { apiUrl } from '../config/api';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Teams from './Teams';
 import Toast from './BootStrap/Toast';
 import EditTeams from './BootStrap/EditTeams';
@@ -25,6 +25,7 @@ const initialBoardState = {
 
 function BoardView() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [state, setState] = useState(() => ({
     ...initialBoardState,
     ...(location.state || {}),
@@ -229,13 +230,33 @@ function BoardView() {
     async function loadBoard() {
       const params = new URLSearchParams(location.search);
       const pw = params.get('password');
+      const boardName = decodeURIComponent(
+        location.pathname.split('/').filter(Boolean).pop() || ''
+      );
+
       if (pw) {
-        const path = window.location.href.replace(/^https?:\/\//, '').split('/');
+        addToRecent(boardName, pw, 'general');
+
         await promisedSetState({
           privilage: 'general',
           generalPassword: pw,
-          boardName: decodeURI(path[path.length - 1].split('?')[0]),
+          boardName: boardName,
         });
+        navigate(location.pathname, {
+          replace: true,
+          state: {
+            privilage: 'general',
+            generalPassword: pw,
+            boardName: boardName,
+          },
+        });
+      } else {
+        const currentState = stateRef.current;
+        if (boardName && !currentState.boardName) {
+          await promisedSetState({
+            boardName: boardName,
+          });
+        }
       }
 
       const tileHint = localStorage.getItem('tile-hint');

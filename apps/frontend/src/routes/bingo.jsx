@@ -8,7 +8,7 @@ import Button from '../components/BootStrap/Button';
 import InputGroup from 'react-bootstrap/InputGroup';
 import FormControl from 'react-bootstrap/FormControl';
 import Alert from 'react-bootstrap/Alert';
-import { fetchGet, fetchPost } from '../utils/utils';
+import { fetchGet, fetchPost, addToRecent } from '../utils/utils';
 import { useNavigate } from 'react-router-dom';
 import RecentBoards from '../components/RecentBoards';
 
@@ -120,7 +120,6 @@ function Bingo({ screenSkip }) {
     const [data, err] = await fetchPost('createBoard', { ...trimmedState });
     if (data) {
       addToRecent(
-        trimmedState.recentBoards,
         trimmedState.boardName,
         trimmedState.adminPassword,
         'admin'
@@ -186,34 +185,11 @@ function Bingo({ screenSkip }) {
       navigationState.privilage = 'general';
       navigationState.canSwitchPriv = true;
     }
-    addToRecent(state.recentBoards, state.boardName, state.joinPw, state.joinPwTitle);
+    addToRecent(state.boardName, state.joinPw, state.joinPwTitle);
     navigate('/bingo/' + state.boardName, { state: navigationState });
   }
 
-  function addToRecent(recentBoards, boardName, joinPw, priv) {
-    if (!recentBoards) {
-      let obj = [
-        {
-          boardName: boardName,
-          password: joinPw,
-          priv: priv,
-        },
-      ];
-      localStorage.setItem('recentBoards', JSON.stringify(obj));
-    } else {
-      let find = recentBoards.find((item) => {
-        return item.boardName === boardName && priv === item.priv;
-      });
-      if (!find) {
-        let obj = {
-          boardName: boardName,
-          password: joinPw,
-          priv: priv,
-        };
-        localStorage.setItem('recentBoards', JSON.stringify([...recentBoards, obj]));
-      }
-    }
-  }
+
 
   return (
     <>

@@ -66,3 +66,26 @@ function normalizeApiError(data, response) {
   }
   return new Error(response.statusText || `Request failed with status ${response.status}`);
 }
+
+export function addToRecent(boardName, joinPw, priv) {
+  try {
+    const stored = localStorage.getItem('recentBoards');
+    let recentBoards = stored ? JSON.parse(stored) : [];
+    if (!Array.isArray(recentBoards)) {
+      recentBoards = [];
+    }
+    const find = recentBoards.find((item) => {
+      return item.boardName === boardName && priv === item.priv;
+    });
+    if (!find) {
+      const obj = {
+        boardName: boardName,
+        password: joinPw,
+        priv: priv,
+      };
+      localStorage.setItem('recentBoards', JSON.stringify([...recentBoards, obj]));
+    }
+  } catch (e) {
+    console.error('Error in addToRecent:', e);
+  }
+}
