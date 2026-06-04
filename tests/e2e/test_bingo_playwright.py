@@ -24,6 +24,11 @@ except ImportError:
     MongoClient = None
     PyMongoError = Exception
 
+try:
+    from PIL import Image, ImageChops
+except ImportError:
+    Image = None
+    ImageChops = None
 
 ROOT = Path(__file__).resolve().parents[2]
 API_DIR = ROOT / "services" / "api"
@@ -31,6 +36,18 @@ BOARD_PREFIX = os.environ.get("PLAYWRIGHT_E2E_BOARD_PREFIX", "__playwright_e2e__
 FRONTEND_URL = os.environ.get("PLAYWRIGHT_FRONTEND_URL", "http://localhost:3000")
 MONGO_URI = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
 TMP_ROOT = Path(os.environ.get("PLAYWRIGHT_E2E_TMP_DIR", ROOT / ".tmp" / "playwright-e2e"))
+IMAGE_REGRESSION_ENABLED = os.environ.get("PLAYWRIGHT_IMAGE_REGRESSION", "1").lower() not in (
+    "0",
+    "false",
+    "no",
+)
+IMAGE_REGRESSION_ROOT = Path(
+    os.environ.get("PLAYWRIGHT_IMAGE_REGRESSION_DIR", TMP_ROOT / "image-regression")
+)
+IMAGE_REGRESSION_MAX_DIFF = float(os.environ.get("PLAYWRIGHT_IMAGE_REGRESSION_MAX_DIFF", "0.002"))
+IMAGE_REGRESSION_PIXEL_TOLERANCE = int(
+    os.environ.get("PLAYWRIGHT_IMAGE_REGRESSION_PIXEL_TOLERANCE", "10")
+)
 
 TINY_PNG = base64.b64decode(
     "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII="
@@ -42,6 +59,8 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
         pytest.skip("Playwright is not installed. Install tests/e2e/requirements.txt.")
     if MongoClient is None:
         pytest.skip("pymongo is not installed. Install tests/e2e/requirements.txt.")
+    if IMAGE_REGRESSION_ENABLED and Image is None:
+        pytest.skip("Pillow is not installed. Install tests/e2e/requirements.txt.")
 
     require_frontend()
     collection = mongo_collection()
@@ -87,7 +106,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             open_tile_by_index(page, 1)
             fill_input_group(page, "Title", "Asset Tile")
             page.get_by_role("button", name="Set Tile Background Image").click()
-            select_asset_image(page, "Dragon claws")
+            select_asset_image(page, "Elder maul")
             expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
             page.get_by_role("button", name="Save").click()
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
@@ -143,6 +162,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(observer.get_by_text("Hidden Row Tile", exact=True)).not_to_be_visible()
             for index in range(4):
                 expect_tile_image_loaded(observer, index)
+            compare_visual_snapshot(observer, "visible-board-images", ".center-board")
 
             open_tile(page, "E2E Tile")
             fill_input_group(page, "Proof", "Proof from Playwright")
@@ -157,6 +177,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(observer.get_by_role("tab", name=re.compile(r"team-0:\s*\(75\)"))).to_be_visible()
             open_tile(observer, "E2E Tile")
             expect_proof_image_loaded(observer)
+            compare_visual_snapshot(observer, "proof-modal", ".modal-content")
             observer.locator(".modal-footer").get_by_role("button", name="Close").click()
             expect(observer.get_by_role("dialog")).not_to_be_visible()
             open_tile(page, "E2E Tile")
@@ -173,6 +194,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(page.get_by_text("Teams Successfully Updated!")).to_be_visible()
             expect_board_tile_count(page, 20)
             expect(page.get_by_text("Hidden Row Tile", exact=True)).to_be_visible()
+            compare_visual_snapshot(page, "revealed-board", ".center-board")
 
             open_tile(page, "E2E Tile")
             page.locator(".modal-header").get_by_role("button", name="Close").click()
@@ -271,6 +293,98 @@ def expect_proof_image_loaded(page):
     image = page.locator('img[alt="proof"]').first
     expect(image).to_be_visible(timeout=15000)
     expect_loaded_image(page, image)
+
+
+def compare_visual_snapshot(page, name, selector):
+    if not IMAGE_REGRESSION_ENABLED:
+        return
+
+    snapshot_name = visual_snapshot_name(name)
+    baseline = IMAGE_REGRESSION_ROOT / "last" / f"{snapshot_name}.png"
+    current = IMAGE_REGRESSION_ROOT / "current" / f"{snapshot_name}.png"
+    diff = IMAGE_REGRESSION_ROOT / "diffs" / f"{snapshot_name}.png"
+
+    for path in (baseline.parent, current.parent, diff.parent):
+        path.mkdir(parents=True, exist_ok=True)
+
+    locator = page.locator(selector).first
+    expect(locator).to_be_visible(timeout=15000)
+    locator.screenshot(path=str(current))
+
+    if not baseline.exists():
+        shutil.copyfile(current, baseline)
+        return
+
+    diff_ratio = image_diff_ratio(baseline, current, diff)
+    if diff_ratio > IMAGE_REGRESSION_MAX_DIFF:
+        failure_dir = save_visual_failure(snapshot_name, baseline, current, diff)
+        pytest.fail(
+            f"Visual snapshot changed for {snapshot_name}: "
+            f"{diff_ratio:.3%} pixels differ. "
+            f"Baseline: {baseline}; Current: {current}; Diff: {diff}; "
+            f"Failure artifacts: {failure_dir}"
+        )
+
+    shutil.copyfile(current, baseline)
+
+
+def visual_snapshot_name(name):
+    browser = os.environ.get("PLAYWRIGHT_BROWSER", "chromium")
+    viewport = "mobile" if os.environ.get("PLAYWRIGHT_MOBILE", "0").lower() in (
+        "1",
+        "true",
+        "yes",
+    ) else "desktop"
+    return f"{name}-{browser}-{viewport}"
+
+
+def save_visual_failure(snapshot_name, baseline, current, diff):
+    timestamp = time.strftime("%Y%m%d-%H%M%S")
+    failure_dir = IMAGE_REGRESSION_ROOT / "failures" / f"{timestamp}-{snapshot_name}"
+    failure_dir.mkdir(parents=True, exist_ok=True)
+    shutil.copyfile(baseline, failure_dir / "baseline.png")
+    shutil.copyfile(current, failure_dir / "current.png")
+    shutil.copyfile(diff, failure_dir / "diff.png")
+    return failure_dir
+
+
+def image_diff_ratio(baseline, current, diff):
+    baseline_image = Image.open(baseline).convert("RGBA")
+    current_image = Image.open(current).convert("RGBA")
+    if baseline_image.size != current_image.size:
+        diff_image = ImageChops.difference(
+            baseline_image.resize(current_image.size),
+            current_image,
+        )
+        changed_mask = changed_pixel_mask(diff_image)
+        save_visual_diff(current_image, changed_mask, diff)
+        return 1.0
+
+    diff_image = ImageChops.difference(baseline_image, current_image)
+    total_pixels = baseline_image.size[0] * baseline_image.size[1]
+    changed_mask = changed_pixel_mask(diff_image)
+    save_visual_diff(current_image, changed_mask, diff)
+    changed_pixels = total_pixels - changed_mask.histogram()[0]
+    return changed_pixels / total_pixels
+
+
+def changed_pixel_mask(diff_image):
+    changed_mask = diff_image.split()[0].point(
+        lambda value: 255 if value > IMAGE_REGRESSION_PIXEL_TOLERANCE else 0
+    )
+    for channel in diff_image.split()[1:]:
+        channel_mask = channel.point(
+            lambda value: 255 if value > IMAGE_REGRESSION_PIXEL_TOLERANCE else 0
+        )
+        changed_mask = ImageChops.lighter(changed_mask, channel_mask)
+    return changed_mask
+
+
+def save_visual_diff(current_image, changed_mask, diff):
+    base = current_image.copy()
+    overlay = Image.new("RGBA", current_image.size, (255, 0, 0, 190))
+    highlighted = Image.composite(overlay, base, changed_mask)
+    highlighted.save(diff)
 
 
 def open_tile(page, title):

@@ -4,6 +4,7 @@
 **/node_modules
 *.DS_Store
 vite-dev*.log
+.tmp/
 
 # Secrets & Environment
 **/.env
