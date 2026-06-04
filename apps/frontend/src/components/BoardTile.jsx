@@ -14,8 +14,13 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
   const completeStyle = getStoredBool('completeStyle');
   const showPoints = getStoredBool('showPoints');
   const showTitleTile = getStoredBool('showTitleTile');
+  const showTileTitle = !bare && !showTitleTile && info?.title;
+  const showTeamProgress = info && teamInfo && info.points > 0 && !showPoints;
 
   const sizeStyle = dem ? { height: dem, width: dem } : {};
+  const titleStyle = showTileTitle
+    ? { '--tile-title-font-size': getTileTitleFontSize(info.title) }
+    : undefined;
 
   let bgHeight = null;
   if (teamInfo) {
@@ -23,6 +28,17 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
       bgHeight = '100%';
     } else if (info?.points > 0) {
       bgHeight = Math.round((teamInfo.currPoints / info.points) * 100) + '%';
+    }
+  }
+
+  function openTile() {
+    setShowModal(true);
+  }
+
+  function handleTileKeyDown(event) {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      openTile();
     }
   }
 
@@ -42,20 +58,20 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
             <img
               style={{ position: 'absolute', zIndex: 100, maxHeight: '100%', maxWidth: '100%' }}
               src={CROSS_SVG}
-              onClick={() => setShowModal(true)}
+              onClick={openTile}
               alt="completed"
             />
           )}
           {info?.image && (
             <img
-              className="bg-img"
+              className={`bg-img ${showTileTitle ? 'has-tile-title' : ''}`}
               style={{
                 opacity: info.image.opacity + '%',
                 maxWidth: 'calc(100% - 8px)',
                 width: info.image.usePixel ? '200px' : 'auto',
                 height: info.image.usePixel ? '200px' : 'auto',
                 objectFit: 'contain',
-                maxHeight: !showTitleTile ? '80%' : 'calc(100% - 8px)',
+                maxHeight: showTileTitle ? '72%' : 'calc(100% - 8px)',
                 imageRendering: info.image.usePixel ? 'pixelated' : 'auto',
               }}
               src={info.image.usePixel ? getPixelUrl(info.image.url) : info.image.url}
@@ -63,45 +79,32 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
             />
           )}
           <div
-            onClick={() => setShowModal(true)}
+            onClick={openTile}
+            onKeyDown={!bare ? handleTileKeyDown : undefined}
+            role={!bare ? 'button' : undefined}
+            tabIndex={!bare ? 0 : undefined}
+            aria-label={!bare ? (info?.title ? `Open ${info.title}` : 'Open tile') : undefined}
             style={{
               ...sizeStyle,
               flexDirection: 'column',
-              justifyContent: showTitleTile ? 'flex-end' : 'space-between',
               overflow: 'hidden',
             }}
             className={`box-flex box-border ${br ? 'br' : ''} ${bb ? 'bb' : ''}`}
           >
-            {!bare && !showTitleTile && (
-              <div style={{ height: '20%', textAlign: 'center', fontFamily: 'osrsFont' }}>
-                {info?.title}
+            {showTileTitle && (
+              <div className="tile-title-overlay" style={titleStyle} title={info.title}>
+                {info.title}
               </div>
             )}
             {!bare && (
-              <div style={{ width: '100%' }}>
-                {info && teamInfo && info.points > 0 && !showPoints && (
-                  <div
-                    style={{
-                      justifyContent: 'flex-end',
-                      display: 'flex',
-                      height: '100%',
-                      alignItems: 'flex-end',
-                    }}
-                  >
+              <div className="tile-meta">
+                {showTeamProgress && (
+                  <div className="tile-progress-badge">
                     {teamInfo.currPoints} / {info.points}
                   </div>
                 )}
                 {privilage === 'admin' && (
-                  <div
-                    style={{
-                      justifyContent: 'flex-end',
-                      display: 'flex',
-                      height: '100%',
-                      alignItems: 'flex-end',
-                    }}
-                  >
-                    {info?.points}
-                  </div>
+                  <div className="tile-progress-badge tile-admin-points">{info?.points}</div>
                 )}
               </div>
             )}
@@ -124,6 +127,12 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
       )}
     </>
   );
+}
+
+function getTileTitleFontSize(title = '') {
+  const length = title.trim().length;
+  const size = Math.max(0.72, Math.min(1, 1 - length * 0.007));
+  return `${size.toFixed(2)}rem`;
 }
 
 function getPixelUrl(url) {
