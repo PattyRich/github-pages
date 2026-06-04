@@ -77,6 +77,7 @@ defaultBoardObj = {
   'rowBingo': 0,
   'colBingo': 0
 }
+GET_BOARD_CACHE_TTL_SECONDS = 180
 
 def setup_indexes(collection):
     try:
@@ -134,6 +135,7 @@ def auth(boardName, password, pwtype, mustBeAdmin = False):
   if (pwtype not in allowedAuthTypes):
     log.warning("Auth failed - invalid auth type '%s'  board=%s", pwtype, boardName)
     return [None, bad_request('Invalid auth type.')]
+  requested_pwtype = pwtype
   if (pwtype == 'admin'):
     pwtype = 'adminPassword'
   if (mustBeAdmin):
@@ -142,6 +144,18 @@ def auth(boardName, password, pwtype, mustBeAdmin = False):
       return [None, bad_request('Must be an admin to make this call.')]
   if (pwtype == 'general'):
     pwtype = 'generalPassword'
+
+  if request.endpoint == 'getBoard' and requested_pwtype == 'general':
+    cached_response = get_cached_board_response(boardName)
+    if cached_response:
+      try:
+        cached_data = json.loads(cached_response)
+        if password == cached_data.get('generalPassword'):
+          log.info("getBoard cache hit  board=%s  pwtype=%s", boardName, requested_pwtype)
+          return [Response(cached_response, mimetype='application/json'), None]
+      except Exception as e:
+        log.warning("getBoard cache parse failed  board=%s  error=%s", boardName, e)
+
   cache = mycol.find_one({'boardName': boardName})
   if (not cache):
     log.warning("Auth failed - board not found  board=%s  ip=%s", boardName, request_ip())
@@ -200,6 +214,28 @@ def is_test_board_request():
     return False
   return is_test_board(data.get('boardName'))
 
+def get_board_cache_key(board_name):
+  return f"board:{board_name}:getBoard:general"
+
+def get_cached_board_response(board_name):
+  try:
+    return _redis.get(get_board_cache_key(board_name))
+  except Exception as e:
+    log.warning("getBoard cache read failed  board=%s  error=%s", board_name, e)
+    return None
+
+def cache_board_response(board_name, response_body):
+  try:
+    _redis.setex(get_board_cache_key(board_name), GET_BOARD_CACHE_TTL_SECONDS, response_body)
+  except Exception as e:
+    log.warning("getBoard cache write failed  board=%s  error=%s", board_name, e)
+
+def invalidate_board_response_cache(board_name):
+  try:
+    _redis.delete(get_board_cache_key(board_name))
+  except Exception as e:
+    log.warning("getBoard cache invalidation failed  board=%s  error=%s", board_name, e)
+
 def postToDiscord(message, webhook_env_var):
   webhook_url = os.getenv(webhook_env_var)
   payload = {
@@ -213,6 +249,7 @@ def postToDiscord(message, webhook_env_var):
     return False
 
 def publish_board_update(board_name):
+  invalidate_board_response_cache(board_name)
   try:
     _redis.publish(f"board:{board_name}", "refresh")
   except Exception as e:
@@ -347,6 +384,8 @@ def getBoard(boardName, password, pwtype):
   cache, err = auth(boardName, password, pwtype)
   if err:
     return err
+  if isinstance(cache, Response):
+    return cache
 
   boardData = cache['boardData']
   visibleRows = board_visible_rows(cache)
@@ -375,7 +414,10 @@ def getBoard(boardName, password, pwtype):
     })
 
   log.info("getBoard - success  board=%s  pwtype=%s", boardName, pwtype)
-  return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired, visibleRows=visibleRows)
+  response = jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired, visibleRows=visibleRows)
+  if pwtype == 'general':
+    cache_board_response(boardName, response.get_data(as_text=True))
+  return response
 
 @app.route('/events/<boardName>/<password>/<pwtype>')
 @limiter.limit("2000 per hour")
