@@ -52,3 +52,19 @@ jobs:
             
             # 2. Update Docker Containers
             docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_DEPLOY_WEBHOOK }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "DISCORD_DEPLOY_WEBHOOK is not set; skipping Discord notification."
+            exit 0
+          fi
+
+          curl -fsS -H "Content-Type: application/json" \
+            -d "{\"content\":\"<@197140022569205762> ${WORKFLOW_NAME} failed: ${RUN_URL}\"}" \
+            "$DISCORD_WEBHOOK"
