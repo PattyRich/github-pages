@@ -1,0 +1,55 @@
+.notfound-page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem 1.5rem;
+}
+
+.notfound-panel {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+  padding: 3rem 2.5rem;
+}
+
+.notfound-code {
+  font-size: 5rem;
+  line-height: 1;
+  margin: 0 0 0.5rem;
+  opacity: 0.6;
+}
+
+.notfound-title {
+  font-size: 1.6rem;
+  margin: 0 0 1rem;
+}
+
+.notfound-body {
+  color: var(--osrs-text-normal);
+  font-size: 0.95rem;
+  line-height: 1.6;
+  margin: 0 0 2rem;
+  opacity: 0.85;
+}
+
+.notfound-home {
+  display: inline-block;
+  padding: 0.55rem 1.4rem;
+  font-size: 0.9rem;
+  text-decoration: none;
+  color: var(--osrs-text-normal);
+  background: var(--osrs-button-bg);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  border-radius: var(--osrs-radius);
+  text-shadow: 1px 1px 0 black;
+  transition: filter 0.15s ease, color 0.15s ease;
+}
+
+.notfound-home:hover,
+.notfound-home:focus-visible {
+  filter: brightness(1.2);
+  color: var(--osrs-text-gold);
+  outline: none;
+}

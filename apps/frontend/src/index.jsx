@@ -14,6 +14,7 @@ import AllPets from './routes/AllPets';
 import LolBeat from './routes/LolBeat';
 import Status from './routes/Status';
 import HomeButton from './components/HomeButton';
+import NotFound from './routes/NotFound';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -110,14 +111,7 @@ root.render(
       <Route path="/github-pages/all-pets" element={<AllPets />} />
       <Route path="/lol-beat" element={IS_MAINTENANCE ? Maintenance : <LolBeat />} />
       <Route path="/github-pages/lol-beat" element={IS_MAINTENANCE ? Maintenance : <LolBeat />} />
-      <Route
-        path="*"
-        element={
-          <main style={{ padding: '1rem' }}>
-            <p>There's nothing here!</p>
-          </main>
-        }
-      />
+      <Route path="*" element={<NotFound />} />
     </Routes>
   </HashRouter>
 );

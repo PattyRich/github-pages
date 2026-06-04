@@ -427,24 +427,30 @@ class Osrs extends React.Component {
     return (
       <div className="route-dark-bg" style={{ padding: '20px' }}>
         <div className="box">
-          <div>
+          <fieldset className="boss-selector boss-grid" aria-label="Boss mode">
             {bossModes.map((boss) => (
-              <span key={boss.value}>
+              <label
+                key={boss.value}
+                className={`boss-chip ${this.state.mode === boss.value ? 'is-active' : ''}`}
+              >
                 <input
                   type="radio"
                   value={boss.value}
                   name="boss-mode"
                   checked={this.state.mode === boss.value}
                   onChange={this.onChangeValue}
-                />{' '}
-                {boss.label}&nbsp;
-              </span>
+                />
+                {boss.label}
+              </label>
             ))}
-          </div>
-          <div>
-            {this.state.mode === 'clues' &&
-              cluesLvl.map((clue, i) => (
-                <span key={clue}>
+          </fieldset>
+          {this.state.mode === 'clues' && (
+            <fieldset className="boss-selector boss-grid clue-selector" aria-label="Clue level">
+              {cluesLvl.map((clue, i) => (
+                <label
+                  key={clue}
+                  className={`boss-chip ${this.state.clue === cluesLvl[i] ? 'is-active' : ''}`}
+                >
                   <input
                     type="radio"
                     value={cluesLvl[i]}
@@ -452,10 +458,11 @@ class Osrs extends React.Component {
                     checked={this.state.clue === cluesLvl[i]}
                     onChange={(e) => this.onChangeValueInput('clue', e)}
                   />
-                  {capitalizeFirstLetter(clue)}&nbsp;
-                </span>
+                  {capitalizeFirstLetter(clue)}
+                </label>
               ))}
-          </div>
+            </fieldset>
+          )}
           {this.state.mode === 'create' && (
             <div style={{ margin: '30px' }}>
               <div style={{ padding: '10px', margin: '10px 0' }}>

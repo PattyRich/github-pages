@@ -1,4 +1,215 @@
-/* Layout only — no global resets, no html/body overrides */
+/* ── Boss selector chips ─────────────────────────────────────────────────── */
+
+.boss-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 12px;
+}
+
+.boss-selector {
+  border: 0;
+  padding: 0;
+  min-width: 0;
+}
+
+.boss-chip {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 11px;
+  border-radius: var(--osrs-radius);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  background: var(--osrs-button-bg);
+  color: var(--osrs-text-normal);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 0.82rem;
+  text-shadow: 1px 1px 0 black;
+  cursor: pointer;
+  user-select: none;
+  transition: filter 0.13s ease, color 0.13s ease;
+  /* hide the real radio but keep it accessible */
+}
+
+.boss-chip input[type='radio'] {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.boss-chip:hover {
+  filter: brightness(1.2);
+  color: var(--osrs-text-gold);
+}
+
+.boss-chip:focus-within {
+  outline: 2px solid var(--osrs-text-gold);
+  outline-offset: 2px;
+}
+
+.boss-chip.is-active {
+  background: var(--osrs-bg-brown-dark);
+  border-color: var(--osrs-text-gold);
+  box-shadow: inset 0 0 0 1px rgba(255, 152, 31, 0.45);
+  color: var(--osrs-text-gold);
+}
+
+/* ── Controls row (rolls, team size, etc.) ───────────────────────────────── */
+
+.osrs-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 18px;
+  margin: 10px 0;
+}
+
+.osrs-field {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.osrs-field label {
+  font-size: 0.88rem;
+  color: var(--osrs-text-normal);
+  white-space: nowrap;
+}
+
+.osrs-field input[type='text'] {
+  width: 80px;
+}
+
+.osrs-checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.88rem;
+  color: var(--osrs-text-normal);
+}
+
+/* ── Action buttons row ──────────────────────────────────────────────────── */
+
+.osrs-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.osrs-completion-text {
+  font-size: 0.88rem;
+  color: var(--osrs-text-normal);
+  margin-top: 4px;
+}
+
+/* ── Simulation row ──────────────────────────────────────────────────────── */
+
+.osrs-sim-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+}
+
+.osrs-sim-row label {
+  font-size: 0.88rem;
+  color: var(--osrs-text-normal);
+}
+
+.osrs-sim-row input[type='text'] {
+  width: 70px;
+}
+
+/* ── Create boss panel ───────────────────────────────────────────────────── */
+
+.create-panel {
+  margin: 16px 0;
+  padding: 14px 16px;
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: var(--osrs-radius-lg);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.create-hint {
+  font-size: 0.83rem;
+  color: var(--osrs-text-normal);
+  opacity: 0.8;
+  line-height: 1.5;
+}
+
+.create-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.create-field-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+
+.create-field-row label {
+  font-size: 0.88rem;
+  color: var(--osrs-text-normal);
+  white-space: nowrap;
+}
+
+.create-field-row input[type='text'],
+.create-field-row select {
+  flex: 1;
+  min-width: 100px;
+}
+
+.create-item-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border: 1px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius);
+  background: rgba(0, 0, 0, 0.15);
+}
+
+.create-stepper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--osrs-text-normal);
+}
+
+/* ── Simulation results (plot area) ─────────────────────────────────────── */
+
+.osrs-plot-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 4px;
+}
+
+.osrs-progress {
+  font-size: 0.88rem;
+  color: var(--osrs-text-normal);
+  margin-bottom: 4px;
+}
+
+/* ── Loot grid ───────────────────────────────────────────────────────────── */
 
 .items {
   display: flex;
@@ -34,6 +245,8 @@
   transform: scale(1.18);
 }
 
+/* ── Glass panel ─────────────────────────────────────────────────────────── */
+
 .box {
   border: 2px solid var(--osrs-border-dark);
   box-shadow:
@@ -51,4 +264,42 @@
 .flexCol {
   display: flex;
   flex-direction: column;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 520px) {
+  .boss-grid {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    padding: 2px 2px 8px;
+    margin: 0 -2px 10px;
+    scrollbar-width: thin;
+  }
+
+  .boss-chip {
+    min-height: 44px;
+    flex: 0 0 auto;
+    padding: 8px 13px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  .osrs-field input[type='text'] {
+    width: 100%;
+  }
+
+  .osrs-field {
+    width: 100%;
+  }
+
+  .osrs-sim-row input[type='text'] {
+    width: 100%;
+  }
+
+  .box {
+    padding: 12px;
+    margin: 4px 0;
+  }
 }
