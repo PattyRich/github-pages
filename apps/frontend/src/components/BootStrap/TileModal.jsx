@@ -258,6 +258,8 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
 
   const isAdmin = privilage === 'admin';
   const isGeneral = !isAdmin;
+  const showRowBonus = br && (isAdmin || Number(state.rowBingo) !== 0);
+  const showColumnBonus = bb && (isAdmin || Number(state.colBingo) !== 0);
 
   return (
     <Modal
@@ -292,7 +294,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
               title="Description"
               disabled={isGeneral}
             />
-            {br && (
+            {showRowBonus && (
               <EditableInput
                 value={state.rowBingo}
                 stateKey="rowBingo"
@@ -301,7 +303,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
                 disabled={isGeneral}
               />
             )}
-            {bb && (
+            {showColumnBonus && (
               <EditableInput
                 value={state.colBingo}
                 stateKey="colBingo"
