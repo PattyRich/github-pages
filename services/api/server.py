@@ -96,11 +96,11 @@ setup_indexes(mycol)
 @app.before_request
 def log_request():
     origin = request.headers.get('Origin', request.host)
-    log.info("--> %s %s  ip=%s  origin=%s", request.method, request.path, request.remote_addr, origin)
+    log.info("--> %s %s  ip=%s  origin=%s", request.method, request.full_path.rstrip('?'), request.remote_addr, origin)
 
 @app.after_request
 def log_response(response):
-    log.info("<-- %s %s  status=%d", request.method, request.path, response.status_code)
+    log.info("<-- %s %s  status=%d", request.method, request.full_path.rstrip('?'), response.status_code)
     return response
 
 @app.errorhandler(429)

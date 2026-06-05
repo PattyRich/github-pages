@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: api-config
+  namespace: praynr-local
+data:
+  MONGO_URI: mongodb://mongo:27017/
+  REDIS_HOST: redis
+  REDIS_PORT: "6379"
+  REDIS_DB: "0"
+  LOG_LEVEL: INFO
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: api-secrets
+  namespace: praynr-local
+type: Opaque
+stringData:
+  RIOT_API_KEY: ""
+  FEEDBACK_WEBHOOK: ""
+  CREATION_WEBHOOK: ""
+  DEBUG_WEBHOOK: ""
