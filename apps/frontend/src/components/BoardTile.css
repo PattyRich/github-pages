@@ -44,13 +44,15 @@
   z-index: 30;
   box-sizing: border-box;
   width: 100%;
-  height: 21%;
+  height: calc(var(--tile-title-font-size, 0.72rem) * 1.35 + 5px);
+  min-height: 18px;
+  max-height: 34%;
   overflow: hidden;
   padding: 2px 3px 0;
   color: var(--osrs-text-yellow);
   font-family: 'osrsFont', sans-serif;
   font-size: var(--tile-title-font-size, 0.72rem);
-  line-height: 1.15;
+  line-height: 1.35;
   text-align: center;
   text-overflow: ellipsis;
   white-space: nowrap;

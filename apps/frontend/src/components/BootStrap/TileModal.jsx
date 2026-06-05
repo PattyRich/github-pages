@@ -260,6 +260,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
   const isGeneral = !isAdmin;
   const showRowBonus = br && (isAdmin || Number(state.rowBingo) !== 0);
   const showColumnBonus = bb && (isAdmin || Number(state.colBingo) !== 0);
+  console.log(showColumnBonus)
 
   return (
     <Modal
