@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import './BoardTile.css';
-import Modal from './BootStrap/TileModal';
+import Modal from './ui/TileModal';
 import { getStoredBool } from '../utils/utils';
 
 const CROSS_SVG =

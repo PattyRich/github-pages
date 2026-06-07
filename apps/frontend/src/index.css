@@ -455,9 +455,6 @@ button:focus {
   color: var(--osrs-text-beige);
 }
 
-/* ─── Toast Notifications ────────────────────────────────────────────────── */
-/* Styles now live in BootStrap/Toast.css */
-
 /* ─── Native modal animation ─────────────────────────────────────────────── */
 @keyframes osrs-modal-in {
   from {

@@ -1,7 +1,7 @@
 import './App.css';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import FeedbackModal from './components/BootStrap/FeedbackModal';
+import FeedbackModal from './components/ui/FeedbackModal';
 
 const ROUTES = [
   {

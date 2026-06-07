@@ -28,6 +28,7 @@ export default function SettingsModal({ handleClose }) {
       titleId="settings-modal-title"
       onClose={handleClose}
       maxWidth="480px"
+      bodyClassName="sm-body"
       footer={
         <ModalButton variant="danger" onClick={handleClose}>
           Close

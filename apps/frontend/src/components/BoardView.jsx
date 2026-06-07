@@ -2,16 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 //import { Link } from "react-router-dom";
 import './BoardView.css';
 import BoardTile from './BoardTile';
-import Button from './BootStrap/Button';
+import Button from './ui/Button';
 import { fetchGet, fetchPut, pwUrlBuilder, addToRecent } from '../utils/utils.js';
 import { apiUrl } from '../config/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Teams from './Teams';
-import Toast from './BootStrap/Toast';
-import EditTeams from './BootStrap/EditTeams';
-import SettingsModal from './BootStrap/SettingsModal';
-import FeedbackModal from './BootStrap/FeedbackModal';
-import PasswordModal from './BootStrap/PasswordModal';
+import Toast from './ui/Toast';
+import EditTeams from './ui/EditTeams';
+import SettingsModal from './ui/SettingsModal';
+import FeedbackModal from './ui/FeedbackModal';
+import PasswordModal from './ui/PasswordModal';
 
 const initialBoardState = {
   privilage: 'general',

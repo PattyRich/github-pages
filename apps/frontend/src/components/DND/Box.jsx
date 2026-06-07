@@ -1,5 +1,5 @@
 import { useDrag } from 'react-dnd';
-import Button from '../BootStrap/Button';
+import Button from '../ui/Button';
 
 const style = {
   border: '2px solid var(--osrs-border-dark)',

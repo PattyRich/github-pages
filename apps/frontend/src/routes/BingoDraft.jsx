@@ -1,13 +1,13 @@
 import React from 'react';
 //import { Link } from "react-router-dom";
 import './BingoDraft.css';
-import Button from '../components/BootStrap/Button';
-import EditableInput from '../components/BootStrap/EditableInput';
+import Button from '../components/ui/Button';
+import EditableInput from '../components/ui/EditableInput';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Dustbin } from '../components/DND/Dustbin';
 import { Box } from '../components/DND/Box';
-import Toast from '../components/BootStrap/Toast';
+import Toast from '../components/ui/Toast';
 
 class BingoDraft extends React.Component {
   constructor(props) {

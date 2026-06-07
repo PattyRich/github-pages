@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 //import { Link } from "react-router-dom";
 import './bingo.css';
 import BoardTile from '../components/BoardTile';
-import EditableInput from '../components/BootStrap/EditableInput';
-import Button from '../components/BootStrap/Button';
+import EditableInput from '../components/ui/EditableInput';
+import Button from '../components/ui/Button';
 
 import { fetchGet, fetchPost, addToRecent } from '../utils/utils';
 import { useNavigate } from 'react-router-dom';

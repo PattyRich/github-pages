@@ -19,6 +19,7 @@ const FeedbackModal = ({ handleClose }) => {
       titleId="feedback-modal-title"
       onClose={handleClose}
       maxWidth="620px"
+      bodyClassName="fm-body"
       footer={
         <>
           <ModalButton variant="danger" onClick={handleClose}>
