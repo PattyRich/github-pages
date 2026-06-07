@@ -1,8 +1,9 @@
-import base64
 import os
 import re
 import shutil
+import struct
 import time
+import zlib
 from pathlib import Path
 from urllib.error import HTTPError, URLError
 from urllib.parse import urlparse
@@ -49,11 +50,6 @@ IMAGE_REGRESSION_PIXEL_TOLERANCE = int(
     os.environ.get("PLAYWRIGHT_IMAGE_REGRESSION_PIXEL_TOLERANCE", "10")
 )
 
-TINY_PNG = base64.b64decode(
-    "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4nGP4////fwAJ+wP9KobjigAAAABJRU5ErkJggg=="
-)
-
-
 def test_bingo_board_create_edit_images_layers_and_cleanup():
     if sync_playwright is None:
         pytest.skip("Playwright is not installed. Install tests/e2e/requirements.txt.")
@@ -71,8 +67,8 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
     run_dir.mkdir(parents=True, exist_ok=True)
     board_image = run_dir / "board.png"
     proof_image = run_dir / "proof.png"
-    board_image.write_bytes(TINY_PNG)
-    proof_image.write_bytes(TINY_PNG)
+    write_fake_board_image(board_image)
+    write_fake_proof_image(proof_image)
 
     cleanup_board(collection, board_name)
 
@@ -285,6 +281,139 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
 def fill_input_group(page, label, value):
     group = page.locator(".editable-input").filter(has_text=label).first
     group.locator("input, textarea").first.fill(value)
+
+
+def write_fake_board_image(path):
+    path.write_bytes(fake_osrs_screenshot_png(width=640, height=640))
+
+
+def write_fake_proof_image(path):
+    path.write_bytes(fake_osrs_screenshot_png())
+
+
+def fake_osrs_screenshot_png(width=960, height=540):
+    pixels = bytearray(width * height * 3)
+
+    def set_pixel(x, y, color):
+        if x < 0 or x >= width or y < 0 or y >= height:
+            return
+        idx = (y * width + x) * 3
+        pixels[idx : idx + 3] = bytes(color)
+
+    def rect(x0, y0, x1, y1, color):
+        x0 = max(0, x0)
+        y0 = max(0, y0)
+        x1 = min(width, x1)
+        y1 = min(height, y1)
+        for y in range(y0, y1):
+            start = (y * width + x0) * 3
+            pixels[start : start + (x1 - x0) * 3] = bytes(color) * (x1 - x0)
+
+    def border(x0, y0, x1, y1, color, size=3):
+        rect(x0, y0, x1, y0 + size, color)
+        rect(x0, y1 - size, x1, y1, color)
+        rect(x0, y0, x0 + size, y1, color)
+        rect(x1 - size, y0, x1, y1, color)
+
+    def circle(cx, cy, radius, color):
+        radius_sq = radius * radius
+        for y in range(cy - radius, cy + radius + 1):
+            for x in range(cx - radius, cx + radius + 1):
+                if (x - cx) * (x - cx) + (y - cy) * (y - cy) <= radius_sq:
+                    set_pixel(x, y, color)
+
+    def diamond(cx, cy, radius, color):
+        for y in range(cy - radius, cy + radius + 1):
+            span = radius - abs(y - cy)
+            rect(cx - span, y, cx + span + 1, y + 1, color)
+
+    for y in range(height):
+        for x in range(width):
+            noise = ((x * 13 + y * 7) % 17) - 8
+            r = max(0, min(255, 35 + x // 80 + noise))
+            g = max(0, min(255, 31 + y // 96 + noise // 2))
+            b = max(0, min(255, 25 + noise // 3))
+            set_pixel(x, y, (r, g, b))
+
+    rect(28, 24, 712, 512, (47, 41, 32))
+    border(28, 24, 712, 512, (29, 24, 19), 5)
+    border(34, 30, 706, 506, (93, 80, 63), 2)
+
+    for y in range(48, 410, 18):
+        for x in range(48, 690, 36):
+            color = (61, 54, 43) if ((x // 36 + y // 18) % 2) else (69, 60, 48)
+            rect(x, y, x + 36, y + 18, color)
+
+    rect(64, 64, 300, 92, (78, 56, 28))
+    rect(76, 72, 214, 78, (247, 230, 193))
+    rect(76, 82, 274, 87, (219, 206, 180))
+
+    circle(368, 248, 26, (36, 70, 28))
+    circle(368, 248, 15, (112, 148, 66))
+    rect(356, 274, 380, 328, (89, 62, 43))
+    rect(338, 328, 398, 340, (33, 27, 20))
+
+    circle(512, 214, 38, (92, 33, 30))
+    circle(512, 214, 24, (133, 51, 42))
+    rect(462, 176, 562, 184, (116, 24, 22))
+    rect(462, 176, 528, 184, (45, 112, 34))
+
+    for offset, color in ((0, (255, 152, 31)), (9, (255, 226, 74)), (17, (247, 230, 193))):
+        diamond(444, 304 - offset, 20 - offset // 2, color)
+    rect(402, 332, 486, 342, (255, 152, 31))
+    rect(416, 350, 470, 358, (247, 230, 193))
+    rect(390, 368, 498, 376, (219, 206, 180))
+
+    rect(48, 418, 692, 494, (38, 32, 24))
+    border(48, 418, 692, 494, (29, 24, 19), 3)
+    for i, line_width in enumerate((292, 456, 338, 520)):
+        y = 432 + i * 14
+        rect(66, y, 66 + line_width, y + 6, (219, 206, 180))
+    rect(66, 480, 222, 486, (255, 152, 31))
+
+    rect(734, 24, 932, 512, (54, 46, 35))
+    border(734, 24, 932, 512, (29, 24, 19), 5)
+    border(740, 30, 926, 506, (93, 80, 63), 2)
+    rect(760, 52, 904, 60, (255, 152, 31))
+    for row in range(7):
+        for col in range(4):
+            x = 760 + col * 38
+            y = 86 + row * 38
+            rect(x, y, x + 32, y + 32, (43, 37, 30))
+            border(x, y, x + 32, y + 32, (29, 24, 19), 2)
+            if (row + col) % 3 == 0:
+                diamond(x + 16, y + 16, 9, (255, 152, 31))
+            elif (row + col) % 3 == 1:
+                circle(x + 16, y + 16, 8, (112, 148, 66))
+            else:
+                rect(x + 9, y + 9, x + 23, y + 23, (156, 54, 45))
+
+    rect(760, 382, 904, 454, (38, 32, 24))
+    border(760, 382, 904, 454, (29, 24, 19), 3)
+    rect(778, 402, 886, 410, (247, 230, 193))
+    rect(778, 420, 864, 427, (219, 206, 180))
+    rect(778, 438, 836, 445, (255, 152, 31))
+
+    scanlines = bytearray()
+    for y in range(height):
+        scanlines.append(0)
+        row_start = y * width * 3
+        scanlines.extend(pixels[row_start : row_start + width * 3])
+
+    def chunk(kind, data):
+        return (
+            struct.pack(">I", len(data))
+            + kind
+            + data
+            + struct.pack(">I", zlib.crc32(kind + data) & 0xFFFFFFFF)
+        )
+
+    return (
+        b"\x89PNG\r\n\x1a\n"
+        + chunk(b"IHDR", struct.pack(">IIBBBBB", width, height, 8, 2, 0, 0, 0))
+        + chunk(b"IDAT", zlib.compress(bytes(scanlines), level=9))
+        + chunk(b"IEND", b"")
+    )
 
 
 def click_and_expect_api(page, method, path_fragment, click):

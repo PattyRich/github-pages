@@ -29,7 +29,7 @@ export default function AlertBanner({
       tabIndex={dismissible ? 0 : undefined}
       {...props}
     >
-      {children}
+      <span className="osrs-alert-message">{children}</span>
     </div>
   );
 }

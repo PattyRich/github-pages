@@ -320,6 +320,10 @@ input[type='checkbox']:not([class]) {
   transform: rotate(45deg);
 }
 
+.osrs-alert-message {
+  min-width: 0;
+}
+
 .osrs-alert-banner:hover {
   filter: brightness(1.08);
 }
@@ -379,9 +383,22 @@ input[type='checkbox']:not([class]) {
 @media (max-width: 520px) {
   .osrs-alert-banner {
     top: 4px !important;
-    align-items: flex-start;
+    align-items: center;
+    justify-content: center;
     width: calc(100vw - 24px) !important;
+    padding-left: 12px;
     padding-right: 12px;
+    text-align: center;
+  }
+
+  .osrs-alert-banner::after {
+    content: '';
+    flex: 0 0 8px;
+    width: 8px;
+  }
+
+  .osrs-alert-message {
+    flex: 1 1 auto;
   }
 }
 
