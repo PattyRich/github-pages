@@ -64,7 +64,7 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
             className={`bg-img ${showTileTitle ? 'has-tile-title' : ''}`}
             style={{
               opacity: info.image.opacity + '%',
-              maxWidth: 'calc(100% - 16px)',
+              maxWidth: 'calc(90% - 16px)',
               width: info.image.usePixel ? '200px' : 'auto',
               height: info.image.usePixel ? '200px' : 'auto',
               objectFit: 'contain',
