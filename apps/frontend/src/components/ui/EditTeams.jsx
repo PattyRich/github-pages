@@ -1,5 +1,7 @@
 import { useState } from 'react';
+import Alert from './Alert';
 import EditableInput from './EditableInput';
+import { RangeField, SelectField, SwitchField } from './FormControls';
 import { ModalButton, ModalShell } from './ModalShell';
 import './EditTeams.css';
 
@@ -136,9 +138,9 @@ function EditTeams({
         </>
       }
     >
-      <div className="alert alert-danger">
+      <Alert variant="danger">
         ***NOTE removing teams or columns/rows will delete all their current data.
-      </div>
+      </Alert>
 
       <div className="et-tabs" role="tablist" aria-label="Edit board sections">
         {tabs.map((tab) => (
@@ -167,63 +169,57 @@ function EditTeams({
           <div className="edit-board-layout">
             <div>
               <div className="edit-board-size-grid">
-                <label className="et-field">
-                  <span className="et-label">Rows (up and down)</span>
-                  <select
-                    className="et-select"
-                    onChange={(e) => {
-                      inputState(e, 'columns');
-                    }}
-                    value={state.columns}
-                  >
-                    {boardSizeOptions.map((num) => (
-                      <option key={num} value={num}>
-                        {num}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="et-field">
-                  <span className="et-label">Columns (left and right)</span>
-                  <select
-                    className="et-select"
-                    onChange={(e) => {
-                      inputState(e, 'rows');
-                    }}
-                    value={state.rows}
-                  >
-                    {boardSizeOptions.map((num) => (
-                      <option key={num} value={num}>
-                        {num}
-                      </option>
-                    ))}
-                  </select>
-                </label>
+                <SelectField
+                  className="et-field"
+                  label="Rows (up and down)"
+                  onChange={(e) => {
+                    inputState(e, 'columns');
+                  }}
+                  value={state.columns}
+                >
+                  {boardSizeOptions.map((num) => (
+                    <option key={num} value={num}>
+                      {num}
+                    </option>
+                  ))}
+                </SelectField>
+                <SelectField
+                  className="et-field"
+                  label="Columns (left and right)"
+                  onChange={(e) => {
+                    inputState(e, 'rows');
+                  }}
+                  value={state.rows}
+                >
+                  {boardSizeOptions.map((num) => (
+                    <option key={num} value={num}>
+                      {num}
+                    </option>
+                  ))}
+                </SelectField>
               </div>
               <SwitchField
+                className="et-switch"
                 id="layered-board-switch"
                 label="Layered board"
                 onChange={toggleLayeredBoard}
                 checked={state.layeredBoard}
               />
               <div className={`layer-control ${state.layeredBoard ? '' : 'is-disabled'}`}>
-                <div className="et-label">
-                  Visible rows: {state.layeredBoard ? state.visibleRows : state.columns} /{' '}
-                  {state.columns}
-                </div>
-                <input
-                  className="et-range"
-                  type="range"
+                <RangeField
+                  label={`Visible rows: ${state.layeredBoard ? state.visibleRows : state.columns} / ${state.columns}`}
                   min={1}
                   max={state.columns}
                   value={state.layeredBoard ? state.visibleRows : state.columns}
                   disabled={!state.layeredBoard}
                   onChange={(e) => inputState(e, 'visibleRows')}
+                  help={
+                    <>
+                      General users can only see tile details and submit proof for revealed rows.
+                      Admins can still edit the full board.
+                    </>
+                  }
                 />
-                <div className="layer-help">
-                  General users can only see tile details and submit proof for revealed rows. Admins
-                  can still edit the full board.
-                </div>
               </div>
             </div>
             <LayerPreview
@@ -269,8 +265,9 @@ function EditTeams({
           aria-labelledby="edit-teams-access-tab"
           className="et-tab-panel"
         >
-          <div style={{ marginBottom: '15px' }}>
+          <div className="edit-access-control">
             <SwitchField
+              className="et-switch"
               id="custom-switch"
               label="Require teams to enter a password to make edits?"
               onChange={() =>
@@ -295,10 +292,10 @@ function EditTeams({
               );
             })
           ) : (
-            <div className="alert alert-primary">
+            <Alert variant="primary">
               Team passwords are off. Anyone with the general board password can submit proof for
               any team.
-            </div>
+            </Alert>
           )}
         </div>
       )}
@@ -317,22 +314,6 @@ function clampVisibleRows(value, rows) {
     return rows;
   }
   return Math.max(1, Math.min(parsed, rows));
-}
-
-function SwitchField({ id, label, checked, onChange }) {
-  return (
-    <label className="et-switch" htmlFor={id}>
-      <input
-        id={id}
-        className="et-switch-input"
-        type="checkbox"
-        checked={checked}
-        onChange={onChange}
-      />
-      <span className="et-switch-control" aria-hidden="true" />
-      <span className="et-switch-label">{label}</span>
-    </label>
-  );
 }
 
 function LayerPreview({ rows, columns, visibleRows }) {

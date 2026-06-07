@@ -48,78 +48,9 @@
   margin-bottom: 18px;
 }
 
-.et-field {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.et-label,
 .layer-preview-title {
   color: var(--osrs-text-beige);
   text-shadow: 1px 1px 0 black;
-}
-
-.et-select {
-  min-height: 34px;
-  padding: 4px 8px;
-  background-color: var(--osrs-bg-brown-dark) !important;
-  color: var(--osrs-text-beige) !important;
-  border: 2px solid var(--osrs-border-dark) !important;
-  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
-}
-
-.et-switch {
-  display: inline-flex;
-  align-items: center;
-  gap: 9px;
-  color: var(--osrs-text-beige);
-  text-shadow: 1px 1px 0 black;
-  cursor: pointer;
-  user-select: none;
-}
-
-.et-switch-input {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  opacity: 0;
-}
-
-.et-switch-control {
-  position: relative;
-  width: 40px;
-  height: 20px;
-  flex: 0 0 auto;
-  background: var(--osrs-bg-brown-dark);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
-}
-
-.et-switch-control::after {
-  content: '';
-  position: absolute;
-  top: 3px;
-  left: 3px;
-  width: 10px;
-  height: 10px;
-  background: var(--osrs-text-normal);
-  border: 1px solid var(--osrs-border-dark);
-  transition: transform 0.12s ease;
-}
-
-.et-switch-input:checked + .et-switch-control {
-  background: #24461a;
-}
-
-.et-switch-input:checked + .et-switch-control::after {
-  transform: translateX(18px);
-  background: var(--osrs-text-gold);
-}
-
-.et-switch-input:focus-visible + .et-switch-control {
-  outline: 2px solid var(--osrs-border-light);
-  outline-offset: 2px;
 }
 
 .layer-control {
@@ -130,39 +61,6 @@
   opacity: 0.65;
 }
 
-.et-range {
-  width: 100%;
-  height: 1.25rem;
-  margin: 4px 0;
-  accent-color: var(--osrs-text-gold);
-}
-
-.et-range::-webkit-slider-runnable-track {
-  background: var(--osrs-bg-brown-dark);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
-  height: 0.65rem;
-}
-
-.et-range::-webkit-slider-thumb {
-  background: var(--osrs-text-gold);
-  border: 2px solid var(--osrs-border-dark);
-  margin-top: -0.35rem;
-}
-
-.et-range::-moz-range-track {
-  background: var(--osrs-bg-brown-dark);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
-  height: 0.65rem;
-}
-
-.et-range::-moz-range-thumb {
-  background: var(--osrs-text-gold);
-  border: 2px solid var(--osrs-border-dark);
-}
-
-.layer-help,
 .layer-preview-help {
   color: var(--osrs-text-normal);
   font-size: 0.92rem;
@@ -212,4 +110,8 @@
   justify-content: flex-start;
   gap: 12px;
   margin-bottom: 16px;
+}
+
+.edit-access-control {
+  margin-bottom: 15px;
 }

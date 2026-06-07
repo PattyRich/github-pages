@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { getStoredBool, setStoredBool } from '../../utils/utils';
+import { CheckboxField } from './FormControls';
 import { ModalButton, ModalShell } from './ModalShell';
 import './SettingsModal.css';
 
@@ -36,16 +37,14 @@ export default function SettingsModal({ handleClose }) {
       }
     >
       {SETTINGS_KEYS.map(({ key, label }, i) => (
-        <label key={key} className="sm-row" htmlFor={`setting-${i}`}>
-          <input
-            className="sm-checkbox"
-            type="checkbox"
-            id={`setting-${i}`}
-            checked={settings[key]}
-            onChange={() => toggle(key)}
-          />
-          <span className="sm-label">{label}</span>
-        </label>
+        <CheckboxField
+          key={key}
+          className="sm-row"
+          id={`setting-${i}`}
+          label={label}
+          checked={settings[key]}
+          onChange={() => toggle(key)}
+        />
       ))}
     </ModalShell>
   );

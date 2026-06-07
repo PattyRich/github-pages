@@ -52,17 +52,17 @@
 }
 
 .editable-input--disabled .editable-input-label {
-  color: #b0a188;
-  background: #342d23;
-  border-color: #17130f;
+  color: var(--osrs-state-disabled-text);
+  background: var(--osrs-state-disabled-addon-bg);
+  border-color: var(--osrs-state-disabled-border);
   box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.58);
   opacity: 0.82;
 }
 
 .editable-input .editable-input-field:disabled {
-  background: #2a241c !important;
-  color: #b0a188 !important;
-  border-color: #17130f !important;
+  background: var(--osrs-state-disabled-bg) !important;
+  color: var(--osrs-state-disabled-text) !important;
+  border-color: var(--osrs-state-disabled-border) !important;
   box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.78) !important;
   opacity: 0.82 !important;
 }

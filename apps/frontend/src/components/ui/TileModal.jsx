@@ -1,6 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import EditableInput from './EditableInput';
+import { CheckboxField } from './FormControls';
+import ImageLightbox from './ImageLightbox';
 import { ModalButton, ModalShell } from './ModalShell';
+import ProofImageGrid from './ProofImageGrid';
 import './TileModal.css';
 
 const NUM_INPUTS = ['points', 'currPoints', 'rowBingo', 'colBingo'];
@@ -357,18 +360,15 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
                     change={changeOpacity}
                     title="Image Opacity (1-100)"
                   />
-                  <div className="tm-check" style={{ marginTop: '15px', marginBottom: '10px' }}>
-                    <input
-                      className="tm-check-input"
-                      checked={state.image.usePixel}
-                      onChange={toggleUsePixel}
-                      type="checkbox"
-                      id="pixelImageCheckbox"
-                    />
-                    <label className="tm-check-label" htmlFor="pixelImageCheckbox">
-                      Use pixel image?
-                    </label>
-                  </div>
+                  <CheckboxField
+                    className="tm-check tm-check--image"
+                    inputClassName="tm-check-input"
+                    labelClassName="tm-check-label"
+                    id="pixelImageCheckbox"
+                    label="Use pixel image?"
+                    checked={state.image.usePixel}
+                    onChange={toggleUsePixel}
+                  />
                 </>
               )}
             </>
@@ -417,173 +417,30 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
                 </div>
               </div>
 
-              <div style={{ marginTop: '10px', marginBottom: '12px' }}>
-                <input
-                  type="file"
-                  accept="image/png,image/jpeg,image/webp,image/gif"
-                  multiple
-                  onChange={handleProofImage}
-                  style={{ display: 'none' }}
-                  ref={proofFileInputRef}
-                />
-                {(state.proofImages || []).length < 10 ? (
-                  <ModalButton
-                    variant="secondary"
-                    className="tm-proof-upload-btn"
-                    onClick={() => proofFileInputRef.current.click()}
-                  >
-                    <span aria-hidden="true" className="tm-proof-upload-icon">
-                      📷
-                    </span>
-                    <span>Upload Proof Image</span>
-                  </ModalButton>
-                ) : (
-                  <small style={{ color: 'var(--osrs-text-normal)', opacity: 0.7 }}>
-                    Max 10 images reached
-                  </small>
-                )}
-              </div>
+              <ProofImageGrid
+                images={state.proofImages || []}
+                inputRef={proofFileInputRef}
+                onUpload={handleProofImage}
+                onOpen={openLightbox}
+                onRemove={removeProofImage}
+              />
 
-              {state.proofImages?.length > 0 && (
-                <div
-                  style={{
-                    display: 'flex',
-                    flexWrap: 'wrap',
-                    gap: '8px',
-                    marginBottom: '10px',
-                  }}
-                >
-                  {state.proofImages.map((img, i) => (
-                    <div key={i} style={{ position: 'relative', display: 'inline-block' }}>
-                      <img
-                        src={img}
-                        onClick={() => openLightbox(i)}
-                        style={{
-                          width: '64px',
-                          height: '64px',
-                          objectFit: 'cover',
-                          cursor: 'pointer',
-                          borderRadius: '4px',
-                          border: '2px solid var(--osrs-border-dark)',
-                          boxSizing: 'border-box',
-                        }}
-                        title="Click to enlarge"
-                        alt="proof"
-                      />
-                      <button
-                        onClick={() => removeProofImage(i)}
-                        style={{
-                          position: 'absolute',
-                          top: '-6px',
-                          right: '-6px',
-                          background: '#c0392b',
-                          color: 'white',
-                          border: 'none',
-                          borderRadius: '50%',
-                          width: '18px',
-                          height: '18px',
-                          fontSize: '10px',
-                          cursor: 'pointer',
-                          padding: 0,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                        }}
-                        title="Remove image"
-                      >
-                        ✖
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <ImageLightbox
+                images={state.proofImages || []}
+                index={state.lightboxIndex}
+                onClose={closeLightbox}
+                onCycle={cycleImage}
+              />
 
-              {state.lightboxIndex !== null && state.proofImages?.length > 0 && (
-                <div
-                  onClick={closeLightbox}
-                  style={{
-                    position: 'fixed',
-                    inset: 0,
-                    background: 'rgba(0,0,0,0.85)',
-                    zIndex: 9999,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    width: '80vw',
-                    height: '80vh'
-                  }}
-                >
-                  {state.proofImages.length > 1 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        cycleImage(-1);
-                      }}
-                      style={lightboxBtnStyle('left')}
-                    >
-                      &#8249;
-                    </button>
-                  )}
-                  <img
-                    src={state.proofImages[state.lightboxIndex]}
-                    onClick={(e) => e.stopPropagation()}
-                    style={{
-                      maxWidth: '95vw',
-                      maxHeight: '90vh',
-                      objectFit: 'contain',
-                      borderRadius: '6px',
-                      boxShadow: '0 4px 32px rgba(0,0,0,0.7)',
-                    }}
-                    alt="proof enlarged"
-                  />
-                  {state.proofImages.length > 1 && (
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        cycleImage(1);
-                      }}
-                      style={lightboxBtnStyle('right')}
-                    >
-                      &#8250;
-                    </button>
-                  )}
-                  <div
-                    style={{
-                      position: 'fixed',
-                      top: '8px',
-                      right: '8px',
-                      color: 'white',
-                      fontSize: '1.1rem',
-                      display: 'flex',
-                      gap: '16px',
-                      alignItems: 'center',
-                    }}
-                  >
-                    <span style={{ opacity: 0.8 }}>
-                      {state.lightboxIndex + 1} / {state.proofImages.length}
-                    </span>
-                    <span
-                      style={{ cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }}
-                      onClick={closeLightbox}
-                    >
-                      ✖
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              <div className="tm-check" style={{ marginTop: '15px' }}>
-                <input
-                  className="tm-check-input"
-                  checked={state.checked}
-                  onChange={toggleCheck}
-                  type="checkbox"
-                  id="tileCompleted"
-                />
-                <label className="tm-check-label" htmlFor="tileCompleted">
-                  Completed?
-                </label>
-              </div>
+              <CheckboxField
+                className="tm-check tm-check--completed"
+                inputClassName="tm-check-input"
+                labelClassName="tm-check-label"
+                id="tileCompleted"
+                label="Completed?"
+                checked={state.checked}
+                onChange={toggleCheck}
+              />
             </>
           )}
         </>
@@ -706,27 +563,4 @@ function getImageUrl(image) {
   image = decodeURI(image).replaceAll(' ', '_');
   image = image.charAt(0).toUpperCase() + image.slice(1);
   return `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`;
-}
-
-function lightboxBtnStyle(side) {
-  return {
-    position: 'fixed',
-    [side]: '8px',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    background: 'rgba(255,255,255,0.15)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '50%',
-    width: '48px',
-    height: '48px',
-    fontSize: '2rem',
-    lineHeight: 1,
-    cursor: 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    zIndex: 10000,
-    backdropFilter: 'blur(4px)',
-  };
 }

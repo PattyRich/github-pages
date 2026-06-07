@@ -1,0 +1,109 @@
+.image-lightbox {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  display: grid;
+  place-items: center;
+  width: 100vw;
+  height: 100vh;
+  padding: 48px 96px;
+  background: rgba(0, 0, 0, 0.85);
+  box-sizing: border-box;
+}
+
+.image-lightbox-stage {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  max-width: min(100%, calc(100vw - 192px));
+  max-height: calc(100vh - 96px);
+}
+
+.image-lightbox-img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(100vh - 96px);
+  object-fit: contain;
+  border-radius: var(--osrs-radius-lg);
+  box-shadow: 0 4px 32px rgba(0, 0, 0, 0.7);
+}
+
+.image-lightbox-nav {
+  position: absolute;
+  top: 50%;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  padding: 0;
+  color: var(--osrs-text-beige);
+  background: rgba(247, 230, 193, 0.14) !important;
+  border: 1px solid rgba(247, 230, 193, 0.35) !important;
+  border-radius: 50%;
+  box-shadow: none !important;
+  font-size: 2rem;
+  line-height: 1;
+  transform: translateY(-50%);
+  cursor: pointer;
+}
+
+.image-lightbox-nav--prev {
+  left: -72px;
+}
+
+.image-lightbox-nav--next {
+  right: -72px;
+}
+
+.image-lightbox-meta {
+  position: fixed;
+  top: 8px;
+  right: 8px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  color: var(--osrs-text-beige);
+  font-size: 1.1rem;
+}
+
+.image-lightbox-meta span {
+  opacity: 0.8;
+}
+
+.image-lightbox-close {
+  padding: 2px 8px;
+  color: var(--osrs-text-beige) !important;
+  background: rgba(247, 230, 193, 0.14) !important;
+  border: 1px solid rgba(247, 230, 193, 0.35) !important;
+  border-radius: var(--osrs-radius);
+  box-shadow: none !important;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+@media (max-width: 720px) {
+  .image-lightbox {
+    padding: 56px 56px 32px;
+  }
+
+  .image-lightbox-stage {
+    max-width: min(100%, calc(100vw - 112px));
+    max-height: calc(100vh - 88px);
+  }
+
+  .image-lightbox-img {
+    max-height: calc(100vh - 88px);
+  }
+
+  .image-lightbox-nav--prev {
+    left: -48px;
+  }
+
+  .image-lightbox-nav--next {
+    right: -48px;
+  }
+}

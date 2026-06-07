@@ -36,6 +36,13 @@
   /* Semantic colors */
   --osrs-tile-on: #2d6e2d;
   --osrs-tile-hint: #b8a800;
+  --osrs-state-success-bg: #24461a;
+  --osrs-state-danger-bg: #5c1b1b;
+  --osrs-state-disabled-bg: #2a241c;
+  --osrs-state-disabled-addon-bg: #342d23;
+  --osrs-state-disabled-border: #17130f;
+  --osrs-state-disabled-text: #b0a188;
+  --osrs-checkmark-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fffac9' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m4 10 4 4 8-8'/%3e%3c/svg%3e");
 
   /* Spacing & shape */
   --osrs-radius: .375rem;
@@ -180,7 +187,6 @@ input[type='checkbox']:not([class]) {
   font-size: 1rem;
   line-height: 1.5;
   font-weight: 400;
-  font-size: 16px;
   text-shadow: 1px 1px 0px black;
   border-radius: var(--osrs-radius) !important;
   padding: 0.375rem 0.75rem;
@@ -205,7 +211,7 @@ input[type='checkbox']:not([class]) {
 }
 
 .osrs-btn--success {
-  background-color: #24461a !important;
+  background-color: var(--osrs-state-success-bg) !important;
 }
 
 .osrs-btn--success:hover,
@@ -215,7 +221,7 @@ input[type='checkbox']:not([class]) {
 }
 
 .osrs-btn--danger {
-  background-color: #5c1b1b !important;
+  background-color: var(--osrs-state-danger-bg) !important;
 }
 
 .osrs-btn--danger:hover,
@@ -230,6 +236,11 @@ input[type='checkbox']:not([class]) {
 .osrs-btn--warning:hover,
 .osrs-btn--warning:focus {
   background-color: #734e19 !important;
+}
+
+.osrs-btn--small {
+  padding: 4px 12px;
+  font-size: 0.78rem;
 }
 
 /* ─── Alerts ─────────────────────────────────────────────────────────────── */
@@ -360,8 +371,8 @@ input[type='checkbox']:not([class]) {
 }
 
 .bingo-completed-check:checked {
-  background-color: #24461a !important;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fffac9' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m4 10 4 4 8-8'/%3e%3c/svg%3e") !important;
+  background-color: var(--osrs-state-success-bg) !important;
+  background-image: var(--osrs-checkmark-image) !important;
   border-color: var(--osrs-text-gold) !important;
 }
 
@@ -428,12 +439,20 @@ select {
   transition: none !important;
 }
 
-input:focus,
-textarea:focus,
-select:focus,
-button:focus {
+input:focus:not(:focus-visible),
+textarea:focus:not(:focus-visible),
+select:focus:not(:focus-visible),
+button:focus:not(:focus-visible) {
   box-shadow: none !important;
   outline: none !important;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--osrs-border-light) !important;
+  outline-offset: 2px !important;
 }
 
 .route-dark-bg .osrs-header,

@@ -1,0 +1,71 @@
+.proof-upload-row {
+  margin-top: 10px;
+  margin-bottom: 12px;
+}
+
+.proof-upload-input {
+  display: none;
+}
+
+.proof-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.proof-upload-limit {
+  color: var(--osrs-text-normal);
+  opacity: 0.7;
+}
+
+.proof-image-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+
+.proof-image-tile {
+  position: relative;
+  display: inline-block;
+}
+
+.proof-image-open {
+  display: block;
+  padding: 0;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  cursor: pointer;
+}
+
+.proof-image-thumb {
+  width: 64px;
+  height: 64px;
+  object-fit: cover;
+  border: 2px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius);
+  box-sizing: border-box;
+}
+
+.proof-image-remove {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  color: var(--osrs-text-beige) !important;
+  background: var(--osrs-state-danger-bg) !important;
+  border: none !important;
+  border-radius: 50%;
+  box-shadow: none !important;
+  font-size: 10px;
+  cursor: pointer;
+}

@@ -1,4 +1,5 @@
 import { useEffect } from 'react';
+import Button from './Button';
 import './ModalShell.css';
 
 export function ModalShell({
@@ -58,7 +59,6 @@ export function ModalShell({
 
 export function ModalButton({ variant = 'primary', size, className = '', children, ...props }) {
   const classes = [
-    'osrs-btn',
     'osrs-modal-btn',
     `osrs-modal-btn--${variant}`,
     size ? `osrs-modal-btn--${size}` : '',
@@ -68,8 +68,8 @@ export function ModalButton({ variant = 'primary', size, className = '', childre
     .join(' ');
 
   return (
-    <button type="button" className={classes} {...props}>
+    <Button variant={variant} size={size} className={classes} {...props}>
       {children}
-    </button>
+    </Button>
   );
 }

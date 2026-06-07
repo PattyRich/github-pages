@@ -1,0 +1,147 @@
+.osrs-field,
+.osrs-range-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  width: 100%;
+  min-width: 0;
+}
+
+.osrs-field-label,
+.osrs-switch,
+.osrs-checkbox-label {
+  color: var(--osrs-text-beige);
+  text-shadow: 1px 1px 0 black;
+}
+
+.osrs-select {
+  width: 100%;
+  min-height: 34px;
+  padding: 4px 8px;
+  background-color: var(--osrs-bg-brown-dark) !important;
+  color: var(--osrs-text-beige) !important;
+  border: 2px solid var(--osrs-border-dark) !important;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
+}
+
+.osrs-switch,
+.osrs-checkbox-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+  cursor: pointer;
+  user-select: none;
+}
+
+.osrs-switch-input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+}
+
+.osrs-switch-control {
+  position: relative;
+  width: 40px;
+  height: 20px;
+  flex: 0 0 auto;
+  background: var(--osrs-bg-brown-dark);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+}
+
+.osrs-switch-control::after {
+  content: '';
+  position: absolute;
+  top: 4px;
+  left: 3px;
+  width: 10px;
+  height: 10px;
+  background: var(--osrs-text-normal);
+  border: 1px solid var(--osrs-border-dark);
+  transition: transform 0.12s ease;
+}
+
+.osrs-switch-input:checked + .osrs-switch-control {
+  background: var(--osrs-state-success-bg);
+}
+
+.osrs-switch-input:checked + .osrs-switch-control::after {
+  transform: translateX(22px);
+  background: var(--osrs-text-gold);
+}
+
+.osrs-switch-input:focus-visible + .osrs-switch-control,
+.osrs-checkbox:focus-visible {
+  outline: 2px solid var(--osrs-border-light) !important;
+  outline-offset: 2px !important;
+}
+
+.osrs-checkbox {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  background: var(--osrs-bg-inventory);
+  border: 2px solid var(--osrs-border-dark) !important;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light) !important;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.13s ease;
+}
+
+.osrs-checkbox:checked {
+  background: var(--osrs-state-success-bg);
+  border-color: var(--osrs-border-dark) !important;
+}
+
+.osrs-checkbox:checked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: var(--osrs-checkmark-image);
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.osrs-range {
+  width: 100%;
+  height: 1.25rem;
+  margin: 4px 0;
+  accent-color: var(--osrs-text-gold);
+}
+
+.osrs-range::-webkit-slider-runnable-track {
+  background: var(--osrs-bg-brown-dark);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  height: 0.65rem;
+}
+
+.osrs-range::-webkit-slider-thumb {
+  background: var(--osrs-text-gold);
+  border: 2px solid var(--osrs-border-dark);
+  margin-top: -0.35rem;
+}
+
+.osrs-range::-moz-range-track {
+  background: var(--osrs-bg-brown-dark);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  height: 0.65rem;
+}
+
+.osrs-range::-moz-range-thumb {
+  background: var(--osrs-text-gold);
+  border: 2px solid var(--osrs-border-dark);
+}
+
+.osrs-field-help {
+  color: var(--osrs-text-normal);
+  font-size: 0.92rem;
+  line-height: 1.35;
+  text-shadow: 1px 1px 0 black;
+}

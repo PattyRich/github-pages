@@ -1,15 +1,36 @@
-export default function BSButton({ style, disabled, click, variant, text }) {
-  const variantClass = variant ? `osrs-btn--${variant.replace('outline-', '')}` : '';
+export default function Button({
+  type = 'button',
+  style,
+  disabled,
+  click,
+  onClick,
+  variant,
+  size,
+  className = '',
+  text,
+  children,
+  ...props
+}) {
+  const normalizedVariant = variant?.replace('outline-', '');
+  const classes = [
+    'osrs-btn',
+    normalizedVariant ? `osrs-btn--${normalizedVariant}` : '',
+    size ? `osrs-btn--${size}` : '',
+    className,
+  ]
+    .filter(Boolean)
+    .join(' ');
 
   return (
     <button
-      type="button"
+      type={type}
       style={style}
       disabled={disabled}
-      onClick={click}
-      className={`osrs-btn ${variantClass}`.trim()}
+      onClick={onClick || click}
+      className={classes}
+      {...props}
     >
-      {text}
+      {children ?? text}
     </button>
   );
 }

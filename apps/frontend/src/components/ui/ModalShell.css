@@ -123,11 +123,11 @@
 }
 
 .osrs-modal-btn--danger {
-  background-color: #6b1212 !important;
+  background-color: var(--osrs-state-danger-bg) !important;
 }
 
 .osrs-modal-btn--success {
-  background-color: #1a5c1a !important;
+  background-color: var(--osrs-state-success-bg) !important;
 }
 
 @media (max-width: 560px) {

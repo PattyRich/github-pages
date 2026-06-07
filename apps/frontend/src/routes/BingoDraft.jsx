@@ -2,6 +2,7 @@ import React from 'react';
 //import { Link } from "react-router-dom";
 import './BingoDraft.css';
 import Button from '../components/ui/Button';
+import Alert from '../components/ui/Alert';
 import EditableInput from '../components/ui/EditableInput';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
@@ -209,10 +210,10 @@ class BingoDraft extends React.Component {
           </div>
           {this.state.editMode ? (
             <div className="flex-center" style={{ flexDirection: 'column', alignItems: 'center' }}>
-              <div className="alert alert-primary">
+              <Alert variant="primary">
                 Add player names with a comma seperating them, then get out of edit mode. Drag and
                 drop players to their team for bingo drafts!
-              </div>
+              </Alert>
               <EditableInput
                 stateKey="players"
                 change={this.inputState}
