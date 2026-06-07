@@ -63,6 +63,46 @@ test('calls onClose when Escape is pressed', () => {
   expect(onClose).toHaveBeenCalledOnce();
 });
 
+test('moves focus into the modal and restores it on close', () => {
+  const opener = document.createElement('button');
+  opener.textContent = 'Open modal';
+  document.body.appendChild(opener);
+  opener.focus();
+
+  const { rerender } = render(
+    <ModalShell title="Modal" onClose={vi.fn()}>
+      <button>Inside</button>
+    </ModalShell>
+  );
+  expect(screen.getByRole('button', { name: 'Close' })).toHaveFocus();
+
+  rerender(
+    <ModalShell title="Modal" show={false} onClose={vi.fn()}>
+      <button>Inside</button>
+    </ModalShell>
+  );
+  expect(opener).toHaveFocus();
+  document.body.removeChild(opener);
+});
+
+test('keeps Tab focus inside the modal', () => {
+  render(
+    <ModalShell title="Modal" onClose={vi.fn()} footer={<button>Last action</button>}>
+      <button>Middle action</button>
+    </ModalShell>
+  );
+
+  const close = screen.getByRole('button', { name: 'Close' });
+  const last = screen.getByRole('button', { name: 'Last action' });
+
+  last.focus();
+  fireEvent.keyDown(window, { key: 'Tab' });
+  expect(close).toHaveFocus();
+
+  fireEvent.keyDown(window, { key: 'Tab', shiftKey: true });
+  expect(last).toHaveFocus();
+});
+
 test('does not render when show is false', () => {
   render(
     <ModalShell title="Modal" show={false} onClose={vi.fn()}>

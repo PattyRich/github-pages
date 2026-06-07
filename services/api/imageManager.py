@@ -1,10 +1,12 @@
 import base64
 import os
 import uuid
+import io
 from pathlib import Path
 from urllib.parse import urlparse
 
 from flask import request, send_from_directory
+from PIL import Image
 
 from imgSizeReducer import reduce_image_size
 from logger import get_logger
@@ -13,23 +15,48 @@ log = get_logger(__name__)
 
 
 class ImageStore:
-  def __init__(self, url_prefix, upload_root):
+  def __init__(self, url_prefix, upload_root, max_source_bytes, max_pixels, target_kb):
     self.url_prefix = url_prefix
     self.upload_root = Path(upload_root)
+    self.max_source_bytes = max_source_bytes
+    self.max_pixels = max_pixels
+    self.target_kb = target_kb
 
   def decode_data_uri(self, data_uri):
     if not isinstance(data_uri, str) or not data_uri.startswith("data:"):
       raise ValueError("Expected an image data URI")
-    header, b64_data = data_uri.split(",", 1)
+    try:
+      header, b64_data = data_uri.split(",", 1)
+    except ValueError as exc:
+      raise ValueError("Expected a valid data URI") from exc
     if ";base64" not in header:
       raise ValueError("Expected a base64 data URI")
     media_type = header.split(";", 1)[0].split(":", 1)[1].lower()
-    if not media_type.startswith("image/"):
+    if media_type not in ("image/png", "image/jpeg", "image/webp", "image/gif"):
       raise ValueError("Expected an image data URI")
-    return media_type, base64.b64decode(b64_data)
+    try:
+      image_bytes = base64.b64decode(b64_data, validate=True)
+    except Exception as exc:
+      raise ValueError("Expected valid base64 image data") from exc
+    if len(image_bytes) > self.max_source_bytes:
+      raise ValueError("Image file is too large")
+    return media_type, image_bytes
+
+  def validate_data_uri(self, data_uri):
+    _media_type, image_bytes = self.decode_data_uri(data_uri)
+    try:
+      with Image.open(io.BytesIO(image_bytes)) as image:
+        if image.width * image.height > self.max_pixels:
+          raise ValueError("Image dimensions are too large")
+        image.verify()
+    except ValueError:
+      raise
+    except Exception as exc:
+      raise ValueError("Expected a readable image file") from exc
 
   def save(self, data_uri):
-    reduced_data_uri = reduce_image_size(data_uri, 50)
+    self.validate_data_uri(data_uri)
+    reduced_data_uri = reduce_image_size(data_uri, self.target_kb, max_pixels=self.max_pixels)
     media_type, image_bytes = self.decode_data_uri(reduced_data_uri)
     extension = media_type.split("/", 1)[1].replace("jpeg", "jpg")
     if extension not in ("webp", "png", "jpg", "gif"):
@@ -81,13 +108,22 @@ class ImageStore:
 
 
 _static = Path(__file__).parent / "static" / "uploads"
+_max_source_bytes = int(os.environ.get("IMAGE_UPLOAD_MAX_SOURCE_BYTES", 8 * 1024 * 1024))
+_max_pixels = int(os.environ.get("IMAGE_UPLOAD_MAX_PIXELS", 16_000_000))
+_target_kb = int(os.environ.get("IMAGE_UPLOAD_TARGET_KB", 50))
 
 proof_images = ImageStore(
   url_prefix="/static/uploads/proofs",
   upload_root=Path(os.environ.get("PROOF_UPLOAD_DIR", _static / "proofs")),
+  max_source_bytes=_max_source_bytes,
+  max_pixels=_max_pixels,
+  target_kb=_target_kb,
 )
 
 board_images = ImageStore(
   url_prefix="/static/uploads/board-images",
   upload_root=Path(os.environ.get("BOARD_IMAGE_UPLOAD_DIR", _static / "board-images")),
+  max_source_bytes=_max_source_bytes,
+  max_pixels=_max_pixels,
+  target_kb=_target_kb,
 )

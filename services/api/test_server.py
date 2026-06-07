@@ -351,6 +351,7 @@ class TestUpdateBoard(unittest.TestCase):
         self.client = _client(server.app)
         self.board = _make_board()
         _mock_col.find_one.return_value = self.board
+        _mock_col.update_one.reset_mock()
         _mock_col.update_one.return_value = MagicMock()
 
     def _put(self, url, payload):
@@ -472,6 +473,40 @@ class TestUpdateBoard(unittest.TestCase):
             updated_team["teamData"][0][0]["proofImages"],
             ["/static/uploads/proofs/test.webp"],
         )
+
+    def test_general_rejects_too_many_proof_images(self):
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 0, "col": 0, "info": {"checked": True, "proof": "",
+                                           "currPoints": 0, "teamId": 0,
+                                           "proofImages": ["/static/uploads/proofs/test.webp"] * (server.maxProofImages + 1)}},
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("limited", json.loads(resp.data)["message"])
+        _mock_col.update_one.assert_not_called()
+
+    def test_general_rejects_external_proof_image_urls(self):
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 0, "col": 0, "info": {"checked": True, "proof": "",
+                                           "currPoints": 0, "teamId": 0,
+                                           "proofImages": ["https://example.com/proof.webp"]}},
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("uploaded through this board", json.loads(resp.data)["message"])
+        _mock_col.update_one.assert_not_called()
+
+    @patch.object(server.board_images, "save", side_effect=ValueError("Image file is too large"))
+    def test_admin_rejects_invalid_board_image_without_storing_data_uri(self, _save):
+        resp = self._put(
+            "/updateBoard/TestBoard/admin123/admin",
+            {"row": 0, "col": 0, "info": {"title": "New Title", "points": 10,
+                                           "description": "", "image": {"url": TINY_PNG_DATA_URI},
+                                           "rowBingo": 0, "colBingo": 0}},
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("Image file is too large", json.loads(resp.data)["message"])
+        _mock_col.update_one.assert_not_called()
 
     def test_general_update_preserves_existing_absolute_proof_url_as_relative_path(self):
         resp = self._put(

@@ -11,6 +11,7 @@ from flask_limiter.util import get_remote_address
 from imgSizeReducer import reduce_image_size
 from imageManager import proof_images, board_images
 from werkzeug.middleware.proxy_fix import ProxyFix
+from werkzeug.exceptions import RequestEntityTooLarge
 import os
 from dotenv import load_dotenv
 load_dotenv()
@@ -24,6 +25,7 @@ log = get_logger(__name__)
 _START_TIME = time.time()
 
 app = Flask(__name__, static_folder='build')
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get("API_MAX_CONTENT_LENGTH", 10 * 1024 * 1024))
 CORS(app)
 
 # Register the League of Legends API routes
@@ -63,6 +65,7 @@ adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBing
 generalTileKeys = ['proof', 'checked', 'currPoints', 'proofImages']
 boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns', 'visibleRows']
 testBoardPrefix = os.environ.get("PLAYWRIGHT_E2E_BOARD_PREFIX", os.environ.get("SELENIUM_E2E_BOARD_PREFIX", "__playwright_e2e__"))
+maxProofImages = int(os.environ.get("MAX_PROOF_IMAGES_PER_TILE", 10))
 defaultTeamObj = {
   'checked': False,
   'proof': '',
@@ -107,6 +110,11 @@ def log_response(response):
 def rate_limit_handler(e):
     log.warning("Rate limit exceeded  ip=%s  path=%s", request.remote_addr, request.path)
     return jsonify(error="Rate limit exceeded", message=str(e.description)), 429
+
+@app.errorhandler(RequestEntityTooLarge)
+def request_too_large_handler(e):
+    log.warning("Request too large  ip=%s  path=%s", request.remote_addr, request.path)
+    return jsonify(error="Request too large", message="Uploaded data is too large."), 413
 
 
 # ---------------------------------------------------------------------------
@@ -217,6 +225,27 @@ def publish_board_update(board_name):
     _redis.publish(f"board:{board_name}", "refresh")
   except Exception as e:
     log.warning("publish_board_update failed  board=%s  error=%s", board_name, e)
+
+def normalize_proof_images(images):
+  if images is None:
+    return []
+  if not isinstance(images, list):
+    raise ValueError("Proof images must be a list.")
+  if len(images) > maxProofImages:
+    raise ValueError(f"Proof images are limited to {maxProofImages} per tile.")
+
+  saved_images = []
+  for img_uri in images:
+    if not isinstance(img_uri, str):
+      raise ValueError("Proof images must be image URLs or uploads.")
+    if img_uri.startswith('data:'):
+      saved_images.append(proof_images.save(img_uri))
+      continue
+    storage_url = proof_images.storage_url(img_uri)
+    if not isinstance(storage_url, str) or not storage_url.startswith(proof_images.url_prefix + "/"):
+      raise ValueError("Proof images must be uploaded through this board.")
+    saved_images.append(storage_url)
+  return saved_images
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -415,6 +444,7 @@ def board_events(boardName, password, pwtype):
 
 @app.route('/updateBoard/<boardName>/<password>/<pwtype>', defaults={'teampw': ''}, methods=['PUT'])
 @app.route('/updateBoard/<boardName>/<password>/<pwtype>/<teampw>', methods=['PUT'])
+@limiter.limit("300 per hour")
 def updateBoard(boardName, password, pwtype, teampw):
   cache, err = auth(boardName, password, pwtype)
   if err:
@@ -423,21 +453,26 @@ def updateBoard(boardName, password, pwtype, teampw):
   if (pwtype == 'admin'):
     data['info'] = clearBadData(data['info'], adminTileKeys)
 
-    boardData = cache['boardData']
-    boardData[data['row']][data['col']] = { **boardData[data['row']][data['col']], **data['info']}
-
     image = data.get('info', {}).get('image') if isinstance(data.get('info'), dict) else None
     image_url = image.get('url', '') if isinstance(image, dict) else ''
+    previous_image_url = ''
     if image and isinstance(image_url, str) and image_url[0:5] == 'data:':
       try:
         saved_url = board_images.save(image_url)
         previous_image_url = cache['boardData'][data['row']][data['col']].get('image', {}) or {}
         previous_image_url = previous_image_url.get('url', '') if isinstance(previous_image_url, dict) else ''
-        boardData[data['row']][data['col']]['image']['url'] = saved_url
-        board_images.delete(previous_image_url)
+        data['info']['image'] = { **image, 'url': saved_url }
+      except ValueError as e:
+        log.warning("updateBoard - board image rejected  board=%s  error=%s", boardName, e)
+        return bad_request(str(e))
       except Exception as e:
         log.error("updateBoard - board image save failed  board=%s  error=%s", boardName, e)
-        pass
+        return bad_request('Failed to save tile image.')
+
+    boardData = cache['boardData']
+    boardData[data['row']][data['col']] = { **boardData[data['row']][data['col']], **data['info']}
+    if previous_image_url:
+      board_images.delete(previous_image_url)
 
     newvalue = { "$set": {'boardData': boardData}}
     mycol.update_one({"boardName": boardName}, newvalue)
@@ -466,18 +501,15 @@ def updateBoard(boardName, password, pwtype, teampw):
 
     # Save newly uploaded proof images to disk and keep MongoDB lightweight.
     incoming_proof_images = data['info'].get('proofImages', [])
-    if incoming_proof_images:
-      saved_images = []
-      for img_uri in incoming_proof_images:
-        if isinstance(img_uri, str) and img_uri.startswith('data:'):
-          try:
-            saved_images.append(proof_images.save(img_uri))
-          except Exception as e:
-            log.error("updateBoard - proof image save failed  board=%s  error=%s", boardName, e)
-            saved_images.append(img_uri)
-        else:
-          saved_images.append(proof_images.storage_url(img_uri))
-      data['info']['proofImages'] = saved_images
+    if 'proofImages' in data['info']:
+      try:
+        data['info']['proofImages'] = normalize_proof_images(incoming_proof_images)
+      except ValueError as e:
+        log.warning("updateBoard - proof image rejected  board=%s  error=%s", boardName, e)
+        return bad_request(str(e))
+      except Exception as e:
+        log.error("updateBoard - proof image save failed  board=%s  error=%s", boardName, e)
+        return bad_request('Failed to save proof image.')
 
     teamData['teamData'][data['row']][data['col']] = { **teamData['teamData'][data['row']][data['col']], **data['info']}
     

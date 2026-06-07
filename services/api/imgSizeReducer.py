@@ -18,6 +18,7 @@ def reduce_image_size(
     max_quality: int = 95,
     allow_resize: bool = True,
     resize_step: float = 0.9,
+    max_pixels: int | None = None,
 ) -> str:
     """
     Reduce a base64-encoded image to approximately the target file size.
@@ -48,11 +49,13 @@ def reduce_image_size(
     else:
         b64_data = data_uri
 
-    image_bytes = base64.b64decode(b64_data)
+    image_bytes = base64.b64decode(b64_data, validate=True)
     target_bytes = int(target_kb * 1024)
 
     # ── 2. Open with Pillow ───────────────────────────────────────────────────
     img = Image.open(io.BytesIO(image_bytes))
+    if max_pixels is not None and img.width * img.height > max_pixels:
+        raise ValueError("Image dimensions are too large")
 
     # Honour EXIF orientation (iOS camera images are commonly rotated 90°)
     img = ImageOps.exif_transpose(img)
