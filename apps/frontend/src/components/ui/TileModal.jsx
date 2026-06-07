@@ -295,6 +295,8 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
           <EditableInput
             value={state.description}
             textArea
+            autoGrow
+            autoGrowMaxHeight={220}
             stateKey="description"
             change={inputState}
             title="Description"

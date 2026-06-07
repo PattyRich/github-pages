@@ -14,6 +14,7 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
   const showPoints = getStoredBool('showPoints');
   const showTitleTile = getStoredBool('showTitleTile');
   const showTileTitle = !bare && !showTitleTile && info?.title;
+  const showTitlePopup = !bare && info?.title;
   const showTeamProgress = info && teamInfo && info.points > 0 && !showPoints;
 
   const sizeStyle = dem ? { height: dem, width: dem } : {};
@@ -46,8 +47,10 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
       <span
         className={`tile-wrapper ${!completeStyle && checked ? 'green-bg' : ''}`}
         style={{ '--bgHeight': bgHeight }}
-        title={info?.title || undefined}
       >
+        {showTitlePopup && (
+          <span className="tile-title-popover" data-title={info.title} aria-hidden="true" />
+        )}
         {checked && completeStyle && !bare && (
           <img
             style={{ position: 'absolute', zIndex: 100, maxHeight: '100%', maxWidth: '100%' }}
@@ -86,7 +89,7 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
           className={`box-flex box-border ${br ? 'br' : ''} ${bb ? 'bb' : ''}`}
         >
           {showTileTitle && (
-            <div className="tile-title-overlay" style={titleStyle} title={info.title}>
+            <div className="tile-title-overlay" style={titleStyle}>
               {info.title}
             </div>
           )}

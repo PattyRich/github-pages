@@ -53,6 +53,19 @@ function lockDocumentScroll() {
   body.style.width = '100%';
 }
 
+function restoreDocumentScroll(scrollY) {
+  const { body, documentElement } = document;
+  const isJsdom = window.navigator?.userAgent?.toLowerCase().includes('jsdom');
+
+  if (!isJsdom && typeof window.scrollTo === 'function') {
+    window.scrollTo(0, scrollY);
+    return;
+  }
+
+  documentElement.scrollTop = scrollY;
+  body.scrollTop = scrollY;
+}
+
 function unlockDocumentScroll() {
   activeModalLocks = Math.max(0, activeModalLocks - 1);
   if (activeModalLocks > 0) return;
@@ -70,12 +83,7 @@ function unlockDocumentScroll() {
     documentElement.style.overflow = previousDocumentStyles.overflow;
   }
 
-  try {
-    window.scrollTo(0, lockedScrollY);
-  } catch {
-    documentElement.scrollTop = lockedScrollY;
-    body.scrollTop = lockedScrollY;
-  }
+  restoreDocumentScroll(lockedScrollY);
   previousBodyStyles = null;
   previousDocumentStyles = null;
   lockedScrollY = 0;
