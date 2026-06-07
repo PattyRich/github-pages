@@ -80,6 +80,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
         with sync_playwright() as p:
             browser = launch_browser(p)
             context = browser.new_context(**browser_context_options())
+            browser_failures = attach_browser_failure_guards(context)
             page = context.new_page()
 
             # Clear tile-hint so the "How to Use" toast fires reliably
@@ -96,7 +97,12 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             fill_input_group(page, "Board Name", board_name)
             fill_input_group(page, "Admin Password", admin_password)
             fill_input_group(page, "General Password", general_password)
-            page.get_by_role("button", name="Create Board").click()
+            click_and_expect_api(
+                page,
+                "POST",
+                "/createBoard",
+                lambda: page.get_by_role("button", name="Create Board").click(),
+            )
 
             expect(page).to_have_url(re.compile(r"#/bingo/"))
             expect(page.get_by_role("button", name="Edit Board")).to_be_visible()
@@ -110,17 +116,17 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             # Settings: toggle a setting, close and reopen — verify it persists
             page.get_by_role("button", name="Settings").click()
             expect(page.get_by_role("dialog")).to_be_visible()
-            hide_points_cb = page.locator("#setting-1")
+            hide_points_cb = page.get_by_label("Hide current points on bingo board?")
             expect(hide_points_cb).not_to_be_checked()
             hide_points_cb.click()
             expect(hide_points_cb).to_be_checked()
-            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
+            close_modal(page)
             expect(page.get_by_role("dialog")).not_to_be_visible()
             page.get_by_role("button", name="Settings").click()
-            expect(page.locator("#setting-1")).to_be_checked()
+            expect(page.get_by_label("Hide current points on bingo board?")).to_be_checked()
             # Restore the setting before continuing
-            page.locator("#setting-1").click()
-            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
+            page.get_by_label("Hide current points on bingo board?").click()
+            close_modal(page)
 
             open_tile(page, "Example Tile")
             fill_input_group(page, "Title", "E2E Tile")
@@ -130,7 +136,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             page.get_by_role("button", name="Set Tile Background Image").click()
             select_wiki_image(page, "Dragon med", "Dragon med helm")
             expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
-            page.get_by_role("button", name="Save").click()
+            save_board_tile(page)
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
             expect_tile_image_loaded(page, 0)
 
@@ -139,7 +145,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             page.get_by_role("button", name="Set Tile Background Image").click()
             select_asset_image(page, "Elder maul")
             expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
-            page.get_by_role("button", name="Save").click()
+            save_board_tile(page)
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
             expect_tile_image_loaded(page, 1)
 
@@ -148,7 +154,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             page.get_by_role("button", name="Set Tile Background Image").click()
             page.locator('input[type="file"][accept=".png,.jpeg"]').set_input_files(str(board_image))
             expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
-            page.get_by_role("button", name="Save").click()
+            save_board_tile(page)
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
             expect_tile_image_loaded(page, 2)
 
@@ -158,13 +164,13 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             select_asset_image(page, "Twisted bow")
             page.get_by_label("Use pixel image?").check()
             expect(page.get_by_label("Use pixel image?")).to_be_checked()
-            page.get_by_role("button", name="Save").click()
+            save_board_tile(page)
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
             expect_tile_image_loaded(page, 3)
 
             open_tile_by_index(page, 10)
             fill_input_group(page, "Title", "Hidden Row Tile")
-            page.get_by_role("button", name="Save").click()
+            save_board_tile(page)
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
 
             edit_board(page)
@@ -177,7 +183,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             page.locator("label.et-switch").filter(has_text="Layered board").click()
             set_range(page, "2")
             expect(page.get_by_text(re.compile(r"Visible rows:\s*2\s*/\s*4"))).to_be_visible()
-            page.get_by_role("button", name="Save").click()
+            save_team_settings(page)
             expect(page.get_by_text("Teams Successfully Updated!")).to_be_visible()
 
             page.get_by_role("button", name="Admin Mode").click()
@@ -202,18 +208,18 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             ).set_input_files(str(proof_image))
             expect(page.locator('img[alt="proof"]')).to_be_visible()
             page.get_by_label("Completed?").check()
-            page.get_by_role("button", name="Save").click()
+            save_board_tile(page)
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
             expect(observer.get_by_text(re.compile(r"Points:\s*75"))).to_be_visible(timeout=15000)
             expect(observer.get_by_role("tab", name=re.compile(r"team-0:\s*\(75\)"))).to_be_visible()
             open_tile(observer, "E2E Tile")
             expect_proof_image_loaded(observer)
             compare_visual_snapshot(observer, "proof-modal", ".osrs-modal-panel")
-            observer.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
+            close_modal(observer)
             expect(observer.get_by_role("dialog")).not_to_be_visible()
             open_tile(page, "E2E Tile")
             expect_proof_image_loaded(page)
-            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
+            close_modal(page)
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
             page.get_by_role("button", name="General Mode").click()
@@ -221,31 +227,31 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             edit_board(page)
             set_range(page, "4")
             expect(page.locator("#layered-board-switch")).to_be_checked()
-            page.get_by_role("button", name="Save").click()
+            save_team_settings(page)
             expect(page.get_by_text("Teams Successfully Updated!")).to_be_visible()
             expect_board_tile_count(page, 20)
             expect(page.get_by_text("Hidden Row Tile", exact=True)).to_be_visible()
             compare_visual_snapshot(page, "revealed-board", ".center-board")
 
             open_tile(page, "E2E Tile")
-            page.locator(".osrs-modal-header").get_by_role("button", name="Close").click()
+            close_modal(page)
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
             open_tile(page, "Asset Tile")
             expect_input_group_value(page, "Title", "Asset Tile")
             expect_tile_image_loaded(page, 1)
-            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
+            close_modal(page)
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
             open_tile(page, "Pixel Asset Tile")
             expect(page.get_by_label("Use pixel image?")).to_be_checked()
             expect_tile_image_loaded(page, 3)
-            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
+            close_modal(page)
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
             open_tile(page, "E2E Tile")
             fill_input_group(page, "Title", "E2E Tile Max Visible")
-            page.get_by_role("button", name="Save").click()
+            save_board_tile(page)
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
 
             # Navigate to join page and verify recent board entry appears and can be joined
@@ -258,6 +264,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             recent_row.get_by_role("button", name="Join").click()
             expect(page).to_have_url(re.compile(rf"#/bingo/{re.escape(board_name)}"))
             expect(page.get_by_role("button", name="Edit Board")).to_be_visible()
+            assert_no_browser_failures(browser_failures)
 
             context.close()
             browser.close()
@@ -278,6 +285,110 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
 def fill_input_group(page, label, value):
     group = page.locator(".editable-input").filter(has_text=label).first
     group.locator("input, textarea").first.fill(value)
+
+
+def click_and_expect_api(page, method, path_fragment, click):
+    with page.expect_response(
+        lambda response: response_matches_api(response, method, path_fragment),
+        timeout=15000,
+    ) as response_info:
+        click()
+
+    response = response_info.value
+    assert get_playwright_value(response, "ok"), (
+        f"Expected {method} {path_fragment} to succeed, "
+        f"got {get_playwright_value(response, 'status')} "
+        f"from {get_playwright_value(response, 'url')}"
+    )
+
+
+def response_matches_api(response, method, path_fragment):
+    request = get_playwright_value(response, "request")
+    return (
+        get_playwright_value(request, "method") == method
+        and path_fragment in get_playwright_value(response, "url")
+    )
+
+
+def save_board_tile(page):
+    click_and_expect_api(
+        page,
+        "PUT",
+        "/updateBoard/",
+        lambda: page.get_by_role("button", name="Save").click(),
+    )
+
+
+def save_team_settings(page):
+    click_and_expect_api(
+        page,
+        "PUT",
+        "/updateTeams/",
+        lambda: page.get_by_role("button", name="Save").click(),
+    )
+
+
+def close_modal(page):
+    page.get_by_role("button", name="Close").last.click()
+
+
+def attach_browser_failure_guards(context):
+    failures = []
+
+    def attach_page(page):
+        page.on(
+            "pageerror",
+            lambda exc: failures.append(
+                f"Page error on {get_playwright_value(page, 'url')}: {exc}"
+            ),
+        )
+        page.on("console", lambda msg: record_console_failure(failures, page, msg))
+        page.on("requestfailed", lambda request: record_request_failure(failures, request))
+
+    for page in context.pages:
+        attach_page(page)
+    context.on("page", attach_page)
+    return failures
+
+
+def record_console_failure(failures, page, msg):
+    if get_playwright_value(msg, "type") != "error":
+        return
+    failures.append(
+        f"Console error on {get_playwright_value(page, 'url')}: "
+        f"{get_playwright_value(msg, 'text')}"
+    )
+
+
+def record_request_failure(failures, request):
+    if ignored_failed_request(request):
+        return
+
+    failure = get_playwright_value(request, "failure") or "unknown failure"
+    failures.append(
+        f"Request failed: {get_playwright_value(request, 'method')} "
+        f"{get_playwright_value(request, 'url')} ({failure})"
+    )
+
+
+def ignored_failed_request(request):
+    failure = get_playwright_value(request, "failure") or ""
+    if get_playwright_value(request, "resource_type") == "eventsource":
+        return True
+    if "ERR_ABORTED" in failure:
+        return True
+    return False
+
+
+def get_playwright_value(obj, name):
+    value = getattr(obj, name)
+    if callable(value):
+        return value()
+    return value
+
+
+def assert_no_browser_failures(failures):
+    assert not failures, "Unexpected browser failures:\n" + "\n".join(failures)
 
 
 def expect_input_group_value(page, label, value):
