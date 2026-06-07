@@ -107,6 +107,21 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             toast.get_by_role("button", name="Close notification").click()
             expect(toast).not_to_be_visible()
 
+            # Settings: toggle a setting, close and reopen — verify it persists
+            page.get_by_role("button", name="Settings").click()
+            expect(page.get_by_role("dialog")).to_be_visible()
+            hide_points_cb = page.locator("#setting-1")
+            expect(hide_points_cb).not_to_be_checked()
+            hide_points_cb.click()
+            expect(hide_points_cb).to_be_checked()
+            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
+            expect(page.get_by_role("dialog")).not_to_be_visible()
+            page.get_by_role("button", name="Settings").click()
+            expect(page.locator("#setting-1")).to_be_checked()
+            # Restore the setting before continuing
+            page.locator("#setting-1").click()
+            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
+
             open_tile(page, "Example Tile")
             fill_input_group(page, "Title", "E2E Tile")
             fill_input_group(page, "Description", "Created by Playwright E2E")
