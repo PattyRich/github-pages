@@ -7,6 +7,8 @@
   justify-content: center;
   padding: 1rem;
   background: rgba(0, 0, 0, 0.62);
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 
 .osrs-modal-panel {
@@ -16,6 +18,7 @@
   flex-direction: column;
   background: rgba(70, 61, 48, 0.9);
   animation: osrs-modal-in 180ms cubic-bezier(0.22, 1, 0.36, 1);
+  overscroll-behavior: contain;
 }
 
 .osrs-modal-header,
@@ -51,15 +54,23 @@
 }
 
 .osrs-modal-close {
+  display: inline-flex;
+  flex: 0 0 32px;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin: -8px -8px -8px 0;
   padding: 0;
   color: var(--osrs-text-normal);
   background: none !important;
   border: none !important;
   box-shadow: none !important;
-  font-size: 1rem;
+  font-size: 1.15rem;
   line-height: 1;
   cursor: pointer;
   opacity: 0.7;
+  touch-action: manipulation;
   transition:
     color 0.15s,
     opacity 0.15s;
@@ -75,6 +86,8 @@
   min-height: 0;
   padding: 18px;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
 }
 
 .osrs-modal-body .alert {
@@ -139,6 +152,13 @@
   .osrs-modal-panel {
     height: auto;
     max-height: calc(100dvh - 1.5rem);
+  }
+
+  .osrs-modal-close {
+    flex-basis: 40px;
+    width: 40px;
+    height: 40px;
+    margin: -10px -10px -10px 0;
   }
 
   .osrs-modal-header,

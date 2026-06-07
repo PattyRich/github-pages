@@ -80,6 +80,12 @@
   margin: 0 10px;
 }
 
+.team-tabs {
+  justify-content: center;
+  width: calc(100% - (var(--osrs-padding-panel) * 2));
+  margin: 0 auto var(--osrs-padding-panel);
+}
+
 /* Board tile progress fills */
 .green-bg {
   background-image: linear-gradient(to top, rgba(0, 150, 0, 0.4) var(--bgHeight), transparent 0%);

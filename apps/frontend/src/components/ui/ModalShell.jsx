@@ -11,6 +11,11 @@ const FOCUSABLE_SELECTOR = [
   '[tabindex]:not([tabindex="-1"])',
 ].join(',');
 
+let activeModalLocks = 0;
+let lockedScrollY = 0;
+let previousBodyStyles = null;
+let previousDocumentStyles = null;
+
 function isVisibleFocusable(element) {
   const style = window.getComputedStyle(element);
   return (
@@ -19,6 +24,61 @@ function isVisibleFocusable(element) {
     style.display !== 'none' &&
     style.visibility !== 'hidden'
   );
+}
+
+function lockDocumentScroll() {
+  activeModalLocks += 1;
+  if (activeModalLocks > 1) return;
+
+  const { body, documentElement } = document;
+  lockedScrollY = window.scrollY || documentElement.scrollTop || 0;
+  previousBodyStyles = {
+    overflow: body.style.overflow,
+    position: body.style.position,
+    top: body.style.top,
+    left: body.style.left,
+    right: body.style.right,
+    width: body.style.width,
+  };
+  previousDocumentStyles = {
+    overflow: documentElement.style.overflow,
+  };
+
+  documentElement.style.overflow = 'hidden';
+  body.style.overflow = 'hidden';
+  body.style.position = 'fixed';
+  body.style.top = `-${lockedScrollY}px`;
+  body.style.left = '0';
+  body.style.right = '0';
+  body.style.width = '100%';
+}
+
+function unlockDocumentScroll() {
+  activeModalLocks = Math.max(0, activeModalLocks - 1);
+  if (activeModalLocks > 0) return;
+
+  const { body, documentElement } = document;
+  if (previousBodyStyles) {
+    body.style.overflow = previousBodyStyles.overflow;
+    body.style.position = previousBodyStyles.position;
+    body.style.top = previousBodyStyles.top;
+    body.style.left = previousBodyStyles.left;
+    body.style.right = previousBodyStyles.right;
+    body.style.width = previousBodyStyles.width;
+  }
+  if (previousDocumentStyles) {
+    documentElement.style.overflow = previousDocumentStyles.overflow;
+  }
+
+  try {
+    window.scrollTo(0, lockedScrollY);
+  } catch {
+    documentElement.scrollTop = lockedScrollY;
+    body.scrollTop = lockedScrollY;
+  }
+  previousBodyStyles = null;
+  previousDocumentStyles = null;
+  lockedScrollY = 0;
 }
 
 export function ModalShell({
@@ -37,6 +97,7 @@ export function ModalShell({
   useEffect(() => {
     if (!show) return;
     const previouslyFocused = document.activeElement;
+    lockDocumentScroll();
 
     const focusModal = () => {
       const focusable = Array.from(
@@ -80,6 +141,7 @@ export function ModalShell({
     window.addEventListener('keydown', handleKeyDown);
     return () => {
       window.removeEventListener('keydown', handleKeyDown);
+      unlockDocumentScroll();
       if (previouslyFocused && document.contains(previouslyFocused)) {
         previouslyFocused.focus();
       }
