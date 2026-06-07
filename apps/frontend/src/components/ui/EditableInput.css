@@ -50,6 +50,7 @@
 .editable-input--autogrow .editable-input-field {
   min-height: 38px;
   max-height: var(--editable-input-max-height, 220px);
+  padding: 8px 10px !important;
   overflow-y: hidden;
 }
 
