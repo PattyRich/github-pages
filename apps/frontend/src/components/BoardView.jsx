@@ -8,6 +8,7 @@ import { apiUrl } from '../config/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Teams from './Teams';
 import Toast from './ui/Toast';
+import AlertBanner from './ui/AlertBanner';
 import EditTeams from './ui/EditTeams';
 import SettingsModal from './ui/SettingsModal';
 import FeedbackModal from './ui/FeedbackModal';
@@ -346,7 +347,9 @@ function BoardView() {
 
   function clipboard() {
     void navigator.clipboard
-      .writeText(`${window.location.href}?password=${encodeURIComponent(state.generalPasswordCopy)}`)
+      .writeText(
+        `${window.location.href}?password=${encodeURIComponent(state.generalPasswordCopy)}`
+      )
       .catch(() => undefined);
     setBoardState({ showToast2: true });
   }
@@ -427,7 +430,7 @@ function BoardView() {
     <div className="flex-wrapper-create">
       <div className="top-bar-container">
         <div className="title-bar">
-          <h2 style={{ marginTop: '0px', fontSize: '2rem'}}> {state.boardName} </h2>
+          <h2 style={{ marginTop: '0px', fontSize: '2rem' }}> {state.boardName} </h2>
         </div>
         <div className="settings-bar">
           <div className="flex bingo-edit">
@@ -442,11 +445,7 @@ function BoardView() {
                 {state.privilage === 'admin' && (
                   <>
                     <Button click={toggleTeamEdit} text="Edit Board" variant="primary" />
-                    <Button
-                      click={clipboard}
-                      variant="warning"
-                      text={'Auto Signin Link 📋'}
-                    />
+                    <Button click={clipboard} variant="warning" text={'Auto Signin Link 📋'} />
                   </>
                 )}
                 {state.privilage === 'admin' ? (
@@ -460,15 +459,13 @@ function BoardView() {
         </div>
       </div>
       {state.alert && (
-        <div onClick={clearAlert} className={`osrs-alert-banner alert-${state.alertVariant}`}>
+        <AlertBanner variant={state.alertVariant} dismissible onDismiss={clearAlert}>
           {state.alert}
-        </div>
+        </AlertBanner>
       )}
       {state.teamData && !(state.privilage === 'admin') && (
         <div className="board-team-summary osrs-header">
-          <h3 className="board-team-name">
-            {state.teamData[state.activeTeamIndex].data.name}
-          </h3>
+          <h3 className="board-team-name">{state.teamData[state.activeTeamIndex].data.name}</h3>
           <span className="board-team-points">
             (Points: {state.teamData[state.activeTeamIndex].pointTotal})
           </span>
@@ -543,9 +540,13 @@ function BoardView() {
         <SettingsModal handleClose={() => setBoardState({ showSettings: false })} />
       )}
       {!showFeedback && width > 1000 ? (
-        <div className="feedback" onClick={() => setBoardState({ showFeedback: true })}>
+        <button
+          type="button"
+          className="feedback"
+          onClick={() => setBoardState({ showFeedback: true })}
+        >
           feedback
-        </div>
+        </button>
       ) : (
         ''
       )}

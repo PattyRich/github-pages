@@ -322,9 +322,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
           {isAdmin && (
             <>
               {state.image ? (
-                <div
-                style={{display: 'flex', alignItems: 'center'}}
-                >
+                <div style={{ display: 'flex', alignItems: 'center' }}>
                   <ModalButton
                     variant="primary"
                     style={{ marginBottom: '10px' }}

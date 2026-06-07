@@ -23,13 +23,7 @@ beforeEach(() => {
 
 test('renders team progress on a tile', () => {
   render(
-    <BoardTile
-      cord={[0, 0]}
-      change={vi.fn()}
-      info={info}
-      teamInfo={teamInfo}
-      privilage="general"
-    />
+    <BoardTile cord={[0, 0]} change={vi.fn()} info={info} teamInfo={teamInfo} privilage="general" />
   );
 
   expect(screen.getByText('Boss task')).toBeInTheDocument();
@@ -38,13 +32,7 @@ test('renders team progress on a tile', () => {
 
 test('opens the tile modal when the tile is clicked', () => {
   render(
-    <BoardTile
-      cord={[0, 0]}
-      change={vi.fn()}
-      info={info}
-      teamInfo={teamInfo}
-      privilage="general"
-    />
+    <BoardTile cord={[0, 0]} change={vi.fn()} info={info} teamInfo={teamInfo} privilage="general" />
   );
 
   fireEvent.click(screen.getByText('Boss task'));

@@ -29,7 +29,9 @@
   text-shadow: 1px 1px 0 black;
   cursor: pointer;
   user-select: none;
-  transition: filter 0.13s ease, color 0.13s ease;
+  transition:
+    filter 0.13s ease,
+    color 0.13s ease;
   /* hide the real radio but keep it accessible */
 }
 

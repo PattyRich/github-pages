@@ -1,7 +1,7 @@
 import { useState } from 'react';
 //import { Link } from "react-router-dom";
 import { getStoredBool } from '../utils/utils';
-import './Teams.css';
+import Tabs from './ui/Tabs';
 
 const Teams = (props) => {
   const [key, setKey] = useState(props.activeTeam.data.name);
@@ -14,26 +14,24 @@ const Teams = (props) => {
     props.changeTeam(teamId);
     setKey(teamName);
   }
+
+  const items =
+    props.teams?.map((team) => {
+      const showPoints = !showTeamPoints && Number(team.pointTotal) !== 0;
+      return {
+        key: team.data.name,
+        label: `${team.data.name}${showPoints ? ': (' + team.pointTotal + ')' : ''}`,
+      };
+    }) || [];
+
   return (
-    <div className="team-tabs" role="tablist" aria-label="Teams">
-      {props.teams &&
-        props.teams.map((team, i) => {
-          const showPoints = !showTeamPoints && Number(team.pointTotal) !== 0;
-          const label = `${team.data.name}${showPoints ? ': (' + team.pointTotal + ')' : ''}`;
-          return (
-            <button
-              key={i}
-              type="button"
-              className={`team-tab ${key === team.data.name ? 'active' : ''}`}
-              role="tab"
-              aria-selected={key === team.data.name}
-              onClick={() => selectTeam(team.data.name)}
-            >
-              {label}
-            </button>
-          );
-        })}
-    </div>
+    <Tabs
+      className="team-tabs"
+      items={items}
+      activeKey={key}
+      onSelect={selectTeam}
+      ariaLabel="Teams"
+    />
   );
 };
 

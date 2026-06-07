@@ -44,7 +44,9 @@
   box-shadow: inset 0 0 0 1px var(--osrs-border-light);
   border-radius: var(--osrs-radius);
   text-shadow: 1px 1px 0 black;
-  transition: filter 0.15s ease, color 0.15s ease;
+  transition:
+    filter 0.15s ease,
+    color 0.15s ease;
 }
 
 .notfound-home:hover,

@@ -3,6 +3,7 @@ import Alert from './Alert';
 import EditableInput from './EditableInput';
 import { RangeField, SelectField, SwitchField } from './FormControls';
 import { ModalButton, ModalShell } from './ModalShell';
+import Tabs from './Tabs';
 import './EditTeams.css';
 
 const boardSizeOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -142,22 +143,14 @@ function EditTeams({
         ***NOTE removing teams or columns/rows will delete all their current data.
       </Alert>
 
-      <div className="et-tabs" role="tablist" aria-label="Edit board sections">
-        {tabs.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            id={`edit-teams-${tab.key}-tab`}
-            className={`et-tab ${state.activeTab === tab.key ? 'active' : ''}`}
-            role="tab"
-            aria-selected={state.activeTab === tab.key}
-            aria-controls={`edit-teams-${tab.key}-panel`}
-            onClick={() => setActiveTab(tab.key)}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
+      <Tabs
+        className="et-tabs"
+        items={tabs}
+        activeKey={state.activeTab}
+        onSelect={setActiveTab}
+        ariaLabel="Edit board sections"
+        idPrefix="edit-teams"
+      />
 
       {state.activeTab === 'board' && (
         <div

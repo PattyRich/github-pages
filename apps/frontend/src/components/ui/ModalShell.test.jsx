@@ -21,7 +21,11 @@ test('renders title, children, and footer', () => {
 
 test('calls onClose when the ✕ button is clicked', () => {
   const onClose = vi.fn();
-  render(<ModalShell title="Modal" onClose={onClose}><p>content</p></ModalShell>);
+  render(
+    <ModalShell title="Modal" onClose={onClose}>
+      <p>content</p>
+    </ModalShell>
+  );
   fireEvent.click(screen.getByRole('button', { name: 'Close' }));
   expect(onClose).toHaveBeenCalledOnce();
 });
@@ -29,7 +33,9 @@ test('calls onClose when the ✕ button is clicked', () => {
 test('calls onClose when the backdrop is clicked', () => {
   const onClose = vi.fn();
   const { container } = render(
-    <ModalShell title="Modal" onClose={onClose}><p>content</p></ModalShell>
+    <ModalShell title="Modal" onClose={onClose}>
+      <p>content</p>
+    </ModalShell>
   );
   fireEvent.mouseDown(container.querySelector('.osrs-modal-backdrop'));
   expect(onClose).toHaveBeenCalledOnce();
@@ -38,7 +44,9 @@ test('calls onClose when the backdrop is clicked', () => {
 test('does not call onClose when the panel itself is clicked', () => {
   const onClose = vi.fn();
   const { container } = render(
-    <ModalShell title="Modal" onClose={onClose}><p>content</p></ModalShell>
+    <ModalShell title="Modal" onClose={onClose}>
+      <p>content</p>
+    </ModalShell>
   );
   fireEvent.mouseDown(container.querySelector('.osrs-modal-panel'));
   expect(onClose).not.toHaveBeenCalled();
@@ -46,7 +54,11 @@ test('does not call onClose when the panel itself is clicked', () => {
 
 test('calls onClose when Escape is pressed', () => {
   const onClose = vi.fn();
-  render(<ModalShell title="Modal" onClose={onClose}><p>content</p></ModalShell>);
+  render(
+    <ModalShell title="Modal" onClose={onClose}>
+      <p>content</p>
+    </ModalShell>
+  );
   fireEvent.keyDown(window, { key: 'Escape' });
   expect(onClose).toHaveBeenCalledOnce();
 });

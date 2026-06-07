@@ -1,14 +1,15 @@
 import React from 'react';
 import Button from './ui/Button';
+import Surface from './ui/Surface';
 
 const Teams = (props) => {
   return (
-    <div className="recent-board-list">
+    <Surface className="recent-board-list" variant="glass">
       <h2 className="osrs-header">Recent Boards</h2>
       {props.recent &&
         props.recent.map((item, i) => {
           return (
-            <div key={i} className="recent-board-row">
+            <Surface key={i} className="recent-board-row" variant="recessed">
               <div className="recent-board-meta">
                 <strong>{item.boardName}</strong>
                 <span>{item.priv}</span>
@@ -21,10 +22,10 @@ const Teams = (props) => {
                   text="Remove"
                 />
               </div>
-            </div>
+            </Surface>
           );
         })}
-    </div>
+    </Surface>
   );
 };
 

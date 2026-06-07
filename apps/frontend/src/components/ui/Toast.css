@@ -10,15 +10,47 @@
 }
 
 /* ── Positions ── */
-.osrs-toast-pos--top-start    { top: 0; left: 0; }
-.osrs-toast-pos--top-center   { top: 0; left: 50%; transform: translateX(-50%); }
-.osrs-toast-pos--top-end      { top: 0; right: 0; }
-.osrs-toast-pos--middle-start { top: 50%; left: 0; transform: translateY(-50%); }
-.osrs-toast-pos--middle-center{ top: 50%; left: 50%; transform: translate(-50%, -50%); }
-.osrs-toast-pos--middle-end   { top: 50%; right: 0; transform: translateY(-50%); }
-.osrs-toast-pos--bottom-start { bottom: 0; left: 0; }
-.osrs-toast-pos--bottom-center{ bottom: 0; left: 50%; transform: translateX(-50%); }
-.osrs-toast-pos--bottom-end   { bottom: 0; right: 0; }
+.osrs-toast-pos--top-start {
+  top: 0;
+  left: 0;
+}
+.osrs-toast-pos--top-center {
+  top: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.osrs-toast-pos--top-end {
+  top: 0;
+  right: 0;
+}
+.osrs-toast-pos--middle-start {
+  top: 50%;
+  left: 0;
+  transform: translateY(-50%);
+}
+.osrs-toast-pos--middle-center {
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+.osrs-toast-pos--middle-end {
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+}
+.osrs-toast-pos--bottom-start {
+  bottom: 0;
+  left: 0;
+}
+.osrs-toast-pos--bottom-center {
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+}
+.osrs-toast-pos--bottom-end {
+  bottom: 0;
+  right: 0;
+}
 
 /* ── Toast panel ── */
 .osrs-toast {
@@ -37,8 +69,14 @@
 }
 
 @keyframes osrs-toast-in {
-  from { opacity: 0; transform: translateY(-6px); }
-  to   { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ── Header ── */
@@ -68,7 +106,9 @@
   padding: 0 0 0 10px;
   line-height: 1;
   opacity: 0.7;
-  transition: opacity 0.15s, color 0.15s;
+  transition:
+    opacity 0.15s,
+    color 0.15s;
 }
 
 .osrs-toast-close:hover {

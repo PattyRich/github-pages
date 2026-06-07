@@ -94,6 +94,7 @@
 
 /* Fixed to viewport corner so it never overlaps board content */
 .feedback {
+  appearance: none;
   position: fixed;
   right: 20px;
   bottom: 20px;

@@ -11,6 +11,7 @@
 }
 
 .start-menu {
+  appearance: none;
   height: clamp(140px, 35vh, 60vh);
   width: clamp(140px, 40vw, 600px);
   min-width: 140px;
@@ -18,6 +19,7 @@
   align-items: center;
   display: flex;
   cursor: pointer;
+  font: inherit;
   user-select: none;
   flex-direction: column;
   transition:
@@ -121,9 +123,6 @@
 
 .create-board-note,
 .create-layer-callout {
-  background: var(--osrs-bg-brown-dark);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
   color: var(--osrs-text-beige);
   text-shadow: 1px 1px 0 black;
   line-height: 1.5;
@@ -146,9 +145,6 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  background: var(--osrs-bg-brown-dark);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
   padding: 10px;
   text-align: center;
 }
@@ -214,9 +210,6 @@
   user-select: none;
   overflow-x: auto;
   max-width: 100%;
-  background: var(--osrs-bg-brown-dark);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
   padding: 12px;
   margin-top: 14px;
 }
@@ -370,21 +363,13 @@
   margin-top: 18px;
 }
 
-.start-menu,
-.osrs-container {
-  background: var(--osrs-glass-bg);
-}
-
 .create-board-shell,
 .join-board-shell {
-  background: var(--osrs-glass-bg-raised);
   padding: 22px;
 }
 
-.start-menu,
-.create-board-shell,
-.join-board-shell,
 .osrs-container {
+  background: var(--osrs-glass-bg);
   backdrop-filter: var(--osrs-glass-blur);
   -webkit-backdrop-filter: var(--osrs-glass-blur);
   border: 2px solid var(--osrs-border-dark);
@@ -397,10 +382,6 @@
 .create-board-panel,
 .join-board-panel,
 .recent-board-list {
-  background: rgba(43, 38, 30, 0.72);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
-  border-radius: var(--osrs-radius);
   padding: 18px;
 }
 
@@ -414,9 +395,6 @@
   justify-content: space-between;
   gap: 12px;
   align-items: center;
-  background: var(--osrs-bg-brown-dark);
-  border: 2px solid var(--osrs-border-dark);
-  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
   padding: 10px;
 }
 

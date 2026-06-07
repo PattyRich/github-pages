@@ -40,7 +40,10 @@
   border-radius: 0 var(--osrs-radius) var(--osrs-radius) 0 !important;
   outline: none !important;
   resize: none;
-  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    color 0.15s ease;
 }
 
 .editable-input .editable-input-field:focus {

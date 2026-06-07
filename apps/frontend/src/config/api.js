@@ -10,8 +10,7 @@ function trimLeadingSlash(value) {
 }
 
 export const API_BASE_URL = trimTrailingSlash(
-  import.meta.env.VITE_API_BASE_URL ||
-    (import.meta.env.DEV ? LOCAL_API_BASE : DEFAULT_API_BASE)
+  import.meta.env.VITE_API_BASE_URL || (import.meta.env.DEV ? LOCAL_API_BASE : DEFAULT_API_BASE)
 );
 
 export function apiUrl(path) {

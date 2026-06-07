@@ -18,9 +18,7 @@ test('renders no label when title is omitted', () => {
 });
 
 test('renders a textarea when textArea prop is set', () => {
-  const { container } = render(
-    <EditableInput title="Notes" textArea value="" change={vi.fn()} />
-  );
+  const { container } = render(<EditableInput title="Notes" textArea value="" change={vi.fn()} />);
   expect(container.querySelector('textarea')).toBeInTheDocument();
   expect(container.querySelector('input')).toBeNull();
 });
@@ -47,9 +45,7 @@ test('does not call enterAction when another key is pressed', () => {
 });
 
 test('disables the input and adds disabled class', () => {
-  const { container } = render(
-    <EditableInput title="Name" value="" change={vi.fn()} disabled />
-  );
+  const { container } = render(<EditableInput title="Name" value="" change={vi.fn()} disabled />);
   expect(screen.getByRole('textbox')).toBeDisabled();
   expect(container.querySelector('.editable-input--disabled')).toBeInTheDocument();
 });
@@ -62,8 +58,6 @@ test('applies inline width style when width prop is provided', () => {
 });
 
 test('renders placeholder text', () => {
-  render(
-    <EditableInput title="Name" value="" change={vi.fn()} placeholder="Enter board name" />
-  );
+  render(<EditableInput title="Name" value="" change={vi.fn()} placeholder="Enter board name" />);
   expect(screen.getByPlaceholderText('Enter board name')).toBeInTheDocument();
 });

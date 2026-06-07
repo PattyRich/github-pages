@@ -4,6 +4,8 @@ import './bingo.css';
 import BoardTile from '../components/BoardTile';
 import EditableInput from '../components/ui/EditableInput';
 import Button from '../components/ui/Button';
+import AlertBanner from '../components/ui/AlertBanner';
+import Surface from '../components/ui/Surface';
 
 import { fetchGet, fetchPost, addToRecent } from '../utils/utils';
 import { useNavigate } from 'react-router-dom';
@@ -184,23 +186,33 @@ function Bingo({ screenSkip }) {
 
   return (
     <>
-      {state.alert && (
-        <div className={`osrs-alert-banner alert-${state.alertVariant}`}>{state.alert}</div>
-      )}
+      {state.alert && <AlertBanner variant={state.alertVariant}>{state.alert}</AlertBanner>}
       {/* {state.showToast && <Toast variant="danger" message={'uh ohohhh'} />} */}
       {state.screen === 1 && (
         <div className="start-screen">
-          <div className="start-menu" onClick={() => navigate('/bingo/create')}>
+          <Surface
+            as="button"
+            type="button"
+            className="start-menu"
+            variant="glass"
+            onClick={() => navigate('/bingo/create')}
+          >
             <h1 className="osrs-header">Create Bingo Board</h1>
-          </div>
-          <div className="start-menu" onClick={() => navigate('/bingo/join')}>
+          </Surface>
+          <Surface
+            as="button"
+            type="button"
+            className="start-menu"
+            variant="glass"
+            onClick={() => navigate('/bingo/join')}
+          >
             <h1 className="osrs-header">Join Bingo Board</h1>
-          </div>
+          </Surface>
         </div>
       )}
       {state.screen === 2 && (
         <div className="create-menu">
-          <div className="create-board-shell">
+          <Surface className="create-board-shell" variant="raised">
             <div className="create-board-header">
               <div>
                 <h1 className="osrs-header">Create Bingo Board</h1>
@@ -213,7 +225,7 @@ function Bingo({ screenSkip }) {
             </div>
 
             <div className="create-board-grid">
-              <section className="create-board-panel">
+              <Surface as="section" className="create-board-panel" variant="glass">
                 <h2 className="osrs-header">Board Details</h2>
                 <p className="create-board-copy">
                   Pick a board name and casual access words for your clan. Do not use "real"
@@ -237,22 +249,22 @@ function Bingo({ screenSkip }) {
                   change={inputState}
                   value={state.generalPassword}
                 />
-                <div className="create-board-note">
+                <Surface className="create-board-note" variant="recessed">
                   <strong>Admin:</strong> edit tiles, points, images, teams, board size, and layered
                   rows.
                   <br />
                   <strong>General:</strong> submit team proof and mark revealed tiles complete.
-                </div>
-              </section>
+                </Surface>
+              </Surface>
 
-              <section className="create-board-panel">
+              <Surface as="section" className="create-board-panel" variant="glass">
                 <h2 className="osrs-header">Event Shape</h2>
                 <p className="create-board-copy">
                   Start with the rough shape. You can resize later, but shrinking removes saved row,
                   column, or team data.
                 </p>
                 <div className="create-stepper-grid">
-                  <div className="create-stepper">
+                  <Surface className="create-stepper" variant="recessed">
                     <span>Rows</span>
                     <div>
                       <Button click={() => changeNum(-1, 'columns')} text="-"></Button>
@@ -260,8 +272,8 @@ function Bingo({ screenSkip }) {
                       <Button click={() => changeNum(1, 'columns')} text="+"></Button>
                     </div>
                     <small>up and down</small>
-                  </div>
-                  <div className="create-stepper">
+                  </Surface>
+                  <Surface className="create-stepper" variant="recessed">
                     <span>Columns</span>
                     <div>
                       <Button click={() => changeNum(-1, 'rows')} text="-"></Button>
@@ -269,8 +281,8 @@ function Bingo({ screenSkip }) {
                       <Button click={() => changeNum(1, 'rows')} text="+"></Button>
                     </div>
                     <small>left and right</small>
-                  </div>
-                  <div className="create-stepper">
+                  </Surface>
+                  <Surface className="create-stepper" variant="recessed">
                     <span>Teams</span>
                     <div>
                       <Button click={() => changeNum(-1, 'teams')} text="-"></Button>
@@ -278,18 +290,18 @@ function Bingo({ screenSkip }) {
                       <Button click={() => changeNum(1, 'teams')} text="+"></Button>
                     </div>
                     <small>competing groups</small>
-                  </div>
+                  </Surface>
                 </div>
 
-                <div className="create-layer-callout">
+                <Surface className="create-layer-callout" variant="recessed">
                   <h3 className="osrs-header">Layered boards</h3>
                   <p>
                     After creation, admins can reveal only the first few rows to general users, then
                     unlock more rows as the event progresses.
                   </p>
-                </div>
+                </Surface>
 
-                <div className="create-board-preview">
+                <Surface className="create-board-preview" variant="recessed">
                   {[...Array(state.columns)].map((_x, i) => (
                     <span key={i} className="flex">
                       {[...Array(state.rows)].map((_x, j) => (
@@ -303,19 +315,19 @@ function Bingo({ screenSkip }) {
                       ))}
                     </span>
                   ))}
-                </div>
-              </section>
+                </Surface>
+              </Surface>
             </div>
 
             <div className="create-board-actions">
               <Button variant="success" click={continueCreate} text="Create Board"></Button>
             </div>
-          </div>
+          </Surface>
         </div>
       )}
       {state.screen === 4 && (
         <div className="join-wrapper">
-          <div className="join-board-shell">
+          <Surface className="join-board-shell" variant="raised">
             <div className="join-board-header">
               <div>
                 <h1 className="osrs-header">Join Bingo Board</h1>
@@ -325,7 +337,7 @@ function Bingo({ screenSkip }) {
             </div>
 
             <div className="join-board-grid">
-              <section className="join-board-panel">
+              <Surface as="section" className="join-board-panel" variant="glass">
                 <h2 className="osrs-header">Access</h2>
                 <EditableInput
                   id="boardName"
@@ -364,9 +376,9 @@ function Bingo({ screenSkip }) {
                 <div className="join-board-actions">
                   <Button variant="success" click={auth} text="Join Board"></Button>
                 </div>
-              </section>
+              </Surface>
 
-              <section className="join-board-panel join-board-help">
+              <Surface as="section" className="join-board-panel join-board-help" variant="glass">
                 <h2 className="osrs-header">What You Need</h2>
                 <ul>
                   <li>
@@ -383,13 +395,13 @@ function Bingo({ screenSkip }) {
                   Layered boards may reveal only part of the board at first. More rows unlock when
                   an admin opens them.
                 </p>
-              </section>
+              </Surface>
             </div>
 
             {state.recentBoards && state.recentBoards.length > 0 && (
               <RecentBoards click={auth} removeRecent={removeRecent} recent={state.recentBoards} />
             )}
-          </div>
+          </Surface>
         </div>
       )}
     </>
