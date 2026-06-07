@@ -26,7 +26,7 @@ export default function ProofImageGrid({
             className="proof-upload-btn"
             onClick={() => inputRef?.current?.click()}
           >
-            Upload Proof Image
+           📸 Upload Proof Image
           </Button>
         ) : (
           <small className="proof-upload-limit">Max {maxImages} images reached</small>
