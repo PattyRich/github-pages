@@ -1,33 +1,57 @@
-import React from 'react';
-//import { Link } from "react-router-dom";
-import Toast from 'react-bootstrap/Toast';
-import ToastContainer from 'react-bootstrap/ToastContainer';
+import { useEffect, useRef } from 'react';
+import './Toast.css';
 
-class ToastCls extends React.Component {
-  constructor(props) {
-    super(props);
-    this.state = {};
-  }
+/**
+ * OSRS-styled toast notification — drop-in replacement for the Bootstrap version.
+ *
+ * Props (unchanged from old component):
+ *   title     {string}
+ *   message   {string}
+ *   variant   {string}  'info' | 'success' | 'danger' | 'warning'
+ *   position  {string}  Bootstrap position string e.g. 'top-end', 'middle-center'
+ *   timeout   {number}  ms before auto-close (default 6000)
+ *   onClose   {fn}
+ */
+export default function Toast({ title, message, variant = 'info', position = 'top-end', timeout = 6000, onClose }) {
+  const timerRef = useRef(null);
 
-  render() {
-    return (
-      <ToastContainer className="p-3" position={this.props.position}>
-        <Toast
-          onClose={this.props.onClose}
-          className={`d-inline-block m-1 osrs-toast-${this.props.variant || 'info'}`}
-          autohide
-          delay={this.props.timeout || 6000}
-        >
-          <Toast.Header>
-            <strong className="me-auto">{this.props.title}</strong>
-          </Toast.Header>
-          <Toast.Body className={this.props.variant === 'Dark' && 'text-white'}>
-            {this.props.message}
-          </Toast.Body>
-        </Toast>
-      </ToastContainer>
-    );
-  }
+  useEffect(() => {
+    timerRef.current = setTimeout(() => {
+      onClose?.();
+    }, timeout);
+    return () => clearTimeout(timerRef.current);
+  }, [timeout, onClose]);
+
+  return (
+    <div className={`osrs-toast-container osrs-toast-pos--${normalizePosition(position)}`}>
+      <div className={`osrs-toast osrs-toast-${variant}`} role="alert" aria-live="polite">
+        <div className="osrs-toast-header">
+          <span className="osrs-toast-title">{title}</span>
+          <button
+            className="osrs-toast-close"
+            onClick={onClose}
+            aria-label="Close notification"
+          >
+            ✕
+          </button>
+        </div>
+        <div className="osrs-toast-body">{message}</div>
+      </div>
+    </div>
+  );
 }
 
-export default ToastCls;
+function normalizePosition(pos) {
+  const map = {
+    'top-start':      'top-start',
+    'top-center':     'top-center',
+    'top-end':        'top-end',
+    'middle-start':   'middle-start',
+    'middle-center':  'middle-center',
+    'middle-end':     'middle-end',
+    'bottom-start':   'bottom-start',
+    'bottom-center':  'bottom-center',
+    'bottom-end':     'bottom-end',
+  };
+  return map[pos] ?? 'top-end';
+}

@@ -1,0 +1,177 @@
+.tm-points-group {
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 1rem;
+}
+
+.tm-input-addon,
+.tm-points-input {
+  min-height: 34px;
+}
+
+.tm-input-addon {
+  display: flex;
+  align-items: center;
+  padding: 4px 10px;
+  color: var(--osrs-text-beige);
+  background-color: var(--osrs-bg-brown-dark);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.tm-input-addon + .tm-points-input,
+.tm-points-input + .tm-input-addon {
+  border-left: 0 !important;
+}
+
+.tm-points-input {
+  min-width: 0;
+  flex: 1;
+  padding: 4px 8px;
+  color: var(--osrs-text-beige);
+  background-color: var(--osrs-bg-brown-dark);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7);
+  border-radius: 0 !important;
+}
+
+.tm-points-input:disabled {
+  color: #b0a188;
+  background-color: #2a241c;
+  border-color: #17130f;
+  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.78);
+  opacity: 0.82;
+}
+
+.tm-points-group:has(.tm-points-input:disabled) .tm-input-addon {
+  color: #b0a188;
+  background-color: #342d23;
+  border-color: #17130f;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.58);
+  opacity: 0.82;
+}
+
+.tm-proof-upload-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+.tm-proof-upload-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  margin-bottom: 5px;
+}
+
+.tm-suggestion-list {
+  margin: 0;
+  padding-left: 0;
+  list-style: none;
+}
+
+.tm-suggestion-item {
+  display: block;
+  padding: 8px 10px;
+  color: var(--osrs-text-normal);
+  background-color: var(--osrs-bg-inventory);
+  border: 1px solid var(--osrs-border-dark);
+  cursor: pointer;
+}
+
+.tm-suggestion-item:hover {
+  color: var(--osrs-text-gold);
+  background-color: var(--osrs-bg-brown);
+}
+
+.tm-suggestion-item:focus-visible {
+  color: var(--osrs-text-gold) !important;
+  outline: 2px solid var(--osrs-border-light);
+  outline-offset: -2px;
+}
+
+.tm-check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.tm-check-label {
+  color: var(--osrs-text-gold);
+  font-weight: bold;
+}
+
+.tm-check-input {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  background: var(--osrs-bg-inventory);
+  border: 2px solid var(--osrs-border-dark) !important;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light) !important;
+  cursor: pointer;
+  position: relative;
+  transition: background 0.13s ease;
+}
+
+.tm-check-input:checked {
+  background: #24461a;
+  border-color: var(--osrs-border-dark) !important;
+}
+
+.tm-check-input:checked::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20'%3e%3cpath fill='none' stroke='%23fffac9' stroke-linecap='round' stroke-linejoin='round' stroke-width='3' d='m4 10 4 4 8-8'/%3e%3c/svg%3e");
+  background-size: contain;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.tm-check-input:focus-visible {
+  outline: 2px solid var(--osrs-border-light);
+  outline-offset: 2px;
+}
+
+.tm-spinner {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  margin: 8px 0;
+}
+
+.tm-spinner-ring {
+  width: 26px;
+  height: 26px;
+  border: 3px solid var(--osrs-border-light);
+  border-top-color: var(--osrs-text-gold);
+  border-radius: 50%;
+  animation: tm-spin 800ms linear infinite;
+}
+
+.tm-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+@keyframes tm-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

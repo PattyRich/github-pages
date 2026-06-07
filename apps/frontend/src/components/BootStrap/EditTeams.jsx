@@ -1,17 +1,25 @@
 import { useState } from 'react';
-import Button from 'react-bootstrap/Button';
-import BSButton from './Button';
-import Modal from 'react-bootstrap/Modal';
 import EditableInput from './EditableInput';
-import Alert from 'react-bootstrap/Alert';
-import Form from 'react-bootstrap/Form';
-import Tab from 'react-bootstrap/Tab';
-import Tabs from 'react-bootstrap/Tabs';
+import { ModalButton, ModalShell } from './ModalShell';
 import './EditTeams.css';
 
 const boardSizeOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
+const tabs = [
+  { key: 'board', label: 'Board' },
+  { key: 'teams', label: 'Teams' },
+  { key: 'access', label: 'Access' },
+];
 
-function EditTeams({ show, handleClose, handleSave, teams, passwordRequired, rows, columns, visibleRows }) {
+function EditTeams({
+  show,
+  handleClose,
+  handleSave,
+  teams,
+  passwordRequired,
+  rows,
+  columns,
+  visibleRows,
+}) {
   const [state, setState] = useState(() => {
     const rowCount = Number(rows);
     const columnCount = Number(columns);
@@ -106,154 +114,195 @@ function EditTeams({ show, handleClose, handleSave, teams, passwordRequired, row
     }));
   }
 
+  function setActiveTab(activeTab) {
+    setState((currentState) => ({ ...currentState, activeTab }));
+  }
+
   return (
-    <Modal
+    <ModalShell
       show={show}
-      onHide={handleClose}
-      size="lg"
-      aria-labelledby="contained-modal-title-vcenter"
-      centered
+      titleId="edit-teams-title"
+      title="Edit Board"
+      onClose={handleClose}
+      maxWidth="800px"
+      footer={
+        <>
+          <ModalButton variant="danger" onClick={handleClose}>
+            Close
+          </ModalButton>
+          <ModalButton variant="success" onClick={save}>
+            Save
+          </ModalButton>
+        </>
+      }
     >
-      <Modal.Header closeButton>
-        <Modal.Title id="contained-modal-title-vcenter">Edit Board</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        <Alert variant={'danger'}>
-          ***NOTE removing teams or columns/rows will delete all their current data.
-        </Alert>
-        <Tabs
-          activeKey={state.activeTab}
-          onSelect={(key) => setState((currentState) => ({ ...currentState, activeTab: key }))}
-          variant="pills"
-          className="mb-3"
+      <div className="alert alert-danger">
+        ***NOTE removing teams or columns/rows will delete all their current data.
+      </div>
+
+      <div className="et-tabs" role="tablist" aria-label="Edit board sections">
+        {tabs.map((tab) => (
+          <button
+            key={tab.key}
+            type="button"
+            id={`edit-teams-${tab.key}-tab`}
+            className={`et-tab ${state.activeTab === tab.key ? 'active' : ''}`}
+            role="tab"
+            aria-selected={state.activeTab === tab.key}
+            aria-controls={`edit-teams-${tab.key}-panel`}
+            onClick={() => setActiveTab(tab.key)}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {state.activeTab === 'board' && (
+        <div
+          id="edit-teams-board-panel"
+          role="tabpanel"
+          aria-labelledby="edit-teams-board-tab"
+          className="et-tab-panel"
         >
-          <Tab eventKey="board" title="Board">
-            <div className="edit-board-layout">
-              <div>
-                <div className="edit-board-size-grid">
-                  <Form.Group>
-                    <Form.Label>Rows (up and down)</Form.Label>
-                    <Form.Select
-                      onChange={(e) => {
-                        inputState(e, 'columns');
-                      }}
-                      value={state.columns}
-                    >
-                      {boardSizeOptions.map((num) => (
-                        <option key={num} value={num}>
-                          {num}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
-                  <Form.Group>
-                    <Form.Label>Columns (left and right)</Form.Label>
-                    <Form.Select
-                      onChange={(e) => {
-                        inputState(e, 'rows');
-                      }}
-                      value={state.rows}
-                    >
-                      {boardSizeOptions.map((num) => (
-                        <option key={num} value={num}>
-                          {num}
-                        </option>
-                      ))}
-                    </Form.Select>
-                  </Form.Group>
+          <div className="edit-board-layout">
+            <div>
+              <div className="edit-board-size-grid">
+                <label className="et-field">
+                  <span className="et-label">Rows (up and down)</span>
+                  <select
+                    className="et-select"
+                    onChange={(e) => {
+                      inputState(e, 'columns');
+                    }}
+                    value={state.columns}
+                  >
+                    {boardSizeOptions.map((num) => (
+                      <option key={num} value={num}>
+                        {num}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label className="et-field">
+                  <span className="et-label">Columns (left and right)</span>
+                  <select
+                    className="et-select"
+                    onChange={(e) => {
+                      inputState(e, 'rows');
+                    }}
+                    value={state.rows}
+                  >
+                    {boardSizeOptions.map((num) => (
+                      <option key={num} value={num}>
+                        {num}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              </div>
+              <SwitchField
+                id="layered-board-switch"
+                label="Layered board"
+                onChange={toggleLayeredBoard}
+                checked={state.layeredBoard}
+              />
+              <div className={`layer-control ${state.layeredBoard ? '' : 'is-disabled'}`}>
+                <div className="et-label">
+                  Visible rows: {state.layeredBoard ? state.visibleRows : state.columns} /{' '}
+                  {state.columns}
                 </div>
-                <Form.Check
-                  type="switch"
-                  id="layered-board-switch"
-                  label="Layered board"
-                  onChange={toggleLayeredBoard}
-                  checked={state.layeredBoard}
+                <input
+                  className="et-range"
+                  type="range"
+                  min={1}
+                  max={state.columns}
+                  value={state.layeredBoard ? state.visibleRows : state.columns}
+                  disabled={!state.layeredBoard}
+                  onChange={(e) => inputState(e, 'visibleRows')}
                 />
-                <div className={`layer-control ${state.layeredBoard ? '' : 'is-disabled'}`}>
-                  <Form.Label>
-                    Visible rows: {state.layeredBoard ? state.visibleRows : state.columns} /{' '}
-                    {state.columns}
-                  </Form.Label>
-                  <Form.Range
-                    min={1}
-                    max={state.columns}
-                    value={state.layeredBoard ? state.visibleRows : state.columns}
-                    disabled={!state.layeredBoard}
-                    onChange={(e) => inputState(e, 'visibleRows')}
-                  />
-                  <div className="layer-help">
-                    General users can only see tile details and submit proof for revealed rows.
-                    Admins can still edit the full board.
-                  </div>
+                <div className="layer-help">
+                  General users can only see tile details and submit proof for revealed rows. Admins
+                  can still edit the full board.
                 </div>
               </div>
-              <LayerPreview
-                rows={state.columns}
-                columns={state.rows}
-                visibleRows={state.layeredBoard ? state.visibleRows : state.columns}
-              />
             </div>
-          </Tab>
-          <Tab eventKey="teams" title="Teams">
-            <div className="flex-center edit-team-count">
-              <BSButton click={removeTeam} text="-"></BSButton>
-              <strong># of Teams: {state.teams.length}</strong>
-              <BSButton click={addTeam} text="+"></BSButton>
+            <LayerPreview
+              rows={state.columns}
+              columns={state.rows}
+              visibleRows={state.layeredBoard ? state.visibleRows : state.columns}
+            />
+          </div>
+        </div>
+      )}
+
+      {state.activeTab === 'teams' && (
+        <div
+          id="edit-teams-teams-panel"
+          role="tabpanel"
+          aria-labelledby="edit-teams-teams-tab"
+          className="et-tab-panel"
+        >
+          <div className="flex-center edit-team-count">
+            <ModalButton variant="secondary" size="small" onClick={removeTeam}>
+              -
+            </ModalButton>
+            <strong># of Teams: {state.teams.length}</strong>
+            <ModalButton variant="secondary" size="small" onClick={addTeam}>
+              +
+            </ModalButton>
+          </div>
+          {state.teams.map((team, i) => (
+            <EditableInput
+              key={i}
+              title={`Team ${i + 1}`}
+              change={(e) => editName(e, i)}
+              value={team.data.name}
+            />
+          ))}
+        </div>
+      )}
+
+      {state.activeTab === 'access' && (
+        <div
+          id="edit-teams-access-panel"
+          role="tabpanel"
+          aria-labelledby="edit-teams-access-tab"
+          className="et-tab-panel"
+        >
+          <div style={{ marginBottom: '15px' }}>
+            <SwitchField
+              id="custom-switch"
+              label="Require teams to enter a password to make edits?"
+              onChange={() =>
+                setState((currentState) => ({
+                  ...currentState,
+                  passwordRequired: !currentState.passwordRequired,
+                }))
+              }
+              checked={state.passwordRequired}
+            />
+          </div>
+          {state.passwordRequired ? (
+            state.teams.map((team, i) => {
+              const password = team.data.password || '';
+              return (
+                <EditableInput
+                  key={i}
+                  title={`${team.data.name}'s password`}
+                  change={(e) => editPassword(e, i)}
+                  value={password}
+                />
+              );
+            })
+          ) : (
+            <div className="alert alert-primary">
+              Team passwords are off. Anyone with the general board password can submit proof for
+              any team.
             </div>
-            {state.teams.map((team, i) => (
-              <EditableInput
-                key={i}
-                title={`Team ${i + 1}`}
-                change={(e) => editName(e, i)}
-                value={team.data.name}
-              />
-            ))}
-          </Tab>
-          <Tab eventKey="access" title="Access">
-            <div style={{ marginBottom: '15px' }}>
-              <Form.Check
-                type="switch"
-                id="custom-switch"
-                label="Require teams to enter a password to make edits?"
-                onChange={() =>
-                  setState((currentState) => ({
-                    ...currentState,
-                    passwordRequired: !currentState.passwordRequired,
-                  }))
-                }
-                checked={state.passwordRequired}
-              />
-            </div>
-            {state.passwordRequired ? (
-              state.teams.map((team, i) => {
-                const password = team.data.password || '';
-                return (
-                  <EditableInput
-                    key={i}
-                    title={`${team.data.name}'s password`}
-                    change={(e) => editPassword(e, i)}
-                    value={password}
-                  />
-                );
-              })
-            ) : (
-              <Alert variant="primary">
-                Team passwords are off. Anyone with the general board password can submit proof for
-                any team.
-              </Alert>
-            )}
-          </Tab>
-        </Tabs>
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="danger" onClick={handleClose}>
-          Close
-        </Button>
-        <Button variant="success" onClick={save}>
-          Save
-        </Button>
-      </Modal.Footer>
-    </Modal>
+          )}
+        </div>
+      )}
+    </ModalShell>
   );
 }
 
@@ -268,6 +317,22 @@ function clampVisibleRows(value, rows) {
     return rows;
   }
   return Math.max(1, Math.min(parsed, rows));
+}
+
+function SwitchField({ id, label, checked, onChange }) {
+  return (
+    <label className="et-switch" htmlFor={id}>
+      <input
+        id={id}
+        className="et-switch-input"
+        type="checkbox"
+        checked={checked}
+        onChange={onChange}
+      />
+      <span className="et-switch-control" aria-hidden="true" />
+      <span className="et-switch-label">{label}</span>
+    </label>
+  );
 }
 
 function LayerPreview({ rows, columns, visibleRows }) {

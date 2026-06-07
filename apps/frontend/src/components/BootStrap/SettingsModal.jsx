@@ -1,7 +1,7 @@
 import { useState } from 'react';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
 import { getStoredBool, setStoredBool } from '../../utils/utils';
+import { ModalButton, ModalShell } from './ModalShell';
+import './SettingsModal.css';
 
 const SETTINGS_KEYS = [
   { key: 'completeStyle', label: 'Use alternative tile complete style?' },
@@ -23,31 +23,29 @@ export default function SettingsModal({ handleClose }) {
   }
 
   return (
-    <Modal show onHide={handleClose} size="lg" aria-labelledby="settings-modal-title" centered>
-      <Modal.Header closeButton>
-        <Modal.Title id="settings-modal-title">Settings</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {SETTINGS_KEYS.map(({ key, label }, i) => (
-          <div key={key} className="form-check" style={{ marginTop: '15px' }}>
-            <input
-              className="form-check-input"
-              type="checkbox"
-              id={`setting-${i}`}
-              checked={settings[key]}
-              onChange={() => toggle(key)}
-            />
-            <label className="form-check-label" htmlFor={`setting-${i}`}>
-              {label}
-            </label>
-          </div>
-        ))}
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="danger" onClick={handleClose}>
+    <ModalShell
+      title="Settings"
+      titleId="settings-modal-title"
+      onClose={handleClose}
+      maxWidth="480px"
+      footer={
+        <ModalButton variant="danger" onClick={handleClose}>
           Close
-        </Button>
-      </Modal.Footer>
-    </Modal>
+        </ModalButton>
+      }
+    >
+      {SETTINGS_KEYS.map(({ key, label }, i) => (
+        <label key={key} className="sm-row" htmlFor={`setting-${i}`}>
+          <input
+            className="sm-checkbox"
+            type="checkbox"
+            id={`setting-${i}`}
+            checked={settings[key]}
+            onChange={() => toggle(key)}
+          />
+          <span className="sm-label">{label}</span>
+        </label>
+      ))}
+    </ModalShell>
   );
 }

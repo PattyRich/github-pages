@@ -1,73 +1,60 @@
 import { useState } from 'react';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
-import InputGroup from 'react-bootstrap/InputGroup';
-import FormControl from 'react-bootstrap/FormControl';
 import { fetchPost } from '../../utils/utils';
+import EditableInput from './EditableInput';
+import { ModalButton, ModalShell } from './ModalShell';
+import './FeedbackModal.css';
 
 const FeedbackModal = ({ handleClose }) => {
   const [feedback, setFeedback] = useState('');
   const [sent, setSent] = useState(false);
 
   function sendMessage(message) {
-    fetchPost('feedback', { message: message });
+    fetchPost('feedback', { message });
     setSent(true);
   }
 
   return (
-    <Modal
-      show={true}
-      onHide={handleClose}
-      size="lg"
-      aria-labelledby="contained-modal-title-vcenter"
-      centered
+    <ModalShell
+      title="Feedback"
+      titleId="feedback-modal-title"
+      onClose={handleClose}
+      maxWidth="620px"
+      footer={
+        <>
+          <ModalButton variant="danger" onClick={handleClose}>
+            Close
+          </ModalButton>
+          {!sent && (
+            <ModalButton
+              variant="success"
+              disabled={feedback.length === 0}
+              onClick={() => sendMessage(feedback)}
+            >
+              Send
+            </ModalButton>
+          )}
+        </>
+      }
     >
-      <Modal.Header closeButton>
-        <Modal.Title id="contained-modal-title-vcenter">Feedback</Modal.Title>
-      </Modal.Header>
-      <Modal.Body>
-        {sent ? (
-          <>
-            <h1> Thanks! </h1>
-            <div style={{ marginBottom: '10px' }}>
-              {' '}
-              If you want to talk to me directly my in game name is Praynr or Praynyr I may be
-              on!{' '}
-            </div>
-          </>
-        ) : (
-          <>
-            <div style={{ marginBottom: '10px' }}>
-              {' '}
-              What can I do take make the website better?{' '}
-            </div>
-            <InputGroup className="mb-3">
-              <InputGroup.Text>Feedback</InputGroup.Text>
-              <FormControl
-                as="textarea"
-                aria-label="With textarea"
-                value={feedback}
-                onChange={(e) => setFeedback(e.target.value)}
-              />
-            </InputGroup>
-          </>
-        )}
-      </Modal.Body>
-      <Modal.Footer>
-        <Button variant="danger" onClick={handleClose}>
-          Close
-        </Button>
-        {!sent && (
-          <Button
-            disabled={feedback.length === 0}
-            variant="success"
-            onClick={() => sendMessage(feedback)}
-          >
-            Send
-          </Button>
-        )}
-      </Modal.Footer>
-    </Modal>
+      {sent ? (
+        <>
+          <p className="fm-thanks osrs-header">Thanks!</p>
+          <p className="fm-note">
+            If you want to talk to me directly my in game name is Praynr or Praynyr - I may be on!
+          </p>
+        </>
+      ) : (
+        <>
+          <p className="fm-prompt">What can I do to make the website better?</p>
+          <EditableInput
+            title="Feedback"
+            textArea
+            value={feedback}
+            change={(e) => setFeedback(e.target.value)}
+          />
+        </>
+      )}
+    </ModalShell>
   );
 };
 

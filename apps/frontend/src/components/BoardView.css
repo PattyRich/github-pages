@@ -48,6 +48,27 @@
   align-items: center;
 }
 
+.board-team-summary {
+  display: grid;
+  grid-template-columns: 1fr auto auto 1fr;
+  align-items: center;
+  column-gap: 10px;
+  width: 100%;
+  margin-top: 10px;
+  text-align: center;
+}
+
+.board-team-name {
+  grid-column: 2;
+  margin: 0;
+  font-size: 1.75rem;
+}
+
+.board-team-points {
+  grid-column: 3;
+  font-size: 1.2rem;
+}
+
 .bingo-edit {
   display: flex;
   flex-wrap: wrap;
@@ -65,10 +86,6 @@
 }
 .green-bg-dark {
   background-image: linear-gradient(to top, rgba(0, 80, 0, 0.6) var(--bgHeight), transparent 0%);
-}
-
-.form-check-label {
-  cursor: pointer;
 }
 
 .recent-boards {
@@ -100,4 +117,41 @@
 .feedback:hover {
   filter: brightness(1.2);
   color: var(--osrs-text-gold);
+}
+
+.mobile-only-title {
+  display: none;
+}
+
+@media (max-width: 820px) {
+  .top-bar-container {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+
+  .flex-wrapper-create .title-bar {
+    display: none;
+  }
+
+  .flex-wrapper-create .settings-bar {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .bingo-edit {
+    justify-content: center;
+    width: 100%;
+  }
+
+  .mobile-only-title {
+    display: block;
+    margin: 0 0 10px;
+    font-family: 'osrsFont', sans-serif;
+    color: var(--osrs-text-gold);
+    text-shadow: 1px 1px 0px black;
+    font-size: 1.5rem;
+    width: 100%;
+    text-align: center;
+  }
 }

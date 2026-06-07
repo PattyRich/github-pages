@@ -1,15 +1,15 @@
-import Button from 'react-bootstrap/Button';
-
 export default function BSButton({ style, disabled, click, variant, text }) {
+  const variantClass = variant ? `osrs-btn--${variant.replace('outline-', '')}` : '';
+
   return (
-    <Button
+    <button
+      type="button"
       style={style}
       disabled={disabled}
       onClick={click}
-      variant={variant || 'outline-secondary'}
-      className="osrs-btn"
+      className={`osrs-btn ${variantClass}`.trim()}
     >
       {text}
-    </Button>
+    </button>
   );
 }

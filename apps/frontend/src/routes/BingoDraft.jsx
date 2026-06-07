@@ -8,7 +8,6 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Dustbin } from '../components/DND/Dustbin';
 import { Box } from '../components/DND/Box';
 import Toast from '../components/BootStrap/Toast';
-import Alert from 'react-bootstrap/Alert';
 
 class BingoDraft extends React.Component {
   constructor(props) {
@@ -210,10 +209,10 @@ class BingoDraft extends React.Component {
           </div>
           {this.state.editMode ? (
             <div className="flex-center" style={{ flexDirection: 'column', alignItems: 'center' }}>
-              <Alert variant={'primary'}>
+              <div className="alert alert-primary">
                 Add player names with a comma seperating them, then get out of edit mode. Drag and
                 drop players to their team for bingo drafts!
-              </Alert>
+              </div>
               <EditableInput
                 stateKey="players"
                 change={this.inputState}

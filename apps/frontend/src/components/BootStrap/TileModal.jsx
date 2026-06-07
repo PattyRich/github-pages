@@ -1,12 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import Button from 'react-bootstrap/Button';
-import Modal from 'react-bootstrap/Modal';
 import EditableInput from './EditableInput';
-import InputGroup from 'react-bootstrap/InputGroup';
-import FormControl from 'react-bootstrap/FormControl';
-import Alert from 'react-bootstrap/Alert';
-import ListGroup from 'react-bootstrap/ListGroup';
-import Spinner from 'react-bootstrap/Spinner';
+import { ModalButton, ModalShell } from './ModalShell';
+import './TileModal.css';
 
 const NUM_INPUTS = ['points', 'currPoints', 'rowBingo', 'colBingo'];
 const tileImages = import.meta.glob('../../assets/*.png', { eager: true, import: 'default' });
@@ -109,6 +104,9 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
   useEffect(() => {
     function handleKeyDown(e) {
       if (stateRef.current.lightboxIndex === null) return;
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Escape') {
+        e.stopPropagation();
+      }
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
         const direction = e.key === 'ArrowLeft' ? -1 : 1;
         setState((currentState) => {
@@ -133,9 +131,9 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
       }
     }
 
-    window.addEventListener('keydown', handleKeyDown);
+    window.addEventListener('keydown', handleKeyDown, true);
     return () => {
-      window.removeEventListener('keydown', handleKeyDown);
+      window.removeEventListener('keydown', handleKeyDown, true);
     };
   }, []);
 
@@ -260,402 +258,425 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
   const isGeneral = !isAdmin;
   const showRowBonus = br && (isAdmin || Number(state.rowBingo) !== 0);
   const showColumnBonus = bb && (isAdmin || Number(state.colBingo) !== 0);
-  console.log(showColumnBonus)
+
+  const modalTitle = !state.chooseImage ? (
+    isAdmin ? (
+      <EditableInput value={state.title} stateKey="title" change={inputState} title="Title" />
+    ) : (
+      <h2>{state.title || 'Info'}</h2>
+    )
+  ) : (
+    <h3>Set Tile Background Image</h3>
+  );
 
   return (
-    <Modal
+    <ModalShell
       show={show}
-      onHide={handleClose}
-      size="lg"
-      aria-labelledby="tile-modal-title"
-      centered
+      titleId="tile-modal-title"
+      title={modalTitle}
+      onClose={handleClose}
+      maxWidth="800px"
+      footer={
+        <>
+          <ModalButton variant="danger" onClick={handleClose}>
+            Close
+          </ModalButton>
+          <ModalButton variant="success" onClick={handleSave}>
+            Save
+          </ModalButton>
+        </>
+      }
     >
-      <Modal.Header closeButton>
-        <Modal.Title id="tile-modal-title">
-          {!state.chooseImage ? (
-            isAdmin ? (
-              <EditableInput value={state.title} stateKey="title" change={inputState} title="Title" />
-            ) : (
-              <h2>{state.title || 'Info'}</h2>
-            )
-          ) : (
-            <h3>Set Tile Background Image</h3>
-          )}
-        </Modal.Title>
-      </Modal.Header>
-
-      <Modal.Body>
-        {!state.chooseImage ? (
-          <>
+      {!state.chooseImage ? (
+        <>
+          <EditableInput
+            value={state.description}
+            textArea
+            stateKey="description"
+            change={inputState}
+            title="Description"
+            disabled={isGeneral}
+          />
+          {showRowBonus && (
             <EditableInput
-              value={state.description}
-              textArea
-              stateKey="description"
+              value={state.rowBingo}
+              stateKey="rowBingo"
               change={inputState}
-              title="Description"
+              title="Row Bonus"
               disabled={isGeneral}
             />
-            {showRowBonus && (
-              <EditableInput
-                value={state.rowBingo}
-                stateKey="rowBingo"
-                change={inputState}
-                title="Row Bonus"
-                disabled={isGeneral}
-              />
-            )}
-            {showColumnBonus && (
-              <EditableInput
-                value={state.colBingo}
-                stateKey="colBingo"
-                change={inputState}
-                title="Column Bonus"
-                disabled={isGeneral}
-              />
-            )}
+          )}
+          {showColumnBonus && (
+            <EditableInput
+              value={state.colBingo}
+              stateKey="colBingo"
+              change={inputState}
+              title="Column Bonus"
+              disabled={isGeneral}
+            />
+          )}
 
-            {isAdmin && (
-              <>
-                {state.image ? (
-                  <>
-                    <Button
-                      style={{ marginBottom: '10px' }}
-                      variant="primary"
-                      onClick={() => setTileState({ image: null })}
-                    >
-                      Remove Tile Background Image
-                    </Button>
-                    <img
-                      src={state.image.url}
-                      style={{
-                        maxWidth: '80px',
-                        maxHeight: '80px',
-                        marginLeft: '10px',
-                        marginBottom: '10px',
-                        opacity: state.image.opacity + '%',
-                        objectFit: 'contain',
-                      }}
-                      alt="Tile background"
-                    />
-                  </>
-                ) : (
-                  <Button
-                    style={{ marginBottom: '10px' }}
+          {isAdmin && (
+            <>
+              {state.image ? (
+                <div
+                style={{display: 'flex', alignItems: 'center'}}
+                >
+                  <ModalButton
                     variant="primary"
-                    onClick={toggleImageSelect}
+                    style={{ marginBottom: '10px' }}
+                    onClick={() => setTileState({ image: null })}
                   >
-                    Set Tile Background Image
-                  </Button>
-                )}
-                {state.image && (
-                  <>
-                    <EditableInput
-                      value={state.image.opacity}
-                      change={changeOpacity}
-                      title="Image Opacity (1-100)"
-                    />
-                    <div className="form-check" style={{ marginTop: '15px', marginBottom: '10px' }}>
-                      <input
-                        className="form-check-input"
-                        checked={state.image.usePixel}
-                        onChange={toggleUsePixel}
-                        type="checkbox"
-                        id="pixelImageCheckbox"
-                      />
-                      <label className="form-check-label" htmlFor="pixelImageCheckbox">
-                        Use pixel image?
-                      </label>
-                    </div>
-                  </>
-                )}
-              </>
-            )}
-
-            <InputGroup className="mb-3" style={{ width: '100%', maxWidth: '320px' }}>
-              <InputGroup.Text>Points</InputGroup.Text>
-              <FormControl
-                aria-label="Current Points"
-                value={state.currPoints}
-                disabled={!isGeneral || state.checked}
-                onChange={(e) => inputState(e, 'currPoints')}
-              />
-              <InputGroup.Text>/</InputGroup.Text>
-              <FormControl
-                aria-label="Total Points"
-                value={state.points}
-                disabled={!isAdmin}
-                onChange={(e) => inputState(e, 'points')}
-              />
-            </InputGroup>
-
-            {isGeneral && (
-              <>
-                <div className="flex">
+                    Remove Tile Background Image
+                  </ModalButton>
+                  <img
+                    src={state.image.url}
+                    style={{
+                      maxWidth: '80px',
+                      maxHeight: '80px',
+                      margin: '10px 0px 20px 10px',
+                      opacity: state.image.opacity + '%',
+                      objectFit: 'contain',
+                    }}
+                    alt="Tile background"
+                  />
+                </div>
+              ) : (
+                <ModalButton
+                  variant="primary"
+                  style={{ marginBottom: '10px' }}
+                  onClick={toggleImageSelect}
+                >
+                  Set Tile Background Image
+                </ModalButton>
+              )}
+              {state.image && (
+                <>
                   <EditableInput
-                    placeholder="Paste imgur or any link"
-                    value={state.proof}
-                    textArea
-                    stateKey="proof"
-                    change={inputState}
-                    title="Proof"
+                    value={state.image.opacity}
+                    change={changeOpacity}
+                    title="Image Opacity (1-100)"
                   />
-                  <div className="flex" style={{ flexWrap: 'wrap' }}>
-                    {detectURLs(state.proof).map((url, i) => (
-                      <div key={url} style={{ margin: '5px' }}>
-                        <a target="_blank" href={url} rel="noreferrer">
-                          Link-{i}
-                        </a>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div style={{ marginTop: '10px', marginBottom: '6px' }}>
-                  <input
-                    type="file"
-                    accept="image/png,image/jpeg,image/webp,image/gif"
-                    multiple
-                    onChange={handleProofImage}
-                    style={{ display: 'none' }}
-                    ref={proofFileInputRef}
-                  />
-                  {(state.proofImages || []).length < 10 ? (
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => proofFileInputRef.current.click()}
-                    >
-                      📸 Upload Proof Image
-                    </Button>
-                  ) : (
-                    <small style={{ color: 'var(--osrs-text-normal)', opacity: 0.7 }}>
-                      Max 10 images reached
-                    </small>
-                  )}
-                </div>
-
-                {state.proofImages?.length > 0 && (
-                  <div
-                    style={{
-                      display: 'flex',
-                      flexWrap: 'wrap',
-                      gap: '8px',
-                      marginBottom: '10px',
-                    }}
-                  >
-                    {state.proofImages.map((img, i) => (
-                      <div key={i} style={{ position: 'relative', display: 'inline-block' }}>
-                        <img
-                          src={img}
-                          onClick={() => openLightbox(i)}
-                          style={{
-                            width: '64px',
-                            height: '64px',
-                            objectFit: 'cover',
-                            cursor: 'pointer',
-                            borderRadius: '4px',
-                            border: '2px solid var(--osrs-border-dark)',
-                            boxSizing: 'border-box',
-                          }}
-                          title="Click to enlarge"
-                          alt="proof"
-                        />
-                        <button
-                          onClick={() => removeProofImage(i)}
-                          style={{
-                            position: 'absolute',
-                            top: '-6px',
-                            right: '-6px',
-                            background: '#c0392b',
-                            color: 'white',
-                            border: 'none',
-                            borderRadius: '50%',
-                            width: '18px',
-                            height: '18px',
-                            fontSize: '10px',
-                            cursor: 'pointer',
-                            padding: 0,
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
-                          title="Remove image"
-                        >
-                          ✖
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {state.lightboxIndex !== null && state.proofImages?.length > 0 && (
-                  <div
-                    onClick={closeLightbox}
-                    style={{
-                      position: 'fixed',
-                      inset: 0,
-                      background: 'rgba(0,0,0,0.85)',
-                      zIndex: 9999,
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    {state.proofImages.length > 1 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          cycleImage(-1);
-                        }}
-                        style={lightboxBtnStyle('left')}
-                      >
-                        &#8249;
-                      </button>
-                    )}
-                    <img
-                      src={state.proofImages[state.lightboxIndex]}
-                      onClick={(e) => e.stopPropagation()}
-                      style={{
-                        maxWidth: '90vw',
-                        maxHeight: '85vh',
-                        objectFit: 'contain',
-                        borderRadius: '6px',
-                        boxShadow: '0 4px 32px rgba(0,0,0,0.7)',
-                      }}
-                      alt="proof enlarged"
+                  <div className="tm-check" style={{ marginTop: '15px', marginBottom: '10px' }}>
+                    <input
+                      className="tm-check-input"
+                      checked={state.image.usePixel}
+                      onChange={toggleUsePixel}
+                      type="checkbox"
+                      id="pixelImageCheckbox"
                     />
-                    {state.proofImages.length > 1 && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          cycleImage(1);
+                    <label className="tm-check-label" htmlFor="pixelImageCheckbox">
+                      Use pixel image?
+                    </label>
+                  </div>
+                </>
+              )}
+            </>
+          )}
+
+          <div className="tm-points-group" style={{ width: '100%', maxWidth: '320px' }}>
+            <span className="tm-input-addon">Points</span>
+            <input
+              className="tm-points-input"
+              type="text"
+              aria-label="Current Points"
+              value={state.currPoints}
+              disabled={!isGeneral || state.checked}
+              onChange={(e) => inputState(e, 'currPoints')}
+            />
+            <span className="tm-input-addon">/</span>
+            <input
+              className="tm-points-input"
+              type="text"
+              aria-label="Total Points"
+              value={state.points}
+              disabled={!isAdmin}
+              onChange={(e) => inputState(e, 'points')}
+            />
+          </div>
+
+          {isGeneral && (
+            <>
+              <div className="flex">
+                <EditableInput
+                  placeholder="Paste imgur or any link"
+                  value={state.proof}
+                  textArea
+                  stateKey="proof"
+                  change={inputState}
+                  title="Proof"
+                />
+                <div className="flex" style={{ flexWrap: 'wrap' }}>
+                  {detectURLs(state.proof).map((url, i) => (
+                    <div key={url} style={{ margin: '5px' }}>
+                      <a target="_blank" href={url} rel="noreferrer">
+                        Link-{i}
+                      </a>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div style={{ marginTop: '10px', marginBottom: '12px' }}>
+                <input
+                  type="file"
+                  accept="image/png,image/jpeg,image/webp,image/gif"
+                  multiple
+                  onChange={handleProofImage}
+                  style={{ display: 'none' }}
+                  ref={proofFileInputRef}
+                />
+                {(state.proofImages || []).length < 10 ? (
+                  <ModalButton
+                    variant="secondary"
+                    className="tm-proof-upload-btn"
+                    onClick={() => proofFileInputRef.current.click()}
+                  >
+                    <span aria-hidden="true" className="tm-proof-upload-icon">
+                      📷
+                    </span>
+                    <span>Upload Proof Image</span>
+                  </ModalButton>
+                ) : (
+                  <small style={{ color: 'var(--osrs-text-normal)', opacity: 0.7 }}>
+                    Max 10 images reached
+                  </small>
+                )}
+              </div>
+
+              {state.proofImages?.length > 0 && (
+                <div
+                  style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '8px',
+                    marginBottom: '10px',
+                  }}
+                >
+                  {state.proofImages.map((img, i) => (
+                    <div key={i} style={{ position: 'relative', display: 'inline-block' }}>
+                      <img
+                        src={img}
+                        onClick={() => openLightbox(i)}
+                        style={{
+                          width: '64px',
+                          height: '64px',
+                          objectFit: 'cover',
+                          cursor: 'pointer',
+                          borderRadius: '4px',
+                          border: '2px solid var(--osrs-border-dark)',
+                          boxSizing: 'border-box',
                         }}
-                        style={lightboxBtnStyle('right')}
-                      >
-                        &#8250;
-                      </button>
-                    )}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: '16px',
-                        right: '20px',
-                        color: 'white',
-                        fontSize: '1.1rem',
-                        display: 'flex',
-                        gap: '16px',
-                        alignItems: 'center',
-                      }}
-                    >
-                      <span style={{ opacity: 0.8 }}>
-                        {state.lightboxIndex + 1} / {state.proofImages.length}
-                      </span>
-                      <span
-                        style={{ cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }}
-                        onClick={closeLightbox}
+                        title="Click to enlarge"
+                        alt="proof"
+                      />
+                      <button
+                        onClick={() => removeProofImage(i)}
+                        style={{
+                          position: 'absolute',
+                          top: '-6px',
+                          right: '-6px',
+                          background: '#c0392b',
+                          color: 'white',
+                          border: 'none',
+                          borderRadius: '50%',
+                          width: '18px',
+                          height: '18px',
+                          fontSize: '10px',
+                          cursor: 'pointer',
+                          padding: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                        title="Remove image"
                       >
                         ✖
-                      </span>
+                      </button>
                     </div>
-                  </div>
-                )}
-
-                <div className="form-check" style={{ marginTop: '15px' }}>
-                  <input
-                    className="form-check-input bingo-completed-check"
-                    checked={state.checked}
-                    onChange={toggleCheck}
-                    type="checkbox"
-                    id="tileCompleted"
-                  />
-                  <label className="form-check-label" htmlFor="tileCompleted">
-                    Completed?
-                  </label>
+                  ))}
                 </div>
-              </>
-            )}
-          </>
-        ) : (
-          <>
-            {Object.keys(listOfImagesRef.current).map((image, i) => {
-              const imageName =
-                image
-                  .split('/')
-                  .pop()
-                  ?.replace(/\.png$/i, '') || image;
-              return (
-                <img
-                  key={i}
-                  title={imageName}
-                  src={listOfImagesRef.current[image]}
-                  onClick={() => setImage(imageName)}
-                  alt={imageName}
-                />
-              );
-            })}
-            <hr />
-            <Alert>
-              Click any image above to set it or type an item's name below as it would appear on
-              the wiki.
-              <br />
-              Examples: Coins, Infernal cape, Bucket of milk, Beaver, Plank
-            </Alert>
-            <div style={{ display: 'flex' }}>
-              <EditableInput
-                value={state.wikiSearch}
-                stateKey="wikiSearch"
-                change={inputState}
-                title="Item Search"
-              />
-            </div>
-            {state.loading && (
-              <Spinner animation="border" role="status">
-                <span className="visually-hidden">Loading...</span>
-              </Spinner>
-            )}
-            {state.triedToSearch && state.suggestions?.length === 0 && (
-              <Alert>No results found, try searching something else</Alert>
-            )}
-            {state.suggestions?.length > 0 && (
-              <ListGroup>
-                {state.suggestions.map((item, i) => (
-                  <ListGroup.Item key={i} action onClick={() => setImage(item.url, true)}>
-                    <div style={{ display: 'flex', alignItems: 'center' }}>
-                      <img
-                        src={item.thumbnail?.url}
-                        style={{ maxWidth: '40px', maxHeight: '40px', paddingRight: '10px' }}
-                        alt={item.title}
-                      />
-                      {item.title}
-                    </div>
-                  </ListGroup.Item>
-                ))}
-              </ListGroup>
-            )}
-            <br />
-            <input
-              type="file"
-              accept=".png,.jpeg"
-              onChange={handleCustomImage}
-              style={{ display: 'none' }}
-              ref={fileInputRef}
-            />
-            <Button style={{ marginTop: '10px' }} onClick={() => fileInputRef.current.click()}>
-              Custom image
-            </Button>
-          </>
-        )}
-      </Modal.Body>
+              )}
 
-      <Modal.Footer>
-        <Button variant="danger" onClick={handleClose}>
-          Close
-        </Button>
-        <Button variant="success" onClick={handleSave}>
-          Save
-        </Button>
-      </Modal.Footer>
-    </Modal>
+              {state.lightboxIndex !== null && state.proofImages?.length > 0 && (
+                <div
+                  onClick={closeLightbox}
+                  style={{
+                    position: 'fixed',
+                    inset: 0,
+                    background: 'rgba(0,0,0,0.85)',
+                    zIndex: 9999,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    width: '80vw',
+                    height: '80vh'
+                  }}
+                >
+                  {state.proofImages.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cycleImage(-1);
+                      }}
+                      style={lightboxBtnStyle('left')}
+                    >
+                      &#8249;
+                    </button>
+                  )}
+                  <img
+                    src={state.proofImages[state.lightboxIndex]}
+                    onClick={(e) => e.stopPropagation()}
+                    style={{
+                      maxWidth: '95vw',
+                      maxHeight: '90vh',
+                      objectFit: 'contain',
+                      borderRadius: '6px',
+                      boxShadow: '0 4px 32px rgba(0,0,0,0.7)',
+                    }}
+                    alt="proof enlarged"
+                  />
+                  {state.proofImages.length > 1 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        cycleImage(1);
+                      }}
+                      style={lightboxBtnStyle('right')}
+                    >
+                      &#8250;
+                    </button>
+                  )}
+                  <div
+                    style={{
+                      position: 'fixed',
+                      top: '8px',
+                      right: '8px',
+                      color: 'white',
+                      fontSize: '1.1rem',
+                      display: 'flex',
+                      gap: '16px',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span style={{ opacity: 0.8 }}>
+                      {state.lightboxIndex + 1} / {state.proofImages.length}
+                    </span>
+                    <span
+                      style={{ cursor: 'pointer', fontSize: '1.5rem', lineHeight: 1 }}
+                      onClick={closeLightbox}
+                    >
+                      ✖
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className="tm-check" style={{ marginTop: '15px' }}>
+                <input
+                  className="tm-check-input"
+                  checked={state.checked}
+                  onChange={toggleCheck}
+                  type="checkbox"
+                  id="tileCompleted"
+                />
+                <label className="tm-check-label" htmlFor="tileCompleted">
+                  Completed?
+                </label>
+              </div>
+            </>
+          )}
+        </>
+      ) : (
+        <>
+          {Object.keys(listOfImagesRef.current).map((image, i) => {
+            const imageName =
+              image
+                .split('/')
+                .pop()
+                ?.replace(/\.png$/i, '') || image;
+            return (
+              <img
+                key={i}
+                title={imageName}
+                src={listOfImagesRef.current[image]}
+                onClick={() => setImage(imageName)}
+                alt={imageName}
+              />
+            );
+          })}
+          <hr />
+          <div className="alert">
+            Click any image above to set it or type an item's name below as it would appear on the
+            wiki.
+            <br />
+            Examples: Coins, Infernal cape, Bucket of milk, Beaver, Plank
+          </div>
+          <div style={{ display: 'flex' }}>
+            <EditableInput
+              value={state.wikiSearch}
+              stateKey="wikiSearch"
+              change={inputState}
+              title="Item Search"
+            />
+          </div>
+          {state.loading && (
+            <div className="tm-spinner" role="status" aria-live="polite">
+              <div className="tm-spinner-ring" />
+              <span className="tm-visually-hidden">Loading...</span>
+            </div>
+          )}
+          {state.triedToSearch && state.suggestions?.length === 0 && (
+            <div className="alert" role="alert">
+              No results found, try searching something else
+            </div>
+          )}
+          {state.suggestions?.length > 0 && (
+            <ul className="tm-suggestion-list">
+              {state.suggestions.map((item, i) => (
+                <li
+                  key={i}
+                  className="tm-suggestion-item"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => setImage(item.url, true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setImage(item.url, true);
+                    }
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                    <img
+                      src={item.thumbnail?.url}
+                      style={{ maxWidth: '40px', maxHeight: '40px', paddingRight: '10px' }}
+                      alt={item.title}
+                    />
+                    {item.title}
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+          <br />
+          <input
+            type="file"
+            accept=".png,.jpeg"
+            onChange={handleCustomImage}
+            style={{ display: 'none' }}
+            ref={fileInputRef}
+          />
+          <ModalButton
+            variant="primary"
+            style={{ marginTop: '10px' }}
+            onClick={() => fileInputRef.current.click()}
+          >
+            Custom image
+          </ModalButton>
+        </>
+      )}
+    </ModalShell>
   );
 }
 
@@ -689,8 +710,8 @@ function getImageUrl(image) {
 
 function lightboxBtnStyle(side) {
   return {
-    position: 'absolute',
-    [side]: '16px',
+    position: 'fixed',
+    [side]: '8px',
     top: '50%',
     transform: 'translateY(-50%)',
     background: 'rgba(255,255,255,0.15)',

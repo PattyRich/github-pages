@@ -1,0 +1,31 @@
+.fm-body {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.fm-prompt {
+  margin: 0;
+  font-size: 0.9rem;
+  color: var(--osrs-text-normal);
+}
+
+.fm-thanks {
+  font-size: 1.4rem;
+  margin: 0;
+}
+
+.fm-note {
+  font-size: 0.9rem;
+  color: var(--osrs-text-normal);
+  line-height: 1.5;
+  margin: 0;
+}
+
+.fm-body .editable-input {
+  max-width: 100%;
+}
+
+.fm-body .editable-input .editable-input-field {
+  min-height: 140px;
+}

@@ -145,15 +145,13 @@ class Pets extends React.Component {
                   <img className="pet-image" src={assetUrl(`${petPicturePath}/${pet.name}.png`)} />
                 </div>
                 <input
-                  className="form-check-input"
+                  className="pet-checkbox"
                   checked={pet.obtained}
                   onChange={() => this.toggleCheck(i)}
                   type="checkbox"
                   value=""
                   id={'pet' + i}
                 />
-                {/* <label className="form-check-label" htmlFor={"pet" + i}>
-          </label> */}
                 <div className="pet-kc-input-container">
                   <input
                     className="pet-kc-input"

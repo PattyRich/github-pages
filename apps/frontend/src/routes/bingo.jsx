@@ -2,12 +2,9 @@ import { useEffect, useRef, useState } from 'react';
 //import { Link } from "react-router-dom";
 import './bingo.css';
 import BoardTile from '../components/BoardTile';
-import 'bootstrap/dist/css/bootstrap.css';
 import EditableInput from '../components/BootStrap/EditableInput';
 import Button from '../components/BootStrap/Button';
-import InputGroup from 'react-bootstrap/InputGroup';
-import FormControl from 'react-bootstrap/FormControl';
-import Alert from 'react-bootstrap/Alert';
+
 import { fetchGet, fetchPost, addToRecent } from '../utils/utils';
 import { useNavigate } from 'react-router-dom';
 import RecentBoards from '../components/RecentBoards';
@@ -119,11 +116,7 @@ function Bingo({ screenSkip }) {
     showAlert('loading');
     const [data, err] = await fetchPost('createBoard', { ...trimmedState });
     if (data) {
-      addToRecent(
-        trimmedState.boardName,
-        trimmedState.adminPassword,
-        'admin'
-      );
+      addToRecent(trimmedState.boardName, trimmedState.adminPassword, 'admin');
       navigate('/bingo/' + trimmedState.boardName, {
         state: {
           adminPassword: trimmedState.adminPassword,
@@ -189,14 +182,10 @@ function Bingo({ screenSkip }) {
     navigate('/bingo/' + state.boardName, { state: navigationState });
   }
 
-
-
   return (
     <>
       {state.alert && (
-        <Alert className="osrs-alert-banner" variant={state.alertVariant}>
-          {state.alert}
-        </Alert>
+        <div className={`osrs-alert-banner alert-${state.alertVariant}`}>{state.alert}</div>
       )}
       {/* {state.showToast && <Toast variant="danger" message={'uh ohohhh'} />} */}
       {state.screen === 1 && (
@@ -365,24 +354,12 @@ function Bingo({ screenSkip }) {
                   </button>
                 </div>
 
-                <InputGroup className="mb-3 join-password-input">
-                  <InputGroup.Text>
-                    {state.joinPwTitle === 'general' ? 'General Pw' : 'Admin Pw'}
-                  </InputGroup.Text>
-                  <FormControl
-                    id="bingo-pw"
-                    value={state.joinPw}
-                    onChange={(e) => {
-                      setBingoState({ joinPw: e.target.value });
-                    }}
-                    onKeyUp={(e) => {
-                      let code = e.keyCode || e.which;
-                      if (code === 13) {
-                        auth();
-                      }
-                    }}
-                  />
-                </InputGroup>
+                <EditableInput
+                  title={state.joinPwTitle === 'general' ? 'General Pw' : 'Admin Pw'}
+                  value={state.joinPw}
+                  change={(e) => setBingoState({ joinPw: e.target.value })}
+                  enterAction={auth}
+                />
 
                 <div className="join-board-actions">
                   <Button variant="success" click={auth} text="Join Board"></Button>

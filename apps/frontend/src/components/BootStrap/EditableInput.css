@@ -1,0 +1,73 @@
+.editable-input {
+  display: flex;
+  align-items: stretch;
+  width: 100%;
+  max-width: 500px;
+  margin-bottom: 12px;
+}
+
+.editable-input-label {
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  font-size: 0.88rem;
+  font-family: 'osrsFont', sans-serif;
+  color: var(--osrs-text-normal);
+  text-shadow: 1px 1px 0 black;
+  background: var(--osrs-bg-brown);
+  border: 2px solid var(--osrs-border-dark);
+  border-right: none;
+  border-radius: var(--osrs-radius) 0 0 var(--osrs-radius);
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.5);
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: border-color 0.15s ease;
+}
+
+/* Both input and textarea field — high specificity to beat index.css !important rules */
+.editable-input .editable-input-field {
+  flex: 1;
+  min-width: 0;
+  padding: 5px 8px !important;
+  font-family: 'osrsFont', sans-serif !important;
+  font-size: 0.9rem !important;
+  color: var(--osrs-text-beige) !important;
+  text-shadow: 1px 1px 0 black;
+  background: var(--osrs-bg-brown-dark) !important;
+  border: 2px solid var(--osrs-border-dark) !important;
+  border-left: none !important;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7) !important;
+  border-radius: 0 var(--osrs-radius) var(--osrs-radius) 0 !important;
+  outline: none !important;
+  resize: none;
+  transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+
+.editable-input .editable-input-field:focus {
+  background: var(--osrs-bg-brown) !important;
+  border-color: var(--osrs-border-light) !important;
+  border-left: none !important;
+  color: var(--osrs-text-beige) !important;
+  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.8) !important;
+}
+
+.editable-input--disabled .editable-input-label {
+  color: #b0a188;
+  background: #342d23;
+  border-color: #17130f;
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.58);
+  opacity: 0.82;
+}
+
+.editable-input .editable-input-field:disabled {
+  background: #2a241c !important;
+  color: #b0a188 !important;
+  border-color: #17130f !important;
+  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.78) !important;
+  opacity: 0.82 !important;
+}
+
+.editable-input .editable-input-field::placeholder {
+  color: var(--osrs-text-normal);
+  opacity: 0.6;
+}
