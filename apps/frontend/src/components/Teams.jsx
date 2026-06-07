@@ -1,7 +1,7 @@
 import { useState } from 'react';
 //import { Link } from "react-router-dom";
-import { Tab, Tabs } from 'react-bootstrap';
 import { getStoredBool } from '../utils/utils';
+import './Teams.css';
 
 const Teams = (props) => {
   const [key, setKey] = useState(props.activeTeam.data.name);
@@ -15,25 +15,25 @@ const Teams = (props) => {
     setKey(teamName);
   }
   return (
-    <Tabs
-      id="controlled-tab-example"
-      activeKey={key}
-      onSelect={(k) => selectTeam(k)}
-      variant="pills"
-      style={{ marginBottom: '5px', display: 'flex', justifyContent: 'center' }}
-    >
+    <div className="team-tabs" role="tablist" aria-label="Teams">
       {props.teams &&
         props.teams.map((team, i) => {
           const showPoints = !showTeamPoints && Number(team.pointTotal) !== 0;
+          const label = `${team.data.name}${showPoints ? ': (' + team.pointTotal + ')' : ''}`;
           return (
-            <Tab
+            <button
               key={i}
-              eventKey={team.data.name}
-              title={`${team.data.name}${showPoints ? ': (' + team.pointTotal + ')' : ''}`}
-            />
+              type="button"
+              className={`team-tab ${key === team.data.name ? 'active' : ''}`}
+              role="tab"
+              aria-selected={key === team.data.name}
+              onClick={() => selectTeam(team.data.name)}
+            >
+              {label}
+            </button>
           );
         })}
-    </Tabs>
+    </div>
   );
 };
 

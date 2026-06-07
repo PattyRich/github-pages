@@ -1,5 +1,4 @@
-import InputGroup from 'react-bootstrap/InputGroup';
-import FormControl from 'react-bootstrap/FormControl';
+import './EditableInput.css';
 
 export default function EditableInput({
   title,
@@ -17,18 +16,24 @@ export default function EditableInput({
     if ((e.keyCode || e.which) === 13) enterAction();
   }
 
+  const Tag = textArea ? 'textarea' : 'input';
+
   return (
-    <InputGroup className="mb-3" style={width ? { width } : { width: '100%', maxWidth: '500px' }}>
-      <InputGroup.Text id="basic-addon1">{title}</InputGroup.Text>
-      <FormControl
+    <div
+      className={`editable-input${disabled ? ' editable-input--disabled' : ''}`}
+      style={width ? { width } : undefined}
+    >
+      {title && <span className="editable-input-label">{title}</span>}
+      <Tag
+        className="editable-input-field"
+        type={textArea ? undefined : 'text'}
         placeholder={placeholder}
-        as={textArea ? 'textarea' : undefined}
         value={value}
-        aria-describedby="basic-addon1"
         onChange={(e) => change(e, stateKey)}
         onKeyUp={handleKeyUp}
         disabled={disabled}
+        aria-label={title}
       />
-    </InputGroup>
+    </div>
   );
 }

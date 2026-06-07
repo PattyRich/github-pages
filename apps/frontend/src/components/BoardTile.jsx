@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import './BoardTile.css';
-import Modal from './BootStrap/TileModal';
-import { OverlayTrigger, Tooltip } from 'react-bootstrap';
+import Modal from './ui/TileModal';
 import { getStoredBool } from '../utils/utils';
 
 const CROSS_SVG =
@@ -44,73 +43,67 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
 
   return (
     <>
-      <OverlayTrigger
-        placement="top"
-        overlay={
-          info?.title ? <Tooltip style={{ position: 'fixed' }}>{info.title}</Tooltip> : <div />
-        }
+      <span
+        className={`tile-wrapper ${!completeStyle && checked ? 'green-bg' : ''}`}
+        style={{ '--bgHeight': bgHeight }}
+        title={info?.title || undefined}
       >
-        <span
-          className={`tile-wrapper ${!completeStyle && checked ? 'green-bg' : ''}`}
-          style={{ '--bgHeight': bgHeight }}
-        >
-          {checked && completeStyle && !bare && (
-            <img
-              style={{ position: 'absolute', zIndex: 100, maxHeight: '100%', maxWidth: '100%' }}
-              src={CROSS_SVG}
-              onClick={openTile}
-              alt="completed"
-            />
-          )}
-          {info?.image && (
-            <img
-              className={`bg-img ${showTileTitle ? 'has-tile-title' : ''}`}
-              style={{
-                opacity: info.image.opacity + '%',
-                maxWidth: 'calc(100% - 8px)',
-                width: info.image.usePixel ? '200px' : 'auto',
-                height: info.image.usePixel ? '200px' : 'auto',
-                objectFit: 'contain',
-                maxHeight: showTileTitle ? '78%' : 'calc(100% - 8px)',
-                imageRendering: info.image.usePixel ? 'pixelated' : 'auto',
-              }}
-              src={info.image.usePixel ? getPixelUrl(info.image.url) : info.image.url}
-              alt=""
-            />
-          )}
-          <div
+        {checked && completeStyle && !bare && (
+          <img
+            style={{ position: 'absolute', zIndex: 100, maxHeight: '100%', maxWidth: '100%' }}
+            src={CROSS_SVG}
             onClick={openTile}
-            onKeyDown={!bare ? handleTileKeyDown : undefined}
-            role={!bare ? 'button' : undefined}
-            tabIndex={!bare ? 0 : undefined}
-            aria-label={!bare ? (info?.title ? `Open ${info.title}` : 'Open tile') : undefined}
+            alt="completed"
+          />
+        )}
+        {info?.image && (
+          <img
+            className={`bg-img ${showTileTitle ? 'has-tile-title' : ''}`}
             style={{
-              ...sizeStyle,
-              flexDirection: 'column',
-              overflow: 'hidden',
+              opacity: info.image.opacity + '%',
+              maxWidth: 'calc(100% - 8px)',
+              width: info.image.usePixel ? '200px' : 'auto',
+              height: info.image.usePixel ? '200px' : 'auto',
+              objectFit: 'contain',
+              maxHeight: showTileTitle ? '78%' : 'calc(100% - 8px)',
+              imageRendering: info.image.usePixel ? 'pixelated' : 'auto',
             }}
-            className={`box-flex box-border ${br ? 'br' : ''} ${bb ? 'bb' : ''}`}
-          >
-            {showTileTitle && (
-              <div className="tile-title-overlay" style={titleStyle} title={info.title}>
-                {info.title}
-              </div>
-            )}
-            {!bare && (
-              <div className="tile-meta">
-                {showTeamProgress && (
-                  <div className="tile-progress-badge">
-                    {teamInfo.currPoints} / {info.points}
-                  </div>
-                )}
-                {privilage === 'admin' && (
-                  <div className="tile-progress-badge tile-admin-points">{info?.points}</div>
-                )}
-              </div>
-            )}
-          </div>
-        </span>
-      </OverlayTrigger>
+            src={info.image.usePixel ? getPixelUrl(info.image.url) : info.image.url}
+            alt=""
+          />
+        )}
+        <div
+          onClick={openTile}
+          onKeyDown={!bare ? handleTileKeyDown : undefined}
+          role={!bare ? 'button' : undefined}
+          tabIndex={!bare ? 0 : undefined}
+          aria-label={!bare ? (info?.title ? `Open ${info.title}` : 'Open tile') : undefined}
+          style={{
+            ...sizeStyle,
+            flexDirection: 'column',
+            overflow: 'hidden',
+          }}
+          className={`box-flex box-border ${br ? 'br' : ''} ${bb ? 'bb' : ''}`}
+        >
+          {showTileTitle && (
+            <div className="tile-title-overlay" style={titleStyle} title={info.title}>
+              {info.title}
+            </div>
+          )}
+          {!bare && (
+            <div className="tile-meta">
+              {showTeamProgress && (
+                <div className="tile-progress-badge">
+                  {teamInfo.currPoints} / {info.points}
+                </div>
+              )}
+              {privilage === 'admin' && (
+                <div className="tile-progress-badge tile-admin-points">{info?.points}</div>
+              )}
+            </div>
+          )}
+        </div>
+      </span>
 
       {showModal && (
         <Modal

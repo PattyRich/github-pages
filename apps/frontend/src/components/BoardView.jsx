@@ -2,16 +2,16 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 //import { Link } from "react-router-dom";
 import './BoardView.css';
 import BoardTile from './BoardTile';
-import Button from './BootStrap/Button';
-import Alert from 'react-bootstrap/Alert';
+import Button from './ui/Button';
 import { fetchGet, fetchPut, pwUrlBuilder, addToRecent } from '../utils/utils.js';
 import { apiUrl } from '../config/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Teams from './Teams';
-import Toast from './BootStrap/Toast';
-import EditTeams from './BootStrap/EditTeams';
-import SettingsModal from './BootStrap/SettingsModal';
-import FeedbackModal from './BootStrap/FeedbackModal';
+import Toast from './ui/Toast';
+import EditTeams from './ui/EditTeams';
+import SettingsModal from './ui/SettingsModal';
+import FeedbackModal from './ui/FeedbackModal';
+import PasswordModal from './ui/PasswordModal';
 
 const initialBoardState = {
   privilage: 'general',
@@ -36,6 +36,8 @@ function BoardView() {
   const alertTimeoutRef = useRef(null);
   const eventSourceRef = useRef(null);
   const sseRetryTimeoutRef = useRef(null);
+  const passwordResolveRef = useRef(null);
+  const [passwordPrompt, setPasswordPrompt] = useState(null);
   const rowsRef = useRef(null);
   const columnsRef = useRef(null);
 
@@ -349,6 +351,25 @@ function BoardView() {
     setBoardState({ showToast2: true });
   }
 
+  function showPasswordModal(message) {
+    return new Promise((resolve) => {
+      passwordResolveRef.current = resolve;
+      setPasswordPrompt(message);
+    });
+  }
+
+  function handlePasswordConfirm(value) {
+    setPasswordPrompt(null);
+    passwordResolveRef.current?.(value);
+    passwordResolveRef.current = null;
+  }
+
+  function handlePasswordCancel() {
+    setPasswordPrompt(null);
+    passwordResolveRef.current?.(null);
+    passwordResolveRef.current = null;
+  }
+
   async function updateBoard(row, col, info, forcePrompt = false) {
     alert('loading');
     let needToAddTeamPassword = false;
@@ -363,7 +384,7 @@ function BoardView() {
         const promptText = forcePrompt
           ? 'Your team password was incorrect. Please try again.'
           : 'Enter Team Password';
-        pw = prompt(promptText);
+        pw = await showPasswordModal(promptText);
         if (pw === null) {
           alert('danger', 'No password entered aborting update.');
           return;
@@ -406,10 +427,11 @@ function BoardView() {
     <div className="flex-wrapper-create">
       <div className="top-bar-container">
         <div className="title-bar">
-          <h2 style={{ marginTop: '0px' }}> {state.boardName} </h2>
+          <h2 style={{ marginTop: '0px', fontSize: '2rem'}}> {state.boardName} </h2>
         </div>
         <div className="settings-bar">
           <div className="flex bingo-edit">
+            <h2 className="mobile-only-title">{state.boardName}</h2>
             <Button
               click={() => setBoardState({ showSettings: true })}
               text="Settings"
@@ -421,7 +443,6 @@ function BoardView() {
                   <>
                     <Button click={toggleTeamEdit} text="Edit Board" variant="primary" />
                     <Button
-                      style={{ marginRight: '10px' }}
                       click={clipboard}
                       variant="warning"
                       text={'Auto Signin Link 📋'}
@@ -439,19 +460,17 @@ function BoardView() {
         </div>
       </div>
       {state.alert && (
-        <Alert onClick={clearAlert} className="osrs-alert-banner" variant={state.alertVariant}>
+        <div onClick={clearAlert} className={`osrs-alert-banner alert-${state.alertVariant}`}>
           {state.alert}
-        </Alert>
+        </div>
       )}
       {state.teamData && !(state.privilage === 'admin') && (
-        <div style={{ alignItems: 'center' }} className="flex-center osrs-header">
-          <h3 className="flex-center" style={{ marginBottom: 0 }}>
-            {' '}
+        <div className="board-team-summary osrs-header">
+          <h3 className="board-team-name">
             {state.teamData[state.activeTeamIndex].data.name}
           </h3>
-          <span style={{ marginLeft: '10px', fontSize: '1.2rem' }}>
-            {' '}
-            (Points: {state.teamData[state.activeTeamIndex].pointTotal}){' '}
+          <span className="board-team-points">
+            (Points: {state.teamData[state.activeTeamIndex].pointTotal})
           </span>
         </div>
       )}
@@ -532,6 +551,13 @@ function BoardView() {
       )}
       {state.showFeedback && (
         <FeedbackModal handleClose={() => setBoardState({ showFeedback: false })} />
+      )}
+      {passwordPrompt && (
+        <PasswordModal
+          message={passwordPrompt}
+          onConfirm={handlePasswordConfirm}
+          onCancel={handlePasswordCancel}
+        />
       )}
     </div>
   );

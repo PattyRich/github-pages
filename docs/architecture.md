@@ -27,8 +27,6 @@ A single-page React 19 application bundled with Vite.
 
 **State** — React Hooks (`useState` / `useEffect`) with `localStorage` for lightweight persistence (e.g. active team selection). No global state library — the app's complexity doesn't warrant one.
 
-**UI** — Bootstrap 5 for layout, supplemented with custom CSS for the OSRS-inspired aesthetic. `html-to-image` handles client-side image generation for pet/tile pictures.
-
 **Polling** — The LoL-Beat crawler is a long-running background job. The frontend polls `/lol/api/job/<id>` at a fixed interval to surface job status without a WebSocket.
 
 ---

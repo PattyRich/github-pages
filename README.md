@@ -20,7 +20,7 @@ A full-stack, production-deployed web application for the Old School RuneScape c
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19, Vite, Bootstrap 5 |
+| Frontend | React 19, Vite |
 | Backend | Python 3.13, Flask, uWSGI |
 | Background Jobs | Redis Queue (RQ) |
 | Database | MongoDB 7.0 |

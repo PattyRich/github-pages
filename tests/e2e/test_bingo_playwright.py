@@ -82,7 +82,17 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             context = browser.new_context(**browser_context_options())
             page = context.new_page()
 
+            # Clear tile-hint so the "How to Use" toast fires reliably
+            page.goto(f"{FRONTEND_URL}")
+            page.evaluate("localStorage.removeItem('tile-hint')")
+
+            # Snapshot the empty join page before any board exists
+            page.goto(f"{FRONTEND_URL}/#/bingo/join")
+            expect(page.locator(".join-board-shell")).to_be_visible()
+            compare_visual_snapshot(page, "join-page-empty", ".join-board-grid")
+
             page.goto(f"{FRONTEND_URL}/#/bingo/create")
+            compare_visual_snapshot(page, "create-bingo-page", ".create-board-shell")
             fill_input_group(page, "Board Name", board_name)
             fill_input_group(page, "Admin Password", admin_password)
             fill_input_group(page, "General Password", general_password)
@@ -90,6 +100,27 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
 
             expect(page).to_have_url(re.compile(r"#/bingo/"))
             expect(page.get_by_role("button", name="Edit Board")).to_be_visible()
+
+            # "How to Use" toast appears on first visit
+            toast = page.locator(".osrs-toast").filter(has_text="How to Use")
+            expect(toast).to_be_visible()
+            toast.get_by_role("button", name="Close notification").click()
+            expect(toast).not_to_be_visible()
+
+            # Settings: toggle a setting, close and reopen — verify it persists
+            page.get_by_role("button", name="Settings").click()
+            expect(page.get_by_role("dialog")).to_be_visible()
+            hide_points_cb = page.locator("#setting-1")
+            expect(hide_points_cb).not_to_be_checked()
+            hide_points_cb.click()
+            expect(hide_points_cb).to_be_checked()
+            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
+            expect(page.get_by_role("dialog")).not_to_be_visible()
+            page.get_by_role("button", name="Settings").click()
+            expect(page.locator("#setting-1")).to_be_checked()
+            # Restore the setting before continuing
+            page.locator("#setting-1").click()
+            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
 
             open_tile(page, "Example Tile")
             fill_input_group(page, "Title", "E2E Tile")
@@ -143,7 +174,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(page.get_by_text("# of Teams: 4")).to_be_visible()
             page.get_by_role("tab", name="Board").click()
             select_by_form_label(page, "Rows (up and down)", "4")
-            page.get_by_label("Layered board").check()
+            page.locator("label.et-switch").filter(has_text="Layered board").click()
             set_range(page, "2")
             expect(page.get_by_text(re.compile(r"Visible rows:\s*2\s*/\s*4"))).to_be_visible()
             page.get_by_role("button", name="Save").click()
@@ -177,19 +208,19 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(observer.get_by_role("tab", name=re.compile(r"team-0:\s*\(75\)"))).to_be_visible()
             open_tile(observer, "E2E Tile")
             expect_proof_image_loaded(observer)
-            compare_visual_snapshot(observer, "proof-modal", ".modal-content")
-            observer.locator(".modal-footer").get_by_role("button", name="Close").click()
+            compare_visual_snapshot(observer, "proof-modal", ".osrs-modal-panel")
+            observer.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
             expect(observer.get_by_role("dialog")).not_to_be_visible()
             open_tile(page, "E2E Tile")
             expect_proof_image_loaded(page)
-            page.locator(".modal-footer").get_by_role("button", name="Close").click()
+            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
             page.get_by_role("button", name="General Mode").click()
             expect(page.get_by_role("button", name="Edit Board")).to_be_visible()
             edit_board(page)
             set_range(page, "4")
-            expect(page.get_by_label("Layered board")).to_be_checked()
+            expect(page.locator("#layered-board-switch")).to_be_checked()
             page.get_by_role("button", name="Save").click()
             expect(page.get_by_text("Teams Successfully Updated!")).to_be_visible()
             expect_board_tile_count(page, 20)
@@ -197,25 +228,36 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             compare_visual_snapshot(page, "revealed-board", ".center-board")
 
             open_tile(page, "E2E Tile")
-            page.locator(".modal-header").get_by_role("button", name="Close").click()
+            page.locator(".osrs-modal-header").get_by_role("button", name="Close").click()
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
             open_tile(page, "Asset Tile")
             expect_input_group_value(page, "Title", "Asset Tile")
             expect_tile_image_loaded(page, 1)
-            page.locator(".modal-footer").get_by_role("button", name="Close").click()
+            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
             open_tile(page, "Pixel Asset Tile")
             expect(page.get_by_label("Use pixel image?")).to_be_checked()
             expect_tile_image_loaded(page, 3)
-            page.locator(".modal-footer").get_by_role("button", name="Close").click()
+            page.locator(".osrs-modal-footer").get_by_role("button", name="Close").click()
             expect(page.get_by_role("dialog")).not_to_be_visible()
 
             open_tile(page, "E2E Tile")
             fill_input_group(page, "Title", "E2E Tile Max Visible")
             page.get_by_role("button", name="Save").click()
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
+
+            # Navigate to join page and verify recent board entry appears and can be joined
+            page.goto(f"{FRONTEND_URL}/#/bingo/join")
+            recent_section = page.locator(".recent-board-list")
+            expect(recent_section).to_be_visible()
+            recent_row = recent_section.locator(".recent-board-row").filter(has_text=board_name).filter(has_text="admin").first
+            expect(recent_row).to_be_visible()
+            expect(recent_row.locator("strong")).to_have_text(board_name)
+            recent_row.get_by_role("button", name="Join").click()
+            expect(page).to_have_url(re.compile(rf"#/bingo/{re.escape(board_name)}"))
+            expect(page.get_by_role("button", name="Edit Board")).to_be_visible()
 
             context.close()
             browser.close()
@@ -234,17 +276,17 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
 
 
 def fill_input_group(page, label, value):
-    group = page.locator(".input-group").filter(has_text=label).first
+    group = page.locator(".editable-input").filter(has_text=label).first
     group.locator("input, textarea").first.fill(value)
 
 
 def expect_input_group_value(page, label, value):
-    group = page.locator(".input-group").filter(has_text=label).first
+    group = page.locator(".editable-input").filter(has_text=label).first
     expect(group.locator("input, textarea").first).to_have_value(value)
 
 
 def select_by_form_label(page, label, value):
-    page.locator("label").filter(has_text=label).locator("xpath=../select").select_option(value)
+    page.locator("label.et-field").filter(has_text=label).locator("select").select_option(value)
 
 
 def set_range(page, value):
@@ -261,7 +303,7 @@ def set_range(page, value):
 
 def select_wiki_image(page, search_text, result_text):
     fill_input_group(page, "Item Search", search_text)
-    wiki_result = page.locator(".list-group-item").filter(has_text=result_text).first
+    wiki_result = page.locator(".tm-suggestion-item").filter(has_text=result_text).first
     expect(wiki_result).to_be_visible(timeout=15000)
     expect_loaded_image(page, wiki_result.locator("img").first)
     wiki_result.click()
@@ -403,7 +445,7 @@ def expect_board_tile_count(page, count):
 
 def edit_board(page):
     page.get_by_role("button", name="Edit Board").click()
-    expect(page.get_by_role("dialog", name="Edit Board")).to_be_visible()
+    expect(page.get_by_role("dialog")).to_be_visible()
 
 
 def launch_browser(p):

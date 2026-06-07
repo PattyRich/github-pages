@@ -1,8 +1,7 @@
 import './App.css';
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import Image from 'react-bootstrap/Image';
-import FeedbackModal from './components/BootStrap/FeedbackModal';
+import FeedbackModal from './components/ui/FeedbackModal';
 
 const ROUTES = [
   {
@@ -119,15 +118,13 @@ export default function App() {
               </div>
 
               <div className="bingo-previews">
-                <Image
+                <img
                   className="preview-img"
-                  fluid
                   src={`${import.meta.env.BASE_URL}board-min2.png`}
                   alt="Bingo Board Preview"
                 />
-                <Image
+                <img
                   className="preview-img"
-                  fluid
                   src={`${import.meta.env.BASE_URL}create-min.png`}
                   alt="Bingo Create Preview"
                 />

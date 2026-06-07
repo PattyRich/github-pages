@@ -40,7 +40,7 @@ test('toggles completed and saves member progress', async () => {
   const completed = screen.getByLabelText(/Completed\?/i);
 
   expect(completed).toBeVisible();
-  expect(completed).toHaveClass('bingo-completed-check');
+  expect(completed).toHaveClass('tm-check-input');
   expect(completed).not.toBeChecked();
 
   fireEvent.click(completed);
@@ -95,6 +95,12 @@ test('shows bundled tile images but saves the selected object as a wiki detail i
       screen.getByRole('button', { name: /Remove Tile Background Image/i })
     ).toBeInTheDocument();
   });
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole('button', { name: /Remove Tile Background Image/i })
+    ).toBeInTheDocument();
+  });
   expect(screen.getByRole('img')).toHaveAttribute('src', expectedWikiUrl);
 
   fireEvent.click(screen.getByRole('button', { name: /Save/i }));
@@ -109,4 +115,33 @@ test('shows bundled tile images but saves the selected object as a wiki detail i
       url: expectedWikiUrl,
     })
   );
+});
+
+test('closes modal when escape key is pressed', () => {
+  const props = renderTileModal();
+
+  fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
+
+  expect(props.handleClose).toHaveBeenCalled();
+});
+
+test('does not close modal on escape if lightbox is open', () => {
+  const props = renderTileModal({
+    teamInfo: {
+      checked: false,
+      currPoints: 10,
+      proof: '',
+      proofImages: ['data:image/png;base64,iVBORw0KGgo='],
+    },
+  });
+
+  const img = screen.getByRole('img', { name: /proof/i });
+  fireEvent.click(img);
+
+  expect(screen.getByText('1 / 1')).toBeInTheDocument();
+
+  fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
+
+  expect(screen.queryByText('1 / 1')).not.toBeInTheDocument();
+  expect(props.handleClose).not.toHaveBeenCalled();
 });
