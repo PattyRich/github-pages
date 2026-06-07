@@ -118,7 +118,7 @@ def reduce_image_size(
     original_kb = len(image_bytes) / 1024
     final_kb = len(compressed) / 1024
     print(
-        f"Original: {original_kb:.1f} KB  →  "
+        f"Original: {original_kb:.1f} KB -> "
         f"Compressed: {final_kb:.1f} KB  "
         f"(target: {target_kb} KB, format: {fmt})"
     )
