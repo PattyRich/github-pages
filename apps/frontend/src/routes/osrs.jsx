@@ -5,6 +5,7 @@ import { loot } from '../looter/looter';
 import { totalLooter } from '../looter/totalLooter';
 import TotalLoot from '../components/TotalLoot';
 import { assetUrl } from '../utils/assetUrl';
+import { capitalizeFirstLetter } from '../utils/utils';
 
 const imageModules = import.meta.glob('../assets/*.png', {
   eager: true,
@@ -737,7 +738,3 @@ class Osrs extends React.Component {
 export default Osrs;
 
 const pause = () => new Promise((r) => setTimeout(r, 0));
-
-function capitalizeFirstLetter(string) {
-  return string.charAt(0).toUpperCase() + string.slice(1);
-}

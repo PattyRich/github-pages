@@ -1,35 +1,7 @@
-export default function AlertBanner({
-  variant = 'primary',
-  children,
-  className = '',
-  dismissible = false,
-  onDismiss,
-  role,
-  onKeyDown,
-  ...props
-}) {
-  const classes = ['osrs-alert-banner', `alert-${variant}`, className].filter(Boolean).join(' ');
-  const bannerRole = role || (variant === 'danger' ? 'alert' : 'status');
+// AlertBanner is now part of Alert — import Alert and pass the `banner` prop.
+// This re-export exists so existing imports don't break during the transition.
+import Alert from './Alert';
 
-  function handleKeyDown(e) {
-    onKeyDown?.(e);
-    if (!dismissible || e.defaultPrevented) return;
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onDismiss?.();
-    }
-  }
-
-  return (
-    <div
-      className={classes}
-      role={bannerRole}
-      onClick={dismissible ? onDismiss : undefined}
-      onKeyDown={handleKeyDown}
-      tabIndex={dismissible ? 0 : undefined}
-      {...props}
-    >
-      <span className="osrs-alert-message">{children}</span>
-    </div>
-  );
+export default function AlertBanner(props) {
+  return <Alert banner {...props} />;
 }

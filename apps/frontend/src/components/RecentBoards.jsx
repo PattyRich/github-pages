@@ -2,7 +2,7 @@ import React from 'react';
 import Button from './ui/Button';
 import Surface from './ui/Surface';
 
-const Teams = (props) => {
+const RecentBoards = (props) => {
   return (
     <Surface className="recent-board-list" variant="glass">
       <h2 className="osrs-header">Recent Boards</h2>
@@ -29,4 +29,4 @@ const Teams = (props) => {
   );
 };
 
-export default Teams;
+export default RecentBoards;

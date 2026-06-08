@@ -67,6 +67,18 @@ function normalizeApiError(data, response) {
   return new Error(response.statusText || `Request failed with status ${response.status}`);
 }
 
+export function debounce(func, delay) {
+  let timer;
+  return function (...args) {
+    clearTimeout(timer);
+    timer = setTimeout(() => func(...args), delay);
+  };
+}
+
+export function capitalizeFirstLetter(string) {
+  return string.charAt(0).toUpperCase() + string.slice(1);
+}
+
 export function addToRecent(boardName, joinPw, priv) {
   try {
     const stored = localStorage.getItem('recentBoards');

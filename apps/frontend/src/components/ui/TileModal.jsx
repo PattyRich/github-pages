@@ -4,6 +4,7 @@ import { CheckboxField } from './FormControls';
 import ImageLightbox from './ImageLightbox';
 import { ModalButton, ModalShell } from './ModalShell';
 import ProofImageGrid from './ProofImageGrid';
+import { debounce } from '../../utils/utils';
 import './TileModal.css';
 
 const NUM_INPUTS = ['points', 'currPoints', 'rowBingo', 'colBingo'];
@@ -538,14 +539,6 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
 }
 
 export default TileModal;
-
-function debounce(func, delay) {
-  let timer;
-  return function (...args) {
-    clearTimeout(timer);
-    timer = setTimeout(() => func(...args), delay);
-  };
-}
 
 function nameFilter(name) {
   return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();

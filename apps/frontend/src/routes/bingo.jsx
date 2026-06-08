@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 //import { Link } from "react-router-dom";
 import './bingo.css';
 import BoardTile from '../components/BoardTile';
 import EditableInput from '../components/ui/EditableInput';
 import Button from '../components/ui/Button';
-import AlertBanner from '../components/ui/AlertBanner';
+import Alert from '../components/ui/Alert';
 import Surface from '../components/ui/Surface';
 
 import { fetchGet, fetchPost, addToRecent } from '../utils/utils';
+import { useAlert } from '../utils/useAlert';
 import { useNavigate } from 'react-router-dom';
 import RecentBoards from '../components/RecentBoards';
 
@@ -30,7 +31,7 @@ function Bingo({ screenSkip }) {
     ...initialBingoState,
     ...(screenSkip ? { screen: screenSkip } : {}),
   }));
-  const alertTimeoutRef = useRef(null);
+  const { alertMessage, alertVariant, isLoading, showAlert, clearAlert } = useAlert();
 
   function setBingoState(stateChange) {
     setState((currentState) => ({
@@ -50,12 +51,6 @@ function Bingo({ screenSkip }) {
         recentBoards: recentBoards,
       }));
     }
-
-    return () => {
-      if (alertTimeoutRef.current) {
-        clearTimeout(alertTimeoutRef.current);
-      }
-    };
   }, []);
 
   function inputState(e, target) {
@@ -132,25 +127,7 @@ function Bingo({ screenSkip }) {
     }
     if (err) {
       showAlert('danger', err.message);
-      setBingoState({ isLoading: false });
       return;
-    }
-  }
-
-  function showAlert(variant, message, skipTimeout = false) {
-    if (variant === 'loading') {
-      setBingoState({ alertVariant: 'warning', isLoading: true, alert: 'Loading...' });
-    } else {
-      setBingoState({ alertVariant: variant, alert: message });
-      if (alertTimeoutRef.current) {
-        clearTimeout(alertTimeoutRef.current);
-      }
-      if (skipTimeout) {
-        return;
-      }
-      alertTimeoutRef.current = setTimeout(() => {
-        setBingoState({ alert: '' });
-      }, 5000);
     }
   }
 
@@ -186,7 +163,11 @@ function Bingo({ screenSkip }) {
 
   return (
     <>
-      {state.alert && <AlertBanner variant={state.alertVariant}>{state.alert}</AlertBanner>}
+      {alertMessage && (
+        <Alert banner variant={alertVariant}>
+          {alertMessage}
+        </Alert>
+      )}
       {/* {state.showToast && <Toast variant="danger" message={'uh ohohhh'} />} */}
       {state.screen === 1 && (
         <div className="start-screen">

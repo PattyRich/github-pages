@@ -42,7 +42,7 @@ class Pets extends React.Component {
   }
 
   componentDidMount() {
-    setInterval(() => {
+    this.saveInterval = setInterval(() => {
       localStorage.setItem('pets', JSON.stringify(this.state.petInfo));
     }, 30000);
     let petData = localStorage.getItem('pets');
@@ -57,6 +57,10 @@ class Pets extends React.Component {
       }
       this.setState({ petInfo: newPetData });
     }
+  }
+
+  componentWillUnmount() {
+    clearInterval(this.saveInterval);
   }
 
   download() {

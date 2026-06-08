@@ -8,16 +8,15 @@ import { apiUrl } from '../config/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Teams from './Teams';
 import Toast from './ui/Toast';
-import AlertBanner from './ui/AlertBanner';
+import Alert from './ui/Alert';
 import EditTeams from './ui/EditTeams';
 import SettingsModal from './ui/SettingsModal';
 import FeedbackModal from './ui/FeedbackModal';
 import PasswordModal from './ui/PasswordModal';
+import { useAlert } from '../utils/useAlert';
 
 const initialBoardState = {
   privilage: 'general',
-  isLoading: false,
-  alert: '',
   teams: 5,
   showEditTeams: false,
   generalPasswordCopy: '',
@@ -31,10 +30,10 @@ function BoardView() {
     ...initialBoardState,
     ...(location.state || {}),
   }));
+  const { alertMessage, alertVariant, isLoading, showAlert: alert, clearAlert } = useAlert();
   const [, setResizeTick] = useState(0);
   const stateRef = useRef(state);
   const pendingStateCallbacksRef = useRef([]);
-  const alertTimeoutRef = useRef(null);
   const eventSourceRef = useRef(null);
   const sseRetryTimeoutRef = useRef(null);
   const passwordResolveRef = useRef(null);
@@ -68,30 +67,6 @@ function BoardView() {
     const callbacks = pendingStateCallbacksRef.current.splice(0);
     callbacks.forEach((callback) => callback());
   }, [state]);
-
-  function clearAlert() {
-    if (alertTimeoutRef.current) {
-      clearTimeout(alertTimeoutRef.current);
-    }
-    setBoardState({ alert: '' });
-  }
-
-  function alert(variant, message, skipTimeout = false) {
-    if (variant === 'loading') {
-      setBoardState({ alertVariant: 'warning', isLoading: true, alert: 'Loading...' });
-    } else {
-      setBoardState({ alertVariant: variant, alert: message });
-      if (alertTimeoutRef.current) {
-        clearTimeout(alertTimeoutRef.current);
-      }
-      if (skipTimeout) {
-        return;
-      }
-      alertTimeoutRef.current = setTimeout(() => {
-        setBoardState({ alert: '' });
-      }, 5000);
-    }
-  }
 
   function visibleBoardData(boardState = stateRef.current) {
     if (!boardState.boardData) {
@@ -283,9 +258,6 @@ function BoardView() {
       if (sseRetryTimeoutRef.current) {
         clearTimeout(sseRetryTimeoutRef.current);
       }
-      if (alertTimeoutRef.current) {
-        clearTimeout(alertTimeoutRef.current);
-      }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -323,11 +295,9 @@ function BoardView() {
     let [, err] = await fetchPut(`updateTeams/${url}`, { dataToSend });
     if (err) {
       alert('danger', err.message);
-      setBoardState({ isLoading: false });
       return;
     }
     await refreshData();
-    setBoardState({ isLoading: false });
     alert('success', 'Teams Successfully Updated!');
   }
 
@@ -398,8 +368,6 @@ function BoardView() {
     let [, err] = await fetchPut(`updateBoard/${url}`, { row, col, info });
     if (err) {
       alert('danger', err.message);
-      setBoardState({ isLoading: false });
-
       if (err.message === 'Your team password was incorrect.') {
         updateBoard(row, col, info, true);
       }
@@ -412,7 +380,6 @@ function BoardView() {
         pw
       );
     }
-    setBoardState({ isLoading: false });
     alert('success', 'Board Successfully Updated!');
   }
 
@@ -458,10 +425,10 @@ function BoardView() {
           </div>
         </div>
       </div>
-      {state.alert && (
-        <AlertBanner variant={state.alertVariant} dismissible onDismiss={clearAlert}>
-          {state.alert}
-        </AlertBanner>
+      {alertMessage && (
+        <Alert banner variant={alertVariant} dismissible onDismiss={clearAlert}>
+          {alertMessage}
+        </Alert>
       )}
       {state.teamData && !(state.privilage === 'admin') && (
         <div className="board-team-summary osrs-header">
