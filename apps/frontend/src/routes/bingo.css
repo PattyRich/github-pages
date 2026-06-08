@@ -359,6 +359,26 @@
   color: var(--osrs-text-gold);
 }
 
+.join-old-recents {
+  margin: 14px 0 0;
+  padding-top: 12px;
+  border-top: 2px solid var(--osrs-border-dark);
+  box-shadow: 0 -1px 0 var(--osrs-border-light);
+}
+
+.join-old-recents a {
+  color: var(--osrs-text-gold);
+  font-family: 'osrsFont', sans-serif;
+  text-shadow: 1px 1px 0 black;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+}
+
+.join-old-recents a:hover,
+.join-old-recents a:focus-visible {
+  color: var(--osrs-text-yellow);
+}
+
 .recent-board-list {
   margin-top: 18px;
 }

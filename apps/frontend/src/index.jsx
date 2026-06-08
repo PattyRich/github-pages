@@ -15,6 +15,7 @@ import LolBeat from './routes/LolBeat';
 import Status from './routes/Status';
 import HomeButton from './components/HomeButton';
 import NotFound from './routes/NotFound';
+import Recents from './routes/Recents';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
@@ -72,6 +73,8 @@ root.render(
     <HomeButton />
     <Routes>
       <Route path="/" element={<App />} />
+      <Route path="/recents" element={<Recents />} />
+      <Route path="/github-pages/recents" element={<Recents />} />
       <Route path="/status" element={<Status />} />
       <Route path="/github-pages/status" element={<Status />} />
       <Route path="/osrs" element={<Osrs />} />
