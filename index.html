@@ -15,11 +15,6 @@
           return;
         }
 
-        // Don't redirect /recents — let the app render so users can see their saved boards
-        if (routePath === '/recents' || hash === '#/recents') {
-          return;
-        }
-
         var projectPath = '/github-pages';
         var pathname = window.location.pathname;
         var search = window.location.search;
@@ -28,6 +23,11 @@
 
         if (pathname === projectPath || pathname.indexOf(projectPath + '/') === 0) {
           routePath = pathname.slice(projectPath.length) || '/';
+        }
+
+        // Don't redirect /recents — let the app render so users can see their saved boards
+        if (routePath === '/recents' || hash === '#/recents') {
+          return;
         }
 
         if (hash.indexOf('#/github-pages') === 0) {
