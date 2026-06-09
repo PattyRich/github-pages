@@ -41,7 +41,7 @@ function BoardView() {
   const stateRef = useRef(state);
   const pendingStateCallbacksRef = useRef([]);
   const eventSourceRef = useRef(null);
-  const sseRetryTimeoutRef = useRef(null);
+  const sseDisconnectedRef = useRef(false);
   const passwordResolveRef = useRef(null);
   const [passwordPrompt, setPasswordPrompt] = useState(null);
   const rowsRef = useRef(null);
@@ -183,30 +183,33 @@ function BoardView() {
     if (eventSourceRef.current) {
       eventSourceRef.current.close();
     }
-    if (sseRetryTimeoutRef.current) {
-      clearTimeout(sseRetryTimeoutRef.current);
-    }
     if (
       !(stateRef.current.generalPassword || stateRef.current.adminPassword) ||
       !stateRef.current.boardName
     ) {
-      sseRetryTimeoutRef.current = setTimeout(() => connectSSE(), 2000);
       return;
     }
     const url = apiUrl(`events/${pwUrlBuilder(stateRef.current)}`);
-    eventSourceRef.current = new EventSource(url);
+    const es = new EventSource(url);
+    eventSourceRef.current = es;
 
-    eventSourceRef.current.onopen = () => {
+    es.onopen = () => {
+      if (sseDisconnectedRef.current) {
+        sseDisconnectedRef.current = false;
+        clearAlert();
+      }
       refreshData();
     };
 
-    eventSourceRef.current.onmessage = () => {
+    es.onmessage = () => {
       refreshData();
     };
 
-    eventSourceRef.current.onerror = () => {
-      eventSourceRef.current.close();
-      sseRetryTimeoutRef.current = setTimeout(() => connectSSE(), 20000);
+    es.onerror = () => {
+      if (!sseDisconnectedRef.current) {
+        sseDisconnectedRef.current = true;
+        alert('warning', 'Lost connection — updates paused, trying to reconnect…');
+      }
     };
   }
 
@@ -258,9 +261,6 @@ function BoardView() {
     return () => {
       if (eventSourceRef.current) {
         eventSourceRef.current.close();
-      }
-      if (sseRetryTimeoutRef.current) {
-        clearTimeout(sseRetryTimeoutRef.current);
       }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps

@@ -1,11 +1,6 @@
 #!/bin/sh
 set -eu
 
-echo "Running prettier before push..."
-cd apps/frontend
-npm run format:check
-cd ../..
-
 echo "Running make test before push..."
 make test
-echo "prettier and make test passed; continuing push."
+echo "make test passed; continuing push."

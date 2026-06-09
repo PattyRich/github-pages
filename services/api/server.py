@@ -449,6 +449,7 @@ def board_events(boardName, password, pwtype):
     pubsub.subscribe(f"board:{boardName}")
     log.info("SSE open  board=%s  pwtype=%s  ip=%s", boardName, pwtype, request.remote_addr)
     try:
+      yield "retry: 3000\n\n"
       last_heartbeat = time.time()
       while True:
         message = pubsub.get_message(timeout=25)

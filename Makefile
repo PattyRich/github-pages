@@ -10,7 +10,7 @@ PYTHON_WIN?=.venv\Scripts\python.exe
 # -----------------------
 # HELP
 # -----------------------
-.PHONY: help install install-hooks dev frontend backend backend-logs build deploy clean up down restart logs ps shell-api shell-worker test e2e e2e-headed
+.PHONY: help install install-hooks dev frontend backend backend-logs build deploy clean up down restart logs ps shell-api shell-worker test format format-check e2e e2e-headed
 
 help:
 	@echo "Available commands:"
@@ -21,6 +21,8 @@ help:
 	@echo "  make backend      - Start backend services in background"
 	@echo "  make backend-logs - Start backend services and tail logs"
 	@echo "  make test         - Run backend + frontend tests"
+	@echo "  make format       - Format frontend files with Prettier"
+	@echo "  make format-check - Check frontend formatting with Prettier"
 	@echo "  make build        - Build frontend for production"
 	@echo "  make deploy       - Build and deploy to GitHub Pages"
 	@echo "  make clean        - Remove build artifacts, node_modules, and docker volumes"
@@ -89,6 +91,12 @@ test:
 	$(PYTHON) -m pytest $(SERVER_DIR)/test_server.py -q
 	cd $(FRONTEND_DIR) && npm test
 	$(PYTHON) tests/e2e/run_e2e.py
+
+format:
+	cd $(FRONTEND_DIR) && npm run format
+
+format-check:
+	cd $(FRONTEND_DIR) && npm run format:check
 
 e2e:
 	$(PYTHON) tests/e2e/run_e2e.py
