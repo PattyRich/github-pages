@@ -13,6 +13,7 @@ from imageManager import proof_images, board_images
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import RequestEntityTooLarge
 import os
+from urllib.parse import quote
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -64,6 +65,7 @@ allowedAuthTypes = ['admin', 'general']
 adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
 generalTileKeys = ['proof', 'checked', 'currPoints', 'proofImages']
 boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns', 'visibleRows']
+disallowedRouteChars = ['?', '#', '/', '\\']
 testBoardPrefix = os.environ.get("PLAYWRIGHT_E2E_BOARD_PREFIX", os.environ.get("SELENIUM_E2E_BOARD_PREFIX", "__playwright_e2e__"))
 maxProofImages = int(os.environ.get("MAX_PROOF_IMAGES_PER_TILE", 10))
 defaultTeamObj = {
@@ -201,6 +203,30 @@ def slice_board_rows(board_data, visible_rows):
 def is_test_board(board_name):
   return isinstance(board_name, str) and board_name.startswith(testBoardPrefix)
 
+def has_disallowed_route_chars(value):
+  return any(char in value for char in disallowedRouteChars)
+
+def validate_board_creation(data):
+  for key in ['boardName', 'adminPassword', 'generalPassword']:
+    if not isinstance(data.get(key), str) or not data[key].strip():
+      return 'Please fill out all fields.'
+    data[key] = data[key].strip()
+    if has_disallowed_route_chars(data[key]):
+      return 'Passwords and boardname cannot have these characters : ' + ' '.join(disallowedRouteChars)
+
+  if data['boardName'].lower() in ['join', 'create']:
+    return "Name can't be join or create for routing purposes."
+
+  return None
+
+def bingo_board_url(board_name, password):
+  encoded_board_name = quote(str(board_name), safe='')
+  encoded_password = quote(str(password), safe='')
+  return f'https://pattyrich.github.io/github-pages/#/bingo/{encoded_board_name}?password={encoded_password}'
+
+def escape_discord_link_text(value):
+  return str(value).replace('\\', '\\\\').replace('[', '\\[').replace(']', '\\]')
+
 def is_test_board_request():
   try:
     data = request.get_json(silent=True) or {}
@@ -324,12 +350,16 @@ def health():
 @limiter.limit("10 per hour", exempt_when=is_test_board_request)
 def createBoard():
   data = json.loads(request.data.decode(), parse_float=float)
+  data = clearBadData(data, boardCreationKeys)
+  validation_error = validate_board_creation(data)
+  if validation_error:
+    return bad_request(validation_error)
+
   cache = mycol.find_one({'boardName': data['boardName']})
   if (cache):
     log.warning("createBoard - name already taken  board=%s  ip=%s", data['boardName'], request.remote_addr)
     return bad_request('Board Name Already Taken!!')
 
-  data = clearBadData(data, boardCreationKeys)
   data['visibleRows'] = clamp_visible_rows(data.get('visibleRows'), int(data['columns']))
 
   boardData = []
@@ -362,8 +392,9 @@ def createBoard():
   log.info("createBoard - success  board=%s  teams=%d  ip=%s", data['boardName'], data['teams'], request.remote_addr)
 
   if not is_test_board(data["boardName"]):
-    board_url = 'https://pattyrich.github.io/github-pages/#/bingo/{}?password={}'.format(data["boardName"].replace(' ', '%20'), data.get('generalPassword', ''))
-    discord_message = 'New bingo board created: **[{}]({})**'.format(data["boardName"], board_url)
+    board_url = bingo_board_url(data["boardName"], data.get('generalPassword', ''))
+    board_label = escape_discord_link_text(data["boardName"])
+    discord_message = 'New bingo board created: **[{}]({})**'.format(board_label, board_url)
     postToDiscord(discord_message, 'CREATION_WEBHOOK')
   else:
     log.info("createBoard - creation webhook skipped for test board  board=%s", data['boardName'])

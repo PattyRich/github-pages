@@ -7,7 +7,7 @@ import Button from '../components/ui/Button';
 import Alert from '../components/ui/Alert';
 import Surface from '../components/ui/Surface';
 
-import { fetchGet, fetchPost, addToRecent } from '../utils/utils';
+import { fetchGet, fetchPost, addToRecent, authUrlBuilder, bingoBoardPath } from '../utils/utils';
 import { useAlert } from '../utils/useAlert';
 import { useNavigate } from 'react-router-dom';
 import RecentBoards from '../components/RecentBoards';
@@ -24,6 +24,8 @@ const initialBingoState = {
   joinPw: '',
   teams: 5,
 };
+
+const notAllowed = ['?', '#', '/', '\\'];
 
 function Bingo({ screenSkip }) {
   const navigate = useNavigate();
@@ -88,7 +90,6 @@ function Bingo({ screenSkip }) {
       return;
     }
 
-    const notAllowed = ['?', '#', '/', '\\'];
     for (let i = 0; i < notAllowed.length; i++) {
       if (
         trimmedState.boardName.includes(notAllowed[i]) ||
@@ -114,7 +115,7 @@ function Bingo({ screenSkip }) {
     const [data, err] = await fetchPost('createBoard', { ...trimmedState });
     if (data) {
       addToRecent(trimmedState.boardName, trimmedState.adminPassword, 'admin');
-      navigate('/bingo/' + trimmedState.boardName, {
+      navigate(bingoBoardPath(trimmedState.boardName), {
         state: {
           adminPassword: trimmedState.adminPassword,
           generalPassword: trimmedState.generalPassword,
@@ -138,27 +139,40 @@ function Bingo({ screenSkip }) {
       obj.adminPassword = recentSkip.password;
       obj.privilage = recentSkip.priv;
       obj.boardName = recentSkip.boardName;
-      navigate('/bingo/' + obj.boardName, { state: obj });
+      navigate(bingoBoardPath(obj.boardName), { state: obj });
       return;
     }
 
-    let [, err] = await fetchGet(`auth/${state.boardName}/${state.joinPw}/${state.joinPwTitle}`);
+    const trimmedAuthState = {
+      ...state,
+      boardName: state.boardName.trim(),
+      joinPw: state.joinPw.trim(),
+    };
+    setBingoState(trimmedAuthState);
+
+    let [, err] = await fetchGet(
+      authUrlBuilder(
+        trimmedAuthState.boardName,
+        trimmedAuthState.joinPw,
+        trimmedAuthState.joinPwTitle
+      )
+    );
     if (err) {
       showAlert('danger', err.message);
       return;
     }
     let navigationState = {
-      boardName: state.boardName,
+      boardName: trimmedAuthState.boardName,
     };
-    if (state.joinPwTitle === 'general') {
-      navigationState.generalPassword = state.joinPw;
+    if (trimmedAuthState.joinPwTitle === 'general') {
+      navigationState.generalPassword = trimmedAuthState.joinPw;
     } else {
-      navigationState.adminPassword = state.joinPw;
+      navigationState.adminPassword = trimmedAuthState.joinPw;
       navigationState.privilage = 'general';
       navigationState.canSwitchPriv = true;
     }
-    addToRecent(state.boardName, state.joinPw, state.joinPwTitle);
-    navigate('/bingo/' + state.boardName, { state: navigationState });
+    addToRecent(trimmedAuthState.boardName, trimmedAuthState.joinPw, trimmedAuthState.joinPwTitle);
+    navigate(bingoBoardPath(trimmedAuthState.boardName), { state: navigationState });
   }
 
   return (

@@ -3,7 +3,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import './BoardView.css';
 import BoardTile from './BoardTile';
 import Button from './ui/Button';
-import { fetchGet, fetchPut, pwUrlBuilder, addToRecent } from '../utils/utils.js';
+import {
+  fetchGet,
+  fetchPut,
+  pwUrlBuilder,
+  addToRecent,
+  decodePathSegment,
+} from '../utils/utils.js';
 import { apiUrl } from '../config/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Teams from './Teams';
@@ -208,9 +214,7 @@ function BoardView() {
     async function loadBoard() {
       const params = new URLSearchParams(location.search);
       const pw = params.get('password');
-      const boardName = decodeURIComponent(
-        location.pathname.split('/').filter(Boolean).pop() || ''
-      );
+      const boardName = decodePathSegment(location.pathname.split('/').filter(Boolean).pop() || '');
 
       if (pw) {
         addToRecent(boardName, pw, 'general');

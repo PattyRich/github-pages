@@ -40,13 +40,37 @@ export function setStoredBool(key, value) {
   localStorage.setItem(key, String(value));
 }
 
+export function encodePathSegment(segment) {
+  return encodeURIComponent(String(segment ?? ''));
+}
+
+export function decodePathSegment(segment) {
+  try {
+    return decodeURIComponent(segment || '');
+  } catch (err) {
+    return segment || '';
+  }
+}
+
+export function encodedPath(...segments) {
+  return segments.map((segment) => encodePathSegment(segment)).join('/');
+}
+
+export function bingoBoardPath(boardName) {
+  return `/bingo/${encodePathSegment(boardName)}`;
+}
+
+export function authUrlBuilder(boardName, password, pwtype) {
+  return encodedPath('auth', boardName, password, pwtype);
+}
+
 export function pwUrlBuilder(state, teamPassword = null) {
   const isAdmin = state.privilage === 'admin';
   const pw = isAdmin ? state.adminPassword : state.generalPassword || state.adminPassword;
   const type = isAdmin ? 'admin' : 'general';
   const segments = [state.boardName, pw, type];
   if (state.teamPasswordsRequired && teamPassword) segments.push(teamPassword);
-  return segments.map((segment) => encodeURIComponent(segment)).join('/');
+  return encodedPath(...segments);
 }
 
 async function readJson(response) {

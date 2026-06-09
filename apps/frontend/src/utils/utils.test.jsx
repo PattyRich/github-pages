@@ -1,5 +1,12 @@
 import { beforeEach, expect, test, vi } from 'vitest';
-import { fetchGet, fetchPost, pwUrlBuilder } from './utils';
+import {
+  authUrlBuilder,
+  bingoBoardPath,
+  decodePathSegment,
+  fetchGet,
+  fetchPost,
+  pwUrlBuilder,
+} from './utils';
 
 function mockJsonResponse(data, response = {}) {
   return {
@@ -71,4 +78,16 @@ test('pwUrlBuilder encodes path segments safely', () => {
   );
 
   expect(url).toBe('TNI%20Clan%20Bingo/Sophie%2Fgeneral/general/team%20pw');
+});
+
+test('board route and auth helpers encode spaces and hash characters', () => {
+  expect(bingoBoardPath('Clan #1 Bingo')).toBe('/bingo/Clan%20%231%20Bingo');
+  expect(authUrlBuilder('Clan Bingo', 'team pw', 'general')).toBe(
+    'auth/Clan%20Bingo/team%20pw/general'
+  );
+});
+
+test('decodePathSegment falls back for malformed manual URLs', () => {
+  expect(decodePathSegment('Clan%20Bingo')).toBe('Clan Bingo');
+  expect(decodePathSegment('Clan%')).toBe('Clan%');
 });

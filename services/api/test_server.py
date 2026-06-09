@@ -215,6 +215,36 @@ class TestCreateBoard(unittest.TestCase):
         self.assertEqual(inserted["visibleRows"], 3)
 
     @patch("server.postToDiscord", return_value=True)
+    def test_creation_discord_link_encodes_board_and_password_spaces(self, post_to_discord):
+        resp = self._post({
+            "boardName": "My Board (2)",
+            "adminPassword": "a",
+            "generalPassword": "general pw",
+            "teams": 2,
+            "rows": 3,
+            "columns": 3,
+        })
+        self.assertEqual(resp.status_code, 200)
+        message = post_to_discord.call_args[0][0]
+        self.assertIn("/#/bingo/My%20Board%20%282%29?password=general%20pw", message)
+
+    def test_create_rejects_route_breaking_characters(self):
+        for char in server.disallowedRouteChars:
+            with self.subTest(char=char):
+                _mock_col.reset_mock()
+                resp = self._post({
+                    "boardName": f"My{char}Board",
+                    "adminPassword": "a",
+                    "generalPassword": "g",
+                    "teams": 2,
+                    "rows": 3,
+                    "columns": 3,
+                })
+                self.assertEqual(resp.status_code, 400)
+                self.assertIn("cannot have these characters", json.loads(resp.data)["message"])
+                _mock_col.find_one.assert_not_called()
+
+    @patch("server.postToDiscord", return_value=True)
     def test_test_board_prefix_skips_creation_discord_alert(self, post_to_discord):
         resp = self._post({
             "boardName": f"{server.testBoardPrefix} smoke",
