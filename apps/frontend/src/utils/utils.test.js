@@ -13,7 +13,7 @@ describe('pwUrlBuilder', () => {
       boardName: 'my-board',
       adminPassword: 'adminpw',
       generalPassword: 'genpw',
-      privilage: 'admin',
+      privilege: 'admin',
     };
     expect(pwUrlBuilder(state)).toBe('my-board/adminpw/admin');
   });
@@ -23,7 +23,7 @@ describe('pwUrlBuilder', () => {
       boardName: 'my-board',
       adminPassword: 'adminpw',
       generalPassword: 'genpw',
-      privilage: 'general',
+      privilege: 'general',
     };
     expect(pwUrlBuilder(state)).toBe('my-board/genpw/general');
   });
@@ -33,7 +33,7 @@ describe('pwUrlBuilder', () => {
       boardName: 'my-board',
       adminPassword: 'adminpw',
       generalPassword: '',
-      privilage: 'general',
+      privilege: 'general',
     };
     expect(pwUrlBuilder(state)).toBe('my-board/adminpw/general');
   });
@@ -43,7 +43,7 @@ describe('pwUrlBuilder', () => {
       boardName: 'my-board',
       adminPassword: 'adminpw',
       generalPassword: 'genpw',
-      privilage: 'general',
+      privilege: 'general',
       teamPasswordsRequired: true,
     };
     expect(pwUrlBuilder(state, 'teampw')).toBe('my-board/genpw/general/teampw');
@@ -54,10 +54,20 @@ describe('pwUrlBuilder', () => {
       boardName: 'my-board',
       adminPassword: 'adminpw',
       generalPassword: 'genpw',
-      privilage: 'general',
+      privilege: 'general',
       teamPasswordsRequired: false,
     };
     expect(pwUrlBuilder(state, 'teampw')).toBe('my-board/genpw/general');
+  });
+
+  test('accepts legacy privilage key on board state', () => {
+    const state = {
+      boardName: 'my-board',
+      adminPassword: 'adminpw',
+      generalPassword: 'genpw',
+      privilage: 'admin',
+    };
+    expect(pwUrlBuilder(state)).toBe('my-board/adminpw/admin');
   });
 
   test('percent-encodes special characters in board name and passwords', () => {
@@ -65,7 +75,7 @@ describe('pwUrlBuilder', () => {
       boardName: 'board name',
       adminPassword: 'p@ss/word',
       generalPassword: 'gen pw',
-      privilage: 'admin',
+      privilege: 'admin',
     };
     expect(pwUrlBuilder(state)).toBe('board%20name/p%40ss%2Fword/admin');
   });
@@ -78,17 +88,17 @@ describe('addToRecent', () => {
     addToRecent('board-1', 'pw', 'general');
     const stored = JSON.parse(localStorage.getItem('recentBoards'));
     expect(stored).toHaveLength(1);
-    expect(stored[0]).toEqual({ boardName: 'board-1', password: 'pw', priv: 'general' });
+    expect(stored[0]).toEqual({ boardName: 'board-1', password: 'pw', privilege: 'general' });
   });
 
-  test('does not add a duplicate entry for the same board + priv', () => {
+  test('does not add a duplicate entry for the same board + privilege', () => {
     addToRecent('board-1', 'pw', 'general');
     addToRecent('board-1', 'pw', 'general');
     const stored = JSON.parse(localStorage.getItem('recentBoards'));
     expect(stored).toHaveLength(1);
   });
 
-  test('adds separate entries for the same board with different privs', () => {
+  test('adds separate entries for the same board with different privileges', () => {
     addToRecent('board-1', 'adminpw', 'admin');
     addToRecent('board-1', 'genpw', 'general');
     const stored = JSON.parse(localStorage.getItem('recentBoards'));
@@ -101,6 +111,16 @@ describe('addToRecent', () => {
     const stored = JSON.parse(localStorage.getItem('recentBoards'));
     expect(stored).toHaveLength(2);
     expect(stored.map((b) => b.boardName)).toEqual(['board-1', 'board-2']);
+  });
+
+  test('treats legacy priv field as privilege when deduplicating', () => {
+    localStorage.setItem(
+      'recentBoards',
+      JSON.stringify([{ boardName: 'board-1', password: 'pw', priv: 'general' }])
+    );
+    addToRecent('board-1', 'pw', 'general');
+    const stored = JSON.parse(localStorage.getItem('recentBoards'));
+    expect(stored).toHaveLength(1);
   });
 
   test('recovers gracefully when localStorage contains corrupt JSON', () => {

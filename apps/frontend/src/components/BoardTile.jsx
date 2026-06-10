@@ -6,7 +6,7 @@ import { getStoredBool } from '../utils/utils';
 const CROSS_SVG =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='red' stroke-width='3'/><path d='M0 0 L100 100 ' stroke='red' stroke-width='3'/></svg>";
 
-export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, privilage, bare }) {
+export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, privilege, bare }) {
   const [showModal, setShowModal] = useState(false);
 
   const checked = teamInfo?.checked;
@@ -100,7 +100,7 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
                   {teamInfo.currPoints} / {info.points}
                 </div>
               )}
-              {privilage === 'admin' && (
+              {privilege === 'admin' && (
                 <div className="tile-progress-badge tile-admin-points">{info?.points}</div>
               )}
             </div>
@@ -112,7 +112,7 @@ export default function BoardTile({ cord, change, info, teamInfo, dem, br, bb, p
         <Modal
           cord={cord}
           change={change}
-          privilage={privilage}
+          privilege={privilege}
           info={info}
           teamInfo={teamInfo}
           show

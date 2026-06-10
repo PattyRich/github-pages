@@ -1,5 +1,6 @@
 import { beforeEach, expect, test, vi } from 'vitest';
 import {
+  addToRecent,
   authUrlBuilder,
   bingoBoardPath,
   decodePathSegment,
@@ -21,6 +22,7 @@ function mockJsonResponse(data, response = {}) {
 beforeEach(() => {
   global.fetch = vi.fn();
   vi.clearAllMocks();
+  localStorage.clear();
 });
 
 test('fetchGet prefixes relative API paths with the configured API base', async () => {
@@ -71,7 +73,7 @@ test('pwUrlBuilder encodes path segments safely', () => {
     {
       boardName: 'TNI Clan Bingo',
       generalPassword: 'Sophie/general',
-      privilage: 'general',
+      privilege: 'general',
       teamPasswordsRequired: true,
     },
     'team pw'
@@ -90,4 +92,31 @@ test('board route and auth helpers encode spaces and hash characters', () => {
 test('decodePathSegment falls back for malformed manual URLs', () => {
   expect(decodePathSegment('Clan%20Bingo')).toBe('Clan Bingo');
   expect(decodePathSegment('Clan%')).toBe('Clan%');
+});
+
+test('pwUrlBuilder accepts legacy privilage key on board state', () => {
+  expect(
+    pwUrlBuilder({
+      boardName: 'my-board',
+      adminPassword: 'adminpw',
+      generalPassword: 'genpw',
+      privilage: 'admin',
+    })
+  ).toBe('my-board/adminpw/admin');
+});
+
+test('addToRecent stores privilege and deduplicates legacy priv entries', () => {
+  localStorage.setItem(
+    'recentBoards',
+    JSON.stringify([{ boardName: 'board-1', password: 'pw', priv: 'general' }])
+  );
+  addToRecent('board-1', 'pw', 'general');
+  expect(JSON.parse(localStorage.getItem('recentBoards'))).toHaveLength(1);
+
+  addToRecent('board-2', 'pw2', 'admin');
+  expect(JSON.parse(localStorage.getItem('recentBoards'))[1]).toEqual({
+    boardName: 'board-2',
+    password: 'pw2',
+    privilege: 'admin',
+  });
 });

@@ -65,7 +65,7 @@ export function authUrlBuilder(boardName, password, pwtype) {
 }
 
 export function pwUrlBuilder(state, teamPassword = null) {
-  const isAdmin = state.privilage === 'admin';
+  const isAdmin = (state.privilege ?? state.privilage) === 'admin';
   const pw = isAdmin ? state.adminPassword : state.generalPassword || state.adminPassword;
   const type = isAdmin ? 'admin' : 'general';
   const segments = [state.boardName, pw, type];
@@ -103,7 +103,11 @@ export function capitalizeFirstLetter(string) {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
 
-export function addToRecent(boardName, joinPw, priv) {
+export function recentBoardPrivilege(item) {
+  return item?.privilege ?? item?.priv;
+}
+
+export function addToRecent(boardName, joinPw, privilege) {
   try {
     const stored = localStorage.getItem('recentBoards');
     let recentBoards = stored ? JSON.parse(stored) : [];
@@ -111,13 +115,13 @@ export function addToRecent(boardName, joinPw, priv) {
       recentBoards = [];
     }
     const find = recentBoards.find((item) => {
-      return item.boardName === boardName && priv === item.priv;
+      return item.boardName === boardName && privilege === recentBoardPrivilege(item);
     });
     if (!find) {
       const obj = {
         boardName: boardName,
         password: joinPw,
-        priv: priv,
+        privilege,
       };
       localStorage.setItem('recentBoards', JSON.stringify([...recentBoards, obj]));
     }

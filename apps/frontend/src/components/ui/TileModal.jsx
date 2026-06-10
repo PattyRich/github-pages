@@ -10,7 +10,7 @@ import './TileModal.css';
 const NUM_INPUTS = ['points', 'currPoints', 'rowBingo', 'colBingo'];
 const tileImages = import.meta.glob('../../assets/*.png', { eager: true, import: 'default' });
 
-function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show, br, bb }) {
+function TileModal({ cord, change, handleClose, info, teamInfo, privilege, show, br, bb }) {
   const [state, setState] = useState(() => ({
     wikiSearch: '',
     ...info,
@@ -28,6 +28,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
   const fileInputRef = useRef(null);
   const proofFileInputRef = useRef(null);
   const debouncedSetCurrSuggestionsRef = useRef(null);
+  const wikiSearchSeqRef = useRef(0);
 
   function setTileState(stateChange) {
     setState((currentState) => {
@@ -69,32 +70,56 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
   function setCurrSuggestions(searchValue = stateRef.current.wikiSearch) {
     setSuggestions(null);
     if (!searchValue.length) return;
-    setTileState({ loading: true, triedToSearch: false });
+
+    const requestId = ++wikiSearchSeqRef.current;
+    setTileState({ loading: true, triedToSearch: false, wikiSearchError: false });
 
     const url = `https://oldschool.runescape.wiki/rest.php/v1/search/title?q=${encodeURIComponent(searchValue)}&limit=5`;
     fetch(url)
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Wiki search failed (${res.status})`);
+        }
+        return res.json();
+      })
       .then(async (data) => {
+        if (requestId !== wikiSearchSeqRef.current) return;
+
         const fetchPromises = (data.pages || []).map(async (item) => {
           if (!item.thumbnail || badTitlesRef.current.includes(item.title)) return null;
           if (stateRef.current.storedSuggestions[item.title]) return item;
           const imgUrl = getImageUrl(item.title);
-          const response = await fetch(imgUrl);
-          if (response.status === 200) {
-            item.url = imgUrl;
-            return item;
+          try {
+            const response = await fetch(imgUrl);
+            if (response.status === 200) {
+              item.url = imgUrl;
+              return item;
+            }
+            badTitlesRef.current.push(item.title);
+          } catch {
+            badTitlesRef.current.push(item.title);
           }
-          badTitlesRef.current.push(item.title);
           return null;
         });
 
         const results = (await Promise.all(fetchPromises)).filter(Boolean);
+        if (requestId !== wikiSearchSeqRef.current) return;
+
         const storedSuggestions = { ...stateRef.current.storedSuggestions };
         results.forEach((item) => {
           storedSuggestions[item.title] = item;
         });
         setTileState({ storedSuggestions });
         setSuggestions(results, storedSuggestions);
+      })
+      .catch(() => {
+        if (requestId !== wikiSearchSeqRef.current) return;
+        setTileState({
+          loading: false,
+          triedToSearch: true,
+          suggestions: [],
+          wikiSearchError: true,
+        });
       });
   }
 
@@ -216,7 +241,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
 
   async function handleSave() {
     let stateToSave = { ...stateRef.current };
-    if (privilage === 'admin') {
+    if (privilege === 'admin') {
       delete stateToSave.checked;
       delete stateToSave.proof;
       delete stateToSave.currPoints;
@@ -276,7 +301,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
     }));
   }
 
-  const isAdmin = privilage === 'admin';
+  const isAdmin = privilege === 'admin';
   const isGeneral = !isAdmin;
   const showRowBonus = br && (isAdmin || Number(state.rowBingo) !== 0);
   const showColumnBonus = bb && (isAdmin || Number(state.colBingo) !== 0);
@@ -502,7 +527,12 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
               <span className="tm-visually-hidden">Loading...</span>
             </div>
           )}
-          {state.triedToSearch && state.suggestions?.length === 0 && (
+          {state.wikiSearchError && (
+            <div className="alert" role="alert">
+              Could not reach the OSRS wiki. Check your connection and try again.
+            </div>
+          )}
+          {state.triedToSearch && !state.wikiSearchError && state.suggestions?.length === 0 && (
             <div className="alert" role="alert">
               No results found, try searching something else
             </div>

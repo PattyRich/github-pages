@@ -22,7 +22,7 @@ import PasswordModal from './ui/PasswordModal';
 import { useAlert } from '../utils/useAlert';
 
 const initialBoardState = {
-  privilage: 'general',
+  privilege: 'general',
   teams: 5,
   showEditTeams: false,
   generalPasswordCopy: '',
@@ -32,10 +32,16 @@ const initialBoardState = {
 function BoardView() {
   const location = useLocation();
   const navigate = useNavigate();
-  const [state, setState] = useState(() => ({
-    ...initialBoardState,
-    ...(location.state || {}),
-  }));
+  const [state, setState] = useState(() => {
+    const fromLocation = location.state || {};
+    const legacyPrivilege = fromLocation.privilege ?? fromLocation.privilage;
+    const { privilege: _privilege, privilage: _privilage, ...rest } = fromLocation;
+    return {
+      ...initialBoardState,
+      ...rest,
+      privilege: legacyPrivilege ?? initialBoardState.privilege,
+    };
+  });
   const { alertMessage, alertVariant, isLoading, showAlert: alert, clearAlert } = useAlert();
   const [, setResizeTick] = useState(0);
   const stateRef = useRef(state);
@@ -78,7 +84,7 @@ function BoardView() {
     if (!boardState.boardData) {
       return [];
     }
-    if (boardState.privilage !== 'general') {
+    if (boardState.privilege !== 'general') {
       return boardState.boardData;
     }
     const visibleRows = Number(boardState.visibleRows) || boardState.boardData.length;
@@ -168,8 +174,8 @@ function BoardView() {
       () => {
         calculateTeamPoints();
         if (firstLoad) {
-          if (stateRef.current.privilage === 'admin') {
-            switchPrivilage();
+          if (stateRef.current.privilege === 'admin') {
+            switchPrivilege();
           }
         }
       }
@@ -223,14 +229,14 @@ function BoardView() {
         addToRecent(boardName, pw, 'general');
 
         await promisedSetState({
-          privilage: 'general',
+          privilege: 'general',
           generalPassword: pw,
           boardName: boardName,
         });
         navigate(location.pathname, {
           replace: true,
           state: {
-            privilage: 'general',
+            privilege: 'general',
             generalPassword: pw,
             boardName: boardName,
           },
@@ -309,12 +315,12 @@ function BoardView() {
     setBoardState({ activeTeamIndex: teamId });
   }
 
-  async function switchPrivilage() {
-    if (stateRef.current.privilage === 'admin') {
-      await promisedSetState({ privilage: 'general', canSwitchPriv: true });
+  async function switchPrivilege() {
+    if (stateRef.current.privilege === 'admin') {
+      await promisedSetState({ privilege: 'general', canSwitchPriv: true });
       await refreshData();
     } else {
-      await promisedSetState({ privilage: 'admin' });
+      await promisedSetState({ privilege: 'admin' });
       await refreshData();
     }
   }
@@ -351,7 +357,7 @@ function BoardView() {
     alert('loading');
     let needToAddTeamPassword = false;
     let pw;
-    if (stateRef.current.teamPasswordsRequired && stateRef.current.privilage !== 'admin') {
+    if (stateRef.current.teamPasswordsRequired && stateRef.current.privilege !== 'admin') {
       pw = getTeamPassword(
         stateRef.current.boardName,
         stateRef.current.teamData[stateRef.current.activeTeamIndex].data.name
@@ -411,18 +417,18 @@ function BoardView() {
               text="Settings"
               variant="primary"
             />
-            {(state.privilage === 'admin' || state.canSwitchPriv) && (
+            {(state.privilege === 'admin' || state.canSwitchPriv) && (
               <>
-                {state.privilage === 'admin' && (
+                {state.privilege === 'admin' && (
                   <>
                     <Button click={toggleTeamEdit} text="Edit Board" variant="primary" />
                     <Button click={clipboard} variant="warning" text={'Auto Signin Link 📋'} />
                   </>
                 )}
-                {state.privilage === 'admin' ? (
-                  <Button click={switchPrivilage} text="Admin Mode" variant="warning" />
+                {state.privilege === 'admin' ? (
+                  <Button click={switchPrivilege} text="Admin Mode" variant="warning" />
                 ) : (
-                  <Button click={switchPrivilage} text="General Mode" variant="primary" />
+                  <Button click={switchPrivilege} text="General Mode" variant="primary" />
                 )}
               </>
             )}
@@ -434,7 +440,7 @@ function BoardView() {
           {alertMessage}
         </Alert>
       )}
-      {state.teamData && !(state.privilage === 'admin') && (
+      {state.teamData && !(state.privilege === 'admin') && (
         <div className="board-team-summary osrs-header">
           <h3 className="board-team-name">{state.teamData[state.activeTeamIndex].data.name}</h3>
           <span className="board-team-points">
@@ -452,7 +458,7 @@ function BoardView() {
                   change={changeBoardTileInfo}
                   info={boardDataToShow[i][j]}
                   teamInfo={
-                    state.teamData && state.privilage !== 'admin'
+                    state.teamData && state.privilege !== 'admin'
                       ? state.teamData[state.activeTeamIndex].data.teamData[i][j]
                       : null
                   }
@@ -460,14 +466,14 @@ function BoardView() {
                   dem={dem}
                   br={boardDataToShow[0].length === j + 1}
                   bb={boardDataToShow.length === i + 1}
-                  privilage={state.privilage}
+                  privilege={state.privilege}
                 />
               ))}
             </span>
           ))}
         </div>
       )}
-      {state.teamData && state.privilage === 'general' && (
+      {state.teamData && state.privilege === 'general' && (
         <Teams
           changeTeam={changeTeam}
           teams={state.teamData}

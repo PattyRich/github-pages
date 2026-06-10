@@ -19,7 +19,7 @@ const initialBingoState = {
   adminPassword: '',
   generalPassword: '',
   boardName: '',
-  privilage: 'admin',
+  privilege: 'admin',
   joinPwTitle: 'general',
   joinPw: '',
   teams: 5,
@@ -71,8 +71,8 @@ function Bingo({ screenSkip }) {
     setBingoState({ [target]: currValue });
   }
 
-  function removeRecent(name) {
-    const recentBoards = state.recentBoards.filter((thing) => thing.boardName !== name);
+  function removeRecent(indexToRemove) {
+    const recentBoards = state.recentBoards.filter((_thing, index) => index !== indexToRemove);
     setBingoState({ recentBoards });
     localStorage.setItem('recentBoards', JSON.stringify(recentBoards));
   }
@@ -121,7 +121,7 @@ function Bingo({ screenSkip }) {
           generalPassword: trimmedState.generalPassword,
           teams: trimmedState.teams,
           boardName: trimmedState.boardName,
-          privilage: 'admin',
+          privilege: 'admin',
           cameFromCreate: true,
         },
       });
@@ -137,7 +137,7 @@ function Bingo({ screenSkip }) {
       let obj = {};
       obj.generalPassword = recentSkip.password;
       obj.adminPassword = recentSkip.password;
-      obj.privilage = recentSkip.priv;
+      obj.privilege = recentSkip.privilege ?? recentSkip.priv;
       obj.boardName = recentSkip.boardName;
       navigate(bingoBoardPath(obj.boardName), { state: obj });
       return;
@@ -168,7 +168,7 @@ function Bingo({ screenSkip }) {
       navigationState.generalPassword = trimmedAuthState.joinPw;
     } else {
       navigationState.adminPassword = trimmedAuthState.joinPw;
-      navigationState.privilage = 'general';
+      navigationState.privilege = 'general';
       navigationState.canSwitchPriv = true;
     }
     addToRecent(trimmedAuthState.boardName, trimmedAuthState.joinPw, trimmedAuthState.joinPwTitle);

@@ -21,7 +21,7 @@ function renderTileModal(overrides = {}) {
     handleClose: vi.fn(),
     info: baseInfo,
     teamInfo: baseTeamInfo,
-    privilage: 'member',
+    privilege: 'member',
     show: true,
     ...overrides,
   };
@@ -69,14 +69,14 @@ test('general users can edit current points but not total points', () => {
 });
 
 test('admins can edit total points but not current points', () => {
-  renderTileModal({ privilage: 'admin', teamInfo: {} });
+  renderTileModal({ privilege: 'admin', teamInfo: {} });
 
   expect(screen.getByLabelText(/Current Points/i)).toBeDisabled();
   expect(screen.getByLabelText(/Total Points/i)).toBeEnabled();
 });
 
 test('shows bundled tile images but saves the selected object as a wiki detail image', async () => {
-  const props = renderTileModal({ privilage: 'admin', teamInfo: {} });
+  const props = renderTileModal({ privilege: 'admin', teamInfo: {} });
 
   fireEvent.click(screen.getByRole('button', { name: /Set Tile Background Image/i }));
   expect(screen.getByRole('heading', { name: /Set Tile Background Image/i })).toBeInTheDocument();
@@ -123,6 +123,27 @@ test('closes modal when escape key is pressed', () => {
   fireEvent.keyDown(window, { key: 'Escape', code: 'Escape' });
 
   expect(props.handleClose).toHaveBeenCalled();
+});
+
+test('clears loading and shows an error when wiki search fails', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() => Promise.reject(new Error('network error')))
+  );
+
+  renderTileModal({ privilege: 'admin', teamInfo: {} });
+
+  fireEvent.click(screen.getByRole('button', { name: /Set Tile Background Image/i }));
+
+  const searchInput = screen.getByLabelText(/Item Search/i);
+  fireEvent.change(searchInput, { target: { value: 'Coins' } });
+
+  await waitFor(() => {
+    expect(screen.getByRole('alert')).toHaveTextContent(/Could not reach the OSRS wiki/i);
+  });
+  expect(screen.queryByRole('status')).not.toBeInTheDocument();
+
+  vi.unstubAllGlobals();
 });
 
 test('does not close modal on escape if lightbox is open', () => {

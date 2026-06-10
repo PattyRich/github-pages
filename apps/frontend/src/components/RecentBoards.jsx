@@ -12,13 +12,13 @@ const RecentBoards = (props) => {
             <Surface key={i} className="recent-board-row" variant="recessed">
               <div className="recent-board-meta">
                 <strong>{item.boardName}</strong>
-                <span>{item.priv}</span>
+                <span>{item.privilege ?? item.priv}</span>
               </div>
               <div className="recent-board-actions">
                 <Button variant="success" click={() => props.click(item)} text="Join" />
                 <Button
                   variant="outline-danger"
-                  click={() => props.removeRecent(item.boardName)}
+                  click={() => props.removeRecent(i)}
                   text="Remove"
                 />
               </div>
