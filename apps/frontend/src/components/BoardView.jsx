@@ -283,7 +283,7 @@ function BoardView() {
 
   async function changeBoardTileInfo(row, col, data) {
     data.teamId = stateRef.current.teamData[stateRef.current.activeTeamIndex].team;
-    await updateBoard(row, col, data);
+    return updateBoard(row, col, data);
   }
 
   async function updateTeams(info, passwordRequired, rows, columns, visibleRows) {

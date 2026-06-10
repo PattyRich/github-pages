@@ -22,6 +22,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
     lightboxIndex: null,
   }));
   const stateRef = useRef(state);
+  const isDirtyRef = useRef(false);
   const badTitlesRef = useRef([]);
   const listOfImagesRef = useRef({});
   const fileInputRef = useRef(null);
@@ -106,6 +107,17 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
   }, [state]);
 
   useEffect(() => {
+    if (!isDirtyRef.current) {
+      setTileState({
+        ...info,
+        ...teamInfo,
+        proofImages: teamInfo?.proofImages || [],
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [info, teamInfo]);
+
+  useEffect(() => {
     function handleKeyDown(e) {
       if (stateRef.current.lightboxIndex === null) return;
       if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'Escape') {
@@ -153,6 +165,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
   }
 
   function inputState(e, target) {
+    isDirtyRef.current = true;
     let value = e.target.value;
     if (NUM_INPUTS.includes(target)) {
       if (isNaN(value)) value = 0;
@@ -173,17 +186,20 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
   }
 
   function setImage(image, skipUrlBuild = false) {
+    isDirtyRef.current = true;
     const url = skipUrlBuild ? image : getImageUrl(image);
     setTileState({ image: { opacity: '100', url, usePixel: false }, chooseImage: false });
   }
 
   function toggleUsePixel() {
+    isDirtyRef.current = true;
     updateTileState((currentState) => ({
       image: { ...currentState.image, usePixel: !currentState.image.usePixel },
     }));
   }
 
   function changeOpacity(e) {
+    isDirtyRef.current = true;
     let val = Number(e.target.value);
     if (isNaN(val)) val = 100;
     val = Math.min(100, Math.max(1, val));
@@ -191,13 +207,14 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
   }
 
   function toggleCheck() {
+    isDirtyRef.current = true;
     updateTileState((currentState) => ({
       checked: !currentState.checked,
       currPoints: currentState.points,
     }));
   }
 
-  function handleSave() {
+  async function handleSave() {
     let stateToSave = { ...stateRef.current };
     if (privilage === 'admin') {
       delete stateToSave.checked;
@@ -213,7 +230,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
         stateToSave.proofImages = stateRef.current.proofImages || [];
       }
     }
-    change(cord[0], cord[1], stateToSave);
+    await change(cord[0], cord[1], stateToSave);
     handleClose();
   }
 
@@ -235,6 +252,7 @@ function TileModal({ cord, change, handleClose, info, teamInfo, privilage, show,
   }
 
   function removeProofImage(index) {
+    isDirtyRef.current = true;
     updateTileState((currentState) => ({
       proofImages: currentState.proofImages.filter((_, i) => i !== index),
       lightboxIndex: null,
