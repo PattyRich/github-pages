@@ -3,14 +3,22 @@ import globals from 'globals';
 import reactHooks from 'eslint-plugin-react-hooks';
 import reactRefresh from 'eslint-plugin-react-refresh';
 import prettier from 'eslint-config-prettier';
+import tseslint from 'typescript-eslint';
+
+const tsFiles = ['src/**/*.{ts,tsx}'];
+const tsRecommended = tseslint.configs.recommended.map((config) => ({
+  ...config,
+  files: tsFiles,
+}));
 
 export default [
   {
     ignores: ['dist/**', 'build/**', 'node_modules/**', 'coverage/**'],
   },
   js.configs.recommended,
+  ...tsRecommended,
   {
-    files: ['src/**/*.{js,jsx}', 'vite.config.mjs'],
+    files: ['src/**/*.{js,jsx,ts,tsx}', 'vite.config.mjs'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -25,13 +33,10 @@ export default [
         },
       },
     },
-    plugins: {
-      'react-hooks': reactHooks,
-      'react-refresh': reactRefresh,
-    },
+  },
+  {
+    files: ['src/**/*.{js,jsx}', 'vite.config.mjs'],
     rules: {
-      'react-hooks/rules-of-hooks': 'error',
-      'react-hooks/exhaustive-deps': 'warn',
       'no-unused-vars': [
         'warn',
         {
@@ -40,6 +45,31 @@ export default [
           caughtErrorsIgnorePattern: '^_',
         },
       ],
+    },
+  },
+  {
+    files: tsFiles,
+    rules: {
+      'no-unused-vars': 'off',
+      '@typescript-eslint/no-unused-vars': [
+        'warn',
+        {
+          argsIgnorePattern: '^_',
+          varsIgnorePattern: '^_',
+          caughtErrorsIgnorePattern: '^_',
+        },
+      ],
+    },
+  },
+  {
+    files: ['src/**/*.{js,jsx,ts,tsx}', 'vite.config.mjs'],
+    plugins: {
+      'react-hooks': reactHooks,
+      'react-refresh': reactRefresh,
+    },
+    rules: {
+      'react-hooks/rules-of-hooks': 'error',
+      'react-hooks/exhaustive-deps': 'warn',
       'no-async-promise-executor': 'warn',
       'no-empty': 'warn',
       'no-useless-assignment': 'warn',
@@ -52,7 +82,7 @@ export default [
     },
   },
   {
-    files: ['src/**/*.test.{js,jsx}', 'src/setupTests.js'],
+    files: ['src/**/*.test.{js,jsx,ts,tsx}', 'src/setupTests.{js,ts}'],
     languageOptions: {
       globals: {
         ...globals.vitest,

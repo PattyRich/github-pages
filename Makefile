@@ -10,7 +10,7 @@ PYTHON_WIN?=.venv\Scripts\python.exe
 # -----------------------
 # HELP
 # -----------------------
-.PHONY: help install install-hooks dev frontend backend backend-logs build deploy clean up down restart logs ps shell-api shell-worker test format format-check e2e e2e-headed
+.PHONY: help install install-hooks dev frontend backend backend-logs build deploy clean up down restart logs ps shell-api shell-worker test typecheck frontend-verify format format-check e2e e2e-headed
 
 help:
 	@echo "Available commands:"
@@ -20,7 +20,9 @@ help:
 	@echo "  make frontend     - Run frontend only (Vite)"
 	@echo "  make backend      - Start backend services in background"
 	@echo "  make backend-logs - Start backend services and tail logs"
-	@echo "  make test         - Run backend + frontend tests"
+	@echo "  make test         - Run backend tests, frontend typecheck/tests, and E2E"
+	@echo "  make typecheck    - Run frontend TypeScript typecheck"
+	@echo "  make frontend-verify - Run frontend typecheck, lint, format check, and unit tests"
 	@echo "  make format       - Format frontend files with Prettier"
 	@echo "  make format-check - Check frontend formatting with Prettier"
 	@echo "  make build        - Build frontend for production"
@@ -89,8 +91,15 @@ shell-worker:
 # -----------------------
 test:
 	$(PYTHON) -m pytest $(SERVER_DIR)/test_server.py -q
+	cd $(FRONTEND_DIR) && npm run typecheck
 	cd $(FRONTEND_DIR) && npm test
 	$(PYTHON) tests/e2e/run_e2e.py
+
+typecheck:
+	cd $(FRONTEND_DIR) && npm run typecheck
+
+frontend-verify:
+	cd $(FRONTEND_DIR) && npm run verify
 
 format:
 	cd $(FRONTEND_DIR) && npm run format

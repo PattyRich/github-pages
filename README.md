@@ -20,7 +20,7 @@ A full-stack, production-deployed web application for the Old School RuneScape c
 
 | Layer | Technology |
 |---|---|
-| Frontend | React 19, Vite |
+| Frontend | React 19, TypeScript, Vite |
 | Backend | Python 3.13, Flask, uWSGI |
 | Background Jobs | Redis Queue (RQ) |
 | Database | MongoDB 7.0 |
@@ -39,7 +39,7 @@ This is a monorepo organized for clarity and scale:
 
 ```
 root/
-├── apps/frontend/          # React 19 SPA (Vite)
+├── apps/frontend/          # React 19 + TypeScript SPA (Vite)
 ├── services/api/           # Flask API + RQ Worker
 ├── scripts/                # Backup automation, data ingestion
 ├── nginx/                  # Reverse proxy & SSL config
@@ -74,10 +74,10 @@ Three test layers cover the stack from unit to browser:
 | Layer | Tool | What it covers |
 |---|---|---|
 | Backend | pytest | Flask API routes and server logic |
-| Frontend | Vitest + Testing Library | React component rendering |
+| Frontend | TypeScript, Vitest + Testing Library | Static typing and React component rendering |
 | E2E | Playwright (Python) | Full browser flows against a live local stack |
 
-Run all three at once:
+Run the backend tests, frontend typecheck/unit tests, and E2E suite at once:
 
 ```bash
 make test
@@ -91,6 +91,12 @@ Or run each layer individually:
 
 # Frontend — Vitest unit tests
 cd apps/frontend && npm test
+
+# Frontend — TypeScript typecheck
+make typecheck
+
+# Frontend — typecheck, lint, format check, and unit tests
+make frontend-verify
 
 # E2E — Playwright browser tests (requires make dev to be running)
 make e2e
@@ -109,7 +115,7 @@ The Playwright suite drives a real Chromium browser against the running local st
 
 GitHub Actions handles all deployments automatically on push to `main`:
 
-- **Frontend** — Built and deployed to `/var/www/frontend` on the production server via SCP.
+- **Frontend** — Typechecked, built, and deployed to `/var/www/frontend` on the production server via SCP.
 - **Backend** — API and worker containers restarted on AWS Lightsail via SSH.
 - **Maintenance** — Weekly job prunes old Docker images and updates base images.
 
@@ -169,7 +175,7 @@ docker exec github-pages-mongo-1 mongorestore --archive=/tmp/backup.gz --gzip
 Proof images are not part of MongoDB backups. In production they live in the Docker named volume `proof_uploads`; include that volume in any full-server backup or migration plan.
 
 ### Maintenance Mode
-Toggle the `IS_MAINTENANCE` boolean in `apps/frontend/src/index.jsx` to enable maintenance mode for Bingo and LoL-Beat routes.
+Toggle the `IS_MAINTENANCE` boolean in `apps/frontend/src/index.tsx` to enable maintenance mode for Bingo and LoL-Beat routes.
 
 
 ---

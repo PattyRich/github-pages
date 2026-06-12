@@ -10,8 +10,11 @@ on:
     paths:
       - 'apps/frontend/src/**'
       - 'apps/frontend/public/**'
+      - 'apps/frontend/eslint.config.mjs'
       - 'apps/frontend/package.json'
       - 'apps/frontend/package-lock.json'
+      - 'apps/frontend/tsconfig.json'
+      - 'apps/frontend/vite.config.mjs'
       - '.github/workflows/deploy-frontend.yml'
 
 jobs:
@@ -31,6 +34,7 @@ jobs:
         working-directory: apps/frontend
         run: |
           npm ci
+          npm run typecheck
           CI=false npm run build
           
       - name: Upload to Temp Directory
