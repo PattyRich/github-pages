@@ -5,7 +5,7 @@ import reactRefresh from 'eslint-plugin-react-refresh';
 import prettier from 'eslint-config-prettier';
 import tseslint from 'typescript-eslint';
 
-const tsFiles = ['src/**/*.{ts,tsx}'];
+const tsFiles = ['src/**/*.{ts,tsx}', 'vite.config.ts'];
 const tsRecommended = tseslint.configs.recommended.map((config) => ({
   ...config,
   files: tsFiles,
@@ -18,7 +18,7 @@ export default [
   js.configs.recommended,
   ...tsRecommended,
   {
-    files: ['src/**/*.{js,jsx,ts,tsx}', 'vite.config.mjs'],
+    files: ['src/**/*.{js,jsx,ts,tsx}', 'vite.config.ts'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
@@ -35,7 +35,7 @@ export default [
     },
   },
   {
-    files: ['src/**/*.{js,jsx}', 'vite.config.mjs'],
+    files: ['src/**/*.{js,jsx}'],
     rules: {
       'no-unused-vars': [
         'warn',
@@ -62,7 +62,7 @@ export default [
     },
   },
   {
-    files: ['src/**/*.{js,jsx,ts,tsx}', 'vite.config.mjs'],
+    files: ['src/**/*.{js,jsx,ts,tsx}', 'vite.config.ts'],
     plugins: {
       'react-hooks': reactHooks,
       'react-refresh': reactRefresh,

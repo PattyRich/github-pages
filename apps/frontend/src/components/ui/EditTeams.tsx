@@ -17,17 +17,16 @@ const tabs = [
 type ActiveTab = (typeof tabs)[number]['key'];
 type BoardSizeTarget = 'columns' | 'rows' | 'visibleRows';
 
-interface TeamData {
+export interface TeamData {
   name: string;
   password?: string;
   teamData?: unknown;
-  [key: string]: unknown;
 }
 
 export interface TeamInfo {
   data: TeamData;
+  pointTotal?: number | string;
   team?: number | string;
-  [key: string]: unknown;
 }
 
 interface EditTeamsProps {

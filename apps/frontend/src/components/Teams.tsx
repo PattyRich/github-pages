@@ -2,41 +2,35 @@ import { useState } from 'react';
 //import { Link } from "react-router-dom";
 import { getStoredBool } from '../utils/utils';
 import Tabs from './ui/Tabs';
-
-interface TeamTabInfo {
-  data: {
-    name: string;
-    [key: string]: unknown;
-  };
-  pointTotal?: number | string;
-  team: number;
-}
+import type { TeamInfo } from './ui/EditTeams';
 
 interface TeamsProps {
-  activeTeam: TeamTabInfo;
+  activeTeam: TeamInfo;
   changeTeam: (teamId: number) => void;
-  teams?: TeamTabInfo[];
+  teams?: TeamInfo[];
 }
 
 const Teams = (props: TeamsProps) => {
   const [key, setKey] = useState(props.activeTeam.data.name);
   const showTeamPoints = getStoredBool('showTeamPoints');
+
   function selectTeam(teamName: string) {
     const teamId = props.teams?.find((team) => {
       return team.data.name === teamName;
     })?.team;
     if (teamId === undefined) return;
     localStorage.setItem('activeTeam', String(teamId));
-    props.changeTeam(teamId);
+    props.changeTeam(Number(teamId));
     setKey(teamName);
   }
 
   const items =
     props.teams?.map((team) => {
-      const showPoints = !showTeamPoints && Number(team.pointTotal) !== 0;
+      const pointTotal = (team as { pointTotal?: number | string }).pointTotal;
+      const showPoints = !showTeamPoints && Number(pointTotal) !== 0;
       return {
         key: team.data.name,
-        label: `${team.data.name}${showPoints ? ': (' + team.pointTotal + ')' : ''}`,
+        label: `${team.data.name}${showPoints ? ': (' + String(pointTotal) + ')' : ''}`,
       };
     }) || [];
 

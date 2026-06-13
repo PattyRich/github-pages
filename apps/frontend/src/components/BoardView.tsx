@@ -21,7 +21,6 @@ interface BoardTeamData {
   name: string;
   password?: string;
   teamData: TeamTileInfo[][];
-  [key: string]: unknown;
 }
 
 interface BoardTeam extends TeamInfo {
@@ -59,7 +58,6 @@ interface BoardState {
   teamPasswordsRequired?: boolean;
   teams: number;
   visibleRows: number | null;
-  [key: string]: unknown;
 }
 
 type BoardStateChange = Partial<BoardState>;
@@ -218,7 +216,7 @@ function BoardView() {
         activeTeamIndex: stateRef.current.activeTeamIndex || activeTeamValue,
         generalPasswordCopy: data.generalPassword,
         teamPasswordsRequired: data.teamPasswordsRequired,
-        visibleRows: data.visibleRows,
+        visibleRows: data.visibleRows ?? null,
       },
       () => {
         calculateTeamPoints();

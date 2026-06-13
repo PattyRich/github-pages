@@ -1,12 +1,8 @@
 import Button from './ui/Button';
 import Surface from './ui/Surface';
+import type { RecentBoard } from '../utils/utils';
 
-export interface RecentBoardItem {
-  boardName?: string;
-  priv?: string;
-  privilege?: string;
-  [key: string]: unknown;
-}
+export type RecentBoardItem = RecentBoard;
 
 interface RecentBoardsProps {
   click: (item: RecentBoardItem) => void;

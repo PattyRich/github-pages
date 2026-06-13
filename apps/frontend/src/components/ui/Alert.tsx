@@ -1,11 +1,12 @@
 import type { HTMLAttributes, KeyboardEvent, ReactNode } from 'react';
+import type { AlertVariant } from '../../types';
 
 export interface AlertProps extends HTMLAttributes<HTMLDivElement> {
   banner?: boolean;
   children?: ReactNode;
   dismissible?: boolean;
   onDismiss?: () => void;
-  variant?: string;
+  variant?: AlertVariant;
 }
 
 /**

@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import type { AlertVariant } from '../types';
+
+export type { AlertVariant };
 
 const ALERT_TIMEOUT_MS = 5000;
-type AlertVariant = '' | 'danger' | 'info' | 'loading' | 'primary' | 'success' | 'warning';
 
 /**
  * Shared alert-banner state with auto-dismiss.

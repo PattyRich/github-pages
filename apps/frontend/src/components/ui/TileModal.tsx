@@ -27,7 +27,6 @@ export interface TileInfo {
   points?: number | string;
   rowBingo?: number | string;
   title?: string;
-  [key: string]: unknown;
 }
 
 export interface TeamTileInfo {
@@ -35,7 +34,6 @@ export interface TeamTileInfo {
   currPoints?: number | string;
   proof?: string;
   proofImages?: string[];
-  [key: string]: unknown;
 }
 
 interface WikiSuggestion {
@@ -44,7 +42,6 @@ interface WikiSuggestion {
   };
   title: string;
   url: string;
-  [key: string]: unknown;
 }
 
 interface WikiSearchResponse {

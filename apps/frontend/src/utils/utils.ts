@@ -31,7 +31,6 @@ export interface PasswordState {
 }
 
 export interface RecentBoard {
-  [key: string]: unknown;
   boardName?: string;
   password?: string;
   priv?: string;

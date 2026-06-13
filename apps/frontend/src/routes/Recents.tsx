@@ -75,9 +75,13 @@ export default function Recents() {
 
 function parseRecentBoards(value: string | null): RecentBoardEntry[] {
   if (!value) return [];
-  const parsed = JSON.parse(value);
-  if (!Array.isArray(parsed)) return [];
-  return parsed.filter(isRecentBoardEntry);
+  try {
+    const parsed = JSON.parse(value);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(isRecentBoardEntry);
+  } catch {
+    return [];
+  }
 }
 
 function isRecentBoardEntry(value: unknown): value is RecentBoardEntry {
