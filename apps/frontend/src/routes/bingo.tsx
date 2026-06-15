@@ -5,7 +5,6 @@ import './bingo.css';
 import BoardTile from '../components/BoardTile';
 import EditableInput from '../components/ui/EditableInput';
 import Button from '../components/ui/Button';
-import Alert from '../components/ui/Alert';
 import Surface from '../components/ui/Surface';
 
 import {
@@ -74,7 +73,7 @@ function Bingo({ screenSkip }: BingoProps) {
     ...initialBingoState,
     ...(screenSkip ? { screen: screenSkip } : {}),
   }));
-  const { alertMessage, alertVariant, showAlert } = useAlert();
+  const { AlertBanner, showAlert } = useAlert();
 
   function setBingoState(stateChange: BingoStateChange) {
     setState((currentState) => ({
@@ -223,11 +222,7 @@ function Bingo({ screenSkip }: BingoProps) {
 
   return (
     <>
-      {alertMessage && (
-        <Alert banner variant={alertVariant}>
-          {alertMessage}
-        </Alert>
-      )}
+      <AlertBanner />
       {/* {state.showToast && <Toast variant="danger" message={'uh ohohhh'} />} */}
       {state.screen === 1 && (
         <div className="start-screen">

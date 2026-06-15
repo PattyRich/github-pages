@@ -1,21 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
+import Alert from '../components/ui/Alert';
+import type { AlertProps } from '../components/ui/Alert';
 import type { AlertVariant } from '../types';
 
 export type { AlertVariant };
 
 const ALERT_TIMEOUT_MS = 5000;
 
+type AlertBannerProps = Omit<AlertProps, 'banner' | 'children' | 'onDismiss' | 'variant'>;
+
 /**
  * Shared alert-banner state with auto-dismiss.
  *
- * Returns:
- *   alertMessage  {string}  — current message to display (empty string = hidden)
- *   alertVariant  {string}  — 'danger' | 'success' | 'warning' | …
- *   isLoading     {boolean} — true while a 'loading' alert is active
- *   showAlert(variant, message, skipTimeout?)
- *       variant = 'loading'  → sets isLoading=true, variant='warning', message='Loading…'
- *       skipTimeout = true   → alert stays until explicitly cleared (useful for persistent errors)
- *   clearAlert()  — dismiss immediately and cancel any pending timeout
+ * Call showAlert/alert to set the current banner. Render AlertBanner anywhere
+ * in the route; it returns null when no alert is active.
  */
 export function useAlert() {
   const [alertMessage, setAlertMessage] = useState('');
@@ -63,5 +61,21 @@ export function useAlert() {
     }
   }
 
-  return { alertMessage, alertVariant, isLoading, showAlert, clearAlert };
+  function AlertBanner({ dismissible = false, ...props }: AlertBannerProps) {
+    if (!alertMessage) return null;
+
+    return (
+      <Alert
+        banner
+        dismissible={dismissible}
+        onDismiss={dismissible ? clearAlert : undefined}
+        variant={alertVariant}
+        {...props}
+      >
+        {alertMessage}
+      </Alert>
+    );
+  }
+
+  return { AlertBanner, alert: showAlert, isLoading, showAlert, clearAlert };
 }

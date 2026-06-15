@@ -8,7 +8,6 @@ import { apiUrl } from '../config/api';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Teams from './Teams';
 import Toast from './ui/Toast';
-import Alert from './ui/Alert';
 import EditTeams from './ui/EditTeams';
 import type { TeamInfo } from './ui/EditTeams';
 import SettingsModal from './ui/SettingsModal';
@@ -87,7 +86,7 @@ function BoardView() {
       privilege: legacyPrivilege ?? initialBoardState.privilege,
     };
   });
-  const { alertMessage, alertVariant, showAlert: alert, clearAlert } = useAlert();
+  const { AlertBanner, alert, clearAlert } = useAlert();
   const [, setResizeTick] = useState(0);
   const stateRef = useRef<BoardState>(state);
   const pendingStateCallbacksRef = useRef<Array<() => void>>([]);
@@ -502,11 +501,7 @@ function BoardView() {
           </div>
         </div>
       </div>
-      {alertMessage && (
-        <Alert banner variant={alertVariant} dismissible onDismiss={clearAlert}>
-          {alertMessage}
-        </Alert>
-      )}
+      <AlertBanner dismissible />
       {activeTeam && !(state.privilege === 'admin') && (
         <div className="board-team-summary osrs-header">
           <h3 className="board-team-name">{activeTeam.data.name}</h3>
