@@ -73,6 +73,12 @@ const Maintenance = (
   </main>
 );
 
+const BingoRoute = IS_MAINTENANCE ? Maintenance : <Bingo />;
+const BingoCreate = IS_MAINTENANCE ? Maintenance : <Bingo key="create" screenSkip={2} />;
+const BingoJoin = IS_MAINTENANCE ? Maintenance : <Bingo key="join" screenSkip={4} />;
+const BingoBoard = IS_MAINTENANCE ? Maintenance : <BoardView />;
+const LolBeatRoute = IS_MAINTENANCE ? Maintenance : <LolBeat />;
+
 root.render(
   <HashRouter>
     <HomeButton />
@@ -88,37 +94,22 @@ root.render(
       <Route path="/github-pages/mage-run" element={<Magerun />} />
       <Route path="/toa-flip" element={<ToaFlip />} />
       <Route path="/github-pages/toa-flip" element={<ToaFlip />} />
-      <Route
-        path="/bingo/create"
-        element={IS_MAINTENANCE ? Maintenance : <Bingo key="create" screenSkip={2} />}
-      />
-      <Route
-        path="/github-pages/bingo/create"
-        element={IS_MAINTENANCE ? Maintenance : <Bingo key="create" screenSkip={2} />}
-      />
-      <Route
-        path="/bingo/join"
-        element={IS_MAINTENANCE ? Maintenance : <Bingo key="join" screenSkip={4} />}
-      />
-      <Route
-        path="/github-pages/bingo/join"
-        element={IS_MAINTENANCE ? Maintenance : <Bingo key="join" screenSkip={4} />}
-      />
-      <Route path="/bingo" element={IS_MAINTENANCE ? Maintenance : <Bingo />} />
-      <Route path="/github-pages/bingo" element={IS_MAINTENANCE ? Maintenance : <Bingo />} />
-      <Route path="/bingo/:boardName" element={IS_MAINTENANCE ? Maintenance : <BoardView />} />
-      <Route
-        path="/github-pages/bingo/:boardName"
-        element={IS_MAINTENANCE ? Maintenance : <BoardView />}
-      />
+      <Route path="/bingo/create" element={BingoCreate} />
+      <Route path="/github-pages/bingo/create" element={BingoCreate} />
+      <Route path="/bingo/join" element={BingoJoin} />
+      <Route path="/github-pages/bingo/join" element={BingoJoin} />
+      <Route path="/bingo" element={BingoRoute} />
+      <Route path="/github-pages/bingo" element={BingoRoute} />
+      <Route path="/bingo/:boardName" element={BingoBoard} />
+      <Route path="/github-pages/bingo/:boardName" element={BingoBoard} />
       <Route path="/bingo-draft" element={<BingoDraft />} />
       <Route path="/github-pages/bingo-draft" element={<BingoDraft />} />
       <Route path="/pets" element={<Pets />} />
       <Route path="/github-pages/pets" element={<Pets />} />
       <Route path="/all-pets" element={<AllPets />} />
       <Route path="/github-pages/all-pets" element={<AllPets />} />
-      <Route path="/lol-beat" element={IS_MAINTENANCE ? Maintenance : <LolBeat />} />
-      <Route path="/github-pages/lol-beat" element={IS_MAINTENANCE ? Maintenance : <LolBeat />} />
+      <Route path="/lol-beat" element={LolBeatRoute} />
+      <Route path="/github-pages/lol-beat" element={LolBeatRoute} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   </HashRouter>

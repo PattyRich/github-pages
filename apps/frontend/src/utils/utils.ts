@@ -164,23 +164,28 @@ export function recentBoardPrivilege(item?: RecentBoard | null): string | undefi
 }
 
 export function addToRecent(boardName: string, joinPw: string, privilege: string): void {
+  const recentBoards = getRecentBoards();
+  const find = recentBoards.find((item) => {
+    return item.boardName === boardName && privilege === recentBoardPrivilege(item);
+  });
+  if (!find) {
+    const obj = {
+      boardName: boardName,
+      password: joinPw,
+      privilege,
+    };
+    localStorage.setItem('recentBoards', JSON.stringify([...recentBoards, obj]));
+  }
+}
+
+function getRecentBoards(): RecentBoard[] {
+  const stored = localStorage.getItem('recentBoards');
+  if (!stored) return [];
   try {
-    const stored = localStorage.getItem('recentBoards');
-    const parsed = stored ? JSON.parse(stored) : [];
-    const recentBoards: RecentBoard[] = Array.isArray(parsed) ? parsed.filter(isRecentBoard) : [];
-    const find = recentBoards.find((item) => {
-      return item.boardName === boardName && privilege === recentBoardPrivilege(item);
-    });
-    if (!find) {
-      const obj = {
-        boardName: boardName,
-        password: joinPw,
-        privilege,
-      };
-      localStorage.setItem('recentBoards', JSON.stringify([...recentBoards, obj]));
-    }
-  } catch (e) {
-    console.error('Error in addToRecent:', e);
+    const parsed = JSON.parse(stored);
+    return Array.isArray(parsed) ? parsed.filter(isRecentBoard) : [];
+  } catch {
+    return [];
   }
 }
 

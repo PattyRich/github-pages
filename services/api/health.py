@@ -3,7 +3,7 @@
 health.py
 ---------
 Modernized health check script for the Bingo API.
-Hits the /health endpoint and posts alerts to Discord via server.postToDiscord.
+Hits the /health endpoint and posts alerts to Discord.
 
 Usage:
     python health.py
@@ -25,31 +25,10 @@ if dotenv_path.exists():
 else:
     load_dotenv()
 
-# Import logging framework and postToDiscord from server
-try:
-    from logger import get_logger
-    log = get_logger(__name__)
-except ImportError:
-    import logging
-    logging.basicConfig(
-        level=logging.INFO,
-        format="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
-        datefmt="%Y-%m-%d %H:%M:%S",
-    )
-    log = logging.getLogger(__name__)
+from logger import get_logger
+from utils import postToDiscord
 
-# Helper to post to Discord (matching server.py implementation)
-def postToDiscord(message: str, webhook_env_var: str) -> bool:
-    webhook_url = os.getenv(webhook_env_var)
-    if not webhook_url:
-        log.error("Failed to post to Discord: %s is not set in environment.", webhook_env_var)
-        return False
-    try:
-        requests.post(webhook_url, json={"content": message}, timeout=10)
-        return True
-    except Exception as e:
-        log.error("Failed to post to Discord webhook=%s error=%s", webhook_env_var, e)
-        return False
+log = get_logger(__name__)
 
 
 
