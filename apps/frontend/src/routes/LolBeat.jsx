@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import './LolBeat.css';
-import { fetchGet, fetchPost } from '../utils/utils.js';
+import { fetchGet, fetchPost } from '../utils/utils';
 
 const DDRAGON_BASE = 'https://ddragon.leagueoflegends.com/cdn';
 const DDRAGON_FALLBACK = '16.9.1';
@@ -9,10 +9,8 @@ function LolBeat() {
   const [riotId, setRiotId] = useState('');
   const [loading, setLoading] = useState(false);
   const [crawling, setCrawling] = useState(false);
-  const [jobId, setJobId] = useState(null);
   const [chain, setChain] = useState([]);
   const [error, setError] = useState('');
-  const [found, setFound] = useState(null);
   const [ddVersion, setDdVersion] = useState(DDRAGON_FALLBACK);
   const [countdown, setCountdown] = useState(0);
   const countdownRef = useRef(null);
@@ -70,7 +68,6 @@ function LolBeat() {
                   `lol/api/chain?riot_id=${encodeURIComponent(rid)}`
                 );
                 if (!err && data?.found && data.chain?.length > 0) {
-                  setFound(true);
                   setChain(data.chain);
                   setError('');
                   stopCrawling();
@@ -96,14 +93,11 @@ function LolBeat() {
     if (!riotId.trim()) return;
     setError('');
     setChain([]);
-    setFound(null);
     setCrawling(true);
-    setJobId(null);
 
     try {
-      const [data, err] = await fetchPost('lol/api/crawl', { riot_id: riotId.trim() });
+      const [, err] = await fetchPost('lol/api/crawl', { riot_id: riotId.trim() });
       if (err) throw err;
-      setJobId(data.job_id);
       startCountdownCycle(riotId.trim());
     } catch (err) {
       setError(err.message || 'Failed to enqueue crawl');
@@ -115,7 +109,6 @@ function LolBeat() {
     if (!riotId.trim()) return;
     setError('');
     setChain([]);
-    setFound(null);
     setLoading(true);
 
     try {
@@ -123,7 +116,6 @@ function LolBeat() {
         `lol/api/chain?riot_id=${encodeURIComponent(riotId.trim())}`
       );
       if (err) throw err;
-      setFound(data.found);
       setChain(data.chain || []);
       if (!data.found) setError(`No path found yet from ${riotId} to #1. Try crawling first.`);
     } catch (err) {

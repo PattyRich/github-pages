@@ -7,7 +7,10 @@ down to a target file size in kilobytes using Pillow.
 
 import base64
 import io
+import logging
 from PIL import Image, ImageOps
+
+log = logging.getLogger(__name__)
 
 
 def reduce_image_size(
@@ -117,10 +120,9 @@ def reduce_image_size(
 
     original_kb = len(image_bytes) / 1024
     final_kb = len(compressed) / 1024
-    print(
-        f"Original: {original_kb:.1f} KB -> "
-        f"Compressed: {final_kb:.1f} KB  "
-        f"(target: {target_kb} KB, format: {fmt})"
+    log.debug(
+        "imgSizeReducer: %.1f KB -> %.1f KB  (target: %s KB, format: %s)",
+        original_kb, final_kb, target_kb, fmt,
     )
 
     return result_uri

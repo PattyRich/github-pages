@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import './Status.css';
-import { fetchGet } from '../utils/utils.js';
+import { fetchGet } from '../utils/utils';
 
 const POLL_INTERVAL = 30000;
 
@@ -65,7 +65,7 @@ export default function Status() {
       if (!json) throw err;
       setData(json);
       setError(null);
-    } catch (e) {
+    } catch {
       setError('Could not reach the API.');
     } finally {
       setLoading(false);

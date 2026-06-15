@@ -3,8 +3,10 @@ monkey.patch_all()
 
 from flask import Flask, jsonify, request, has_request_context, Response, stream_with_context
 from flask_cors import CORS
-import json, datetime
-import time, requests
+import json
+import datetime
+import time
+import requests
 import pymongo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
@@ -17,9 +19,10 @@ from urllib.parse import quote
 from dotenv import load_dotenv
 load_dotenv()
 
+from rq import Worker
 from logger import get_logger
 from lol_server import lol_api
-from rq import Worker
+from utils import postToDiscord
 
 log = get_logger(__name__)
 
@@ -233,18 +236,6 @@ def is_test_board_request():
   except Exception:
     return False
   return is_test_board(data.get('boardName'))
-
-def postToDiscord(message, webhook_env_var):
-  webhook_url = os.getenv(webhook_env_var)
-  payload = {
-    "content": message
-  }
-  try:
-    requests.post(webhook_url, json=payload)
-    return True
-  except Exception as e:
-    log.error("Failed to post to Discord  webhook=%s  error=%s", webhook_env_var, e)
-    return False
 
 def publish_board_update(board_name):
   try:
@@ -603,31 +594,17 @@ def updateTeams(boardName, password, pwtype):
   overWrite = {}
   for i in range(len(updateOlderTeams)):
     teamKey = 'team-' + str(i)
-    password = ''
-    if 'password' in updateOlderTeams[i]['data']:
-      password = updateOlderTeams[i]['data']['password']
-
-    # some nasty logic here. We need cache for teamData, its not actually going to be changing
-    # from this call but we need it for the mongo obj, name and password could actually change though
-    # teamData might change due to board size changes, but not in the same way as direct changes from users for pw / name
     overWrite[teamKey] = {
       'name': updateOlderTeams[i]['data']['name'],
       'teamData': cache[teamKey]['teamData'],
-      'password': password
+      'password': updateOlderTeams[i]['data'].get('password', '')
     }
-    ## spread object for all sets since it won't take a dict
-    newvalue = { "$set": { **overWrite, 'teams': size }}
-    update = mycol.update_one({"boardName": boardName}, newvalue)
-    
-    ## a passwords requirement for teams to submit proof has been set (backwards compatible)
-    if ('requirePassword' in cache and requirePassword != cache['requirePassword']):
-      newvalue = { "$set": {'requirePassword': requirePassword}}
-      update = mycol.update_one({"boardName": boardName}, newvalue)
-    elif ('requirePassword' not in cache):
-      newvalue = { "$set": {'requirePassword': requirePassword}}
-      update = mycol.update_one({"boardName": boardName}, newvalue)
 
-  mycol.update_one({"boardName": boardName}, { "$set": {'requirePassword': requirePassword, 'visibleRows': visibleRows}})
+  # Single write for all team updates, team count, requirePassword, and visibleRows
+  mycol.update_one(
+    {"boardName": boardName},
+    {"$set": {**overWrite, 'teams': size, 'requirePassword': requirePassword, 'visibleRows': visibleRows}}
+  )
 
   log.info("updateTeams - complete  board=%s  teams=%d", boardName, size)
   publish_board_update(boardName)
@@ -657,7 +634,7 @@ def changeBoardSize(teamData, rows, cols, cache, boardName):
     # team changes
     for i in range(cache['teams']):
       teamKey = 'team-' + str(i)
-      teamData = cache[teamKey]['teamData']
+      tile_data = cache[teamKey]['teamData']
 
       overWrite[teamKey] = {
         'name': cache[teamKey]['name'],
@@ -665,22 +642,22 @@ def changeBoardSize(teamData, rows, cols, cache, boardName):
       }
 
       if lessRows:
-        for j in range(len(teamData)):
-          teamData[j] = teamData[j][:rows]
+        for j in range(len(tile_data)):
+          tile_data[j] = tile_data[j][:rows]
       elif moreRows:
-        for j in range(len(teamData)):
+        for j in range(len(tile_data)):
           for k in range(rows - currRows):
-            teamData[j].append(defaultTeamObj.copy())
+            tile_data[j].append(defaultTeamObj.copy())
 
       if lessCols:
-        teamData = teamData[:cols]
+        tile_data = tile_data[:cols]
       elif moreCols:
         for j in range(cols - currCols):
-          teamData.append([])
+          tile_data.append([])
           for k in range(rows):
-            teamData[len(teamData) -1].append(defaultTeamObj.copy())
+            tile_data[len(tile_data) -1].append(defaultTeamObj.copy())
       
-      overWrite[teamKey]['teamData'] = teamData
+      overWrite[teamKey]['teamData'] = tile_data
 
     overWrite['rows'] = rows
     overWrite['columns'] = cols 

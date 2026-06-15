@@ -65,8 +65,8 @@ REDIS_DB   = int(os.environ.get("REDIS_DB", 0))
 # How many recent matches to pull per player
 MATCHES_PER_PLAYER = 20
 
-# Seconds to sleep between API calls (dev key = 1.2 s to stay under 1 req/s)
-RATE_SLEEP = 0
+# Seconds to sleep between API calls. Set RIOT_RATE_SLEEP=1.2 for a dev key (1 req/s limit).
+RATE_SLEEP = float(os.environ.get("RIOT_RATE_SLEEP", 0))
 
 
 # ---------------------------------------------------------------------------

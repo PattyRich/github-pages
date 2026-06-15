@@ -1,9 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import LolBeat from './LolBeat';
-import { fetchGet, fetchPost } from '../utils/utils.js';
+import { fetchGet, fetchPost } from '../utils/utils';
 
-vi.mock('../utils/utils.js', () => ({
+vi.mock('../utils/utils', () => ({
   fetchGet: vi.fn(),
   fetchPost: vi.fn(),
 }));

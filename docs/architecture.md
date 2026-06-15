@@ -9,7 +9,7 @@ Praynr is a full-stack monorepo serving two distinct products on the same backen
 ```
 root/
 ├── apps/
-│   └── frontend/           # React 19 SPA (Vite)
+│   └── frontend/           # React 19 + TypeScript SPA (Vite)
 ├── services/
 │   └── api/                # Unified Flask API + RQ background worker
 ├── scripts/                # Backup automation, data ingestion utilities
@@ -21,11 +21,13 @@ root/
 
 ## Frontend (`apps/frontend`)
 
-A single-page React 19 application bundled with Vite.
+A single-page React 19 application written in TypeScript and bundled with Vite.
 
 **Routing** — `react-router-dom` manages two primary surfaces: the Bingo board editor/viewer and the LoL-Beat search interface.
 
 **State** — React Hooks (`useState` / `useEffect`) with `localStorage` for lightweight persistence (e.g. active team selection). No global state library — the app's complexity doesn't warrant one.
+
+**Type Safety** — TypeScript covers the main Bingo board flow, shared UI primitives, route shell, API helpers, and related tests. `npm run typecheck` runs `tsc --noEmit`, while `npm run verify` combines typecheck, lint, formatting checks, and Vitest.
 
 **Polling** — The LoL-Beat crawler is a long-running background job. The frontend polls `/lol/api/job/<id>` at a fixed interval to surface job status without a WebSocket.
 
@@ -152,7 +154,7 @@ Separating concerns across key namespaces keeps Redis operationally simple — y
 
 **Networking** — Nginx terminates SSL and acts as the single entry point. It proxies API requests to uWSGI and serves the React SPA's static files from `/var/www/frontend`. Proof images are currently served by Flask from `/static/uploads/proofs/...` with long cache headers; they could be moved behind a direct Nginx `alias` later if image traffic grows. Cloudflare sits in front for DDoS mitigation and CDN.
 
-**CI/CD** — GitHub Actions runs on push to `main`. The frontend workflow builds the Vite bundle and SCPs the dist to the server. The backend workflow SSHes in and restarts only the `api` and `worker` containers — other services stay running. A weekly scheduled workflow prunes dangling images and updates base images.
+**CI/CD** — GitHub Actions runs on push to `main`. The frontend workflow typechecks, builds the Vite bundle, and SCPs the dist to the server. The backend workflow SSHes in and restarts only the `api` and `worker` containers — other services stay running. A weekly scheduled workflow prunes dangling images and updates base images.
 
 **Monitoring** — Dozzle streams live container logs via a web UI at `dozzle.praynr.com`, authenticated via `dozzle/users.yml`. This means production debugging doesn't require SSH.
 
@@ -170,4 +172,4 @@ Separating concerns across key namespaces keeps Redis operationally simple — y
 
 ---
 
-*Last updated: 2026-06-01*
+*Last updated: 2026-06-12*
