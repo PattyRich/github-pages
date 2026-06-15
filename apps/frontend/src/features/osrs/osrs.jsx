@@ -1,18 +1,18 @@
 import React from 'react';
 //import { Link } from "react-router-dom";
 import './osrs.css';
-import { loot } from '../looter/looter';
-import { totalLooter } from '../looter/totalLooter';
-import TotalLoot from '../components/TotalLoot';
-import { assetUrl } from '../utils/assetUrl';
-import { capitalizeFirstLetter } from '../utils/utils';
+import { loot } from './looter/looter';
+import { totalLooter } from './looter/totalLooter';
+import TotalLoot from './TotalLoot';
+import { assetUrl } from '../../utils/assetUrl';
+import { capitalizeFirstLetter } from '../../utils/utils';
 
-const imageModules = import.meta.glob('../assets/*.png', {
+const imageModules = import.meta.glob('../../assets/*.png', {
   eager: true,
   query: '?url',
   import: 'default',
 });
-const lootDataModules = import.meta.glob('../looter/*.js');
+const lootDataModules = import.meta.glob('./looter/*.js');
 let plotlyPromise;
 
 function getPlotly() {
@@ -234,7 +234,7 @@ class Osrs extends React.Component {
       return;
     }
 
-    const loadLootData = lootDataModules[`../looter/${mode}.js`];
+    const loadLootData = lootDataModules[`./looter/${mode}.js`];
     if (!loadLootData) {
       this.setState({ icons: iconClone });
       return;

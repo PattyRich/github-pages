@@ -2,10 +2,10 @@ import { useEffect, useState } from 'react';
 import type { ChangeEvent } from 'react';
 //import { Link } from "react-router-dom";
 import './bingo.css';
-import BoardTile from '../components/BoardTile';
-import EditableInput from '../components/ui/EditableInput';
-import Button from '../components/ui/Button';
-import Surface from '../components/ui/Surface';
+import BoardTile from './BoardTile';
+import EditableInput from '../../components/ui/EditableInput';
+import Button from '../../components/ui/Button';
+import Surface from '../../components/ui/Surface';
 
 import {
   fetchGet,
@@ -14,10 +14,10 @@ import {
   authUrlBuilder,
   bingoBoardPath,
   type RecentBoard,
-} from '../utils/utils';
-import { useAlert } from '../utils/useAlert';
+} from '../../utils/utils';
+import { useAlert } from '../../utils/useAlert';
 import { useNavigate } from 'react-router-dom';
-import RecentBoards from '../components/RecentBoards';
+import RecentBoards from './RecentBoards';
 
 const initialBingoState = {
   screen: 1,

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 //import { Link } from "react-router-dom";
-import { getStoredBool } from '../utils/utils';
-import Tabs from './ui/Tabs';
-import type { TeamInfo } from './ui/EditTeams';
+import { getStoredBool } from '../../utils/utils';
+import Tabs from '../../components/ui/Tabs';
+import type { TeamInfo } from '../../components/ui/EditTeams';
 
 interface TeamsProps {
   activeTeam: TeamInfo;

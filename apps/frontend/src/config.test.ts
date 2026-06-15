@@ -1,5 +1,5 @@
 import { expect, test } from 'vitest';
-import { API_BASE_URL, apiUrl } from './api';
+import { API_BASE_URL, apiUrl } from './config';
 
 test('uses localhost API base in Vite dev and test mode', () => {
   expect(API_BASE_URL).toBe('http://localhost:8000');

@@ -1,5 +1,5 @@
 import { completion } from './completion';
-import { cluesLvl } from '../routes/osrs';
+import { cluesLvl } from '../osrs';
 
 const teamActivites = ['nex', 'tob'];
 const lootModules = import.meta.glob('./*.js');

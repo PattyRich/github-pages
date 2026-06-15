@@ -4,7 +4,7 @@ import React from 'react';
 //https://forum.ikov.io/profile/82597-rational/content/page/2/ olm picture
 //olm room 10/18
 import './magerun.css';
-import { assetUrl } from '../utils/assetUrl';
+import { assetUrl } from '../../utils/assetUrl';
 
 class Magerun extends React.Component {
   constructor() {

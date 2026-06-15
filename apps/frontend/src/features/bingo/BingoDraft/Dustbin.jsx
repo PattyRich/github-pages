@@ -1,5 +1,5 @@
 import { useDrop } from 'react-dnd';
-import EditableInput from '../ui/EditableInput';
+import EditableInput from '../../../components/ui/EditableInput';
 import { Box } from './Box';
 
 export const Dustbin = (props) => {

@@ -1,9 +1,9 @@
 import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, test, vi } from 'vitest';
 import Status from './Status';
-import { fetchGet } from '../utils/utils';
+import { fetchGet } from '../../utils/utils';
 
-vi.mock('../utils/utils', () => ({
+vi.mock('../../utils/utils', () => ({
   fetchGet: vi.fn(),
 }));
 

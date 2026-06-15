@@ -1,9 +1,9 @@
 import React from 'react';
 //import { Link } from "react-router-dom";
 import './Pets.css';
-import { data } from '../looter/pets-list';
-import PetSection from '../components/PetSection';
-import { assetUrl } from '../utils/assetUrl';
+import { data } from '../osrs/looter/pets-list';
+import PetSection from './PetSection';
+import { assetUrl } from '../../utils/assetUrl';
 
 import { toPng } from 'html-to-image';
 let totalPets = 0;

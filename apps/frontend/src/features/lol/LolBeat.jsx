@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import './LolBeat.css';
-import { fetchGet, fetchPost } from '../utils/utils';
+import { fetchGet, fetchPost } from '../../utils/utils';
 
 const DDRAGON_BASE = 'https://ddragon.leagueoflegends.com/cdn';
 const DDRAGON_FALLBACK = '16.9.1';

@@ -1,9 +1,9 @@
 import { useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import './BoardTile.css';
-import Modal from './ui/TileModal';
-import type { TeamTileInfo, TileInfo, TileModalState } from './ui/TileModal';
-import { getStoredBool } from '../utils/utils';
+import Modal from '../../components/ui/TileModal';
+import type { TeamTileInfo, TileInfo, TileModalState } from '../../components/ui/TileModal';
+import { getStoredBool } from '../../utils/utils';
 
 const CROSS_SVG =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='red' stroke-width='3'/><path d='M0 0 L100 100 ' stroke='red' stroke-width='3'/></svg>";

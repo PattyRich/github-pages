@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { assetUrl } from '../utils/assetUrl';
+import { assetUrl } from '../../utils/assetUrl';
 
 const TotalLoot = (props) => {
   useEffect(() => {

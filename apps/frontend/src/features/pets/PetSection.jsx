@@ -1,4 +1,4 @@
-import { assetUrl } from '../utils/assetUrl';
+import { assetUrl } from '../../utils/assetUrl';
 
 const WRAP_SECTIONS = ['Slayer', 'Wilderness'];
 

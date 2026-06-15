@@ -1,6 +1,6 @@
-import Button from './ui/Button';
-import Surface from './ui/Surface';
-import type { RecentBoard } from '../utils/utils';
+import Button from '../../components/ui/Button';
+import Surface from '../../components/ui/Surface';
+import type { RecentBoard } from '../../utils/utils';
 
 export type RecentBoardItem = RecentBoard;
 

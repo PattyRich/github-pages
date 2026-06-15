@@ -1,14 +1,14 @@
 import { useEffect, useState } from 'react';
-import { loot } from '../looter/looter';
+import { loot } from '../osrs/looter/looter';
 import './AllPets.css';
-import { assetUrl } from '../utils/assetUrl';
+import { assetUrl } from '../../utils/assetUrl';
 
 const AllPets = (props) => {
   const [petList, setPetList] = useState([]);
   const [petData, setPetData] = useState([]);
 
   useEffect(() => {
-    import('../looter/all-pets.js').then((data) => {
+    import('../osrs/looter/all-pets.js').then((data) => {
       let datax = JSON.parse(JSON.stringify(data)).data;
       setPetList(datax);
     });

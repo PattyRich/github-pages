@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import './Status.css';
-import { fetchGet } from '../utils/utils';
+import { fetchGet } from '../../utils/utils';
 
 const POLL_INTERVAL = 30000;
 
