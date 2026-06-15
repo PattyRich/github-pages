@@ -14,7 +14,7 @@ on:
       - 'apps/frontend/package.json'
       - 'apps/frontend/package-lock.json'
       - 'apps/frontend/tsconfig.json'
-      - 'apps/frontend/vite.config.mjs'
+      - 'apps/frontend/vite.config.ts'
       - '.github/workflows/deploy-frontend.yml'
 
 jobs:
