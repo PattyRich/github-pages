@@ -327,7 +327,6 @@ function TileModal({
   }
 
   function toggleUsePixel() {
-    if (boardType !== 'osrs') return;
     isDirtyRef.current = true;
     updateTileState((currentState) => {
       if (!currentState.image) return null;
