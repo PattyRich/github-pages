@@ -817,7 +817,7 @@ async function fetchCommonsSuggestions(searchValue: string): Promise<ImageSugges
     gsrlimit: '6',
     gsrsearch: searchValue,
     iiprop: 'url|extmetadata',
-    iiurlwidth: '250',
+    iiurlwidth: '480',
     origin: '*',
     prop: 'imageinfo',
   });
