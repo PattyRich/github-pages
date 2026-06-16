@@ -2,7 +2,7 @@ import { useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import './BoardTile.css';
 import Modal from '../../components/ui/TileModal';
-import type { TeamTileInfo, TileInfo, TileModalState } from '../../components/ui/TileModal';
+import type { TeamTileInfo, TileInfo, TileModalState } from '../../components/ui/tile-modal/types';
 import { getStoredBool } from '../../utils/utils';
 import { DEFAULT_BOARD_TYPE, type BoardType } from '../../types';
 

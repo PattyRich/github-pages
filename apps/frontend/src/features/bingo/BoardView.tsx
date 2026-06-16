@@ -20,7 +20,7 @@ import SettingsModal from '../../components/ui/SettingsModal';
 import FeedbackModal from '../../components/ui/FeedbackModal';
 import PasswordModal from '../../components/ui/PasswordModal';
 import { useAlert } from '../../utils/useAlert';
-import type { TeamTileInfo, TileInfo, TileModalState } from '../../components/ui/TileModal';
+import type { TeamTileInfo, TileInfo, TileModalState } from '../../components/ui/tile-modal/types';
 import { DEFAULT_BOARD_TYPE, normalizeBoardType, type BoardType } from '../../types';
 
 interface BoardTeamData {
