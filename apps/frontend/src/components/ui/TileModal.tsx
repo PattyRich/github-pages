@@ -11,12 +11,14 @@ import './TileModal.css';
 
 const NUM_INPUTS = ['points', 'currPoints', 'rowBingo', 'colBingo'];
 const COMMONS_API_URL = 'https://commons.wikimedia.org/w/api.php';
+const OSRS_API_URL = 'https://oldschool.runescape.wiki/api.php';
 const tileImages = import.meta.glob<string>('../../assets/*.png', {
   eager: true,
   import: 'default',
 });
 
 export interface TileImage {
+  animated?: boolean;
   attribution?: string;
   license?: string;
   licenseUrl?: string;
@@ -44,6 +46,7 @@ export interface TeamTileInfo {
 }
 
 interface ImageSuggestion {
+  animated?: boolean;
   attribution?: string;
   license?: string;
   licenseUrl?: string;
@@ -58,6 +61,34 @@ interface ImageSuggestion {
 
 interface OsrsSearchResponse {
   pages?: ImageSuggestion[];
+}
+
+interface OsrsFileSearchResponse {
+  query?: {
+    search?: OsrsFileSearchResult[];
+  };
+}
+
+interface OsrsFileSearchResult {
+  title: string;
+}
+
+interface OsrsImageInfoResponse {
+  query?: {
+    pages?: Record<string, OsrsImageInfoPage>;
+  };
+}
+
+interface OsrsImageInfoPage {
+  imageinfo?: OsrsImageInfo[];
+  title: string;
+}
+
+interface OsrsImageInfo {
+  descriptionurl?: string;
+  mime?: string;
+  thumburl?: string;
+  url?: string;
 }
 
 interface CommonsSearchResponse {
@@ -171,7 +202,9 @@ function TileModal({
       setTileState({ suggestions: [] });
       return;
     }
-    const data = curr.map((item) => storedSuggestions[item.title] || item);
+    const data = curr.map(
+      (item) => storedSuggestions[suggestionKey(item)] || storedSuggestions[item.title] || item
+    );
     setTileState({ suggestions: data, triedToSearch: true, loading: false });
   }
 
@@ -197,7 +230,7 @@ function TileModal({
 
         const storedSuggestions = { ...stateRef.current.storedSuggestions };
         results.forEach((item) => {
-          storedSuggestions[item.title] = item;
+          cacheSuggestion(storedSuggestions, item);
         });
         setTileState({ storedSuggestions });
         setSuggestions(results, storedSuggestions);
@@ -314,9 +347,14 @@ function TileModal({
         ? {
             opacity: '100',
             url: skipUrlBuild ? image : getImageUrl(image),
+            animated: skipUrlBuild && isAnimatedImageUrl(image),
             usePixel: false,
           }
         : {
+            animated:
+              image.animated ||
+              image.sourceName === 'OSRS Wiki GIF' ||
+              isAnimatedImageUrl(image.url),
             attribution: image.attribution,
             license: image.license,
             licenseUrl: image.licenseUrl,
@@ -555,7 +593,7 @@ function TileModal({
                       )}
                     </div>
                   )}
-                  {!isGenericBoard && (
+                  {!isGenericBoard && !isAnimatedTileImage(state.image) && (
                     <CheckboxField
                       className="tm-check tm-check--image"
                       inputClassName="tm-check-input"
@@ -766,15 +804,73 @@ function detectURLs(message?: string) {
   return res || [];
 }
 
+function isAnimatedImageUrl(url?: string) {
+  if (!url) return false;
+  return /^data:image\/gif[;,]/i.test(url) || /\.gif(?:[?#]|$)/i.test(url);
+}
+
+function isAnimatedTileImage(image?: TileImage | null) {
+  return Boolean(image?.animated || isAnimatedImageUrl(image?.url));
+}
+
 function getImageUrl(image: string) {
-  image = image.split('/').pop() || image;
-  if (image.endsWith('png')) image = image.slice(0, -4);
-  image = decodeURI(image).replaceAll(' ', '_');
-  image = image.charAt(0).toUpperCase() + image.slice(1);
+  image = getWikiImageBaseName(image);
   return `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`;
 }
 
+function getWikiImageBaseName(image: string) {
+  image = image.split('/').pop() || image;
+  image = image.replace(/\.png$/i, '');
+  image = decodeURI(image).replaceAll(' ', '_');
+  return image.charAt(0).toUpperCase() + image.slice(1);
+}
+
+function getDetailImageFileTitle(image: string) {
+  return `File:${getWikiImageBaseName(image)}_detail.png`;
+}
+
+function normaliseWikiFileTitle(title: string) {
+  return title.replace(/^File:/i, '').replaceAll('_', ' ').trim().toLowerCase();
+}
+
+function suggestionKey(item: ImageSuggestion) {
+  return `${item.title}|${item.url}`;
+}
+
+function cacheSuggestion(
+  storedSuggestions: Record<string, ImageSuggestion>,
+  item: ImageSuggestion
+) {
+  storedSuggestions[suggestionKey(item)] = item;
+  if (item.sourceName !== 'OSRS Wiki GIF') {
+    storedSuggestions[item.title] = item;
+  }
+}
+
 async function fetchOsrsSuggestions(
+  searchValue: string,
+  badTitles: string[],
+  storedSuggestions: Record<string, ImageSuggestion>
+): Promise<ImageSuggestion[]> {
+  const results = await Promise.allSettled([
+    fetchOsrsItemSuggestions(searchValue, badTitles, storedSuggestions),
+    fetchOsrsGifSuggestions(searchValue),
+  ]);
+
+  const fulfilledResults = results.filter(
+    (result): result is PromiseFulfilledResult<ImageSuggestion[]> =>
+      result.status === 'fulfilled'
+  );
+  if (fulfilledResults.length > 0) {
+    const fulfilled = fulfilledResults.flatMap((result) => result.value);
+
+    return uniqueSuggestions(fulfilled).slice(0, 10);
+  }
+
+  throw new Error('Wiki search failed');
+}
+
+async function fetchOsrsItemSuggestions(
   searchValue: string,
   badTitles: string[],
   storedSuggestions: Record<string, ImageSuggestion>
@@ -785,30 +881,133 @@ async function fetchOsrsSuggestions(
     throw new Error(`Wiki search failed (${res.status})`);
   }
   const data = (await res.json()) as OsrsSearchResponse;
-  const fetchPromises = (data.pages || []).map(async (item) => {
-    if (!item.thumbnail || badTitles.includes(item.title)) return null;
-    if (storedSuggestions[item.title]) return storedSuggestions[item.title];
-    const imgUrl = getImageUrl(item.title);
-    try {
-      const response = await fetch(imgUrl);
-      if (response.status === 200) {
-        return {
-          ...item,
-          sourceName: 'OSRS Wiki',
-          sourceUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(item.title.replaceAll(' ', '_'))}`,
-          url: imgUrl,
-        };
-      }
-      badTitles.push(item.title);
-    } catch {
-      badTitles.push(item.title);
+  const candidates = (data.pages || []).filter(
+    (item) => item.thumbnail && !badTitles.includes(item.title)
+  );
+  const cachedSuggestions: ImageSuggestion[] = [];
+  const uncachedCandidates = candidates.filter((item) => {
+    const cached = storedSuggestions[item.title];
+    if (cached) {
+      cachedSuggestions.push(cached);
+      return false;
     }
-    return null;
+    return true;
   });
 
-  return (await Promise.all(fetchPromises)).filter((item): item is ImageSuggestion =>
-    Boolean(item)
-  );
+  const fileTitles = uncachedCandidates.map((item) => getDetailImageFileTitle(item.title));
+  const detailImages = await fetchOsrsImageInfoPages(fileTitles, 180);
+  const detailSuggestions = uncachedCandidates
+    .map((item) => {
+      const fileTitle = getDetailImageFileTitle(item.title);
+      const page = detailImages.get(normaliseWikiFileTitle(fileTitle));
+      const suggestion = toOsrsDetailSuggestion(item, page);
+      if (!suggestion) {
+        badTitles.push(item.title);
+      }
+      return suggestion;
+    })
+    .filter((item): item is ImageSuggestion => Boolean(item));
+
+  return [...cachedSuggestions, ...detailSuggestions];
+}
+
+async function fetchOsrsGifSuggestions(searchValue: string): Promise<ImageSuggestion[]> {
+  const gifSearchValue = /\bgif\b/i.test(searchValue) ? searchValue : `${searchValue} gif`;
+  const searchParams = new URLSearchParams({
+    action: 'query',
+    format: 'json',
+    list: 'search',
+    origin: '*',
+    srnamespace: '6',
+    srlimit: '20',
+    srsearch: gifSearchValue,
+  });
+  const searchRes = await fetch(`${OSRS_API_URL}?${searchParams}`);
+  if (!searchRes.ok) {
+    throw new Error(`Wiki GIF search failed (${searchRes.status})`);
+  }
+
+  const searchData = (await searchRes.json()) as OsrsFileSearchResponse;
+  const titles = (searchData.query?.search || [])
+    .map((result) => result.title)
+    .filter((title) => /\.gif$/i.test(title))
+    .slice(0, 5);
+
+  if (titles.length === 0) {
+    return [];
+  }
+
+  const detailImages = await fetchOsrsImageInfoPages(titles, 160);
+  return Array.from(detailImages.values())
+    .map(toOsrsGifSuggestion)
+    .filter((item): item is ImageSuggestion => Boolean(item));
+}
+
+async function fetchOsrsImageInfoPages(titles: string[], thumbWidth: number) {
+  const pagesByTitle = new Map<string, OsrsImageInfoPage>();
+  if (titles.length === 0) return pagesByTitle;
+
+  const imageParams = new URLSearchParams({
+    action: 'query',
+    format: 'json',
+    iiprop: 'url|mime|size',
+    iiurlwidth: String(thumbWidth),
+    origin: '*',
+    prop: 'imageinfo',
+    titles: titles.join('|'),
+  });
+  const imageRes = await fetch(`${OSRS_API_URL}?${imageParams}`);
+  if (!imageRes.ok) {
+    throw new Error(`Wiki GIF info failed (${imageRes.status})`);
+  }
+
+  const imageData = (await imageRes.json()) as OsrsImageInfoResponse;
+  Object.values(imageData.query?.pages || {}).forEach((page) => {
+    if (page.imageinfo?.[0]?.url) {
+      pagesByTitle.set(normaliseWikiFileTitle(page.title), page);
+    }
+  });
+  return pagesByTitle;
+}
+
+function toOsrsDetailSuggestion(
+  item: ImageSuggestion,
+  page?: OsrsImageInfoPage
+): ImageSuggestion | null {
+  const imageInfo = page?.imageinfo?.[0];
+  if (!imageInfo?.url) return null;
+
+  return {
+    ...item,
+    sourceName: 'OSRS Wiki',
+    sourceUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(item.title.replaceAll(' ', '_'))}`,
+    url: imageInfo.thumburl || imageInfo.url,
+  };
+}
+
+function toOsrsGifSuggestion(page: OsrsImageInfoPage): ImageSuggestion | null {
+  const imageInfo = page.imageinfo?.[0];
+  if (imageInfo?.mime !== 'image/gif' || !imageInfo.url) return null;
+  const title = cleanCommonsTitle(page.title);
+
+  return {
+    animated: true,
+    sourceName: 'OSRS Wiki GIF',
+    sourceUrl: imageInfo.descriptionurl,
+    thumbnail: { url: imageInfo.thumburl || imageInfo.url },
+    title,
+    url: imageInfo.url,
+  };
+}
+
+function uniqueSuggestions(items: ImageSuggestion[]) {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    const key = item.url || item.title;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 async function fetchCommonsSuggestions(searchValue: string): Promise<ImageSuggestion[]> {

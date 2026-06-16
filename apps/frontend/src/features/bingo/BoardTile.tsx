@@ -45,7 +45,8 @@ export default function BoardTile({
   const showTileTitle = !bare && !showTitleTile && info?.title;
   const showTitlePopup = !bare && info?.title;
   const showTeamProgress = info && teamInfo && Number(info.points) > 0 && !showPoints;
-  const usePixelImage = boardType === 'osrs' && info?.image?.usePixel;
+  const usePixelImage =
+    boardType === 'osrs' && info?.image?.usePixel && !isAnimatedTileImage(info.image);
 
   const sizeStyle: CSSProperties = dem ? { height: dem, width: dem } : {};
   const titleStyle: (CSSProperties & Record<string, string>) | undefined = showTileTitle
@@ -170,6 +171,13 @@ function getPixelUrl(url?: string) {
     return `https://oldschool.runescape.wiki/images/${name}.png`;
   }
   return url;
+}
+
+function isAnimatedTileImage(image?: TileInfo['image']) {
+  const url = image?.url || '';
+  return Boolean(
+    image?.animated || /^data:image\/gif[;,]/i.test(url) || /\.gif(?:[?#]|$)/i.test(url)
+  );
 }
 
 const noopChange: NonNullable<BoardTileProps['change']> = () => undefined;

@@ -151,6 +151,148 @@ test('clears loading and shows an error when wiki search fails', async () => {
   vi.unstubAllGlobals();
 });
 
+test('osrs searches include gif file results in the same suggestion list', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn((input: RequestInfo | URL) => {
+      const url = String(input);
+      if (url.includes('/rest.php/v1/search/title')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              pages: [
+                {
+                  thumbnail: { url: 'https://oldschool.runescape.wiki/images/Crab.png' },
+                  title: 'Crab',
+                },
+              ],
+            }),
+        });
+      }
+      if (url.includes('/images/thumb/Crab_detail.png')) {
+        return Promise.reject(new Error('detail image should not be probed directly'));
+      }
+      if (url.includes('list=search')) {
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              query: {
+                search: [{ title: 'File:Crab dance.gif' }],
+              },
+            }),
+        });
+      }
+      if (url.includes('prop=imageinfo')) {
+        const decodedUrl = decodeURIComponent(url);
+        if (decodedUrl.includes('Crab_detail.png')) {
+          return Promise.resolve({
+            ok: true,
+            json: () =>
+              Promise.resolve({
+                query: {
+                  pages: {
+                    12345: {
+                      title: 'File:Crab detail.png',
+                      imageinfo: [
+                        {
+                          descriptionurl:
+                            'https://oldschool.runescape.wiki/w/File:Crab_detail.png',
+                          mime: 'image/png',
+                          thumburl:
+                            'https://oldschool.runescape.wiki/images/thumb/Crab_detail.png/180px-Crab_detail.png',
+                          url: 'https://oldschool.runescape.wiki/images/Crab_detail.png',
+                        },
+                      ],
+                    },
+                  },
+                },
+              }),
+          });
+        }
+        return Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              query: {
+                pages: {
+                  626372: {
+                    title: 'File:Crab dance.gif',
+                    imageinfo: [
+                      {
+                        descriptionurl:
+                          'https://oldschool.runescape.wiki/w/File:Crab_dance.gif',
+                        mime: 'image/gif',
+                        thumburl: 'https://oldschool.runescape.wiki/images/thumb/Crab_dance.gif',
+                        url: 'https://oldschool.runescape.wiki/images/Crab_dance.gif',
+                      },
+                    ],
+                  },
+                },
+              },
+            }),
+        });
+      }
+      return Promise.reject(new Error(`unexpected fetch ${url}`));
+    })
+  );
+
+  const props = renderTileModal({ privilege: 'admin', teamInfo: {} });
+
+  fireEvent.click(screen.getByRole('button', { name: /Set Tile Background Image/i }));
+  fireEvent.change(screen.getByLabelText(/Item Search/i), { target: { value: 'crab dance' } });
+
+  await waitFor(
+    () => {
+      expect(screen.getByText('Crab')).toBeInTheDocument();
+      expect(screen.getByText('Crab dance')).toBeInTheDocument();
+    },
+    { timeout: 2000 }
+  );
+
+  expect(screen.getByText(/OSRS Wiki GIF/i)).toBeInTheDocument();
+  expect(
+    (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.some(([input]) =>
+      decodeURIComponent(String(input)).includes('srsearch=Crab+dance+gif')
+    )
+  ).toBe(true);
+  expect(
+    (fetch as unknown as ReturnType<typeof vi.fn>).mock.calls.some(([input]) =>
+      String(input).includes('/images/thumb/Crab_detail.png')
+    )
+  ).toBe(false);
+
+  fireEvent.click(screen.getByText('Crab dance'));
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole('button', { name: /Remove Tile Background Image/i })
+    ).toBeInTheDocument();
+  });
+  expect(screen.getByRole('img', { name: /Tile background/i })).toHaveAttribute(
+    'src',
+    'https://oldschool.runescape.wiki/images/Crab_dance.gif'
+  );
+  expect(screen.queryByLabelText(/Use pixel image/i)).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /Save/i }));
+
+  await waitFor(() => expect(props.change).toHaveBeenCalled());
+
+  const savedState = props.change.mock.calls[0][2];
+  expect(savedState.image).toEqual(
+    expect.objectContaining({
+      animated: true,
+      sourceName: 'OSRS Wiki GIF',
+      sourceUrl: 'https://oldschool.runescape.wiki/w/File:Crab_dance.gif',
+      url: 'https://oldschool.runescape.wiki/images/Crab_dance.gif',
+    })
+  );
+
+  vi.unstubAllGlobals();
+});
+
 test('generic boards search Commons and save source metadata', async () => {
   vi.stubGlobal(
     'fetch',
