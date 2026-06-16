@@ -94,6 +94,7 @@ Collection: bingo.bingo
 Document shape:
 {
   boardName:  string,          // unique identifier (indexed)
+  boardType:  "osrs"|"generic", // OSRS remains the default for legacy boards
   boardData:  Tile[][],        // 2D array of { title, image, points }
   "team-1":   TeamState,       // { name, optional team secret, teamData: TeamTile[][] }
   "team-2":   TeamState,

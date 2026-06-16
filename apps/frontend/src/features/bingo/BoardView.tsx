@@ -3,7 +3,13 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import './BoardView.css';
 import BoardTile from './BoardTile';
 import Button from '../../components/ui/Button';
-import { fetchGet, fetchPut, pwUrlBuilder, addToRecent, decodePathSegment } from '../../utils/utils';
+import {
+  fetchGet,
+  fetchPut,
+  pwUrlBuilder,
+  addToRecent,
+  decodePathSegment,
+} from '../../utils/utils';
 import { apiUrl } from '../../config';
 import { useLocation, useNavigate } from 'react-router-dom';
 import Teams from './Teams';
@@ -15,6 +21,7 @@ import FeedbackModal from '../../components/ui/FeedbackModal';
 import PasswordModal from '../../components/ui/PasswordModal';
 import { useAlert } from '../../utils/useAlert';
 import type { TeamTileInfo, TileInfo, TileModalState } from '../../components/ui/TileModal';
+import { DEFAULT_BOARD_TYPE, normalizeBoardType, type BoardType } from '../../types';
 
 interface BoardTeamData {
   name: string;
@@ -30,6 +37,7 @@ interface BoardTeam extends TeamInfo {
 
 interface BoardApiResponse {
   boardData: TileInfo[][];
+  boardType?: BoardType;
   generalPassword: string;
   teamData: BoardTeam[];
   teamPasswordsRequired?: boolean;
@@ -40,6 +48,7 @@ interface BoardState {
   activeTeamIndex: number;
   adminPassword?: string;
   boardData?: TileInfo[][];
+  boardType: BoardType;
   boardJustCreated?: boolean | null;
   boardName?: string;
   cameFromCreate?: boolean;
@@ -68,6 +77,7 @@ const initialBoardState = {
   privilege: 'general',
   teams: 5,
   activeTeamIndex: 0,
+  boardType: DEFAULT_BOARD_TYPE,
   showEditTeams: false,
   generalPasswordCopy: '',
   visibleRows: null,
@@ -84,6 +94,7 @@ function BoardView() {
       ...initialBoardState,
       ...rest,
       privilege: legacyPrivilege ?? initialBoardState.privilege,
+      boardType: normalizeBoardType(fromLocation.boardType),
     };
   });
   const { AlertBanner, alert, clearAlert } = useAlert();
@@ -210,6 +221,7 @@ function BoardView() {
     setBoardState(
       {
         boardData: data.boardData,
+        boardType: normalizeBoardType(data.boardType),
         teams: data.teamData.length,
         teamData: data.teamData,
         activeTeamIndex: stateRef.current.activeTeamIndex || activeTeamValue,
@@ -527,6 +539,7 @@ function BoardView() {
                   br={boardDataToShow[0].length === j + 1}
                   bb={boardDataToShow.length === i + 1}
                   privilege={state.privilege}
+                  boardType={state.boardType}
                 />
               ))}
             </span>

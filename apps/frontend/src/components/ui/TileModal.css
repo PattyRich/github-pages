@@ -77,6 +77,74 @@
   outline-offset: -2px;
 }
 
+.tm-suggestion-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.tm-suggestion-thumb {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  object-fit: contain;
+}
+
+.tm-suggestion-list--generic .tm-suggestion-item {
+  padding: 10px 12px;
+}
+
+.tm-suggestion-list--generic .tm-suggestion-content {
+  gap: 12px;
+}
+
+.tm-suggestion-list--generic .tm-suggestion-thumb {
+  width: 64px;
+  height: 64px;
+  background-color: var(--osrs-bg-brown-dark);
+  border: 1px solid var(--osrs-border-dark);
+}
+
+.tm-suggestion-text {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.tm-suggestion-text > span,
+.tm-suggestion-text small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.tm-suggestion-text small,
+.tm-image-credit {
+  color: var(--osrs-text-normal);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  text-shadow: 1px 1px 0 black;
+}
+
+.tm-image-credit {
+  max-width: 100%;
+  margin: 6px 0 10px;
+  overflow-wrap: anywhere;
+}
+
+.tm-image-credit a {
+  color: var(--osrs-text-gold);
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.tm-image-credit a:hover,
+.tm-image-credit a:focus-visible {
+  color: var(--osrs-text-yellow);
+}
+
 .tm-check {
   display: flex;
   align-items: center;

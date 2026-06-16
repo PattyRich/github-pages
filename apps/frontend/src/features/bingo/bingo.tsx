@@ -6,6 +6,7 @@ import BoardTile from './BoardTile';
 import EditableInput from '../../components/ui/EditableInput';
 import Button from '../../components/ui/Button';
 import Surface from '../../components/ui/Surface';
+import { DEFAULT_BOARD_TYPE, type BoardType } from '../../types';
 
 import {
   fetchGet,
@@ -26,6 +27,7 @@ const initialBingoState = {
   adminPassword: '',
   generalPassword: '',
   boardName: '',
+  boardType: DEFAULT_BOARD_TYPE,
   privilege: 'admin',
   joinPwTitle: 'general' as const,
   joinPw: '',
@@ -42,6 +44,7 @@ interface BingoProps {
 interface BingoState {
   adminPassword: string;
   boardName: string;
+  boardType: BoardType;
   columns: number;
   generalPassword: string;
   joinPw: string;
@@ -58,6 +61,7 @@ type BingoStateChange = Partial<BingoState>;
 interface BingoNavigationState {
   adminPassword?: string;
   boardName: string;
+  boardType?: BoardType;
   canSwitchPriv?: boolean;
   cameFromCreate?: boolean;
   generalPassword?: string;
@@ -164,6 +168,7 @@ function Bingo({ screenSkip }: BingoProps) {
           generalPassword: trimmedState.generalPassword,
           teams: trimmedState.teams,
           boardName: trimmedState.boardName,
+          boardType: trimmedState.boardType,
           privilege: 'admin',
           cameFromCreate: true,
         },
@@ -291,6 +296,35 @@ function Bingo({ screenSkip }: BingoProps) {
                   <br />
                   <strong>General:</strong> submit team proof and mark revealed tiles complete.
                 </Surface>
+                <div className="create-board-type">
+                  <span className="create-board-type-label">Board Style</span>
+                  <div
+                    className="create-board-type-grid"
+                    role="radiogroup"
+                    aria-label="Board Style"
+                  >
+                    <button
+                      type="button"
+                      className={`create-board-type-card ${state.boardType === 'osrs' ? 'is-active' : ''}`}
+                      role="radio"
+                      aria-checked={state.boardType === 'osrs'}
+                      onClick={() => setBingoState({ boardType: 'osrs' })}
+                    >
+                      <span>OSRS</span>
+                      <small>Osrs wiki item and icon search.</small>
+                    </button>
+                    <button
+                      type="button"
+                      className={`create-board-type-card ${state.boardType === 'generic' ? 'is-active' : ''}`}
+                      role="radio"
+                      aria-checked={state.boardType === 'generic'}
+                      onClick={() => setBingoState({ boardType: 'generic' })}
+                    >
+                      <span>Generic</span>
+                      <small>General wikipedia image search.</small>
+                    </button>
+                  </div>
+                </div>
               </Surface>
 
               <Surface as="section" className="create-board-panel" variant="glass">
