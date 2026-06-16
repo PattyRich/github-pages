@@ -151,6 +151,85 @@ test('clears loading and shows an error when wiki search fails', async () => {
   vi.unstubAllGlobals();
 });
 
+test('generic boards search Commons and save source metadata', async () => {
+  vi.stubGlobal(
+    'fetch',
+    vi.fn(() =>
+      Promise.resolve({
+        ok: true,
+        json: () =>
+          Promise.resolve({
+            query: {
+              pages: {
+                1: {
+                  title: 'File:Birthday cake.jpg',
+                  imageinfo: [
+                    {
+                      descriptionurl: 'https://commons.wikimedia.org/wiki/File:Birthday_cake.jpg',
+                      extmetadata: {
+                        Artist: { value: '<a href="/wiki/User:Baker">Baker</a>' },
+                        LicenseShortName: { value: 'CC BY-SA 4.0' },
+                        LicenseUrl: { value: 'https://creativecommons.org/licenses/by-sa/4.0/' },
+                        ObjectName: { value: 'Birthday cake' },
+                      },
+                      thumburl: 'https://upload.wikimedia.org/thumb/cake.jpg/180px-cake.jpg',
+                      url: 'https://upload.wikimedia.org/cake.jpg',
+                    },
+                  ],
+                },
+              },
+            },
+          }),
+      })
+    )
+  );
+
+  const props = renderTileModal({ boardType: 'generic', privilege: 'admin', teamInfo: {} });
+
+  fireEvent.click(screen.getByRole('button', { name: /Set Tile Background Image/i }));
+
+  expect(screen.queryAllByRole('img').filter((img) => img.getAttribute('title')).length).toBe(0);
+  expect(screen.getByText(/Wikimedia Commons/i)).toBeInTheDocument();
+
+  fireEvent.change(screen.getByLabelText(/Image Search/i), { target: { value: 'Birthday cake' } });
+
+  await waitFor(
+    () => {
+      expect(screen.getByText('Birthday cake')).toBeInTheDocument();
+    },
+    { timeout: 2000 }
+  );
+
+  fireEvent.click(screen.getByText('Birthday cake'));
+
+  await waitFor(() => {
+    expect(
+      screen.getByRole('button', { name: /Remove Tile Background Image/i })
+    ).toBeInTheDocument();
+  });
+
+  expect(screen.queryByLabelText(/Use pixel image/i)).not.toBeInTheDocument();
+  expect(screen.getByText(/Source:/i)).toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /Save/i }));
+
+  await waitFor(() => expect(props.change).toHaveBeenCalled());
+
+  const savedState = props.change.mock.calls[0][2];
+  expect(savedState.image).toEqual(
+    expect.objectContaining({
+      attribution: 'Baker',
+      license: 'CC BY-SA 4.0',
+      licenseUrl: 'https://creativecommons.org/licenses/by-sa/4.0/',
+      sourceName: 'Wikimedia Commons',
+      sourceUrl: 'https://commons.wikimedia.org/wiki/File:Birthday_cake.jpg',
+      url: 'https://upload.wikimedia.org/thumb/cake.jpg/180px-cake.jpg',
+    })
+  );
+
+  vi.unstubAllGlobals();
+});
+
 test('does not close modal on escape if lightbox is open', () => {
   const props = renderTileModal({
     teamInfo: {

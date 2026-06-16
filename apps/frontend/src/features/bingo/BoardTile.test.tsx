@@ -77,6 +77,24 @@ test('uses the pixel image URL when requested', () => {
   );
 });
 
+test('does not rewrite pixel image URLs on generic boards', () => {
+  const sourceUrl =
+    'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png';
+  const { container } = renderBoardTile({
+    boardType: 'generic',
+    info: {
+      ...info,
+      image: {
+        opacity: 100,
+        usePixel: true,
+        url: sourceUrl,
+      },
+    },
+  });
+
+  expect(container.querySelector('.bg-img')).toHaveAttribute('src', sourceUrl);
+});
+
 test('shows green-bg class when tile is checked and completeStyle is off', () => {
   const { container } = renderBoardTile({
     teamInfo: { ...teamInfo, checked: true },

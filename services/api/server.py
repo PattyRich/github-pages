@@ -65,9 +65,10 @@ db = myclient["bingo"]
 mycol = db['bingo']
 
 allowedAuthTypes = ['admin', 'general']
+allowedBoardTypes = ['osrs', 'generic']
 adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
 generalTileKeys = ['proof', 'checked', 'currPoints', 'proofImages']
-boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns', 'visibleRows']
+boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns', 'visibleRows', 'boardType']
 disallowedRouteChars = ['?', '#', '/', '\\']
 testBoardPrefix = os.environ.get("PLAYWRIGHT_E2E_BOARD_PREFIX", os.environ.get("SELENIUM_E2E_BOARD_PREFIX", "__playwright_e2e__"))
 maxProofImages = int(os.environ.get("MAX_PROOF_IMAGES_PER_TILE", 10))
@@ -203,6 +204,12 @@ def board_visible_rows(cache):
 def slice_board_rows(board_data, visible_rows):
   return board_data[:visible_rows]
 
+def normalize_board_type(value):
+  return 'generic' if value in ['generic', 'plain'] else 'osrs'
+
+def board_type(cache):
+  return normalize_board_type(cache.get('boardType'))
+
 def is_test_board(board_name):
   return isinstance(board_name, str) and board_name.startswith(testBoardPrefix)
 
@@ -219,6 +226,8 @@ def validate_board_creation(data):
 
   if data['boardName'].lower() in ['join', 'create']:
     return "Name can't be join or create for routing purposes."
+
+  data['boardType'] = normalize_board_type(data.get('boardType'))
 
   return None
 
@@ -358,7 +367,7 @@ def createBoard():
     boardData.append([])
     for j in range(data['rows']):
       boardData[i].append(defaultBoardObj.copy())
-      if i == 0 and j == 0:
+      if data.get('boardType') == 'osrs' and i == 0 and j == 0:
         boardData[i][0]['title'] = 'Example Tile'
         boardData[i][0]['image'] = {'url': 'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png', 'opacity': 100}
   
@@ -382,12 +391,12 @@ def createBoard():
 
   log.info("createBoard - success  board=%s  teams=%d  ip=%s", data['boardName'], data['teams'], request.remote_addr)
 
-  if not is_test_board(data["boardName"]):
+  if not is_test_board(data["boardName"]) and os.environ.get('CREATION_WEBHOOK', '').strip():
     board_url = bingo_board_url(data["boardName"], data.get('generalPassword', ''))
     board_label = escape_discord_link_text(data["boardName"])
     discord_message = 'New bingo board created: **[{}]({})**'.format(board_label, board_url)
     postToDiscord(discord_message, 'CREATION_WEBHOOK')
-  else:
+  elif is_test_board(data["boardName"]):
     log.info("createBoard - creation webhook skipped for test board  board=%s", data['boardName'])
 
   return jsonify(success=True)
@@ -409,6 +418,7 @@ def getBoard(boardName, password, pwtype):
   teamData = []
   generalPassword = cache['generalPassword']
   passwordRequired = cache.get('requirePassword', False)
+  cacheBoardType = board_type(cache)
 
   for i in range(cache['teams']):
     team = 'team-' + str(i)
@@ -426,7 +436,7 @@ def getBoard(boardName, password, pwtype):
     })
 
   log.info("getBoard - success  board=%s  pwtype=%s", boardName, pwtype)
-  return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired, visibleRows=visibleRows)
+  return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired, visibleRows=visibleRows, boardType=cacheBoardType)
 
 @app.route('/events/<boardName>/<password>/<pwtype>')
 @limiter.limit("2000 per hour")

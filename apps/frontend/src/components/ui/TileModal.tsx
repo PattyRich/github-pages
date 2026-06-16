@@ -6,16 +6,23 @@ import ImageLightbox from './ImageLightbox';
 import { ModalButton, ModalShell } from './ModalShell';
 import ProofImageGrid from './ProofImageGrid';
 import { debounce } from '../../utils/utils';
+import { DEFAULT_BOARD_TYPE, type BoardType } from '../../types';
 import './TileModal.css';
 
 const NUM_INPUTS = ['points', 'currPoints', 'rowBingo', 'colBingo'];
+const COMMONS_API_URL = 'https://commons.wikimedia.org/w/api.php';
 const tileImages = import.meta.glob<string>('../../assets/*.png', {
   eager: true,
   import: 'default',
 });
 
 export interface TileImage {
+  attribution?: string;
+  license?: string;
+  licenseUrl?: string;
   opacity: number | string;
+  sourceName?: string;
+  sourceUrl?: string;
   url: string;
   usePixel?: boolean;
 }
@@ -36,7 +43,12 @@ export interface TeamTileInfo {
   proofImages?: string[];
 }
 
-interface WikiSuggestion {
+interface ImageSuggestion {
+  attribution?: string;
+  license?: string;
+  licenseUrl?: string;
+  sourceName?: string;
+  sourceUrl?: string;
   thumbnail?: {
     url?: string;
   };
@@ -44,8 +56,26 @@ interface WikiSuggestion {
   url: string;
 }
 
-interface WikiSearchResponse {
-  pages?: WikiSuggestion[];
+interface OsrsSearchResponse {
+  pages?: ImageSuggestion[];
+}
+
+interface CommonsSearchResponse {
+  query?: {
+    pages?: Record<string, CommonsPage>;
+  };
+}
+
+interface CommonsPage {
+  imageinfo?: CommonsImageInfo[];
+  title: string;
+}
+
+interface CommonsImageInfo {
+  descriptionurl?: string;
+  extmetadata?: Record<string, { value?: string }>;
+  thumburl?: string;
+  url?: string;
 }
 
 export interface TileModalState extends TileInfo, TeamTileInfo {
@@ -54,8 +84,8 @@ export interface TileModalState extends TileInfo, TeamTileInfo {
   loading?: boolean;
   proofImages: string[];
   proofImagesChanged: boolean;
-  storedSuggestions: Record<string, WikiSuggestion>;
-  suggestions: WikiSuggestion[];
+  storedSuggestions: Record<string, ImageSuggestion>;
+  suggestions: ImageSuggestion[];
   triedToSearch?: boolean;
   wikiSearch: string;
   wikiSearchError?: boolean;
@@ -63,6 +93,7 @@ export interface TileModalState extends TileInfo, TeamTileInfo {
 
 interface TileModalProps {
   bb?: boolean;
+  boardType?: BoardType;
   br?: boolean;
   change: (row: number, col: number, info: Partial<TileModalState>) => Promise<void> | void;
   cord: [number, number];
@@ -83,6 +114,7 @@ function TileModal({
   show,
   br,
   bb,
+  boardType = DEFAULT_BOARD_TYPE,
 }: TileModalProps) {
   const [state, setState] = useState<TileModalState>(() => ({
     wikiSearch: '',
@@ -132,16 +164,14 @@ function TileModal({
   }
 
   function setSuggestions(
-    curr: WikiSuggestion[] | null,
+    curr: ImageSuggestion[] | null,
     storedSuggestions = stateRef.current.storedSuggestions
   ) {
     if (!curr) {
       setTileState({ suggestions: [] });
       return;
     }
-    const data = curr
-      .filter((item) => storedSuggestions[item.title])
-      .map((item) => storedSuggestions[item.title]);
+    const data = curr.map((item) => storedSuggestions[item.title] || item);
     setTileState({ suggestions: data, triedToSearch: true, loading: false });
   }
 
@@ -152,37 +182,17 @@ function TileModal({
     const requestId = ++wikiSearchSeqRef.current;
     setTileState({ loading: true, triedToSearch: false, wikiSearchError: false });
 
-    const url = `https://oldschool.runescape.wiki/rest.php/v1/search/title?q=${encodeURIComponent(searchValue)}&limit=5`;
-    fetch(url)
-      .then((res) => {
-        if (!res.ok) {
-          throw new Error(`Wiki search failed (${res.status})`);
-        }
-        return res.json() as Promise<WikiSearchResponse>;
-      })
-      .then(async (data) => {
-        if (requestId !== wikiSearchSeqRef.current) return;
+    const searchPromise =
+      boardType === 'generic'
+        ? fetchCommonsSuggestions(searchValue)
+        : fetchOsrsSuggestions(
+            searchValue,
+            badTitlesRef.current,
+            stateRef.current.storedSuggestions
+          );
 
-        const fetchPromises = (data.pages || []).map(async (item) => {
-          if (!item.thumbnail || badTitlesRef.current.includes(item.title)) return null;
-          if (stateRef.current.storedSuggestions[item.title]) return item;
-          const imgUrl = getImageUrl(item.title);
-          try {
-            const response = await fetch(imgUrl);
-            if (response.status === 200) {
-              item.url = imgUrl;
-              return item;
-            }
-            badTitlesRef.current.push(item.title);
-          } catch {
-            badTitlesRef.current.push(item.title);
-          }
-          return null;
-        });
-
-        const results = (await Promise.all(fetchPromises)).filter((item): item is WikiSuggestion =>
-          Boolean(item)
-        );
+    searchPromise
+      .then((results) => {
         if (requestId !== wikiSearchSeqRef.current) return;
 
         const storedSuggestions = { ...stateRef.current.storedSuggestions };
@@ -283,21 +293,37 @@ function TileModal({
       }
     }
     if (target === 'wikiSearch') {
-      value = nameFilter(String(value));
+      value = boardType === 'osrs' ? nameFilter(String(value)) : String(value);
       debouncedSetCurrSuggestionsRef.current?.(value);
     }
     setTileState({ [target]: value } as Partial<TileModalState>);
   }
 
   function toggleImageSelect() {
-    listOfImagesRef.current = tileImages;
+    listOfImagesRef.current = boardType === 'osrs' ? tileImages : {};
     setTileState({ chooseImage: true });
   }
 
-  function setImage(image: string, skipUrlBuild = false) {
+  function setImage(image: string | ImageSuggestion, skipUrlBuild = false) {
     isDirtyRef.current = true;
-    const url = skipUrlBuild ? image : getImageUrl(image);
-    setTileState({ image: { opacity: '100', url, usePixel: false }, chooseImage: false });
+    const nextImage =
+      typeof image === 'string'
+        ? {
+            opacity: '100',
+            url: skipUrlBuild ? image : getImageUrl(image),
+            usePixel: false,
+          }
+        : {
+            attribution: image.attribution,
+            license: image.license,
+            licenseUrl: image.licenseUrl,
+            opacity: '100',
+            sourceName: image.sourceName,
+            sourceUrl: image.sourceUrl,
+            url: image.url,
+            usePixel: false,
+          };
+    setTileState({ image: nextImage, chooseImage: false });
   }
 
   function toggleUsePixel() {
@@ -395,6 +421,9 @@ function TileModal({
 
   const isAdmin = privilege === 'admin';
   const isGeneral = !isAdmin;
+  const isGenericBoard = boardType === 'generic';
+  const searchInputTitle = isGenericBoard ? 'Image Search' : 'Item Search';
+  const searchProviderName = isGenericBoard ? 'Wikimedia Commons' : 'the OSRS wiki';
   const showRowBonus = br && (isAdmin || Number(state.rowBingo) !== 0);
   const showColumnBonus = bb && (isAdmin || Number(state.colBingo) !== 0);
 
@@ -496,15 +525,44 @@ function TileModal({
                     change={changeOpacity}
                     title="Image Opacity (1-100)"
                   />
-                  <CheckboxField
-                    className="tm-check tm-check--image"
-                    inputClassName="tm-check-input"
-                    labelClassName="tm-check-label"
-                    id="pixelImageCheckbox"
-                    label="Use pixel image?"
-                    checked={state.image.usePixel}
-                    onChange={toggleUsePixel}
-                  />
+                  {state.image.sourceName && (
+                    <div className="tm-image-credit">
+                      <span>Source: </span>
+                      {state.image.sourceUrl ? (
+                        <a href={state.image.sourceUrl} target="_blank" rel="noreferrer">
+                          {state.image.sourceName}
+                        </a>
+                      ) : (
+                        state.image.sourceName
+                      )}
+                      {state.image.attribution && <span> by {state.image.attribution}</span>}
+                      {state.image.license && (
+                        <span>
+                          {' '}
+                          (
+                          {state.image.licenseUrl ? (
+                            <a href={state.image.licenseUrl} target="_blank" rel="noreferrer">
+                              {state.image.license}
+                            </a>
+                          ) : (
+                            state.image.license
+                          )}
+                          )
+                        </span>
+                      )}
+                    </div>
+                  )}
+                  {!isGenericBoard && (
+                    <CheckboxField
+                      className="tm-check tm-check--image"
+                      inputClassName="tm-check-input"
+                      labelClassName="tm-check-label"
+                      id="pixelImageCheckbox"
+                      label="Use pixel image?"
+                      checked={state.image.usePixel}
+                      onChange={toggleUsePixel}
+                    />
+                  )}
                 </>
               )}
             </>
@@ -582,35 +640,41 @@ function TileModal({
         </>
       ) : (
         <>
-          {Object.keys(listOfImagesRef.current).map((image, i) => {
-            const imageName =
-              image
-                .split('/')
-                .pop()
-                ?.replace(/\.png$/i, '') || image;
-            return (
-              <img
-                key={i}
-                title={imageName}
-                src={listOfImagesRef.current[image]}
-                onClick={() => setImage(imageName)}
-                alt={imageName}
-              />
-            );
-          })}
-          <hr />
+          {!isGenericBoard &&
+            Object.keys(listOfImagesRef.current).map((image, i) => {
+              const imageName =
+                image
+                  .split('/')
+                  .pop()
+                  ?.replace(/\.png$/i, '') || image;
+              return (
+                <img
+                  key={i}
+                  title={imageName}
+                  src={listOfImagesRef.current[image]}
+                  onClick={() => setImage(imageName)}
+                  alt={imageName}
+                />
+              );
+            })}
+          {!isGenericBoard && <hr />}
           <div className="alert">
-            Click any image above to set it or type an item's name below as it would appear on the
-            wiki.
-            <br />
-            Examples: Coins, Infernal cape, Bucket of milk, Beaver, Plank
+            {isGenericBoard
+              ? 'Search Wikimedia Commons for a freely licensed image, or upload a custom image.'
+              : "Click any image above to set it or type an item's name below as it would appear on the wiki."}
+            {!isGenericBoard && (
+              <>
+                <br />
+                Examples: Coins, Infernal cape, Bucket of milk, Beaver, Plank
+              </>
+            )}
           </div>
           <div style={{ display: 'flex' }}>
             <EditableInput
               value={state.wikiSearch}
               stateKey="wikiSearch"
               change={inputState}
-              title="Item Search"
+              title={searchInputTitle}
             />
           </div>
           {state.loading && (
@@ -621,7 +685,7 @@ function TileModal({
           )}
           {state.wikiSearchError && (
             <div className="alert" role="alert">
-              Could not reach the OSRS wiki. Check your connection and try again.
+              Could not reach {searchProviderName}. Check your connection and try again.
             </div>
           )}
           {state.triedToSearch && !state.wikiSearchError && state.suggestions?.length === 0 && (
@@ -630,28 +694,37 @@ function TileModal({
             </div>
           )}
           {state.suggestions?.length > 0 && (
-            <ul className="tm-suggestion-list">
+            <ul className={`tm-suggestion-list${isGenericBoard ? ' tm-suggestion-list--generic' : ''}`}>
               {state.suggestions.map((item, i) => (
                 <li
                   key={i}
                   className="tm-suggestion-item"
                   role="button"
                   tabIndex={0}
-                  onClick={() => setImage(item.url, true)}
+                  onClick={() => setImage(item)}
                   onKeyDown={(e: ReactKeyboardEvent<HTMLLIElement>) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault();
-                      setImage(item.url, true);
+                      setImage(item);
                     }
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <div className="tm-suggestion-content">
                     <img
                       src={item.thumbnail?.url}
-                      style={{ maxWidth: '40px', maxHeight: '40px', paddingRight: '10px' }}
+                      className="tm-suggestion-thumb"
                       alt={item.title}
                     />
-                    {item.title}
+                    <span className="tm-suggestion-text">
+                      <span>{item.title}</span>
+                      {(item.attribution || item.license || item.sourceName) && (
+                        <small>
+                          {[item.attribution, item.license, item.sourceName]
+                            .filter(Boolean)
+                            .join(' / ')}
+                        </small>
+                      )}
+                    </span>
                   </div>
                 </li>
               ))}
@@ -696,4 +769,113 @@ function getImageUrl(image: string) {
   image = decodeURI(image).replaceAll(' ', '_');
   image = image.charAt(0).toUpperCase() + image.slice(1);
   return `https://oldschool.runescape.wiki/images/thumb/${encodeURIComponent(image)}_detail.png/180px-${encodeURIComponent(image)}_detail.png`;
+}
+
+async function fetchOsrsSuggestions(
+  searchValue: string,
+  badTitles: string[],
+  storedSuggestions: Record<string, ImageSuggestion>
+): Promise<ImageSuggestion[]> {
+  const url = `https://oldschool.runescape.wiki/rest.php/v1/search/title?q=${encodeURIComponent(searchValue)}&limit=5`;
+  const res = await fetch(url);
+  if (!res.ok) {
+    throw new Error(`Wiki search failed (${res.status})`);
+  }
+  const data = (await res.json()) as OsrsSearchResponse;
+  const fetchPromises = (data.pages || []).map(async (item) => {
+    if (!item.thumbnail || badTitles.includes(item.title)) return null;
+    if (storedSuggestions[item.title]) return storedSuggestions[item.title];
+    const imgUrl = getImageUrl(item.title);
+    try {
+      const response = await fetch(imgUrl);
+      if (response.status === 200) {
+        return {
+          ...item,
+          sourceName: 'OSRS Wiki',
+          sourceUrl: `https://oldschool.runescape.wiki/w/${encodeURIComponent(item.title.replaceAll(' ', '_'))}`,
+          url: imgUrl,
+        };
+      }
+      badTitles.push(item.title);
+    } catch {
+      badTitles.push(item.title);
+    }
+    return null;
+  });
+
+  return (await Promise.all(fetchPromises)).filter((item): item is ImageSuggestion =>
+    Boolean(item)
+  );
+}
+
+async function fetchCommonsSuggestions(searchValue: string): Promise<ImageSuggestion[]> {
+  const params = new URLSearchParams({
+    action: 'query',
+    format: 'json',
+    generator: 'search',
+    gsrnamespace: '6',
+    gsrlimit: '6',
+    gsrsearch: searchValue,
+    iiprop: 'url|extmetadata',
+    iiurlwidth: '250',
+    origin: '*',
+    prop: 'imageinfo',
+  });
+  const res = await fetch(`${COMMONS_API_URL}?${params}`);
+  if (!res.ok) {
+    throw new Error(`Commons search failed (${res.status})`);
+  }
+  const data = (await res.json()) as CommonsSearchResponse;
+  return Object.values(data.query?.pages || {})
+    .map(toCommonsSuggestion)
+    .filter((item): item is ImageSuggestion => Boolean(item))
+    .slice(0, 5);
+}
+
+function toCommonsSuggestion(page: CommonsPage): ImageSuggestion | null {
+  const imageInfo = page.imageinfo?.[0];
+  const imageUrl = imageInfo?.thumburl || imageInfo?.url;
+  if (!imageUrl) return null;
+
+  const extmetadata = imageInfo?.extmetadata || {};
+  const title = metadataText(extmetadata, 'ObjectName') || cleanCommonsTitle(page.title);
+  const attribution = metadataText(extmetadata, 'Artist') || metadataText(extmetadata, 'Credit');
+  const license =
+    metadataText(extmetadata, 'LicenseShortName') || metadataText(extmetadata, 'UsageTerms');
+  const licenseUrl = metadataValue(extmetadata, 'LicenseUrl');
+
+  return {
+    attribution,
+    license,
+    licenseUrl,
+    sourceName: 'Wikimedia Commons',
+    sourceUrl: imageInfo?.descriptionurl,
+    thumbnail: { url: imageUrl },
+    title,
+    url: imageUrl,
+  };
+}
+
+function cleanCommonsTitle(title: string) {
+  return title
+    .replace(/^File:/, '')
+    .replace(/\.[a-z0-9]+$/i, '')
+    .replaceAll('_', ' ');
+}
+
+function metadataText(metadata: Record<string, { value?: string }>, key: string) {
+  return stripHtml(metadataValue(metadata, key));
+}
+
+function metadataValue(metadata: Record<string, { value?: string }>, key: string) {
+  return metadata[key]?.value || '';
+}
+
+function stripHtml(value: string) {
+  if (!value) return '';
+  const withoutTags = value.replace(/<[^>]*>/g, ' ');
+  if (typeof document === 'undefined') return withoutTags.replace(/\s+/g, ' ').trim();
+  const textarea = document.createElement('textarea');
+  textarea.innerHTML = withoutTags;
+  return textarea.value.replace(/\s+/g, ' ').trim();
 }

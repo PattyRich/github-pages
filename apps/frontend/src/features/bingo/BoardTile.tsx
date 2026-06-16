@@ -4,6 +4,7 @@ import './BoardTile.css';
 import Modal from '../../components/ui/TileModal';
 import type { TeamTileInfo, TileInfo, TileModalState } from '../../components/ui/TileModal';
 import { getStoredBool } from '../../utils/utils';
+import { DEFAULT_BOARD_TYPE, type BoardType } from '../../types';
 
 const CROSS_SVG =
   "data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' version='1.1' preserveAspectRatio='none' viewBox='0 0 100 100'><path d='M100 0 L0 100 ' stroke='red' stroke-width='3'/><path d='M0 0 L100 100 ' stroke='red' stroke-width='3'/></svg>";
@@ -13,6 +14,7 @@ type TileCoord = [number, number];
 interface BoardTileProps {
   bare?: boolean;
   bb?: boolean;
+  boardType?: BoardType;
   br?: boolean;
   change?: (row: number, col: number, info: Partial<TileModalState>) => Promise<void> | void;
   cord?: TileCoord;
@@ -32,6 +34,7 @@ export default function BoardTile({
   bb,
   privilege,
   bare,
+  boardType = DEFAULT_BOARD_TYPE,
 }: BoardTileProps) {
   const [showModal, setShowModal] = useState(false);
 
@@ -42,6 +45,7 @@ export default function BoardTile({
   const showTileTitle = !bare && !showTitleTile && info?.title;
   const showTitlePopup = !bare && info?.title;
   const showTeamProgress = info && teamInfo && Number(info.points) > 0 && !showPoints;
+  const usePixelImage = boardType === 'osrs' && info?.image?.usePixel;
 
   const sizeStyle: CSSProperties = dem ? { height: dem, width: dem } : {};
   const titleStyle: (CSSProperties & Record<string, string>) | undefined = showTileTitle
@@ -91,13 +95,13 @@ export default function BoardTile({
             style={{
               opacity: info.image.opacity + '%',
               maxWidth: 'calc(90% - 16px)',
-              width: info.image.usePixel ? '200px' : 'auto',
-              height: info.image.usePixel ? '200px' : 'auto',
+              width: usePixelImage ? '200px' : 'auto',
+              height: usePixelImage ? '200px' : 'auto',
               objectFit: 'contain',
               maxHeight: showTileTitle ? '78%' : 'calc(100% - 8px)',
-              imageRendering: info.image.usePixel ? 'pixelated' : 'auto',
+              imageRendering: usePixelImage ? 'pixelated' : 'auto',
             }}
-            src={info.image.usePixel ? getPixelUrl(info.image.url) : info.image.url}
+            src={usePixelImage ? getPixelUrl(info.image.url) : info.image.url}
             alt=""
           />
         )}
@@ -145,6 +149,7 @@ export default function BoardTile({
           handleClose={() => setShowModal(false)}
           br={br}
           bb={bb}
+          boardType={boardType}
         />
       )}
     </>

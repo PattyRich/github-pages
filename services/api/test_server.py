@@ -213,17 +213,38 @@ class TestCreateBoard(unittest.TestCase):
         self.assertTrue(json.loads(resp.data)["success"])
         inserted = _mock_col.insert_one.call_args[0][0]
         self.assertEqual(inserted["visibleRows"], 3)
+        self.assertEqual(inserted["boardType"], "osrs")
+        self.assertEqual(inserted["boardData"][0][0]["title"], "Example Tile")
+        self.assertIn("oldschool.runescape.wiki", inserted["boardData"][0][0]["image"]["url"])
 
     @patch("server.postToDiscord", return_value=True)
-    def test_creation_discord_link_encodes_board_and_password_spaces(self, post_to_discord):
+    def test_generic_board_skips_osrs_starter_tile(self, _):
         resp = self._post({
-            "boardName": "My Board (2)",
+            "boardName": "GenericBoard",
             "adminPassword": "a",
-            "generalPassword": "general pw",
+            "generalPassword": "g",
             "teams": 2,
             "rows": 3,
             "columns": 3,
+            "boardType": "generic",
         })
+        self.assertEqual(resp.status_code, 200)
+        inserted = _mock_col.insert_one.call_args[0][0]
+        self.assertEqual(inserted["boardType"], "generic")
+        self.assertEqual(inserted["boardData"][0][0]["title"], "")
+        self.assertIsNone(inserted["boardData"][0][0]["image"])
+
+    @patch("server.postToDiscord", return_value=True)
+    def test_creation_discord_link_encodes_board_and_password_spaces(self, post_to_discord):
+        with patch.dict(server.os.environ, {"CREATION_WEBHOOK": "https://discord.example/webhook"}):
+            resp = self._post({
+                "boardName": "My Board (2)",
+                "adminPassword": "a",
+                "generalPassword": "general pw",
+                "teams": 2,
+                "rows": 3,
+                "columns": 3,
+            })
         self.assertEqual(resp.status_code, 200)
         message = post_to_discord.call_args[0][0]
         self.assertIn("/#/bingo/My%20Board%20%282%29?password=general%20pw", message)
@@ -246,14 +267,29 @@ class TestCreateBoard(unittest.TestCase):
 
     @patch("server.postToDiscord", return_value=True)
     def test_test_board_prefix_skips_creation_discord_alert(self, post_to_discord):
-        resp = self._post({
-            "boardName": f"{server.testBoardPrefix} smoke",
-            "adminPassword": "a",
-            "generalPassword": "g",
-            "teams": 2,
-            "rows": 3,
-            "columns": 3,
-        })
+        with patch.dict(server.os.environ, {"CREATION_WEBHOOK": "https://discord.example/webhook"}):
+            resp = self._post({
+                "boardName": f"{server.testBoardPrefix} smoke",
+                "adminPassword": "a",
+                "generalPassword": "g",
+                "teams": 2,
+                "rows": 3,
+                "columns": 3,
+            })
+        self.assertEqual(resp.status_code, 200)
+        post_to_discord.assert_not_called()
+
+    @patch("server.postToDiscord", return_value=True)
+    def test_missing_creation_webhook_skips_creation_discord_alert(self, post_to_discord):
+        with patch.dict(server.os.environ, {"CREATION_WEBHOOK": ""}):
+            resp = self._post({
+                "boardName": "LocalDevBoard",
+                "adminPassword": "a",
+                "generalPassword": "g",
+                "teams": 2,
+                "rows": 3,
+                "columns": 3,
+            })
         self.assertEqual(resp.status_code, 200)
         post_to_discord.assert_not_called()
 
@@ -292,6 +328,21 @@ class TestGetBoard(unittest.TestCase):
         data = json.loads(resp.data)
         self.assertIn("boardData", data)
         self.assertIn("teamData", data)
+        self.assertEqual(data["boardType"], "osrs")
+
+    def test_get_board_returns_generic_board_type(self):
+        self.board["boardType"] = "generic"
+        resp = self.client.get("/getBoard/TestBoard/admin123/admin")
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual(data["boardType"], "generic")
+
+    def test_get_board_normalizes_legacy_plain_board_type(self):
+        self.board["boardType"] = "plain"
+        resp = self.client.get("/getBoard/TestBoard/admin123/admin")
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual(data["boardType"], "generic")
 
     def test_get_board_as_general(self):
         resp = self.client.get("/getBoard/TestBoard/gen123/general")
