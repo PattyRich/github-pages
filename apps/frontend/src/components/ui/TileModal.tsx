@@ -734,7 +734,7 @@ function TileModal({
           <br />
           <input
             type="file"
-            accept="image/png,image/jpeg"
+            accept=".png,.jpeg"
             onChange={handleCustomImage}
             style={{ display: 'none' }}
             ref={fileInputRef}

@@ -1,3 +1,4 @@
+import json
 import os
 import re
 import shutil
@@ -48,6 +49,14 @@ IMAGE_REGRESSION_ROOT = Path(
 IMAGE_REGRESSION_MAX_DIFF = float(os.environ.get("PLAYWRIGHT_IMAGE_REGRESSION_MAX_DIFF", "0.002"))
 IMAGE_REGRESSION_PIXEL_TOLERANCE = int(
     os.environ.get("PLAYWRIGHT_IMAGE_REGRESSION_PIXEL_TOLERANCE", "10")
+)
+GENERIC_COMMONS_IMAGE_TITLE = "Lionel Messi Commons Test Image"
+GENERIC_COMMONS_IMAGE_URL = (
+    "https://upload.wikimedia.org/wikipedia/commons/thumb/8/83/"
+    "Lionel_Messi_31mar2007.jpg/250px-Lionel_Messi_31mar2007.jpg"
+)
+GENERIC_COMMONS_SOURCE_URL = (
+    "https://commons.wikimedia.org/wiki/File:Lionel_Messi_31mar2007.jpg"
 )
 
 def test_bingo_board_create_edit_images_layers_and_cleanup():
@@ -276,6 +285,80 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
     finally:
         cleanup_board(collection, board_name)
         shutil.rmtree(run_dir, ignore_errors=True)
+
+
+def test_generic_bingo_board_commons_image_visual_regression():
+    if sync_playwright is None:
+        pytest.skip("Playwright is not installed. Install tests/e2e/requirements.txt.")
+    if MongoClient is None:
+        pytest.skip("pymongo is not installed. Install tests/e2e/requirements.txt.")
+    if IMAGE_REGRESSION_ENABLED and Image is None:
+        pytest.skip("Pillow is not installed. Install tests/e2e/requirements.txt.")
+
+    require_frontend()
+    collection = mongo_collection()
+    board_name = f"{BOARD_PREFIX}generic-{int(time.time() * 1000)}"
+    admin_password = "adminpw"
+    general_password = "generalpw"
+
+    cleanup_board(collection, board_name)
+
+    try:
+        with sync_playwright() as p:
+            browser = launch_browser(p)
+            context = browser.new_context(**browser_context_options())
+            browser_failures = attach_browser_failure_guards(context)
+            page = context.new_page()
+            stub_commons_search(page)
+
+            page.goto(f"{FRONTEND_URL}/#/bingo/create")
+            fill_input_group(page, "Board Name", board_name)
+            fill_input_group(page, "Admin Password", admin_password)
+            fill_input_group(page, "General Password", general_password)
+            generic_radio = page.get_by_role("radio", name=re.compile(r"Generic"))
+            generic_radio.click()
+            expect(generic_radio).to_be_checked()
+            click_and_expect_api(
+                page,
+                "POST",
+                "/createBoard",
+                lambda: page.get_by_role("button", name="Create Board").click(),
+            )
+
+            expect(page).to_have_url(re.compile(r"#/bingo/"))
+            expect(page.get_by_text("Example Tile", exact=True)).not_to_be_visible()
+            expect_board_tile_count(page, 25)
+
+            open_tile_by_index(page, 0)
+            fill_input_group(page, "Title", "Generic Commons Tile")
+            page.get_by_role("button", name="Set Tile Background Image").click()
+            expect(page.get_by_text("Search Wikimedia Commons")).to_be_visible()
+            expect(page.locator('img[title="Twisted bow"]')).to_have_count(0)
+            expect(page.get_by_label("Use pixel image?")).to_have_count(0)
+            select_commons_image(page, "messi", GENERIC_COMMONS_IMAGE_TITLE)
+            expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
+            expect(page.get_by_text("Source:")).to_be_visible()
+            expect(page.get_by_text("Wikimedia Commons")).to_be_visible()
+            expect(page.get_by_label("Use pixel image?")).to_have_count(0)
+            save_board_tile(page)
+            expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
+            expect_tile_image_loaded(page, 0)
+            compare_visual_snapshot(page, "generic-board-commons-image", ".center-board")
+            assert_no_browser_failures(browser_failures)
+
+            context.close()
+            browser.close()
+
+        board = collection.find_one({"boardName": board_name})
+        assert board is not None
+        assert board.get("boardType") == "generic"
+        tile = board["boardData"][0][0]
+        assert tile["title"] == "Generic Commons Tile"
+        assert tile["image"]["url"] == GENERIC_COMMONS_IMAGE_URL
+        assert tile["image"]["sourceName"] == "Wikimedia Commons"
+        assert not any("oldschool.runescape.wiki" in url for url in collect_artifact_urls(board))
+    finally:
+        cleanup_board(collection, board_name)
 
 
 def fill_input_group(page, label, value):
@@ -547,6 +630,53 @@ def select_wiki_image(page, search_text, result_text):
     expect(wiki_result).to_be_visible(timeout=15000)
     expect_loaded_image(page, wiki_result.locator("img").first)
     wiki_result.click()
+
+
+def select_commons_image(page, search_text, result_text):
+    fill_input_group(page, "Image Search", search_text)
+    commons_result = page.locator(".tm-suggestion-item").filter(has_text=result_text).first
+    expect(commons_result).to_be_visible(timeout=15000)
+    expect_loaded_image(page, commons_result.locator("img").first)
+    commons_result.click()
+
+
+def stub_commons_search(page):
+    payload = {
+        "query": {
+            "pages": {
+                "1": {
+                    "title": "File:Lionel_Messi_31mar2007.jpg",
+                    "imageinfo": [
+                        {
+                            "descriptionurl": GENERIC_COMMONS_SOURCE_URL,
+                            "thumburl": GENERIC_COMMONS_IMAGE_URL,
+                            "url": GENERIC_COMMONS_IMAGE_URL,
+                            "extmetadata": {
+                                "ObjectName": {"value": GENERIC_COMMONS_IMAGE_TITLE},
+                                "Artist": {"value": "Alex Tremps"},
+                                "LicenseShortName": {"value": "CC BY 2.0"},
+                                "LicenseUrl": {
+                                    "value": "https://creativecommons.org/licenses/by/2.0/"
+                                },
+                            },
+                        }
+                    ],
+                }
+            }
+        }
+    }
+
+    page.route(
+        "https://commons.wikimedia.org/w/api.php**",
+        lambda route: route.fulfill(
+            status=200,
+            body=json.dumps(payload),
+            headers={
+                "access-control-allow-origin": "*",
+                "content-type": "application/json",
+            },
+        ),
+    )
 
 
 def select_asset_image(page, title):
