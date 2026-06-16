@@ -24,7 +24,7 @@ export default function ProofImageGrid({
       <div className="proof-upload-row">
         <input
           type="file"
-          accept="image/png,image/jpeg,image/webp,image/gif"
+          accept="image/png,image/jpeg,image/webp"
           multiple
           onChange={onUpload}
           className="proof-upload-input"

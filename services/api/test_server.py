@@ -10,8 +10,12 @@ or:
     python -m unittest test_server.py -v
 """
 
+import base64
+import io
 import json
+import tempfile
 import unittest
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 
@@ -80,6 +84,27 @@ TINY_PNG_DATA_URI = (
 )
 
 
+def _animated_image_data_uri(format_name="GIF", mime_type="image/gif"):
+    from PIL import Image
+
+    frames = [
+        Image.new("RGB", (4, 4), (255, 0, 0)),
+        Image.new("RGB", (4, 4), (0, 255, 0)),
+    ]
+    buf = io.BytesIO()
+    save_options = {
+        "format": format_name,
+        "save_all": True,
+        "append_images": frames[1:],
+        "duration": [60, 60],
+        "loop": 0,
+    }
+    if format_name == "WEBP":
+        save_options.update({"quality": 80, "method": 6})
+    frames[0].save(buf, **save_options)
+    return f"data:{mime_type};base64,{base64.b64encode(buf.getvalue()).decode('ascii')}"
+
+
 # ---------------------------------------------------------------------------
 # Tests: helper functions (pure Python, no HTTP)
 # ---------------------------------------------------------------------------
@@ -121,6 +146,52 @@ class TestClearBadData(unittest.TestCase):
     def test_empty_data(self):
         result = server.clearBadData({}, ["title"])
         self.assertEqual(result, {})
+
+
+class TestImageStore(unittest.TestCase):
+    def test_board_cover_store_preserves_animated_gif_as_webp(self):
+        from PIL import Image
+
+        with tempfile.TemporaryDirectory() as tmp:
+            store = server.board_images.__class__(
+                url_prefix="/static/uploads/board-images",
+                upload_root=Path(tmp),
+                max_source_bytes=1024 * 1024,
+                max_pixels=10_000,
+                target_kb=50,
+                allowed_media_types=("image/png", "image/jpeg", "image/webp", "image/gif"),
+                allow_animated=True,
+                animated_target_kb=300,
+                max_animation_frames=10,
+                max_animation_total_pixels=100_000,
+            )
+
+            saved_url = store.save(_animated_image_data_uri())
+            saved_path = Path(tmp) / saved_url.rsplit("/", 1)[-1]
+
+            self.assertTrue(saved_url.endswith(".webp"))
+            self.assertLessEqual(saved_path.stat().st_size, 300 * 1024)
+            with Image.open(saved_path) as image:
+                self.assertEqual(image.format, "WEBP")
+                self.assertTrue(getattr(image, "is_animated", False))
+                self.assertGreater(getattr(image, "n_frames", 1), 1)
+
+    def test_proof_store_rejects_animated_webp(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            store = server.proof_images.__class__(
+                url_prefix="/static/uploads/proofs",
+                upload_root=Path(tmp),
+                max_source_bytes=1024 * 1024,
+                max_pixels=10_000,
+                target_kb=50,
+                allowed_media_types=("image/png", "image/jpeg", "image/webp"),
+                allow_animated=False,
+                max_animation_frames=10,
+                max_animation_total_pixels=100_000,
+            )
+
+            with self.assertRaisesRegex(ValueError, "Animated images are only supported"):
+                store.save(_animated_image_data_uri("WEBP", "image/webp"))
 
 
 # ---------------------------------------------------------------------------

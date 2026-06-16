@@ -270,7 +270,10 @@ function TileModal({
 
   function handleCustomImage(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (file && (file.type === 'image/png' || file.type === 'image/jpeg')) {
+    if (
+      file &&
+      ['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)
+    ) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result;
@@ -278,7 +281,7 @@ function TileModal({
       };
       reader.readAsDataURL(file);
     } else {
-      alert('Please select a valid PNG or JPEG file');
+      alert('Please select a valid PNG, JPEG, WEBP, or GIF file');
     }
   }
 
@@ -378,7 +381,7 @@ function TileModal({
   function handleProofImage(e: ChangeEvent<HTMLInputElement>) {
     const MAX = 10;
     Array.from(e.target.files || []).forEach((file) => {
-      if (!['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) return;
+      if (!['image/png', 'image/jpeg', 'image/webp'].includes(file.type)) return;
       const reader = new FileReader();
       reader.onload = (event) => {
         updateTileState((currentState) => {
@@ -733,7 +736,7 @@ function TileModal({
           <br />
           <input
             type="file"
-            accept=".png,.jpeg"
+            accept="image/png,image/jpeg,image/webp,image/gif"
             onChange={handleCustomImage}
             style={{ display: 'none' }}
             ref={fileInputRef}
@@ -743,7 +746,7 @@ function TileModal({
             style={{ marginTop: '10px' }}
             onClick={() => fileInputRef.current?.click()}
           >
-            Custom image
+            Custom image or gif
           </ModalButton>
         </>
       )}

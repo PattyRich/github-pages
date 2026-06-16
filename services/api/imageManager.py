@@ -15,12 +15,35 @@ log = get_logger(__name__)
 
 
 class ImageStore:
-  def __init__(self, url_prefix, upload_root, max_source_bytes, max_pixels, target_kb):
+  def __init__(
+    self,
+    url_prefix,
+    upload_root,
+    max_source_bytes,
+    max_pixels,
+    target_kb,
+    allowed_media_types=None,
+    allow_animated=False,
+    animated_target_kb=None,
+    max_animation_frames=120,
+    max_animation_total_pixels=120_000_000,
+    animation_workers=None,
+    animated_webp_method=4,
+  ):
     self.url_prefix = url_prefix
     self.upload_root = Path(upload_root)
     self.max_source_bytes = max_source_bytes
     self.max_pixels = max_pixels
     self.target_kb = target_kb
+    if allowed_media_types is None:
+      allowed_media_types = ("image/png", "image/jpeg", "image/webp", "image/gif")
+    self.allowed_media_types = tuple(allowed_media_types)
+    self.allow_animated = allow_animated
+    self.animated_target_kb = animated_target_kb or target_kb
+    self.max_animation_frames = max_animation_frames
+    self.max_animation_total_pixels = max_animation_total_pixels
+    self.animation_workers = animation_workers
+    self.animated_webp_method = max(0, min(6, animated_webp_method))
 
   def decode_data_uri(self, data_uri):
     if not isinstance(data_uri, str) or not data_uri.startswith("data:"):
@@ -32,7 +55,7 @@ class ImageStore:
     if ";base64" not in header:
       raise ValueError("Expected a base64 data URI")
     media_type = header.split(";", 1)[0].split(":", 1)[1].lower()
-    if media_type not in ("image/png", "image/jpeg", "image/webp", "image/gif"):
+    if media_type not in self.allowed_media_types:
       raise ValueError("Expected an image data URI")
     try:
       image_bytes = base64.b64decode(b64_data, validate=True)
@@ -48,15 +71,35 @@ class ImageStore:
       with Image.open(io.BytesIO(image_bytes)) as image:
         if image.width * image.height > self.max_pixels:
           raise ValueError("Image dimensions are too large")
+        is_animated = bool(getattr(image, "is_animated", False) or getattr(image, "n_frames", 1) > 1)
+        if is_animated:
+          if not self.allow_animated:
+            raise ValueError("Animated images are only supported for tile cover images")
+          frame_count = getattr(image, "n_frames", 1)
+          if frame_count > self.max_animation_frames:
+            raise ValueError(f"Animated images are limited to {self.max_animation_frames} frames")
+          if image.width * image.height * frame_count > self.max_animation_total_pixels:
+            raise ValueError("Animated image dimensions are too large")
         image.verify()
+        return is_animated
     except ValueError:
       raise
     except Exception as exc:
       raise ValueError("Expected a readable image file") from exc
 
   def save(self, data_uri):
-    self.validate_data_uri(data_uri)
-    reduced_data_uri = reduce_image_size(data_uri, self.target_kb, max_pixels=self.max_pixels)
+    is_animated = self.validate_data_uri(data_uri)
+    target_kb = self.animated_target_kb if is_animated else self.target_kb
+    reduced_data_uri = reduce_image_size(
+      data_uri,
+      target_kb,
+      max_pixels=self.max_pixels,
+      allow_animated=self.allow_animated,
+      max_animation_frames=self.max_animation_frames,
+      max_animation_total_pixels=self.max_animation_total_pixels,
+      animation_workers=self.animation_workers,
+      animated_webp_method=self.animated_webp_method,
+    )
     media_type, image_bytes = self.decode_data_uri(reduced_data_uri)
     extension = media_type.split("/", 1)[1].replace("jpeg", "jpg")
     if extension not in ("webp", "png", "jpg", "gif"):
@@ -111,6 +154,11 @@ _static = Path(__file__).parent / "static" / "uploads"
 _max_source_bytes = int(os.environ.get("IMAGE_UPLOAD_MAX_SOURCE_BYTES", 8 * 1024 * 1024))
 _max_pixels = int(os.environ.get("IMAGE_UPLOAD_MAX_PIXELS", 16_000_000))
 _target_kb = int(os.environ.get("IMAGE_UPLOAD_TARGET_KB", 50))
+_animated_board_target_kb = int(os.environ.get("BOARD_IMAGE_UPLOAD_ANIMATION_TARGET_KB", 300))
+_max_animation_frames = int(os.environ.get("IMAGE_UPLOAD_MAX_ANIMATION_FRAMES", 120))
+_max_animation_total_pixels = int(os.environ.get("IMAGE_UPLOAD_MAX_ANIMATION_TOTAL_PIXELS", 120_000_000))
+_animation_workers = int(os.environ.get("IMAGE_UPLOAD_ANIMATION_WORKERS", min(4, os.cpu_count() or 1)))
+_animated_webp_method = int(os.environ.get("IMAGE_UPLOAD_ANIMATION_WEBP_METHOD", 4))
 
 proof_images = ImageStore(
   url_prefix="/static/uploads/proofs",
@@ -118,6 +166,12 @@ proof_images = ImageStore(
   max_source_bytes=_max_source_bytes,
   max_pixels=_max_pixels,
   target_kb=_target_kb,
+  allowed_media_types=("image/png", "image/jpeg", "image/webp"),
+  allow_animated=False,
+  max_animation_frames=_max_animation_frames,
+  max_animation_total_pixels=_max_animation_total_pixels,
+  animation_workers=_animation_workers,
+  animated_webp_method=_animated_webp_method,
 )
 
 board_images = ImageStore(
@@ -126,4 +180,11 @@ board_images = ImageStore(
   max_source_bytes=_max_source_bytes,
   max_pixels=_max_pixels,
   target_kb=_target_kb,
+  allowed_media_types=("image/png", "image/jpeg", "image/webp", "image/gif"),
+  allow_animated=True,
+  animated_target_kb=_animated_board_target_kb,
+  max_animation_frames=_max_animation_frames,
+  max_animation_total_pixels=_max_animation_total_pixels,
+  animation_workers=_animation_workers,
+  animated_webp_method=_animated_webp_method,
 )

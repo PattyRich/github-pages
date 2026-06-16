@@ -157,7 +157,9 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             open_tile_by_index(page, 2)
             fill_input_group(page, "Title", "Upload Tile")
             page.get_by_role("button", name="Set Tile Background Image").click()
-            page.locator('input[type="file"][accept=".png,.jpeg"]').set_input_files(str(board_image))
+            page.locator(
+                'input[type="file"][accept="image/png,image/jpeg,image/webp,image/gif"]'
+            ).set_input_files(str(board_image))
             expect(page.get_by_role("button", name="Remove Tile Background Image")).to_be_visible()
             save_board_tile(page)
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
@@ -209,7 +211,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             open_tile(page, "E2E Tile")
             fill_input_group(page, "Proof", "Proof from Playwright")
             page.locator(
-                'input[type="file"][accept="image/png,image/jpeg,image/webp,image/gif"]'
+                'input[type="file"][accept="image/png,image/jpeg,image/webp"]'
             ).set_input_files(str(proof_image))
             expect(page.locator('img[alt="proof"]')).to_be_visible()
             page.get_by_label("Completed?").check()

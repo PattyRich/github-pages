@@ -29,7 +29,7 @@ log = get_logger(__name__)
 _START_TIME = time.time()
 
 app = Flask(__name__, static_folder='build')
-app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get("API_MAX_CONTENT_LENGTH", 10 * 1024 * 1024))
+app.config['MAX_CONTENT_LENGTH'] = int(os.environ.get("API_MAX_CONTENT_LENGTH", 16 * 1024 * 1024))
 CORS(app)
 
 # Register the League of Legends API routes
