@@ -207,10 +207,7 @@ function TileModal({
 
   function handleCustomImage(e: ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (
-      file &&
-      ['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)
-    ) {
+    if (file && ['image/png', 'image/jpeg', 'image/webp', 'image/gif'].includes(file.type)) {
       const reader = new FileReader();
       reader.onload = (event) => {
         const result = event.target?.result;
@@ -248,7 +245,6 @@ function TileModal({
     const nextImage =
       typeof image === 'string'
         ? {
-            opacity: '100',
             url: skipUrlBuild ? image : getImageUrl(image),
             animated: skipUrlBuild && isAnimatedImageUrl(image),
             usePixel: false,
@@ -261,7 +257,6 @@ function TileModal({
             attribution: image.attribution,
             license: image.license,
             licenseUrl: image.licenseUrl,
-            opacity: '100',
             sourceName: image.sourceName,
             sourceUrl: image.sourceUrl,
             url: image.url,
@@ -280,17 +275,6 @@ function TileModal({
     });
   }
 
-  function changeOpacity(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) {
-    isDirtyRef.current = true;
-    let val = Number(e.target.value);
-    if (isNaN(val)) val = 100;
-    val = Math.min(100, Math.max(1, val));
-    updateTileState((currentState) => {
-      if (!currentState.image) return null;
-      return { image: { ...currentState.image, opacity: val } };
-    });
-  }
-
   function toggleCheck() {
     isDirtyRef.current = true;
     updateTileState((currentState) => ({
@@ -305,6 +289,7 @@ function TileModal({
       delete stateToSave.checked;
       delete stateToSave.proof;
       delete stateToSave.currPoints;
+      stateToSave.image = stripImageOpacity(stateToSave.image);
     } else {
       stateToSave = {
         checked: stateToSave.checked,
@@ -401,7 +386,6 @@ function TileModal({
     >
       {!state.chooseImage ? (
         <TileDetailsPanel
-          changeOpacity={changeOpacity}
           closeLightbox={closeLightbox}
           cycleImage={cycleImage}
           handleProofImage={handleProofImage}
@@ -434,6 +418,13 @@ function TileModal({
       )}
     </ModalShell>
   );
+}
+
+function stripImageOpacity(image: TileModalState['image']) {
+  if (!image) return image;
+  const imageWithoutOpacity = { ...image };
+  delete imageWithoutOpacity.opacity;
+  return imageWithoutOpacity;
 }
 
 export default TileModal;

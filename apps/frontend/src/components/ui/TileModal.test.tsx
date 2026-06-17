@@ -80,6 +80,39 @@ test('admins can edit total points but not current points', () => {
   expect(screen.getByLabelText(/Total Points/i)).toBeEnabled();
 });
 
+test('admins save legacy tile images without opacity', async () => {
+  const props = renderTileModal({
+    privilege: 'admin',
+    teamInfo: {},
+    info: {
+      ...baseInfo,
+      image: {
+        opacity: 45,
+        url: 'https://example.com/legacy-tile.png',
+        usePixel: false,
+      },
+    },
+  });
+
+  expect(screen.getByRole('img', { name: /Tile background/i }).getAttribute('style')).toContain(
+    'opacity: 45%'
+  );
+  expect(screen.queryByLabelText(/Image Opacity/i)).not.toBeInTheDocument();
+
+  fireEvent.click(screen.getByRole('button', { name: /Save/i }));
+
+  await waitFor(() => expect(props.change).toHaveBeenCalled());
+
+  const savedState = props.change.mock.calls[0][2];
+  expect(savedState.image).toEqual(
+    expect.objectContaining({
+      url: 'https://example.com/legacy-tile.png',
+      usePixel: false,
+    })
+  );
+  expect(savedState.image).not.toHaveProperty('opacity');
+});
+
 test('shows bundled tile images but saves the selected object as a wiki detail image', async () => {
   const props = renderTileModal({ privilege: 'admin', teamInfo: {} });
 
@@ -107,6 +140,7 @@ test('shows bundled tile images but saves the selected object as a wiki detail i
     ).toBeInTheDocument();
   });
   expect(screen.getByRole('img')).toHaveAttribute('src', expectedWikiUrl);
+  expect(screen.queryByLabelText(/Image Opacity/i)).not.toBeInTheDocument();
 
   fireEvent.click(screen.getByRole('button', { name: /Save/i }));
 
@@ -115,11 +149,11 @@ test('shows bundled tile images but saves the selected object as a wiki detail i
   const savedState = props.change.mock.calls[0][2];
   expect(savedState.image).toEqual(
     expect.objectContaining({
-      opacity: '100',
       usePixel: false,
       url: expectedWikiUrl,
     })
   );
+  expect(savedState.image).not.toHaveProperty('opacity');
 });
 
 test('closes modal when escape key is pressed', () => {
@@ -197,8 +231,7 @@ test('osrs searches include gif file results in the same suggestion list', async
                       title: 'File:Crab detail.png',
                       imageinfo: [
                         {
-                          descriptionurl:
-                            'https://oldschool.runescape.wiki/w/File:Crab_detail.png',
+                          descriptionurl: 'https://oldschool.runescape.wiki/w/File:Crab_detail.png',
                           mime: 'image/png',
                           thumburl:
                             'https://oldschool.runescape.wiki/images/thumb/Crab_detail.png/180px-Crab_detail.png',
@@ -221,8 +254,7 @@ test('osrs searches include gif file results in the same suggestion list', async
                     title: 'File:Crab dance.gif',
                     imageinfo: [
                       {
-                        descriptionurl:
-                          'https://oldschool.runescape.wiki/w/File:Crab_dance.gif',
+                        descriptionurl: 'https://oldschool.runescape.wiki/w/File:Crab_dance.gif',
                         mime: 'image/gif',
                         thumburl: 'https://oldschool.runescape.wiki/images/thumb/Crab_dance.gif',
                         url: 'https://oldschool.runescape.wiki/images/Crab_dance.gif',
@@ -289,6 +321,7 @@ test('osrs searches include gif file results in the same suggestion list', async
       url: 'https://oldschool.runescape.wiki/images/Crab_dance.gif',
     })
   );
+  expect(savedState.image).not.toHaveProperty('opacity');
 
   vi.unstubAllGlobals();
 });
@@ -368,6 +401,7 @@ test('generic boards search Commons and save source metadata', async () => {
       url: 'https://upload.wikimedia.org/thumb/cake.jpg/180px-cake.jpg',
     })
   );
+  expect(savedState.image).not.toHaveProperty('opacity');
 
   vi.unstubAllGlobals();
 });

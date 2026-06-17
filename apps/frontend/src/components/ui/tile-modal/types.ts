@@ -3,7 +3,7 @@ export interface TileImage {
   attribution?: string;
   license?: string;
   licenseUrl?: string;
-  opacity: number | string;
+  opacity?: number | string;
   sourceName?: string;
   sourceUrl?: string;
   url: string;

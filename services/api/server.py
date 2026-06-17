@@ -192,6 +192,13 @@ def public_board_image(image):
     return None
   return { **image, 'url': board_images.public_url(image_url) }
 
+def strip_image_opacity(image):
+  if not isinstance(image, dict):
+    return image
+  image = { **image }
+  image.pop('opacity', None)
+  return image
+
 def board_visual_rows(cache):
   if cache.get('columns'):
     return int(cache['columns'])
@@ -369,7 +376,7 @@ def createBoard():
       boardData[i].append(defaultBoardObj.copy())
       if data.get('boardType') == 'osrs' and i == 0 and j == 0:
         boardData[i][0]['title'] = 'Example Tile'
-        boardData[i][0]['image'] = {'url': 'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png', 'opacity': 100}
+        boardData[i][0]['image'] = {'url': 'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png'}
   
   data['boardData'] = boardData
 
@@ -485,6 +492,8 @@ def updateBoard(boardName, password, pwtype, teampw):
   data = json.loads(request.data.decode(), parse_float=float)
   if (pwtype == 'admin'):
     data['info'] = clearBadData(data['info'], adminTileKeys)
+    if 'image' in data['info']:
+      data['info']['image'] = strip_image_opacity(data['info']['image'])
 
     image = data.get('info', {}).get('image') if isinstance(data.get('info'), dict) else None
     image_url = image.get('url', '') if isinstance(image, dict) else ''

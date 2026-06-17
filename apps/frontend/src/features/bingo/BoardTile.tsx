@@ -97,7 +97,7 @@ export default function BoardTile({
           <img
             className={`bg-img ${showTileTitle ? 'has-tile-title' : ''}`}
             style={{
-              opacity: info.image.opacity + '%',
+              opacity: getTileImageOpacity(info.image),
               maxWidth: 'calc(90% - 16px)',
               width: usePixelImage ? '200px' : 'auto',
               height: usePixelImage ? '200px' : 'auto',
@@ -164,6 +164,10 @@ function getTileTitleFontSize(title = '') {
   const length = title.trim().length;
   const size = Math.max(0.72, Math.min(1, 1 - length * 0.007));
   return `${size.toFixed(2)}rem`;
+}
+
+function getTileImageOpacity(image?: TileInfo['image']) {
+  return `${image?.opacity ?? 100}%`;
 }
 
 function getPixelUrl(url?: string) {

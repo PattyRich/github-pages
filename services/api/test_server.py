@@ -287,6 +287,7 @@ class TestCreateBoard(unittest.TestCase):
         self.assertEqual(inserted["boardType"], "osrs")
         self.assertEqual(inserted["boardData"][0][0]["title"], "Example Tile")
         self.assertIn("oldschool.runescape.wiki", inserted["boardData"][0][0]["image"]["url"])
+        self.assertNotIn("opacity", inserted["boardData"][0][0]["image"])
 
     @patch("server.postToDiscord", return_value=True)
     def test_generic_board_skips_osrs_starter_tile(self, _):
@@ -535,6 +536,22 @@ class TestUpdateBoard(unittest.TestCase):
         # Confirm evilKey didn't make it into boardData
         board_data = _mock_col.update_one.call_args[0][1]["$set"]["boardData"]
         self.assertNotIn("evilKey", board_data[0][0])
+
+    def test_admin_update_strips_image_opacity(self):
+        resp = self._put(
+            "/updateBoard/TestBoard/admin123/admin",
+            {"row": 0, "col": 0, "info": {"title": "OK", "points": 5,
+                                           "description": "",
+                                           "image": {"url": "https://example.com/tile.png",
+                                                     "opacity": 42,
+                                                     "usePixel": True},
+                                           "rowBingo": 0, "colBingo": 0}},
+        )
+        self.assertEqual(resp.status_code, 200)
+        board_data = _mock_col.update_one.call_args[0][1]["$set"]["boardData"]
+        self.assertEqual(board_data[0][0]["image"]["url"], "https://example.com/tile.png")
+        self.assertTrue(board_data[0][0]["image"]["usePixel"])
+        self.assertNotIn("opacity", board_data[0][0]["image"])
 
     def test_general_can_update_tile(self):
         resp = self._put(

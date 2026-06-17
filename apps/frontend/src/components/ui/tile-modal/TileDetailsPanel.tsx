@@ -8,7 +8,6 @@ import { detectURLs, isAnimatedTileImage } from './imageUtils';
 import type { TileModalState } from './types';
 
 interface TileDetailsPanelProps {
-  changeOpacity: (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => void;
   closeLightbox: () => void;
   cycleImage: (direction: -1 | 1) => void;
   handleProofImage: (e: ChangeEvent<HTMLInputElement>) => void;
@@ -29,7 +28,6 @@ interface TileDetailsPanelProps {
 }
 
 export default function TileDetailsPanel({
-  changeOpacity,
   closeLightbox,
   cycleImage,
   handleProofImage,
@@ -96,7 +94,7 @@ export default function TileDetailsPanel({
                   maxWidth: '80px',
                   maxHeight: '80px',
                   margin: '10px 0px 20px 10px',
-                  opacity: state.image.opacity + '%',
+                  opacity: getTileImageOpacity(state.image),
                   objectFit: 'contain',
                 }}
                 alt="Tile background"
@@ -113,11 +111,6 @@ export default function TileDetailsPanel({
           )}
           {state.image && (
             <>
-              <EditableInput
-                value={state.image.opacity}
-                change={changeOpacity}
-                title="Image Opacity (1-100)"
-              />
               {state.image.sourceName && (
                 <div className="tm-image-credit">
                   <span>Source: </span>
@@ -232,4 +225,8 @@ export default function TileDetailsPanel({
       )}
     </>
   );
+}
+
+function getTileImageOpacity(image?: TileModalState['image']) {
+  return `${image?.opacity ?? 100}%`;
 }
