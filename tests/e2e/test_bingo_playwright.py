@@ -200,7 +200,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             page.locator("label.et-switch").filter(has_text="Layered board").click()
             set_range(page, "2")
             expect(page.get_by_text(re.compile(r"Visible rows:\s*2\s*/\s*4"))).to_be_visible()
-            save_team_settings(page)
+            save_team_settings(page, confirm=True)
             expect(page.get_by_text("Teams Successfully Updated!")).to_be_visible()
 
             page.get_by_role("button", name="Admin Mode").click()
@@ -543,12 +543,20 @@ def save_board_tile(page):
     )
 
 
-def save_team_settings(page):
+def save_team_settings(page, confirm=False):
+    if confirm:
+        page.get_by_role("button", name=re.compile(r"^Save$")).click()
+        expect(page.get_by_role("button", name="Confirm Save")).to_be_visible()
+        expect(page.get_by_role("tab", name="Board")).not_to_be_visible()
+        click = lambda: page.get_by_role("button", name="Confirm Save").click()
+    else:
+        click = lambda: page.get_by_role("button", name=re.compile(r"^Save$")).click()
+
     click_and_expect_api(
         page,
         "PUT",
         "/updateTeams/",
-        lambda: page.get_by_role("button", name="Save").click(),
+        click,
     )
 
 

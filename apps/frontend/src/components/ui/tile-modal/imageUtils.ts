@@ -43,7 +43,11 @@ export function getDetailImageFileTitle(image: string) {
 }
 
 export function normaliseWikiFileTitle(title: string) {
-  return title.replace(/^File:/i, '').replaceAll('_', ' ').trim().toLowerCase();
+  return title
+    .replace(/^File:/i, '')
+    .replaceAll('_', ' ')
+    .trim()
+    .toLowerCase();
 }
 
 export function cleanCommonsTitle(title: string) {

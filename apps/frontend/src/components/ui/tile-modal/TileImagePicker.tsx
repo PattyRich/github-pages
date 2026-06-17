@@ -101,11 +101,7 @@ export default function TileImagePicker({
               }}
             >
               <div className="tm-suggestion-content">
-                <img
-                  src={item.thumbnail?.url}
-                  className="tm-suggestion-thumb"
-                  alt={item.title}
-                />
+                <img src={item.thumbnail?.url} className="tm-suggestion-thumb" alt={item.title} />
                 <span className="tm-suggestion-text">
                   <span>{item.title}</span>
                   {(item.attribution || item.license || item.sourceName) && (

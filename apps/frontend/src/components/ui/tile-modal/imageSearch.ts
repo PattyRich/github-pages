@@ -71,8 +71,7 @@ export async function fetchOsrsSuggestions(
   ]);
 
   const fulfilledResults = results.filter(
-    (result): result is PromiseFulfilledResult<ImageSuggestion[]> =>
-      result.status === 'fulfilled'
+    (result): result is PromiseFulfilledResult<ImageSuggestion[]> => result.status === 'fulfilled'
   );
   if (fulfilledResults.length > 0) {
     const fulfilled = fulfilledResults.flatMap((result) => result.value);
