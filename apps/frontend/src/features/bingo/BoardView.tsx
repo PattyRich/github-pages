@@ -72,6 +72,7 @@ type BoardStateChange = Partial<BoardState>;
 type BoardStateUpdater = BoardStateChange | ((previousState: BoardState) => BoardStateChange);
 type PasswordPromptResolver = (value: string | null) => void;
 type BoardUpdateInfo = Partial<TileModalState> & { teamId?: number };
+type BoardGuideStep = 'mode' | 'tile' | null;
 
 const initialBoardState = {
   privilege: 'general',
@@ -105,6 +106,7 @@ function BoardView() {
   const sseDisconnectedRef = useRef(false);
   const passwordResolveRef = useRef<PasswordPromptResolver | null>(null);
   const [passwordPrompt, setPasswordPrompt] = useState<string | null>(null);
+  const [boardGuideStep, setBoardGuideStep] = useState<BoardGuideStep>(null);
   const rowsRef = useRef<number | null>(null);
   const columnsRef = useRef<number | null>(null);
 
@@ -308,8 +310,13 @@ function BoardView() {
         }
       }
 
+      const shouldShowCreatedBoardGuide =
+        stateRef.current.cameFromCreate && stateRef.current.privilege === 'admin';
       const tileHint = localStorage.getItem('tile-hint');
-      if (!tileHint) {
+      if (shouldShowCreatedBoardGuide) {
+        localStorage.setItem('tile-hint', 'true');
+        setBoardGuideStep('mode');
+      } else if (!tileHint) {
         localStorage.setItem('tile-hint', 'true');
         setBoardState({ showToast: true });
       }
@@ -394,6 +401,27 @@ function BoardView() {
     } else {
       await promisedSetState({ privilege: 'admin' });
       await refreshData();
+    }
+  }
+
+  async function handlePrivilegeButtonClick(): Promise<void> {
+    if (boardGuideStep === 'mode') {
+      setBoardGuideStep('tile');
+    }
+    await switchPrivilege();
+  }
+
+  function advanceBoardGuideToTile(): void {
+    setBoardGuideStep('tile');
+  }
+
+  function dismissBoardGuide(): void {
+    setBoardGuideStep(null);
+  }
+
+  function handleTileOpen(): void {
+    if (boardGuideStep) {
+      setBoardGuideStep(null);
     }
   }
 
@@ -504,13 +532,43 @@ function BoardView() {
                   </>
                 )}
                 {state.privilege === 'admin' ? (
-                  <Button click={switchPrivilege} text="Admin Mode" variant="warning" />
+                  <Button
+                    click={() => void handlePrivilegeButtonClick()}
+                    text="Admin Mode"
+                    variant="warning"
+                    className={boardGuideStep === 'mode' ? 'board-guide-mode-target' : ''}
+                  />
                 ) : (
-                  <Button click={switchPrivilege} text="General Mode" variant="primary" />
+                  <Button
+                    click={() => void handlePrivilegeButtonClick()}
+                    text="General Mode"
+                    variant="primary"
+                    className={boardGuideStep === 'mode' ? 'board-guide-mode-target' : ''}
+                  />
                 )}
               </>
             )}
           </div>
+          {boardGuideStep === 'mode' && (
+            <div className="board-guide-popover" role="status" aria-live="polite">
+              <span className="board-guide-kicker">First stop</span>
+              <h3 className="osrs-header">Admin and General Mode</h3>
+              <p>
+                You are in Admin Mode now, where you can edit tiles, teams, points, images, and
+                reveal settings. Use this button later to swap into General Mode and see what teams
+                will use during the event.
+              </p>
+              <div className="board-guide-actions">
+                <Button
+                  click={advanceBoardGuideToTile}
+                  text="Next: tile"
+                  variant="success"
+                  size="small"
+                />
+                <Button click={dismissBoardGuide} text="Skip" variant="primary" size="small" />
+              </div>
+            </div>
+          )}
         </div>
       </div>
       <AlertBanner dismissible />
@@ -520,8 +578,21 @@ function BoardView() {
           <span className="board-team-points">(Points: {activeTeam.pointTotal})</span>
         </div>
       )}
+      {boardGuideStep === 'tile' && state.boardData && (
+        <div className="board-guide-banner" role="status" aria-live="polite">
+          <div>
+            <span className="board-guide-kicker">Next</span>
+            <h3 className="osrs-header">Click a bingo tile</h3>
+            <p>
+              Open any tile to see its details. Admin Mode lets you build the tile setup; General
+              Mode lets teams submit progress and proof.
+            </p>
+          </div>
+          <Button click={dismissBoardGuide} text="Skip" variant="primary" size="small" />
+        </div>
+      )}
       {state.boardData && (
-        <div className="center-board">
+        <div className={`center-board ${boardGuideStep === 'tile' ? 'board-guide-tile-step' : ''}`}>
           {boardDataToShow.map((row, i) => (
             <span key={i} className="flex">
               {row.map((tile, j) => (
@@ -540,6 +611,7 @@ function BoardView() {
                   bb={boardDataToShow.length === i + 1}
                   privilege={state.privilege}
                   boardType={state.boardType}
+                  onOpen={handleTileOpen}
                 />
               ))}
             </span>

@@ -35,6 +35,10 @@
   border-radius: var(--osrs-radius-lg);
 }
 
+.flex-wrapper-create .settings-bar {
+  position: relative;
+}
+
 .flex-wrapper-create h2 {
   margin: 0;
   font-family: 'osrsFont', sans-serif;
@@ -74,6 +78,112 @@
   flex-wrap: wrap;
   gap: 8px;
   align-items: center;
+}
+
+.osrs-btn.board-guide-mode-target {
+  position: relative;
+  z-index: 130;
+  color: var(--osrs-text-gold) !important;
+}
+
+.osrs-btn.board-guide-mode-target::after {
+  content: '';
+  position: absolute;
+  inset: -6px;
+  border: 2px solid var(--osrs-text-gold);
+  border-radius: calc(var(--osrs-radius) + 4px);
+  pointer-events: none;
+  animation: board-guide-button-pulse 1.4s ease-in-out infinite;
+}
+
+.board-guide-popover,
+.board-guide-banner {
+  box-sizing: border-box;
+  background: var(--osrs-glass-bg-raised);
+  backdrop-filter: var(--osrs-glass-blur);
+  -webkit-backdrop-filter: var(--osrs-glass-blur);
+  border: 2px solid var(--osrs-border-dark);
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    var(--osrs-glass-shadow);
+  border-radius: var(--osrs-radius-lg);
+  color: var(--osrs-text-beige);
+}
+
+.board-guide-popover {
+  position: absolute;
+  top: calc(100% + 10px);
+  right: 0;
+  z-index: 120;
+  width: min(360px, calc(100vw - 32px));
+  padding: 14px;
+  text-align: left;
+  animation: board-guide-in 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.board-guide-popover::before {
+  content: '';
+  position: absolute;
+  top: -7px;
+  right: 24px;
+  width: 12px;
+  height: 12px;
+  background: var(--osrs-bg-brown);
+  border-top: 2px solid var(--osrs-border-dark);
+  border-left: 2px solid var(--osrs-border-dark);
+  transform: rotate(45deg);
+}
+
+.board-guide-kicker {
+  display: block;
+  margin-bottom: 3px;
+  color: var(--osrs-text-yellow);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 0.82rem;
+  text-shadow: 1px 1px 0 black;
+}
+
+.board-guide-popover h3,
+.board-guide-banner h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.board-guide-popover p,
+.board-guide-banner p {
+  margin: 8px 0 0;
+  color: var(--osrs-text-beige);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  text-shadow: 1px 1px 0 black;
+}
+
+.board-guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.board-guide-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  position: fixed;
+  z-index: 115;
+  top: 96px;
+  left: 50%;
+  translate: -50% 0;
+  width: min(720px, calc(100% - 32px));
+  margin: 0;
+  padding: 12px 14px;
+  animation: board-guide-in 160ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.board-guide-tile-step .tile-wrapper {
+  z-index: 75;
+  animation: board-guide-tile-pulse 1.5s ease-in-out infinite;
 }
 
 .edit-teams button {
@@ -130,6 +240,52 @@
   display: none;
 }
 
+@keyframes board-guide-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes board-guide-button-pulse {
+  0%,
+  100% {
+    opacity: 0.72;
+    transform: scale(1);
+    box-shadow:
+      0 0 0 2px color-mix(in srgb, var(--osrs-text-gold) 34%, transparent),
+      0 0 12px color-mix(in srgb, var(--osrs-text-gold) 28%, transparent);
+  }
+
+  50% {
+    opacity: 1;
+    transform: scale(1.03);
+    box-shadow:
+      0 0 0 4px color-mix(in srgb, var(--osrs-text-gold) 54%, transparent),
+      0 0 22px color-mix(in srgb, var(--osrs-text-gold) 42%, transparent);
+  }
+}
+
+@keyframes board-guide-tile-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 1px color-mix(in srgb, var(--osrs-text-gold) 40%, transparent),
+      0 0 8px color-mix(in srgb, var(--osrs-text-gold) 22%, transparent);
+  }
+
+  50% {
+    box-shadow:
+      0 0 0 3px color-mix(in srgb, var(--osrs-text-gold) 62%, transparent),
+      0 0 16px color-mix(in srgb, var(--osrs-text-gold) 34%, transparent);
+  }
+}
+
 @media (max-width: 820px) {
   .top-bar-container {
     flex-direction: column;
@@ -142,6 +298,8 @@
   }
 
   .flex-wrapper-create .settings-bar {
+    flex-direction: column;
+    align-items: stretch;
     justify-content: center;
     text-align: center;
   }
@@ -160,5 +318,25 @@
     font-size: 1.5rem;
     width: 100%;
     text-align: center;
+  }
+
+  .board-guide-popover {
+    position: relative;
+    top: auto;
+    right: auto;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+  .board-guide-popover::before {
+    right: 50%;
+    transform: translateX(50%) rotate(45deg);
+  }
+
+  .board-guide-banner {
+    align-items: flex-start;
+    flex-direction: column;
+    top: auto;
+    bottom: 16px;
   }
 }

@@ -20,6 +20,7 @@ interface BoardTileProps {
   cord?: TileCoord;
   dem?: number | string;
   info?: TileInfo | null;
+  onOpen?: (cord?: TileCoord) => void;
   privilege?: string;
   teamInfo?: TeamTileInfo | null;
 }
@@ -28,6 +29,7 @@ export default function BoardTile({
   cord,
   change,
   info,
+  onOpen,
   teamInfo,
   dem,
   br,
@@ -63,6 +65,7 @@ export default function BoardTile({
   }
 
   function openTile() {
+    onOpen?.(cord);
     setShowModal(true);
   }
 

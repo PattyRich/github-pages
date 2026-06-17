@@ -88,7 +88,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             browser_failures = attach_browser_failure_guards(context)
             page = context.new_page()
 
-            # Clear tile-hint so the "How to Use" toast fires reliably
+            # Reset onboarding local state before creating a fresh board
             page.goto(f"{FRONTEND_URL}")
             page.evaluate("localStorage.removeItem('tile-hint')")
 
@@ -112,11 +112,21 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(page).to_have_url(re.compile(r"#/bingo/"))
             expect(page.get_by_role("button", name="Edit Board")).to_be_visible()
 
-            # "How to Use" toast appears on first visit
-            toast = page.locator(".osrs-toast").filter(has_text="How to Use")
-            expect(toast).to_be_visible()
-            toast.get_by_role("button", name="Close notification").click()
-            expect(toast).not_to_be_visible()
+            # Created boards start with the admin onboarding guide instead of the generic toast
+            mode_guide = page.locator(".board-guide-popover")
+            expect(mode_guide).to_be_visible()
+            expect(mode_guide).to_contain_text("Admin and General Mode")
+            expect(page.locator(".board-guide-mode-target")).to_be_visible()
+            mode_guide.get_by_role("button", name="Next: tile").click()
+
+            tile_guide = page.locator(".board-guide-banner")
+            expect(tile_guide).to_be_visible()
+            expect(tile_guide).to_contain_text("Click a bingo tile")
+            expect(page.locator(".center-board.board-guide-tile-step")).to_be_visible()
+            open_tile_by_index(page, 0)
+            expect(tile_guide).not_to_be_visible()
+            close_modal(page)
+            expect(page.get_by_role("dialog")).not_to_be_visible()
 
             # Settings: toggle a setting, close and reopen — verify it persists
             page.get_by_role("button", name="Settings").click()
