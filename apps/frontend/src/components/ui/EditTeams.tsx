@@ -264,7 +264,7 @@ function EditTeams({
                   <div className="edit-board-size-grid">
                     <SelectField
                       className="et-field"
-                      label="Rows (up and down)"
+                      label="Rows"
                       onChange={(e) => {
                         inputState(e, 'columns');
                       }}
@@ -278,7 +278,7 @@ function EditTeams({
                     </SelectField>
                     <SelectField
                       className="et-field"
-                      label="Columns (left and right)"
+                      label="Columns"
                       onChange={(e) => {
                         inputState(e, 'rows');
                       }}

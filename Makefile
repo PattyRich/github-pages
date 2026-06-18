@@ -10,7 +10,7 @@ PYTHON_WIN?=.venv\Scripts\python.exe
 # -----------------------
 # HELP
 # -----------------------
-.PHONY: help install install-hooks dev frontend backend backend-logs build deploy clean up down restart logs ps shell-api shell-worker test typecheck frontend-verify format format-check e2e e2e-headed
+.PHONY: help install install-hooks dev frontend backend backend-logs build deploy clean up down restart logs ps shell-api shell-worker test test-backend test-frontend-typecheck test-frontend-unit test-e2e typecheck frontend-verify format format-check e2e e2e-headed
 
 help:
 	@echo "Available commands:"
@@ -90,9 +90,19 @@ shell-worker:
 # TEST, BUILD & DEPLOY
 # -----------------------
 test:
+	$(MAKE) --no-print-directory -j3 test-backend test-frontend-typecheck test-frontend-unit
+	$(MAKE) --no-print-directory test-e2e
+
+test-backend:
 	$(PYTHON) -m pytest $(SERVER_DIR)/test_server.py -q
+
+test-frontend-typecheck:
 	cd $(FRONTEND_DIR) && npm run typecheck
+
+test-frontend-unit:
 	cd $(FRONTEND_DIR) && npm test
+
+test-e2e:
 	$(PYTHON) tests/e2e/run_e2e.py
 
 typecheck:
@@ -108,7 +118,7 @@ format-check:
 	cd $(FRONTEND_DIR) && npm run format:check
 
 e2e:
-	$(PYTHON) tests/e2e/run_e2e.py
+	$(MAKE) --no-print-directory test-e2e
 
 e2e-headed:
 	$(PYTHON) tests/e2e/run_e2e.py --headed
