@@ -131,6 +131,8 @@ The names below (`text-gold`, `success-bg`, etc.) are the design vocabulary used
 | `text-yellow` | `--osrs-text-yellow` | `#ffff00` |
 | `text-normal` | `--osrs-text-normal` | `#dbceb4` |
 | `text-beige` | `--osrs-text-beige` | `#f7e6c1` |
+| Muted success text | `--osrs-text-success` | `#9fc77c` |
+| Muted danger text | `--osrs-text-danger` | `#d99890` |
 | `button-bg` | `--osrs-button-bg` | `#5a4c37` |
 | `button-hover` | `--osrs-button-hover` | `#483d2c` |
 | `button-active` | `--osrs-button-active` | `#362d20` |

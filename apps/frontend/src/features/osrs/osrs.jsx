@@ -46,6 +46,8 @@ class Osrs extends React.Component {
       mode: 'cox',
       rewards: null,
       rolls: '',
+      averageKillsPerDrop: null,
+      lastSimulation: null,
       nothingCounter: 0,
       rewardList: [],
       rewardCount: 0,
@@ -113,11 +115,17 @@ class Osrs extends React.Component {
     let rewardCount = 0;
     let rewards = null;
     let fullLootRewards = [];
-    this.setState({ rewardList, rewardCount, rewards, fullLootRewards });
+    this.setState({
+      rewardList,
+      rewardCount,
+      rewards,
+      fullLootRewards,
+      lastSimulation: null,
+    });
   };
 
   async onChangeValue(event) {
-    this.setState({ mode: event.target.value });
+    this.setState({ mode: event.target.value, lastSimulation: null });
     this.completion(event.target.value);
   }
 
@@ -310,7 +318,21 @@ class Osrs extends React.Component {
       }
     }
     rewards = await this.lootFunction(this.state.rolls, this.state.mode, this.state);
-    this.setState({ rewards: rewards });
+    const requestedRolls = Number(this.state.rolls);
+    const rolls =
+      Number.isFinite(requestedRolls) && requestedRolls > 0
+        ? requestedRolls
+        : lastKillCount(rewards);
+    const drops = countDrops(rewards);
+    const lastSimulation = rolls > 0
+      ? {
+          rolls,
+          drops,
+          averageKillsPerDrop: drops ? rolls / drops : null,
+          expectedAverageKillsPerDrop: this.state.averageKillsPerDrop,
+        }
+      : null;
+    this.setState({ rewards: rewards, lastSimulation });
     if (this.state.mode === 'create') {
       this.completion(this.state.mode);
     }
@@ -378,11 +400,12 @@ class Osrs extends React.Component {
   }
 
   async completion(mode) {
-    let completion = await loot(null, mode || this.state.mode, {
-      runCompletion: true,
-      ...this.state,
-    });
-    this.setState({ completion: completion });
+    const selectedMode = mode || this.state.mode;
+    const [completion, averageKillsPerDrop] = await Promise.all([
+      loot(null, selectedMode, { ...this.state, runCompletion: true }),
+      loot(null, selectedMode, { ...this.state, runDropRate: true }),
+    ]);
+    this.setState({ completion, averageKillsPerDrop });
   }
 
   imageSrc(name) {
@@ -615,7 +638,15 @@ class Osrs extends React.Component {
             </button>
           ) : null}
           {this.state.completion && (
-            <span> Average completion not including pet is: {this.state.completion} kc </span>
+            <div className="osrs-completion-text">
+              Average completion not including pet: {this.state.completion} KC
+            </div>
+          )}
+          {this.state.averageKillsPerDrop && (
+            <div className="osrs-completion-text">
+              Average kills per drop (expected): 1 drop per{' '}
+              {formatNumber(this.state.averageKillsPerDrop)} KC
+            </div>
           )}
           {this.state.mode === 'create' && (
             <span> (This will be wrong if your rates are very common) </span>
@@ -668,6 +699,9 @@ class Osrs extends React.Component {
               ? 'Nothing x' + this.state.nothingCounter
               : null}
           </div>
+          {this.state.lastSimulation && (
+            <SimulationResult simulation={this.state.lastSimulation} />
+          )}
         </div>
         {this.state.rewardList.length ? (
           <div className="box">
@@ -738,3 +772,66 @@ class Osrs extends React.Component {
 export default Osrs;
 
 const pause = () => new Promise((r) => setTimeout(r, 0));
+
+function countDrops(rewards) {
+  return rewards.reduce((total, reward) => total + (reward.quantity || 1), 0);
+}
+
+function lastKillCount(rewards) {
+  return rewards.reduce((lastKill, reward) => Math.max(lastKill, reward.kc || 0), 0);
+}
+
+function formatNumber(value) {
+  return Number(value.toFixed(2)).toLocaleString();
+}
+
+function SimulationResult({ simulation }) {
+  const { rolls, drops, averageKillsPerDrop } = simulation;
+  const comparison = getSimulationComparison(simulation);
+
+  if (!drops) {
+    return <div className="osrs-simulation-result">This simulation: no drops in {rolls} KC.</div>;
+  }
+
+  return (
+    <div className="osrs-simulation-result">
+      This simulation:{' '}
+      <span className={`osrs-simulation-rate ${comparison?.tone || ''}`}>
+        1 drop per {formatNumber(averageKillsPerDrop)} KC
+      </span>{' '}
+      ({drops} {drops === 1 ? 'drop' : 'drops'} in {rolls} KC
+      {comparison && (
+        <>
+          ,{' '}
+          <span className={`osrs-simulation-comparison ${comparison.tone}`}>
+            {formatNumber(comparison.percentage)}% {comparison.label} than expected
+          </span>
+        </>
+      )}
+      )
+    </div>
+  );
+}
+
+function getSimulationComparison({
+  drops,
+  averageKillsPerDrop,
+  expectedAverageKillsPerDrop,
+}) {
+  if (!drops || !Number.isFinite(expectedAverageKillsPerDrop) || !expectedAverageKillsPerDrop) {
+    return null;
+  }
+
+  const percentage =
+    ((expectedAverageKillsPerDrop - averageKillsPerDrop) / expectedAverageKillsPerDrop) * 100;
+
+  if (Math.abs(percentage) < 0.01) {
+    return null;
+  }
+
+  return {
+    percentage: Math.abs(percentage),
+    label: percentage > 0 ? 'better' : 'worse',
+    tone: percentage > 0 ? 'is-better' : 'is-worse',
+  };
+}

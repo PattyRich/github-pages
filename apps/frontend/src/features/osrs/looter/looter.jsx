@@ -145,9 +145,43 @@ export function loot(
         resolve(completion(data));
         return;
       }
+      if (options.runDropRate) {
+        resolve(averageKillsPerDrop(data, clueType));
+        return;
+      }
       resolve(looter(rolls, data, clueType));
     });
   });
+}
+
+function averageKillsPerDrop(data, clueType) {
+  let dropChance = data.chance / 100;
+
+  // Zulrah makes two unique-table rolls per kill.
+  if (data.name === 'zulrah') {
+    dropChance *= 2;
+  }
+
+  // Challenge Mode rewards are rolled independently of the regular CoX table.
+  if (data.rollCms) {
+    dropChance += data.cms.reduce((total, item) => total + item.rate, 0);
+  }
+
+  // A clue casket can make multiple rare-table rolls.
+  if (clueType) {
+    dropChance *= averageClueRolls(clueType);
+  }
+
+  return Number.isFinite(dropChance) && dropChance > 0 ? 1 / dropChance : null;
+}
+
+function averageClueRolls(clueType) {
+  if (clueType === cluesLvl[0]) return 2;
+  if (clueType === cluesLvl[1]) return 3;
+  if (clueType === cluesLvl[2]) return 4;
+  if (clueType === cluesLvl[3] || clueType === cluesLvl[4]) return 5;
+  if (clueType === cluesLvl[5]) return 6;
+  return 1;
 }
 
 function random_generator(max, min) {
@@ -169,9 +203,7 @@ function looter(rolls, data, clueType) {
   let finish = rolls === 'f';
   let checkList = [];
 
-  data.items.sort((item1) => {
-    return item1.extra === true ? 1 : -1;
-  });
+  data.items.sort((a, b) => (a.extra === true ? 1 : 0) - (b.extra === true ? 1 : 0));
 
   if (finish) {
     rolls = 1000000;
@@ -281,6 +313,10 @@ function looter(rolls, data, clueType) {
               if (dt2 > 2) {
                 dt2 = 0;
               } else {
+                rewards.push({
+                  kc: kcc + 1,
+                  name: 'Gold ring',
+                });
                 return;
               }
             }

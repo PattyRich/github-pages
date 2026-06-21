@@ -111,6 +111,27 @@
   margin-top: 4px;
 }
 
+.osrs-simulation-result {
+  margin-top: 8px;
+  color: var(--osrs-text-beige);
+  font-size: 0.9rem;
+}
+
+.osrs-simulation-rate,
+.osrs-simulation-comparison {
+  font-weight: 600;
+}
+
+.route-dark-bg .osrs-simulation-rate.is-better,
+.route-dark-bg .osrs-simulation-comparison.is-better {
+  color: var(--osrs-text-success);
+}
+
+.route-dark-bg .osrs-simulation-rate.is-worse,
+.route-dark-bg .osrs-simulation-comparison.is-worse {
+  color: var(--osrs-text-danger);
+}
+
 /* ── Simulation row ──────────────────────────────────────────────────────── */
 
 .osrs-sim-row {
