@@ -1,6 +1,0 @@
-#!/bin/sh
-set -eu
-
-echo "Running make test before push..."
-make test
-echo "make test passed; continuing push."

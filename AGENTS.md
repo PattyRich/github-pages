@@ -10,7 +10,7 @@ Read these before working outside familiar territory instead of re-deriving what
 
 ## General Rules
 
-Do not run build, test, or lint after every task by default. The user will run full verification before pushing, and a pre-push git hook already runs `make test` automatically, so running it again mid-task is redundant. Run verification only when explicitly requested, or when a change is high-risk and needs a focused check.
+Do not run build, test, or lint after every task by default. The user will run full verification before committing, and a pre-commit git hook already runs `make test` automatically, so running it again mid-task is redundant. Run verification only when explicitly requested, or when a change is high-risk and needs a focused check.
 Don't tell me you didn't run them.
 
 When verification *is* requested, use (full list in `Makefile`):
