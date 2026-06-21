@@ -196,7 +196,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             page.locator(".edit-team-count").get_by_role("button", name="-").click()
             expect(page.get_by_text("# of Teams: 4")).to_be_visible()
             page.get_by_role("tab", name="Board").click()
-            select_by_form_label(page, "Rows (up and down)", "4")
+            select_by_form_label(page, "Rows", "4")
             page.locator("label.et-switch").filter(has_text="Layered board").click()
             set_range(page, "2")
             expect(page.get_by_text(re.compile(r"Visible rows:\s*2\s*/\s*4"))).to_be_visible()
