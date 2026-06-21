@@ -38,6 +38,8 @@
   --osrs-tile-hint: #b8a800;
   --osrs-state-success-bg: #24461a;
   --osrs-state-danger-bg: #7a2424;
+  --osrs-state-warning-bg: #634316;
+  --osrs-state-info-bg: #24364e;
   --osrs-state-disabled-bg: #2a241c;
   --osrs-state-disabled-addon-bg: #342d23;
   --osrs-state-disabled-border: #17130f;
@@ -256,7 +258,7 @@ input[type='checkbox']:not([class]) {
 }
 
 .osrs-btn--warning {
-  background-color: #634316 !important;
+  background-color: var(--osrs-state-warning-bg) !important;
 }
 
 .osrs-btn--warning:hover,
@@ -270,6 +272,10 @@ input[type='checkbox']:not([class]) {
 }
 
 /* ─── Alerts ─────────────────────────────────────────────────────────────── */
+/* Alert-banner variants below intentionally use their own tuned, slightly
+   darker/desaturated shades for the translucent banner look. They are
+   deliberately distinct from --osrs-state-success-bg / --osrs-state-danger-bg
+   (used by buttons and the bingo checkbox) — this is not drift to be "fixed". */
 .alert {
   background: var(--osrs-bg-brown) !important;
   color: var(--osrs-text-beige) !important;
@@ -359,7 +365,7 @@ input[type='checkbox']:not([class]) {
 }
 
 .alert-primary {
-  background: #24364e !important;
+  background: var(--osrs-state-info-bg) !important;
   color: #d8e6fa !important;
 }
 

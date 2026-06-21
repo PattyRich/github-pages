@@ -15,7 +15,7 @@ colors:
   button-hover: "#483d2c"
   button-active: "#362d20"
   success-bg: "#24461a"
-  danger-bg: "#5c1b1b"
+  danger-bg: "#7a2424"
   warning-bg: "#634316"
   info-bg: "#24364e"
 typography:
@@ -105,9 +105,43 @@ The product is a toolbox, not a marketing site. New screens should open directly
 - Shared theme tokens in `apps/frontend/src/index.css` are the source of truth.
 - Component CSS stays close to the component or route unless the pattern is truly global.
 
+### Where Things Live
+
+- **Global tokens** — `apps/frontend/src/index.css`, inside the `:root` block. This is the only place color/radius/spacing primitives are declared.
+- **Reusable primitives** — `apps/frontend/src/components/ui` (Button, Alert, Toast, ModalShell, etc.), each typically paired with a co-located `.css` file.
+- **Route/feature styling** — `apps/frontend/src/pages/*.css` and `apps/frontend/src/features/*/*.css`. Keep these scoped to their route; promote a value to `index.css` only once it is reused elsewhere.
+- **Fonts/imagery** — `apps/frontend/src/assets`.
+
 ## 2. Colors
 
 The palette is a warm OSRS inventory palette: dark brown surfaces, black-brown borders, parchment text, gold action emphasis, and restrained state colors.
+
+### Token Reference
+
+The names below (`text-gold`, `success-bg`, etc.) are the design vocabulary used throughout this document. They are **not** literal CSS identifiers — each one maps to an `--osrs-*` custom property in `apps/frontend/src/index.css`, except where noted below. Check this table before searching the CSS for a name that will not appear verbatim.
+
+| Design name | CSS variable | Hex |
+|---|---|---|
+| `page-brown-dark` | `--osrs-bg-brown-dark` (aliased `--osrs-page-bg`) | `#2b261e` |
+| `surface-brown` | `--osrs-bg-brown` (aliased `--osrs-surface-raised`) | `#3c3224` |
+| `inventory-brown` | `--osrs-bg-inventory` (aliased `--osrs-surface`) | `#463d32` |
+| `border-dark` | `--osrs-border-dark` | `#1d1813` |
+| `border-light` | `--osrs-border-light` | `#5d503f` |
+| `text-gold` | `--osrs-text-gold` | `#ff981f` |
+| `text-yellow` | `--osrs-text-yellow` | `#ffff00` |
+| `text-normal` | `--osrs-text-normal` | `#dbceb4` |
+| `text-beige` | `--osrs-text-beige` | `#f7e6c1` |
+| `button-bg` | `--osrs-button-bg` | `#5a4c37` |
+| `button-hover` | `--osrs-button-hover` | `#483d2c` |
+| `button-active` | `--osrs-button-active` | `#362d20` |
+| `success-bg` | `--osrs-state-success-bg` | `#24461a` |
+| `danger-bg` | `--osrs-state-danger-bg` | `#7a2424` |
+| `warning-bg` | `--osrs-state-warning-bg` | `#634316` |
+| `info-bg` | `--osrs-state-info-bg` (code calls this variant `primary`, not `info` — there's no `osrs-btn--info`/`osrs-btn--primary` button variant defined, only the alert banner uses it) | `#24364e` |
+
+Shape/spacing tokens are mostly convention, not enforced variables: only `--osrs-radius` (= `rounded.sm`), `--osrs-radius-lg` (= `rounded.md`), `--osrs-gap` (= `spacing.md`, 10px), and `--osrs-padding-panel` (= `spacing.xl`, 20px) exist as real CSS variables. The rest of the spacing scale is a consistent literal used directly in component CSS, not a token to look up.
+
+**Alert banner shades are intentionally distinct.** The `.alert-success`, `.alert-danger`, and `.alert-warning` classes (and their `osrs-alert-banner` counterparts) use their own tuned, slightly darker/desaturated hex values rather than the `--osrs-state-*` variables above — this is a deliberate choice for the translucent banner look, called out in a comment above `.alert` in `index.css`. Don't "fix" them to match the button/checkbox tokens; if you need the alert banner's exact shade for new work, read it directly from `index.css` rather than reusing this table.
 
 ### Primary
 - **Quest Gold** (`text-gold`): Use for headings, primary hover states, important actions, selected knobs, and OSRS display accents. It should be noticeable because it is scarce.

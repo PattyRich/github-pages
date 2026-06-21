@@ -25,7 +25,4 @@ backups/*
 .vscode/
 .idea/
 
-# Agents
-AGENTS.md
-
 .impeccable
