@@ -109,8 +109,8 @@ test('requires confirmation before saving fewer teams', () => {
 test('requires confirmation before saving fewer rows or columns', () => {
   const props = renderEditTeams();
 
-  fireEvent.change(screen.getByLabelText(/Rows \(up and down\)/i), { target: { value: '4' } });
-  fireEvent.change(screen.getByLabelText(/Columns \(left and right\)/i), {
+  fireEvent.change(screen.getByLabelText(/^Rows$/i), { target: { value: '4' } });
+  fireEvent.change(screen.getByLabelText(/^Columns$/i), {
     target: { value: '3' },
   });
   fireEvent.click(screen.getByRole('button', { name: /^Save$/i }));
@@ -132,7 +132,7 @@ test('keeps layered board off when rows are increased from an unlayered board', 
 
   expect(screen.getByLabelText(/Layered board/i)).not.toBeChecked();
 
-  fireEvent.change(screen.getByLabelText(/Rows \(up and down\)/i), { target: { value: '6' } });
+  fireEvent.change(screen.getByLabelText(/^Rows$/i), { target: { value: '6' } });
 
   expect(screen.getByLabelText(/Layered board/i)).not.toBeChecked();
   expect(screen.getByText(/Visible rows: 6 \/ 6/i)).toBeInTheDocument();
