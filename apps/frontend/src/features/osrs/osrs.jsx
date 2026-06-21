@@ -774,7 +774,10 @@ export default Osrs;
 const pause = () => new Promise((r) => setTimeout(r, 0));
 
 function countDrops(rewards) {
-  return rewards.reduce((total, reward) => total + (reward.quantity || 1), 0);
+  return rewards.reduce(
+    (total, reward) => total + (reward.isPet ? 0 : reward.quantity || 1),
+    0
+  );
 }
 
 function lastKillCount(rewards) {
@@ -790,7 +793,11 @@ function SimulationResult({ simulation }) {
   const comparison = getSimulationComparison(simulation);
 
   if (!drops) {
-    return <div className="osrs-simulation-result">This simulation: no drops in {rolls} KC.</div>;
+    return (
+      <div className="osrs-simulation-result">
+        This simulation: no non-pet drops in {rolls} KC.
+      </div>
+    );
   }
 
   return (

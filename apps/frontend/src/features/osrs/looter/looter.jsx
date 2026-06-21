@@ -364,6 +364,7 @@ function looter(rolls, data, clueType) {
           rewards.push({
             kc: kc + 1,
             name: data.pet.name,
+            isPet: true,
           });
           if (data.pet.getPet) checkList[checkList.length - 1] += 1;
         }
@@ -371,6 +372,7 @@ function looter(rolls, data, clueType) {
         rewards.push({
           kc: kc + 1,
           name: data.pet.name,
+          isPet: true,
         });
         if (data.pet.getPet) checkList[checkList.length - 1] += 1;
       }
