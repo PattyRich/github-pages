@@ -802,6 +802,28 @@ class TestHealthEndpoint(unittest.TestCase):
     def setUp(self):
         self.client = _client(server.app)
         server.mycol.count_documents.return_value = 5
+        server.mycol.aggregate.return_value = iter([{
+            "summary": [{
+                "boards": 5,
+                "created_last_24h": 1,
+                "created_last_7d": 2,
+                "created_last_30d": 3,
+                "boards_with_progress": 5,
+                "total_board_tiles": 125,
+                "average_board_tiles": 25,
+                "largest_board_tiles": 36,
+                "total_teams": 8,
+                "total_team_tiles": 200,
+                "completed_tiles": 50,
+                "proof_notes": 40,
+                "proof_images": 12,
+                "points_earned": 900,
+            }],
+            "board_types": [{"_id": "osrs", "boards": 4}, {"_id": "generic", "boards": 1}],
+            "popular_layouts": [{"_id": {"rows": 5, "columns": 5}, "boards": 3}],
+        }])
+        server.mycol.aggregate.side_effect = None
+        server._health_analytics_cache = None
 
 
     @patch("server._redis")
@@ -828,6 +850,35 @@ class TestHealthEndpoint(unittest.TestCase):
             self.assertEqual(data["mongo"]["status"], "ok")
             self.assertEqual(data["redis"]["status"], "ok")
             self.assertEqual(data["rq"]["status"], "ok")
+            self.assertEqual(data["mongo"]["analytics"]["board_types"], {"osrs": 4, "generic": 1})
+            self.assertEqual(data["mongo"]["analytics"]["activity"]["boards_with_progress"], 5)
+            self.assertEqual(data["mongo"]["analytics"]["progress"]["completion_percentage"], 25)
+            self.assertEqual(data["mongo"]["analytics"]["popular_layouts"][0]["boards"], 3)
+
+    @patch("server._redis")
+    @patch("server.Worker")
+    @patch("rq.Queue")
+    @patch("rq.registry.FailedJobRegistry")
+    @patch("rq.registry.StartedJobRegistry")
+    def test_health_analytics_failure_does_not_degrade_service(
+        self, mock_started_registry, mock_failed_registry, mock_queue, mock_worker, mock_redis
+    ):
+        server.mycol.aggregate.side_effect = Exception("aggregate timed out")
+        mock_redis.ping.return_value = True
+        mock_worker.all.return_value = [MagicMock()]
+        mock_failed_registry.return_value.count = 0
+        mock_started_registry.return_value.count = 0
+        mock_queue.return_value.__len__.return_value = 0
+
+        with patch.object(server.myclient, "admin", create=True) as mock_admin:
+            mock_admin.command.return_value = {"ok": 1.0}
+
+            resp = self.client.get("/health")
+
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual(data["mongo"]["status"], "ok")
+        self.assertEqual(data["mongo"]["analytics"], {"status": "unavailable"})
 
     @patch("server._redis")
     @patch("server.Worker")

@@ -13,6 +13,22 @@ function formatUptime(seconds) {
   return `${m}m`;
 }
 
+function formatNumber(value) {
+  return typeof value === 'number' ? value.toLocaleString() : '—';
+}
+
+function formatBoardMix(boardTypes) {
+  const types = Object.entries(boardTypes ?? {});
+  if (!types.length) return 'No boards yet';
+  return types
+    .map(([type, count]) => `${formatNumber(count)} ${type === 'osrs' ? 'OSRS' : type}`)
+    .join(' · ');
+}
+
+function formatLayout(layout) {
+  return layout ? `${layout.columns} × ${layout.rows}` : '—';
+}
+
 function StatusBadge({ status }) {
   const map = {
     ok: { label: 'healthy', cls: 'badge-ok' },
@@ -89,6 +105,9 @@ export default function Status() {
 
   const overallOk = data?.status === 'ok';
   const rqStatus = data?.rq?.workers === 0 ? 'degraded' : (data?.rq?.status ?? 'ok');
+  const analytics = data?.mongo?.analytics;
+  const analyticsAvailable = analytics && analytics.status !== 'unavailable';
+  const commonLayout = analytics?.popular_layouts?.[0];
 
   return (
     <div className="status-page">
@@ -199,6 +218,64 @@ export default function Status() {
               sub={data?.rq?.failed > 0 ? `${data.rq.failed} failed jobs` : 'no failed jobs'}
             />
             <StatCard label="Rate limiting" value="Redis" sub="flask-limiter backend" />
+          </div>
+        </section>
+
+        <section className="status-section">
+          <h2 className="status-section-label">Analytics</h2>
+          <div className="stat-grid analytics-grid">
+            {loading ? (
+              <StatCard label="Analytics snapshot" value="Loading…" sub="collecting board activity" />
+            ) : !analyticsAvailable ? (
+              <StatCard
+                label="Analytics snapshot"
+                value="Unavailable"
+                sub="the service is healthy, but board metrics are not ready"
+              />
+            ) : (
+              <>
+                <StatCard
+                  label="Boards created · 30 days"
+                  value={formatNumber(analytics.created?.last_30d)}
+                  sub={`${formatNumber(analytics.created?.last_24h)} past day · ${formatNumber(analytics.created?.last_7d)} past week`}
+                />
+                <StatCard
+                  label="Active team completion"
+                  value={`${formatNumber(analytics.progress?.completion_percentage)}%`}
+                  sub={`${formatNumber(analytics.progress?.completed_tiles)} / ${formatNumber(analytics.progress?.team_tiles)} tiles checked`}
+                />
+                <StatCard
+                  label="Proof images"
+                  value={formatNumber(analytics.progress?.proof_images)}
+                  sub={`${formatNumber(analytics.progress?.proof_notes)} notes from active teams`}
+                />
+                <StatCard
+                  label="Points claimed"
+                  value={formatNumber(analytics.progress?.points_earned)}
+                  sub="from teams with checked tiles"
+                />
+                <StatCard
+                  label="Boards with progress"
+                  value={formatNumber(analytics.activity?.boards_with_progress)}
+                  sub={formatBoardMix(analytics.board_types)}
+                />
+                <StatCard
+                  label="Most common active board"
+                  value={formatLayout(commonLayout)}
+                  sub={commonLayout ? `${formatNumber(commonLayout.boards)} boards use this layout` : 'no board layouts yet'}
+                />
+                <StatCard
+                  label="Active board capacity"
+                  value={`${formatNumber(analytics.board_tiles?.average_per_board)} avg`}
+                  sub={`${formatNumber(analytics.board_tiles?.total)} tiles · ${formatNumber(analytics.board_tiles?.largest_board)} largest`}
+                />
+                <StatCard
+                  label="Teams playing"
+                  value={formatNumber(analytics.teams?.total)}
+                  sub={`${formatNumber(analytics.teams?.average_per_board)} per active board`}
+                />
+              </>
+            )}
           </div>
         </section>
 

@@ -280,6 +280,16 @@
   margin-top: 3px;
 }
 
+/* ─── Analytics ─────────────────────────────────────────────────────────── */
+
+.analytics-grid .stat-card {
+  min-height: 86px;
+}
+
+.analytics-grid .stat-value {
+  font-variant-numeric: tabular-nums;
+}
+
 /* ─── Endpoint / JSON block ──────────────────────────────────────────────── */
 
 .endpoint-card {
