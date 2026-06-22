@@ -2,6 +2,7 @@ import datetime
 import time
 
 _board_analytics_cache = None
+MAX_ANALYTICS_POINTS_PER_TILE = 1000
 
 def clear_board_analytics_cache():
   global _board_analytics_cache
@@ -238,7 +239,7 @@ def get_board_analytics(collection, cache_seconds):
                           {'$gte': ['$$available', 0]},
                         ],
                       },
-                      {'$min': ['$$claimed', '$$available']},
+                      {'$min': ['$$claimed', '$$available', MAX_ANALYTICS_POINTS_PER_TILE]},
                       0,
                     ],
                   },
@@ -343,6 +344,5 @@ def get_board_analytics(collection, cache_seconds):
     'expires_at': now + cache_seconds,
   }
   return analytics
-
 
 

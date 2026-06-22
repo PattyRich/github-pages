@@ -252,7 +252,7 @@ export default function Status() {
                 <StatCard
                   label="Points claimed"
                   value={formatNumber(analytics.progress?.points_earned)}
-                  sub="from teams with checked tiles"
+                  sub="from active teams · 1,000 max per tile"
                 />
                 <StatCard
                   label="Boards with progress"
