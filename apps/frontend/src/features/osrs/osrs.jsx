@@ -775,7 +775,7 @@ const pause = () => new Promise((r) => setTimeout(r, 0));
 
 function countDrops(rewards) {
   return rewards.reduce(
-    (total, reward) => total + (reward.isPet ? 0 : reward.quantity || 1),
+    (total, reward) => total + (reward.isPet || reward.isBonusDrop ? 0 : reward.quantity || 1),
     0
   );
 }
@@ -795,7 +795,7 @@ function SimulationResult({ simulation }) {
   if (!drops) {
     return (
       <div className="osrs-simulation-result">
-        This simulation: no non-pet drops in {rolls} KC.
+        This simulation: no regular drops in {rolls} KC.
       </div>
     );
   }

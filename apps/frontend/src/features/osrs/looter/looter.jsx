@@ -162,11 +162,6 @@ function averageKillsPerDrop(data, clueType) {
     dropChance *= 2;
   }
 
-  // Challenge Mode rewards are rolled independently of the regular CoX table.
-  if (data.rollCms) {
-    dropChance += data.cms.reduce((total, item) => total + item.rate, 0);
-  }
-
   // A clue casket can make multiple rare-table rolls.
   if (clueType) {
     dropChance *= averageClueRolls(clueType);
@@ -238,7 +233,7 @@ function looter(rolls, data, clueType) {
 
     //previous check only adds if this is cox
     if (data.rollCms) {
-      rollItemAdHoc(i, data.cms);
+      rollItemAdHoc(i, data.cms, false, true);
     }
 
     if (clueType) {
@@ -265,7 +260,7 @@ function looter(rolls, data, clueType) {
   }
   return rewards;
 
-  function rollItemAdHoc(kc, items, checkListBool = false) {
+  function rollItemAdHoc(kc, items, checkListBool = false, isBonusDrop = false) {
     let rng = Math.random();
     //they got loot
     let weight = 0;
@@ -286,6 +281,7 @@ function looter(rolls, data, clueType) {
           rewards.push({
             kc: kc + 1,
             name: items[j].name,
+            isBonusDrop,
           });
           if (checkListBool) {
             checkList[j] += 1;
