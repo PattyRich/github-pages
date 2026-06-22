@@ -554,12 +554,35 @@ class TestUpdateBoard(unittest.TestCase):
         self.assertNotIn("opacity", board_data[0][0]["image"])
 
     def test_general_can_update_tile(self):
+        self.board["boardData"][0][0]["points"] = 10
         resp = self._put(
             "/updateBoard/TestBoard/gen123/general",
             {"row": 0, "col": 0, "info": {"checked": True, "proof": "img.png",
-                                           "currPoints": 5, "teamId": 0}},
+                                            "currPoints": 5, "teamId": 0}},
         )
         self.assertEqual(resp.status_code, 200)
+
+    def test_general_rejects_points_above_tile_value(self):
+        self.board["boardData"][0][0]["points"] = 10
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 0, "col": 0, "info": {"checked": True, "proof": "",
+                                            "currPoints": 11, "teamId": 0}},
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("cannot exceed", json.loads(resp.data)["message"])
+        _mock_col.update_one.assert_not_called()
+
+    def test_general_rejects_negative_points(self):
+        self.board["boardData"][0][0]["points"] = 10
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 0, "col": 0, "info": {"checked": True, "proof": "",
+                                            "currPoints": -1, "teamId": 0}},
+        )
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("cannot be negative", json.loads(resp.data)["message"])
+        _mock_col.update_one.assert_not_called()
 
     def test_general_cannot_update_hidden_row(self):
         board = _make_board(rows=4, cols=3, visible_rows=2)
@@ -823,7 +846,7 @@ class TestHealthEndpoint(unittest.TestCase):
             "popular_layouts": [{"_id": {"rows": 5, "columns": 5}, "boards": 3}],
         }])
         server.mycol.aggregate.side_effect = None
-        server._health_analytics_cache = None
+        server.analytics.clear_board_analytics_cache()
 
 
     @patch("server._redis")
