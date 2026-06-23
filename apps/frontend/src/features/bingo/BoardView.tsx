@@ -19,6 +19,7 @@ import type { TeamInfo } from '../../components/ui/EditTeams';
 import SettingsModal from '../../components/ui/SettingsModal';
 import FeedbackModal from '../../components/ui/FeedbackModal';
 import PasswordModal from '../../components/ui/PasswordModal';
+import BoardAuditModal, { type BoardAuditEvent } from '../../components/ui/BoardAuditModal';
 import { useAlert } from '../../utils/useAlert';
 import type { TeamTileInfo, TileInfo, TileModalState } from '../../components/ui/tile-modal/types';
 import { DEFAULT_BOARD_TYPE, normalizeBoardType, type BoardType } from '../../types';
@@ -44,6 +45,11 @@ interface BoardApiResponse {
   visibleRows?: number | null;
 }
 
+interface BoardAuditApiResponse {
+  events: BoardAuditEvent[];
+  nextCursor: string | null;
+}
+
 interface BoardState {
   activeTeamIndex: number;
   adminPassword?: string;
@@ -59,6 +65,7 @@ interface BoardState {
   privilage?: string;
   showEditTeams: boolean;
   showFeedback?: boolean;
+  showAuditHistory?: boolean;
   showSettings?: boolean;
   showToast?: boolean;
   showToast2?: boolean;
@@ -107,6 +114,10 @@ function BoardView() {
   const passwordResolveRef = useRef<PasswordPromptResolver | null>(null);
   const [passwordPrompt, setPasswordPrompt] = useState<string | null>(null);
   const [boardGuideStep, setBoardGuideStep] = useState<BoardGuideStep>(null);
+  const [auditEvents, setAuditEvents] = useState<BoardAuditEvent[]>([]);
+  const [auditNextCursor, setAuditNextCursor] = useState<string | null>(null);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [auditError, setAuditError] = useState<string | null>(null);
   const rowsRef = useRef<number | null>(null);
   const columnsRef = useRef<number | null>(null);
 
@@ -243,6 +254,35 @@ function BoardView() {
 
     rowsRef.current = data.boardData[0]?.length || 0;
     columnsRef.current = data.boardData.length;
+  }
+
+  async function loadAuditHistory(cursor: string | null = null): Promise<void> {
+    const currentState = stateRef.current;
+    if (!currentState.boardName) return;
+
+    setAuditLoading(true);
+    setAuditError(null);
+    const query = cursor ? `?limit=50&cursor=${encodeURIComponent(cursor)}` : '?limit=50';
+    const [data, err] = await fetchGet<BoardAuditApiResponse>(
+      `boardAudit/${pwUrlBuilder(currentState)}${query}`
+    );
+    if (err || !data) {
+      setAuditError(err?.message || 'History is unavailable right now.');
+      setAuditLoading(false);
+      return;
+    }
+
+    setAuditEvents((currentEvents) => (cursor ? [...currentEvents, ...data.events] : data.events));
+    setAuditNextCursor(data.nextCursor);
+    setAuditLoading(false);
+  }
+
+  function openAuditHistory(): void {
+    setAuditEvents([]);
+    setAuditNextCursor(null);
+    setAuditError(null);
+    setBoardState({ showAuditHistory: true });
+    void loadAuditHistory();
   }
 
   function connectSSE(): void {
@@ -499,15 +539,15 @@ function BoardView() {
   }
 
   const showFeedback = localStorage.getItem('showFeedback') === 'true';
-  let height = document.documentElement.clientHeight;
-  let width = document.documentElement.clientWidth;
+  const height = document.documentElement.clientHeight;
+  const width = document.documentElement.clientWidth;
   const boardDataToShow = visibleBoardData(state);
   const activeTeam = state.teamData?.[state.activeTeamIndex];
   const renderColumns = boardDataToShow.length || columnsRef.current || 1;
   const renderRows = boardDataToShow[0]?.length || rowsRef.current || 1;
-  let maxWidth = (width * 0.75) / renderRows;
-  let maxHeight = (height * 0.75) / renderColumns;
-  let dem = maxHeight < maxWidth ? maxHeight : maxWidth;
+  const maxWidth = (width * 0.75) / renderRows;
+  const maxHeight = (height * 0.75) / renderColumns;
+  const dem = maxHeight < maxWidth ? maxHeight : maxWidth;
   //let dem = width < height ? (width / rowsRef.current)-40 : (height / columnsRef.current)-40;
   return (
     <div className="flex-wrapper-create">
@@ -523,6 +563,7 @@ function BoardView() {
               text="Settings"
               variant="primary"
             />
+            <Button click={openAuditHistory} text="History" variant="primary" />
             {(state.privilege === 'admin' || state.canSwitchPriv) && (
               <>
                 {state.privilege === 'admin' && (
@@ -656,6 +697,16 @@ function BoardView() {
       )}
       {state.showSettings && (
         <SettingsModal handleClose={() => setBoardState({ showSettings: false })} />
+      )}
+      {state.showAuditHistory && (
+        <BoardAuditModal
+          events={auditEvents}
+          error={auditError}
+          hasMore={Boolean(auditNextCursor)}
+          loading={auditLoading}
+          onClose={() => setBoardState({ showAuditHistory: false })}
+          onLoadMore={() => void loadAuditHistory(auditNextCursor)}
+        />
       )}
       {!showFeedback && width > 1000 ? (
         <button

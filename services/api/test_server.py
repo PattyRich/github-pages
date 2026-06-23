@@ -11,10 +11,12 @@ or:
 """
 
 import base64
+import datetime
 import io
 import json
 import tempfile
 import unittest
+from bson.objectid import ObjectId
 from pathlib import Path
 from unittest.mock import MagicMock, patch
 
@@ -28,6 +30,7 @@ mock_mongo_cls = MONGO_PATCH.start()
 
 # Build a realistic mock collection that won't blow up on index_information()
 _mock_col = MagicMock()
+_mock_audit_col = MagicMock()
 _mock_col.index_information.return_value = {"_id_": {}}   # 1 index → skip creation
 mock_mongo_cls.return_value.__getitem__.return_value.__getitem__.return_value = _mock_col
 
@@ -43,6 +46,7 @@ import server  # noqa: E402  (must come after patch)
 
 # Point server's module-level `mycol` at our controllable mock
 server.mycol = _mock_col
+server.auditcol = _mock_audit_col
 
 
 # ---------------------------------------------------------------------------
@@ -55,6 +59,7 @@ def _make_board(rows=2, cols=2, teams=2,
     """Return a minimal board document as MongoDB would return it."""
     board_data = [[server.defaultBoardObj.copy() for _ in range(rows)] for _ in range(cols)]
     doc = {
+        "_id": ObjectId(),
         "boardName": board_name,
         "adminPassword": admin_pw,
         "generalPassword": general_pw,
@@ -63,6 +68,7 @@ def _make_board(rows=2, cols=2, teams=2,
         "rows": rows,
         "columns": cols,
         "visibleRows": visible_rows if visible_rows is not None else rows,
+        "date": datetime.datetime(2026, 1, 1),
     }
     for i in range(teams):
         key = f"team-{i}"
@@ -146,6 +152,63 @@ class TestClearBadData(unittest.TestCase):
     def test_empty_data(self):
         result = server.clearBadData({}, ["title"])
         self.assertEqual(result, {})
+
+
+class TestAuditHelpers(unittest.TestCase):
+    def test_tile_diff_only_reports_real_changes(self):
+        existing = {
+            "title": "Old title",
+            "points": 5,
+            "checked": False,
+            "proof": "secret proof",
+            "proofImages": ["/static/uploads/proofs/old.webp"],
+        }
+        changes = server.tile_audit_changes(
+            existing,
+            {
+                "title": "New title",
+                "points": 5,
+                "checked": False,
+                "proof": "new secret proof",
+                "proofImages": ["/static/uploads/proofs/new.webp"],
+            },
+        )
+
+        self.assertEqual(changes[0], {"field": "title", "before": "Old title", "after": "New title"})
+        self.assertIn({"field": "proof", "changed": True}, changes)
+        self.assertIn({"field": "proofImages", "added": 1, "removed": 1}, changes)
+        self.assertNotIn("secret proof", json.dumps(changes))
+        self.assertNotIn("old.webp", json.dumps(changes))
+
+    def test_tile_diff_skips_noop_patch(self):
+        existing = {"checked": False, "proof": "", "currPoints": 0}
+        self.assertEqual(
+            server.tile_audit_changes(existing, {"checked": False, "proof": "", "currPoints": 0}),
+            [],
+        )
+
+    def test_tile_diff_ignores_legacy_current_points_type_change(self):
+        self.assertEqual(
+            server.tile_audit_changes({"currPoints": "40"}, {"currPoints": 40}),
+            [],
+        )
+
+    def test_settings_diff_never_contains_password_values(self):
+        board = _make_board(teams=1)
+        board["team-0"]["password"] = "old-secret"
+        changes = server.board_settings_audit_changes(
+            board,
+            [{"data": {"name": "Renamed", "password": "new-secret"}}],
+            False,
+            2,
+            2,
+            2,
+        )
+
+        serialized = json.dumps(changes)
+        self.assertNotIn("old-secret", serialized)
+        self.assertNotIn("new-secret", serialized)
+        self.assertIn({"field": "teamPassword", "teamId": 0, "changed": True}, changes)
 
 
 class TestImageStore(unittest.TestCase):
@@ -262,6 +325,8 @@ class TestCreateBoard(unittest.TestCase):
         self.client = _client(server.app)
         _mock_col.find_one.return_value = None           # board doesn't exist yet
         _mock_col.insert_one.return_value = MagicMock()  # simulate successful insert
+        _mock_col.insert_one.return_value.inserted_id = ObjectId()
+        _mock_audit_col.reset_mock()
 
     def _post(self, payload):
         return self.client.post(
@@ -288,6 +353,9 @@ class TestCreateBoard(unittest.TestCase):
         self.assertEqual(inserted["boardData"][0][0]["title"], "Example Tile")
         self.assertIn("oldschool.runescape.wiki", inserted["boardData"][0][0]["image"]["url"])
         self.assertNotIn("opacity", inserted["boardData"][0][0]["image"])
+        event = _mock_audit_col.insert_one.call_args[0][0]
+        self.assertEqual(event["eventType"], "board.created")
+        self.assertEqual(event["boardId"], _mock_col.insert_one.return_value.inserted_id)
 
     @patch("server.postToDiscord", return_value=True)
     def test_generic_board_skips_osrs_starter_tile(self, _):
@@ -476,6 +544,40 @@ class TestGetBoard(unittest.TestCase):
         self.assertTrue(all(len(row) == 4 for row in data["boardData"]))
 
 
+class TestBoardAuditEndpoint(unittest.TestCase):
+    def setUp(self):
+        self.client = _client(server.app)
+        self.board = _make_board()
+        _mock_col.find_one.return_value = self.board
+        _mock_audit_col.reset_mock()
+
+    def test_general_editor_can_read_audit_history(self):
+        event_id = ObjectId()
+        event = {
+            "_id": event_id,
+            "boardId": self.board["_id"],
+            "createdAt": datetime.datetime(2026, 1, 2, 12, 0),
+            "eventType": "tile.updated",
+            "actor": {"role": "team", "teamId": 0, "teamName": "team-0"},
+            "target": {"type": "tile", "row": 0, "col": 0, "title": "A tile"},
+            "changes": [{"field": "checked", "before": False, "after": True}],
+        }
+        _mock_audit_col.find.return_value.sort.return_value.limit.return_value = [event]
+
+        resp = self.client.get("/boardAudit/TestBoard/gen123/general?limit=100")
+
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual(data["events"][0]["id"], str(event_id))
+        self.assertEqual(data["events"][0]["actor"]["teamName"], "team-0")
+        self.assertIsNone(data["nextCursor"])
+        _mock_audit_col.find.return_value.sort.return_value.limit.assert_called_once_with(51)
+
+    def test_audit_history_rejects_wrong_password(self):
+        resp = self.client.get("/boardAudit/TestBoard/wrong/general")
+        self.assertEqual(resp.status_code, 400)
+
+
 class TestAuthEndpoint(unittest.TestCase):
     def setUp(self):
         self.client = _client(server.app)
@@ -506,6 +608,7 @@ class TestUpdateBoard(unittest.TestCase):
         _mock_col.find_one.return_value = self.board
         _mock_col.update_one.reset_mock()
         _mock_col.update_one.return_value = MagicMock()
+        _mock_audit_col.reset_mock()
 
     def _put(self, url, payload):
         return self.client.put(
@@ -561,6 +664,34 @@ class TestUpdateBoard(unittest.TestCase):
                                             "currPoints": 5, "teamId": 0}},
         )
         self.assertEqual(resp.status_code, 200)
+
+    def test_general_update_appends_safe_audit_event(self):
+        self.board["boardData"][0][0]["points"] = 10
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 0, "col": 0, "info": {"checked": True, "proof": "private proof",
+                                            "currPoints": 5, "teamId": 0,
+                                            "proofImages": ["/static/uploads/proofs/proof.webp"]}},
+        )
+
+        self.assertEqual(resp.status_code, 200)
+        event = _mock_audit_col.insert_one.call_args[0][0]
+        self.assertEqual(event["boardId"], self.board["_id"])
+        self.assertEqual(event["actor"], {"role": "team", "teamId": 0, "teamName": "team-0"})
+        self.assertIn({"field": "proof", "changed": True}, event["changes"])
+        self.assertIn({"field": "proofImages", "added": 1, "removed": 0}, event["changes"])
+        self.assertNotIn("private proof", json.dumps(event, default=str))
+        self.assertNotIn("proof.webp", json.dumps(event, default=str))
+
+    def test_noop_tile_update_does_not_append_audit_event(self):
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 0, "col": 0, "info": {"checked": False, "proof": "",
+                                            "currPoints": 0, "teamId": 0}},
+        )
+
+        self.assertEqual(resp.status_code, 200)
+        _mock_audit_col.insert_one.assert_not_called()
 
     def test_general_rejects_points_above_tile_value(self):
         self.board["boardData"][0][0]["points"] = 10
@@ -724,6 +855,7 @@ class TestUpdateTeams(unittest.TestCase):
         _mock_col.find_one.return_value = self.board
         _mock_col.update_one.reset_mock()
         _mock_col.update_one.return_value = MagicMock()
+        _mock_audit_col.reset_mock()
 
     @patch("server.publish_board_update")
     def test_adding_team_persists_password(self, _publish):
@@ -750,6 +882,11 @@ class TestUpdateTeams(unittest.TestCase):
             if "team-1" in call_args[0][1].get("$set", {})
         ]
         self.assertEqual(added_team_updates[0]["password"], "newsecret")
+        event = _mock_audit_col.insert_one.call_args[0][0]
+        self.assertEqual(event["eventType"], "board.settings_updated")
+        self.assertIn({"field": "teamsAdded", "teams": [{"teamId": 1, "name": "Boss"}]}, event["changes"])
+        self.assertNotIn("oldsecret", json.dumps(event, default=str))
+        self.assertNotIn("newsecret", json.dumps(event, default=str))
 
 
 class TestFeedbackEndpoint(unittest.TestCase):

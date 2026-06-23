@@ -98,7 +98,7 @@ Document shape:
   boardData:  Tile[][],        // 2D array of { title, image, points }
   "team-1":   TeamState,       // { name, optional team secret, teamData: TeamTile[][] }
   "team-2":   TeamState,
-  expiresAt:  Date             // TTL index, ~3 years from creation
+  date:       Date             // TTL index, ~3 years from creation
 }
 ```
 
@@ -114,6 +114,25 @@ TeamTile {
   currPoints:   number
 }
 ```
+
+### MongoDB â€” Bingo Audit Events
+
+Each board mutation also appends a separate immutable document to `bingo.board_audit_events`. Events link through the board's Mongo `_id`, not its mutable display name, and have an `expiresAt` TTL matching the parent board.
+
+```
+{
+  boardId:     ObjectId,
+  boardName:   string,         // display snapshot
+  createdAt:   Date,
+  expiresAt:   Date,
+  eventType:   string,         // board.created | tile.updated | board.settings_updated
+  actor:       { role, teamId?, teamName? },
+  target:      { type, row?, col?, title? },
+  changes:     Change[]        // field-level, with proof/image summaries only
+}
+```
+
+Audit events never store credentials, request IPs, proof text, proof image paths, or image data. The API appends them best-effort after a successful board write; the board remains authoritative if the audit insert fails.
 
 ### Local Filesystem — Bingo Proof Images
 
@@ -173,4 +192,4 @@ Separating concerns across key namespaces keeps Redis operationally simple — y
 
 ---
 
-*Last updated: 2026-06-12*
+*Last updated: 2026-06-22*

@@ -9,6 +9,9 @@ import math
 import time
 import requests
 import pymongo
+from bson.errors import InvalidId
+from bson.objectid import ObjectId
+from collections import Counter
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from imgSizeReducer import reduce_image_size
@@ -65,6 +68,7 @@ mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
 myclient = pymongo.MongoClient(mongo_uri)
 db = myclient["bingo"]
 mycol = db['bingo']
+auditcol = db['board_audit_events']
 
 allowedAuthTypes = ['admin', 'general']
 allowedBoardTypes = ['osrs', 'generic']
@@ -75,6 +79,7 @@ disallowedRouteChars = ['?', '#', '/', '\\']
 testBoardPrefix = os.environ.get("PLAYWRIGHT_E2E_BOARD_PREFIX", os.environ.get("SELENIUM_E2E_BOARD_PREFIX", "__playwright_e2e__"))
 maxProofImages = int(os.environ.get("MAX_PROOF_IMAGES_PER_TILE", 10))
 healthAnalyticsCacheSeconds = max(0, int(os.environ.get("HEALTH_ANALYTICS_CACHE_SECONDS", 60)))
+boardTtlSeconds = 100000000
 defaultTeamObj = {
   'checked': False,
   'proof': '',
@@ -90,15 +95,17 @@ defaultBoardObj = {
   'colBingo': 0
 }
 
-def setup_indexes(collection):
+def setup_indexes(collection, audit_collection):
     try:
         collection.create_index([("boardName", 1)])
-        collection.create_index([("date", 1)], expireAfterSeconds=100000000)
+        collection.create_index([("date", 1)], expireAfterSeconds=boardTtlSeconds)
+        audit_collection.create_index([("boardId", 1), ("createdAt", -1), ("_id", -1)])
+        audit_collection.create_index([("expiresAt", 1)], expireAfterSeconds=0)
         log.info("MongoDB indexes created/verified successfully")
     except Exception as e:
         log.error("Failed to set up MongoDB indexes: %s", e)
 
-setup_indexes(mycol)
+setup_indexes(mycol, auditcol)
 
 
 # ---------------------------------------------------------------------------
@@ -222,6 +229,150 @@ def strip_image_opacity(image):
   image = { **image }
   image.pop('opacity', None)
   return image
+
+def audit_expiry(board, created_at):
+  board_created_at = board.get('date')
+  if not isinstance(board_created_at, datetime.datetime):
+    board_created_at = created_at
+  return board_created_at + datetime.timedelta(seconds=boardTtlSeconds)
+
+def audit_values_match(field, before, after):
+  if field != 'currPoints':
+    return before == after
+  try:
+    return math.isfinite(float(before)) and math.isfinite(float(after)) and float(before) == float(after)
+  except (TypeError, ValueError):
+    return before == after
+
+def tile_audit_changes(existing_tile, patch):
+  """Return a safe, field-level summary of an accepted tile patch."""
+  changes = []
+  for field in adminTileKeys + generalTileKeys:
+    if field not in patch:
+      continue
+
+    before = existing_tile.get(field)
+    after = patch[field]
+    if field == 'proof':
+      if before != after:
+        changes.append({'field': field, 'changed': True})
+    elif field == 'proofImages':
+      before_images = Counter(before if isinstance(before, list) else [])
+      after_images = Counter(after if isinstance(after, list) else [])
+      added = sum((after_images - before_images).values())
+      removed = sum((before_images - after_images).values())
+      if added or removed:
+        changes.append({'field': field, 'added': added, 'removed': removed})
+    elif field == 'image':
+      before_state = 'set' if isinstance(before, dict) and before.get('url') else 'empty'
+      after_state = 'set' if isinstance(after, dict) and after.get('url') else 'empty'
+      if before != after:
+        changes.append({'field': field, 'before': before_state, 'after': after_state})
+    elif not audit_values_match(field, before, after):
+      changes.append({'field': field, 'before': before, 'after': after})
+  return changes
+
+def tile_audit_target(row, col, tile):
+  title = tile.get('title') if isinstance(tile.get('title'), str) else ''
+  return {'type': 'tile', 'row': int(row), 'col': int(col), 'title': title}
+
+def team_audit_snapshot(team_id, team):
+  data = team.get('data', {}) if isinstance(team, dict) else {}
+  name = data.get('name', '') if isinstance(data, dict) else ''
+  return {'teamId': team_id, 'name': str(name)}
+
+def board_settings_audit_changes(cache, requested_teams, require_password, rows, columns, visible_rows):
+  """Summarize board administration changes without recording team passwords."""
+  changes = []
+  if int(cache.get('rows', 0)) != rows:
+    changes.append({'field': 'rows', 'before': int(cache.get('rows', 0)), 'after': rows})
+  if int(cache.get('columns', 0)) != columns:
+    changes.append({'field': 'columns', 'before': int(cache.get('columns', 0)), 'after': columns})
+
+  current_visible_rows = board_visible_rows(cache)
+  if current_visible_rows != visible_rows:
+    changes.append({'field': 'visibleRows', 'before': current_visible_rows, 'after': visible_rows})
+  if bool(cache.get('requirePassword', False)) != bool(require_password):
+    changes.append({
+      'field': 'passwordRequired',
+      'before': bool(cache.get('requirePassword', False)),
+      'after': bool(require_password),
+    })
+
+  current_team_count = int(cache.get('teams', 0))
+  requested_team_count = len(requested_teams)
+  current_teams = [
+    {'data': {'name': cache.get(f'team-{team_id}', {}).get('name', '')}}
+    for team_id in range(current_team_count)
+  ]
+
+  if requested_team_count > current_team_count:
+    changes.append({
+      'field': 'teamsAdded',
+      'teams': [
+        team_audit_snapshot(team_id, requested_teams[team_id])
+        for team_id in range(current_team_count, requested_team_count)
+      ],
+    })
+  elif requested_team_count < current_team_count:
+    changes.append({
+      'field': 'teamsRemoved',
+      'teams': [
+        team_audit_snapshot(team_id, current_teams[team_id])
+        for team_id in range(requested_team_count, current_team_count)
+      ],
+    })
+
+  for team_id in range(min(current_team_count, requested_team_count)):
+    previous_team = cache.get(f'team-{team_id}', {})
+    previous_name = str(previous_team.get('name', ''))
+    next_data = requested_teams[team_id].get('data', {})
+    next_name = str(next_data.get('name', ''))
+    if previous_name != next_name:
+      changes.append({
+        'field': 'teamName',
+        'teamId': team_id,
+        'before': previous_name,
+        'after': next_name,
+      })
+    if previous_team.get('password', '') != next_data.get('password', ''):
+      changes.append({'field': 'teamPassword', 'teamId': team_id, 'changed': True})
+  return changes
+
+def append_board_audit_event(board, event_type, actor, target, changes=None):
+  """Best-effort immutable audit append. A failed audit write must not undo board state."""
+  board_id = board.get('_id')
+  if board_id is None:
+    log.error("audit event skipped - board has no _id  board=%s", board.get('boardName'))
+    return
+
+  created_at = datetime.datetime.now(datetime.UTC)
+  event = {
+    'boardId': board_id,
+    'boardName': board.get('boardName', ''),
+    'createdAt': created_at,
+    'expiresAt': audit_expiry(board, created_at),
+    'eventType': event_type,
+    'actor': actor,
+    'target': target,
+    'changes': changes or [],
+  }
+  try:
+    auditcol.insert_one(event)
+  except Exception:
+    log.exception("audit event insert failed  board=%s  event=%s", board.get('boardName'), event_type)
+
+def public_audit_event(event):
+  created_at = event.get('createdAt')
+  created_at_value = created_at.isoformat() if isinstance(created_at, datetime.datetime) else ''
+  return {
+    'id': str(event.get('_id', '')),
+    'createdAt': created_at_value,
+    'eventType': event.get('eventType', ''),
+    'actor': event.get('actor', {}),
+    'target': event.get('target', {}),
+    'changes': event.get('changes', []),
+  }
 
 def board_visual_rows(cache):
   if cache.get('columns'):
@@ -425,6 +576,13 @@ def createBoard():
   if (not insert):
     log.error("createBoard - MongoDB insert failed  board=%s", data['boardName'])
     return bad_request('Failed to create bingo board in Mongo.')
+  data['_id'] = insert.inserted_id
+  append_board_audit_event(
+    data,
+    'board.created',
+    {'role': 'admin'},
+    {'type': 'board'},
+  )
 
   log.info("createBoard - success  board=%s  teams=%d  ip=%s", data['boardName'], data['teams'], request.remote_addr)
 
@@ -474,6 +632,46 @@ def getBoard(boardName, password, pwtype):
 
   log.info("getBoard - success  board=%s  pwtype=%s", boardName, pwtype)
   return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired, visibleRows=visibleRows, boardType=cacheBoardType)
+
+@app.route('/boardAudit/<boardName>/<password>/<pwtype>', methods=['GET'])
+@limiter.limit("500 per hour")
+def get_board_audit(boardName, password, pwtype):
+  cache, err = auth(boardName, password, pwtype)
+  if err:
+    return err
+
+  try:
+    limit = int(request.args.get('limit', 50))
+  except (TypeError, ValueError):
+    return bad_request('Audit limit must be a number.')
+  limit = max(1, min(limit, 50))
+
+  query = {'boardId': cache['_id']}
+  cursor = request.args.get('cursor')
+  if cursor:
+    try:
+      cursor_id = ObjectId(cursor)
+    except (InvalidId, TypeError):
+      return bad_request('Invalid audit cursor.')
+    cursor_event = auditcol.find_one({'_id': cursor_id, 'boardId': cache['_id']}, {'createdAt': 1})
+    if not cursor_event:
+      return bad_request('Invalid audit cursor.')
+    cursor_created_at = cursor_event.get('createdAt')
+    query['$or'] = [
+      {'createdAt': {'$lt': cursor_created_at}},
+      {'createdAt': cursor_created_at, '_id': {'$lt': cursor_id}},
+    ]
+
+  events = list(
+    auditcol.find(query)
+    .sort([('createdAt', pymongo.DESCENDING), ('_id', pymongo.DESCENDING)])
+    .limit(limit + 1)
+  )
+  has_more = len(events) > limit
+  if has_more:
+    events.pop()
+  next_cursor = str(events[-1]['_id']) if has_more and events else None
+  return jsonify(events=[public_audit_event(event) for event in events], nextCursor=next_cursor)
 
 @app.route('/events/<boardName>/<password>/<pwtype>')
 @limiter.limit("2000 per hour")
@@ -542,12 +740,23 @@ def updateBoard(boardName, password, pwtype, teampw):
         return bad_request('Failed to save tile image.')
 
     boardData = cache['boardData']
-    boardData[data['row']][data['col']] = { **boardData[data['row']][data['col']], **data['info']}
+    existing_tile = boardData[data['row']][data['col']]
+    changes = tile_audit_changes(existing_tile, data['info'])
+    updated_tile = { **existing_tile, **data['info']}
+    boardData[data['row']][data['col']] = updated_tile
     if previous_image_url:
       board_images.delete(previous_image_url)
 
     newvalue = { "$set": {'boardData': boardData}}
     mycol.update_one({"boardName": boardName}, newvalue)
+    if changes:
+      append_board_audit_event(
+        cache,
+        'tile.updated',
+        {'role': 'admin'},
+        tile_audit_target(data['row'], data['col'], updated_tile),
+        changes,
+      )
     log.info("updateBoard - admin tile update  board=%s  row=%s  col=%s", boardName, data.get('row'), data.get('col'))
 
   if (pwtype == 'general'):
@@ -555,7 +764,8 @@ def updateBoard(boardName, password, pwtype, teampw):
       log.warning("updateBoard - hidden row update rejected  board=%s  row=%s  ip=%s", boardName, data.get('row'), request.remote_addr)
       return bad_request('That row has not been revealed yet.')
 
-    teamKey = 'team-' + str(data['info']['teamId'])
+    team_id = int(data['info']['teamId'])
+    teamKey = 'team-' + str(team_id)
     teamData = cache.get(teamKey)
     if not teamData:
       log.warning("updateBoard - team not found  board=%s  team=%s  ip=%s", boardName, teamKey, request.remote_addr)
@@ -587,10 +797,24 @@ def updateBoard(boardName, password, pwtype, teampw):
         log.error("updateBoard - proof image save failed  board=%s  error=%s", boardName, e)
         return bad_request('Failed to save proof image.')
 
-    teamData['teamData'][data['row']][data['col']] = { **teamData['teamData'][data['row']][data['col']], **data['info']}
+    changes = tile_audit_changes(existing_tile, data['info'])
+    updated_tile = { **existing_tile, **data['info']}
+    teamData['teamData'][data['row']][data['col']] = updated_tile
     
     newvalue = { "$set": {teamKey: teamData}}
     update = mycol.update_one({"boardName": boardName}, newvalue)
+    if changes:
+      append_board_audit_event(
+        cache,
+        'tile.updated',
+        {
+          'role': 'team',
+          'teamId': team_id,
+          'teamName': teamData.get('name', ''),
+        },
+        tile_audit_target(data['row'], data['col'], cache['boardData'][data['row']][data['col']]),
+        changes,
+      )
     if 'proofImages' in data['info']:
       proof_images.cleanup_removed(previous_proof_images, data['info']['proofImages'])
     log.info("updateBoard - general tile update  board=%s  team=%s  row=%s  col=%s", boardName, teamKey, data.get('row'), data.get('col'))
@@ -612,6 +836,14 @@ def updateTeams(boardName, password, pwtype):
   visibleRows = clamp_visible_rows(data['dataToSend'].get('visibleRows'), cols)
   data = data['dataToSend']['teamData']
   size = len(data)
+  settings_changes = board_settings_audit_changes(
+    cache,
+    data,
+    requirePassword,
+    rows,
+    cols,
+    visibleRows,
+  )
 
   changed = changeBoardSize(data, rows, cols, cache, boardName)
   if changed:
@@ -658,6 +890,14 @@ def updateTeams(boardName, password, pwtype):
     {"boardName": boardName},
     {"$set": {**overWrite, 'teams': size, 'requirePassword': requirePassword, 'visibleRows': visibleRows}}
   )
+  if settings_changes:
+    append_board_audit_event(
+      cache,
+      'board.settings_updated',
+      {'role': 'admin'},
+      {'type': 'board'},
+      settings_changes,
+    )
 
   log.info("updateTeams - complete  board=%s  teams=%d", boardName, size)
   publish_board_update(boardName)
