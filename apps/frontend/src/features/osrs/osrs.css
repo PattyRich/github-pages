@@ -223,13 +223,143 @@
   flex-wrap: wrap;
   align-items: center;
   gap: 8px;
-  margin: 8px 0 4px;
+  margin: 12px 5px 6px;
 }
 
 .osrs-progress {
   font-size: 0.88rem;
   color: var(--osrs-text-normal);
-  margin-bottom: 4px;
+  min-width: 72px;
+}
+
+.osrs-plot-controls button:disabled {
+  background: var(--osrs-state-disabled-bg);
+  border-color: var(--osrs-state-disabled-border);
+  color: var(--osrs-state-disabled-text);
+  cursor: not-allowed;
+  filter: none;
+}
+
+.osrs-simulation-panel {
+  box-sizing: border-box;
+  max-width: calc(100% - 10px);
+  margin: 10px 5px 18px;
+  padding: 14px;
+  border: 2px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius-lg);
+  background: rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  line-height: 1.35;
+}
+
+.osrs-simulation-panel-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.route-dark-bg .osrs-simulation-title {
+  margin: 0;
+  color: var(--osrs-text-gold) !important;
+  font-family: 'osrsFont', sans-serif;
+  font-size: 1.05rem;
+  text-shadow: 1px 1px 0 black;
+}
+
+.route-dark-bg .osrs-simulation-meta {
+  margin: 2px 0 0;
+  color: var(--osrs-text-normal);
+  font-size: 0.82rem;
+}
+
+.osrs-chart-tabs {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 3px;
+  padding: 3px;
+  border: 2px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius);
+  background: var(--osrs-bg-brown-dark);
+  box-shadow: inset 1px 1px 3px rgba(0, 0, 0, 0.7);
+}
+
+.route-dark-bg .osrs-chart-tab {
+  border: 1px solid transparent;
+  border-radius: calc(var(--osrs-radius) - 2px);
+  background: transparent;
+  color: var(--osrs-text-normal);
+  cursor: pointer;
+  font-family: 'osrsFont', sans-serif;
+  font-size: 0.78rem;
+  padding: 4px 10px;
+  text-shadow: 1px 1px 0 black;
+  transition:
+    background-color 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease;
+}
+
+.route-dark-bg .osrs-chart-tab:hover {
+  color: var(--osrs-text-gold);
+}
+
+.route-dark-bg .osrs-chart-tab.is-active {
+  border-color: var(--osrs-border-light);
+  background: var(--osrs-button-bg);
+  color: var(--osrs-text-gold);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+}
+
+.osrs-simulation-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(118px, 1fr));
+  gap: 8px;
+  margin: 0 0 12px;
+}
+
+.osrs-simulation-stat {
+  min-height: 58px;
+  padding: 7px 9px;
+  border: 1px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius);
+  background: rgba(0, 0, 0, 0.18);
+  box-shadow: inset 0 0 0 1px var(--osrs-glass-border);
+}
+
+.osrs-simulation-stat dt {
+  margin: 0 0 2px;
+  color: var(--osrs-text-normal);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 0.74rem;
+  text-shadow: 1px 1px 0 black;
+}
+
+.osrs-simulation-stat dd {
+  margin: 0;
+  color: var(--osrs-text-beige);
+  font-size: 0.98rem;
+  font-weight: 600;
+  line-height: 1.2;
+}
+
+.osrs-chart-shell {
+  box-sizing: border-box;
+  max-width: 100%;
+  min-width: 0;
+  min-height: 360px;
+  overflow: hidden;
+  border: 1px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius);
+  background: var(--osrs-bg-brown-dark);
+  box-shadow: inset 1px 1px 4px rgba(0, 0, 0, 0.75);
+}
+
+#simulation-chart {
+  max-width: 100%;
+  width: 100%;
+  min-height: 360px;
 }
 
 /* ── Loot grid ───────────────────────────────────────────────────────────── */
@@ -319,6 +449,34 @@
 
   .osrs-sim-row input[type='text'] {
     width: 100%;
+  }
+
+  .osrs-simulation-panel {
+    margin-inline: 0;
+    padding: 10px;
+  }
+
+  .osrs-simulation-panel-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .osrs-chart-tabs {
+    width: 100%;
+  }
+
+  .route-dark-bg .osrs-chart-tab {
+    flex: 1;
+    text-align: center;
+  }
+
+  .osrs-simulation-stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .osrs-chart-shell,
+  #simulation-chart {
+    min-height: 320px;
   }
 
   .box {

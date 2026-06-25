@@ -55,6 +55,8 @@ class Osrs extends React.Component {
       points: 30000,
       pets: true,
       histogramData: [],
+      simulationPlot: null,
+      plotMode: 'chance',
       simulations: 1000,
       fullRewards: false,
       fullLootRewards: [],
@@ -101,6 +103,7 @@ class Osrs extends React.Component {
     this.go = this.go.bind(this);
     this.stopInterval = this.stopInterval.bind(this);
     this.graphSimulation = this.graphSimulation.bind(this);
+    this.setPlotMode = this.setPlotMode.bind(this);
     this.lootFunction = this.lootFunction.bind(this);
     this.saveBoss = this.saveBoss.bind(this);
     this.selectBoss = this.selectBoss.bind(this);
@@ -121,11 +124,22 @@ class Osrs extends React.Component {
       rewards,
       fullLootRewards,
       lastSimulation: null,
+      simulationPlot: null,
+      progress: 0,
+      bestRewards: null,
+      worstRewards: null,
     });
   };
 
   async onChangeValue(event) {
-    this.setState({ mode: event.target.value, lastSimulation: null });
+    this.setState({
+      mode: event.target.value,
+      lastSimulation: null,
+      simulationPlot: null,
+      progress: 0,
+      bestRewards: null,
+      worstRewards: null,
+    });
     this.completion(event.target.value);
   }
 
@@ -146,7 +160,13 @@ class Osrs extends React.Component {
 
   selectBoss(name) {
     let index = this.state.bosses.findIndex((x) => x.bossName === name);
-    this.setState({ createData: this.state.bosses[index] });
+    this.setState({
+      createData: this.state.bosses[index],
+      simulationPlot: null,
+      progress: 0,
+      bestRewards: null,
+      worstRewards: null,
+    });
   }
 
   deleteBoss() {
@@ -161,7 +181,17 @@ class Osrs extends React.Component {
   }
 
   onChangeValueInput(state, event) {
-    this.setState({ [state]: event.target.value }, () => {
+    const nextState = { [state]: event.target.value };
+    if (shouldClearSimulationPlot(state)) {
+      Object.assign(nextState, {
+        simulationPlot: null,
+        progress: 0,
+        bestRewards: null,
+        worstRewards: null,
+      });
+    }
+
+    this.setState(nextState, () => {
       if (state == 'points' || state == 'teamSize' || state == 'invocation') {
         this.completion();
       }
@@ -176,11 +206,38 @@ class Osrs extends React.Component {
     }
   }
 
-  async clearPlots() {
+  clearPlots() {
+    if (window.Plotly) {
+      const chart = document.getElementById('simulation-chart');
+      if (chart) {
+        window.Plotly.purge(chart);
+      }
+    }
+    this.setState({
+      bestRewards: null,
+      worstRewards: null,
+      simulationPlot: null,
+      plotMode: 'chance',
+      progress: 0,
+    });
+  }
+
+  setPlotMode(plotMode) {
+    this.setState({ plotMode }, () => this.renderSimulationPlot());
+  }
+
+  async renderSimulationPlot() {
+    if (!this.state.simulationPlot || !document.getElementById('simulation-chart')) {
+      return;
+    }
+
     const Plotly = await getPlotly();
-    Plotly.deleteTraces('histogram', 0);
-    Plotly.deleteTraces('scatter', 0);
-    this.setState({ bestRewards: null, worstRewards: null });
+    const figure = buildSimulationFigure(
+      this.state.simulationPlot,
+      this.state.plotMode,
+      this.state.completion
+    );
+    Plotly.react('simulation-chart', figure.data, figure.layout, figure.config);
   }
 
   changeCreateData(thing, data, index) {
@@ -192,7 +249,6 @@ class Osrs extends React.Component {
       } else {
         copy.items.push({ name: '', rate: '1/100' });
       }
-      this.setState({ createData: copy });
     } else if (thing === 'name') {
       copy.items[index].name = nameFilter(data);
     } else if (thing === 'rate') {
@@ -212,7 +268,13 @@ class Osrs extends React.Component {
       return rate.replace(/[^0-9/.]/g, '');
     }
 
-    this.setState({ createData: copy });
+    this.setState({
+      createData: copy,
+      simulationPlot: null,
+      progress: 0,
+      bestRewards: null,
+      worstRewards: null,
+    });
   }
 
   async addIcons(mode, loot = null) {
@@ -344,42 +406,71 @@ class Osrs extends React.Component {
   }
 
   async graphSimulation(skipGraph = false) {
-    let arr = [];
-    let items = [];
-    this.setState({ progress: 0, bestRewards: null, worstRewards: null });
-    let best, worst;
-    for (let i = 0; i < this.state.simulations; i++) {
-      if (i % (this.state.simulations / 100) == 0) {
-        let progress = Math.round((i / this.state.simulations) * 100);
+    let killCounts = [];
+    this.setState({
+      progress: 0,
+      bestRewards: null,
+      worstRewards: null,
+      simulationPlot: null,
+    });
+
+    if (this.state.mode === 'clues' && !cluesData[this.state.clue]) {
+      await this.getClueData(this.state.clue);
+    }
+
+    const simulations = Math.max(0, Number(this.state.simulations) || 0);
+    if (!simulations) {
+      this.setState({
+        progress: 0,
+        bestRewards: null,
+        worstRewards: null,
+        simulationPlot: null,
+      });
+      return;
+    }
+
+    const progressStep = Math.max(1, Math.floor(simulations / 100));
+    let best;
+    let worst;
+    let bestKillCount = Infinity;
+    let worstKillCount = -Infinity;
+
+    for (let i = 0; i < simulations; i++) {
+      if (i % progressStep == 0) {
+        let progress = Math.round((i / simulations) * 100);
         this.setState({ progress });
         await pause();
       }
       let x = await this.lootFunction('f', this.state.mode, this.state);
+      const finishKillCount = lastKillCount(x);
       if (!skipGraph) {
-        arr.push(x[x.length - 1].kc);
-        items.push(x.length);
+        killCounts.push(finishKillCount);
       }
-      if (!best || x[x.length - 1].kc < best[best.length - 1].kc) {
+      if (!best || finishKillCount < bestKillCount) {
         best = x;
+        bestKillCount = finishKillCount;
       }
-      if (!worst || x[x.length - 1].kc > worst[worst.length - 1].kc) {
+      if (!worst || finishKillCount > worstKillCount) {
         worst = x;
+        worstKillCount = finishKillCount;
       }
     }
 
-    this.setState({ progress: 100, bestRewards: best, worstRewards: worst });
-    if (skipGraph) {
-      return;
-    }
-
-    const Plotly = await getPlotly();
-    let layout = {
-      xaxis: { title: { text: 'KC' } },
-      yaxis: { title: { text: '# of people' } },
-    };
-    Plotly.newPlot('histogram', [{ x: arr, type: 'histogram' }], layout);
-    layout.yaxis.title.text = '# of items received';
-    Plotly.newPlot('scatter', [{ x: arr, y: items, mode: 'markers', type: 'scatter' }], layout);
+    const simulationPlot = skipGraph ? null : buildSimulationPlot(killCounts);
+    this.setState(
+      {
+        progress: 100,
+        bestRewards: best,
+        worstRewards: worst,
+        simulationPlot,
+        plotMode: 'chance',
+      },
+      () => {
+        if (!skipGraph && simulationPlot) {
+          this.renderSimulationPlot();
+        }
+      }
+    );
   }
 
   async componentDidMount() {
@@ -608,7 +699,15 @@ class Osrs extends React.Component {
               &nbsp; Challenge Mode?{' '}
               <input
                 type="checkbox"
-                onChange={() => this.setState({ cms: !this.state.cms })}
+                onChange={() =>
+                  this.setState({
+                    cms: !this.state.cms,
+                    simulationPlot: null,
+                    progress: 0,
+                    bestRewards: null,
+                    worstRewards: null,
+                  })
+                }
                 checked={this.state.cms}
               />
             </span>
@@ -651,17 +750,16 @@ class Osrs extends React.Component {
           {this.state.mode === 'create' && (
             <span> (This will be wrong if your rates are very common) </span>
           )}
-          <br />
-          <span>
+          <div className="osrs-sim-row">
             <label> Plot results of a # of simulations </label>
             <input
               type="text"
               value={this.state.simulations}
               onChange={(e) => this.onChangeValueInput('simulations', e)}
             />
-          </span>
-          <button onClick={() => this.graphSimulation()}> Plot. </button>
-          <button onClick={() => this.graphSimulation(true)}> Sim without graph. </button>
+            <button onClick={() => this.graphSimulation()}> Plot </button>
+            <button onClick={() => this.graphSimulation(true)}> Sim without graph </button>
+          </div>
           <div className="items">
             {this.state.rewards
               ? this.state.rewards.map((item, i) => (
@@ -746,24 +844,30 @@ class Osrs extends React.Component {
           </div>
         ) : null}
         {this.state.progress > 0 && (
-          <span>
-            <div style={{ marginLeft: '20px' }}> {this.state.progress}% done </div>
-            <button style={{ margin: '5px' }} onClick={() => this.showPlotData('best')}>
-              {' '}
-              Show best simulation.{' '}
+          <div className="osrs-plot-controls">
+            <div className="osrs-progress"> {this.state.progress}% done </div>
+            <button
+              disabled={!this.state.bestRewards}
+              onClick={() => this.showPlotData('best')}
+            >
+              Show best simulation
             </button>
-            <button style={{ margin: '5px' }} onClick={() => this.showPlotData('worst')}>
-              {' '}
-              Show worst simulation.{' '}
+            <button
+              disabled={!this.state.worstRewards}
+              onClick={() => this.showPlotData('worst')}
+            >
+              Show worst simulation
             </button>
-            <button style={{ margin: '5px' }} onClick={() => this.clearPlots()}>
-              {' '}
-              Clear{' '}
-            </button>
-          </span>
+            <button onClick={() => this.clearPlots()}> Clear </button>
+          </div>
         )}
-        <div id="histogram"> </div>
-        <div id="scatter"> </div>
+        {this.state.simulationPlot && (
+          <SimulationPlotPanel
+            mode={this.state.plotMode}
+            onModeChange={this.setPlotMode}
+            summary={this.state.simulationPlot.summary}
+          />
+        )}
       </div>
     );
   }
@@ -786,6 +890,304 @@ function lastKillCount(rewards) {
 
 function formatNumber(value) {
   return Number(value.toFixed(2)).toLocaleString();
+}
+
+function formatKc(value) {
+  return Number.isFinite(value) ? Math.round(value).toLocaleString() : '-';
+}
+
+function shouldClearSimulationPlot(state) {
+  return ['points', 'teamSize', 'invocation', 'clue', 'simulations'].includes(state);
+}
+
+function buildSimulationPlot(killCounts) {
+  const sortedKillCounts = killCounts
+    .filter((killCount) => Number.isFinite(killCount) && killCount > 0)
+    .sort((a, b) => a - b);
+
+  if (!sortedKillCounts.length) {
+    return null;
+  }
+
+  return {
+    killCounts: sortedKillCounts,
+    curve: buildChanceCurve(sortedKillCounts),
+    summary: summarizeKillCounts(sortedKillCounts),
+  };
+}
+
+function buildChanceCurve(sortedKillCounts) {
+  const x = [0];
+  const y = [0];
+
+  sortedKillCounts.forEach((killCount, index) => {
+    if (killCount !== sortedKillCounts[index + 1]) {
+      x.push(killCount);
+      y.push(((index + 1) / sortedKillCounts.length) * 100);
+    }
+  });
+
+  return { x, y };
+}
+
+function summarizeKillCounts(sortedKillCounts) {
+  const total = sortedKillCounts.length;
+  const average =
+    sortedKillCounts.reduce((sum, killCount) => sum + killCount, 0) / total;
+
+  return {
+    total,
+    min: sortedKillCounts[0],
+    median: percentileNearest(sortedKillCounts, 0.5),
+    average,
+    p90: percentileNearest(sortedKillCounts, 0.9),
+    p95: percentileNearest(sortedKillCounts, 0.95),
+    max: sortedKillCounts[total - 1],
+  };
+}
+
+function percentileNearest(sortedValues, percentile) {
+  const index = Math.min(
+    sortedValues.length - 1,
+    Math.max(0, Math.ceil(sortedValues.length * percentile) - 1)
+  );
+  return sortedValues[index];
+}
+
+function buildSimulationFigure(simulationPlot, plotMode, completion) {
+  const theme = getPlotTheme();
+  const expectedCompletion = getExpectedCompletion(completion);
+  const markerLayer = buildSimulationMarkers(
+    simulationPlot.summary,
+    expectedCompletion,
+    theme
+  );
+  const xMax = Math.max(simulationPlot.summary.max, expectedCompletion || 0);
+  const commonLayout = {
+    autosize: true,
+    height: 390,
+    paper_bgcolor: 'rgba(0, 0, 0, 0)',
+    plot_bgcolor: hexToRgba(theme.bgDark, 0.62),
+    font: {
+      color: theme.textNormal,
+      family:
+        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+    },
+    margin: { t: 26, r: 24, b: 56, l: 68 },
+    xaxis: {
+      title: { text: 'KC' },
+      color: theme.textNormal,
+      gridcolor: hexToRgba(theme.borderLight, 0.24),
+      zeroline: false,
+      range: [0, Math.ceil(xMax * 1.04)],
+    },
+    shapes: markerLayer.shapes,
+    annotations: markerLayer.annotations,
+  };
+
+  if (plotMode === 'distribution') {
+    return {
+      data: [
+        {
+          x: simulationPlot.killCounts,
+          type: 'histogram',
+          marker: {
+            color: hexToRgba(theme.gold, 0.74),
+            line: { color: theme.borderDark, width: 1 },
+          },
+          hovertemplate: '%{x:,.0f} KC<br>%{y} simulations<extra></extra>',
+        },
+      ],
+      layout: {
+        ...commonLayout,
+        bargap: 0.06,
+        hovermode: 'closest',
+        yaxis: {
+          title: { text: 'Simulations' },
+          color: theme.textNormal,
+          gridcolor: hexToRgba(theme.borderLight, 0.2),
+          zeroline: false,
+        },
+      },
+      config: plotConfig,
+    };
+  }
+
+  return {
+    data: [
+      {
+        x: simulationPlot.curve.x,
+        y: simulationPlot.curve.y,
+        mode: 'lines',
+        type: 'scatter',
+        line: {
+          color: theme.gold,
+          width: 3,
+          shape: 'hv',
+        },
+        fill: 'tozeroy',
+        fillcolor: hexToRgba(theme.gold, 0.15),
+        hovertemplate: '%{x:,.0f} KC<br>%{y:.1f}% complete<extra></extra>',
+      },
+    ],
+    layout: {
+      ...commonLayout,
+      hovermode: 'x unified',
+      yaxis: {
+        title: { text: 'Chance completed' },
+        color: theme.textNormal,
+        gridcolor: hexToRgba(theme.borderLight, 0.2),
+        ticksuffix: '%',
+        range: [0, 100],
+        zeroline: false,
+      },
+    },
+    config: plotConfig,
+  };
+}
+
+const plotConfig = {
+  responsive: true,
+  displaylogo: false,
+  modeBarButtonsToRemove: ['lasso2d', 'select2d'],
+};
+
+function getPlotTheme() {
+  const styles = getComputedStyle(document.documentElement);
+  const token = (name, fallback) => styles.getPropertyValue(name).trim() || fallback;
+
+  return {
+    bgDark: token('--osrs-bg-brown-dark', '#2b261e'),
+    borderDark: token('--osrs-border-dark', '#1d1813'),
+    borderLight: token('--osrs-border-light', '#5d503f'),
+    gold: token('--osrs-text-gold', '#ff981f'),
+    textYellow: token('--osrs-text-yellow', '#ffff00'),
+    textNormal: token('--osrs-text-normal', '#dbceb4'),
+    textSuccess: token('--osrs-text-success', '#9fc77c'),
+    textDanger: token('--osrs-text-danger', '#d99890'),
+  };
+}
+
+function getExpectedCompletion(completion) {
+  return typeof completion === 'number' && Number.isFinite(completion) && completion > 0
+    ? completion
+    : null;
+}
+
+function buildSimulationMarkers(summary, expectedCompletion, theme) {
+  const markers = [
+    { label: 'Median', value: summary.median, color: theme.textYellow, dash: 'dot' },
+    { label: '90%', value: summary.p90, color: theme.textSuccess, dash: 'dash' },
+    { label: '95%', value: summary.p95, color: theme.textDanger, dash: 'dash' },
+  ];
+
+  if (expectedCompletion) {
+    markers.unshift({
+      label: 'Expected',
+      value: expectedCompletion,
+      color: theme.textNormal,
+      dash: 'longdash',
+    });
+  }
+
+  return {
+    shapes: markers.map((marker) => ({
+      type: 'line',
+      xref: 'x',
+      yref: 'paper',
+      x0: marker.value,
+      x1: marker.value,
+      y0: 0,
+      y1: 1,
+      line: {
+        color: marker.color,
+        width: 1.4,
+        dash: marker.dash,
+      },
+    })),
+    annotations: markers.map((marker, index) => ({
+      x: marker.value,
+      y: 1 - (index % 2) * 0.1,
+      xref: 'x',
+      yref: 'paper',
+      text: marker.label,
+      showarrow: false,
+      yanchor: 'bottom',
+      font: { color: marker.color, size: 11 },
+      bgcolor: hexToRgba(theme.bgDark, 0.82),
+      bordercolor: marker.color,
+      borderpad: 3,
+      borderwidth: 1,
+    })),
+  };
+}
+
+function hexToRgba(hex, alpha) {
+  const normalized = hex.replace('#', '').trim();
+
+  if (normalized.length !== 6) {
+    return `rgba(0, 0, 0, ${alpha})`;
+  }
+
+  const red = parseInt(normalized.slice(0, 2), 16);
+  const green = parseInt(normalized.slice(2, 4), 16);
+  const blue = parseInt(normalized.slice(4, 6), 16);
+  return `rgba(${red}, ${green}, ${blue}, ${alpha})`;
+}
+
+function SimulationPlotPanel({ mode, onModeChange, summary }) {
+  const stats = [
+    { label: 'Best run', value: `${formatKc(summary.min)} KC` },
+    { label: 'Median', value: `${formatKc(summary.median)} KC` },
+    { label: 'Average', value: `${formatKc(summary.average)} KC` },
+    { label: '90% done', value: `${formatKc(summary.p90)} KC` },
+    { label: '95% done', value: `${formatKc(summary.p95)} KC` },
+    { label: 'Worst run', value: `${formatKc(summary.max)} KC` },
+  ];
+
+  return (
+    <section className="osrs-simulation-panel" aria-label="Simulation odds">
+      <div className="osrs-simulation-panel-header">
+        <div>
+          <h3 className="osrs-simulation-title">Completion odds</h3>
+          <p className="osrs-simulation-meta">
+            {summary.total.toLocaleString()} simulated runs
+          </p>
+        </div>
+        <div className="osrs-chart-tabs" role="tablist" aria-label="Simulation chart view">
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'chance'}
+            className={`osrs-chart-tab ${mode === 'chance' ? 'is-active' : ''}`}
+            onClick={() => onModeChange('chance')}
+          >
+            Chance curve
+          </button>
+          <button
+            type="button"
+            role="tab"
+            aria-selected={mode === 'distribution'}
+            className={`osrs-chart-tab ${mode === 'distribution' ? 'is-active' : ''}`}
+            onClick={() => onModeChange('distribution')}
+          >
+            Distribution
+          </button>
+        </div>
+      </div>
+      <dl className="osrs-simulation-stats">
+        {stats.map((stat) => (
+          <div key={stat.label} className="osrs-simulation-stat">
+            <dt>{stat.label}</dt>
+            <dd>{stat.value}</dd>
+          </div>
+        ))}
+      </dl>
+      <div className="osrs-chart-shell">
+        <div id="simulation-chart" />
+      </div>
+    </section>
+  );
 }
 
 function SimulationResult({ simulation }) {

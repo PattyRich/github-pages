@@ -453,6 +453,8 @@ input[type='checkbox']:not([class]) {
   background-image: none !important;
   min-height: 100vh;
   width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
   color: #ffffff !important;
   position: relative;
   overflow: auto;
