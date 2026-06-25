@@ -12,6 +12,7 @@ export let data = {
     {
       name: 'Chromium ingot',
       rate: 3 / 512,
+      extra: true
     },
     {
       name: 'Virtus mask',
