@@ -1,4 +1,20 @@
 services:
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    ports:
+      - "${NGINX_HTTP_PORT:-80}:80"
+      - "${NGINX_HTTPS_PORT:-443}:443"
+    volumes:
+      - /etc/ssl/praynr-cert.pem:/etc/nginx/certs/praynr-cert.pem:ro
+      - /etc/ssl/praynr-private-key.pem:/etc/nginx/certs/praynr-private-key.pem:ro
+      - /etc/ssl/cloudflare.crt:/etc/nginx/certs/cloudflare.crt:ro
+    depends_on:
+      - api
+      - dozzle
+    restart: unless-stopped
+
   mongo:
     image: mongo:7.0
     ports:
@@ -16,8 +32,8 @@ services:
   api:
     build:
       context: ./services/api
-    ports:
-      - "127.0.0.1:8000:8000"
+    expose:
+      - "8000"
     env_file:
       - ./services/api/.env
     volumes:
@@ -44,8 +60,8 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       - dozzle_data:/data
       - ./dozzle/users.yml:/data/users.yml
-    ports:
-      - "127.0.0.1:8080:8080"
+    expose:
+      - "8080"
     environment:
       DOZZLE_AUTH_PROVIDER: simple
     restart: unless-stopped

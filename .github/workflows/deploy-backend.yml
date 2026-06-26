@@ -10,6 +10,7 @@ on:
     paths:
       - 'services/api/**'
       - 'docker-compose.prod.yml'
+      - '.dockerignore'
       - 'nginx/**'
       - '.github/workflows/deploy-backend.yml'
 
@@ -17,41 +18,31 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: SSH and Update Docker/Nginx
+      - name: SSH and Update Docker Stack
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
           script: |
+            set -e
             cd /var/www/server/github-pages
-            
-            # Backup current state in case of failure
-            CURRENT_COMMIT=$(git rev-parse HEAD)
             
             git fetch origin main
             git reset --hard origin/main
-            
-            # 1. Update Nginx Config safely
-            sudo cp /etc/nginx/cloudflare.conf /etc/nginx/cloudflare.conf.backup || true
-            sudo cp /etc/nginx/sites-available/default /etc/nginx/sites-available/default.backup || true
-            
-            sudo cp nginx/cloudflare.conf /etc/nginx/cloudflare.conf
-            sudo cp nginx/praynr.conf /etc/nginx/sites-available/default
-            
-            if sudo nginx -t; then
-              sudo systemctl reload nginx
+
+            docker compose -f docker-compose.prod.yml config >/tmp/praynr-compose-config.yml
+            docker compose -f docker-compose.prod.yml build api worker nginx
+            docker compose -f docker-compose.prod.yml run --rm --no-deps nginx nginx -t
+
+            docker compose -f docker-compose.prod.yml up -d --no-deps api worker
+
+            if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet nginx; then
+              echo "Host nginx is still active; skipping Docker nginx start until cutover."
+              echo "After stopping/disabling host nginx, run: docker compose -f docker-compose.prod.yml up -d nginx"
             else
-              echo "Nginx configuration test failed. Rolling back..."
-              sudo cp /etc/nginx/cloudflare.conf.backup /etc/nginx/cloudflare.conf
-              sudo cp /etc/nginx/sites-available/default.backup /etc/nginx/sites-available/default
-              sudo nginx -t
-              git reset --hard $CURRENT_COMMIT
-              exit 1
+              docker compose -f docker-compose.prod.yml up -d nginx
             fi
-            
-            # 2. Update Docker Containers
-            docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
 
       - name: Notify Discord on failure
         if: failure()

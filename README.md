@@ -26,7 +26,7 @@ A full-stack, production-deployed web application for the Old School RuneScape c
 | Database | MongoDB 7.0 |
 | File Storage | Docker volume-backed local filesystem for Bingo proof images |
 | Cache / Graph Store | Redis 7 |
-| Reverse Proxy | Nginx + Cloudflare |
+| Reverse Proxy | Dockerized Nginx + Cloudflare |
 | Infrastructure | AWS Lightsail, Docker Compose |
 | CI/CD | GitHub Actions |
 | Monitoring | Dozzle |
@@ -115,8 +115,8 @@ The Playwright suite drives a real Chromium browser against the running local st
 
 GitHub Actions handles all deployments automatically on push to `main`:
 
-- **Frontend** — Typechecked, built, and deployed to `/var/www/frontend` on the production server via SCP.
-- **Backend** — API and worker containers restarted on AWS Lightsail via SSH.
+- **Frontend** — Typechecked, then rebuilt into the production Nginx image on AWS Lightsail via SSH.
+- **Backend** — API, worker, and Nginx images rebuilt/restarted on AWS Lightsail via SSH.
 - **Maintenance** — Weekly job prunes old Docker images and updates base images.
 
 ---
@@ -127,8 +127,8 @@ GitHub Actions handles all deployments automatically on push to `main`:
 # Start all services
 docker compose -f docker-compose.prod.yml up -d
 
-# Rebuild only the API and worker after code changes (zero-downtime for other services)
-docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
+# Rebuild the API, worker, and Nginx after code/config changes
+docker compose -f docker-compose.prod.yml up -d --build api worker nginx
 
 # Stop (data is safe in named volumes)
 docker compose -f docker-compose.prod.yml down
@@ -136,6 +136,22 @@ docker compose -f docker-compose.prod.yml down
 
 > [!CAUTION]
 > **Never** use `docker compose down -v` in production — it destroys MongoDB, Redis, Dozzle, and proof image upload volumes permanently.
+
+Production Nginx runs as the `nginx` Compose service. Its image builds the React SPA and serves the generated files from `/usr/share/nginx/html`, so the production server no longer needs `/var/www/frontend`. TLS and Cloudflare authenticated-origin-pull certificates stay on the host and are mounted read-only from:
+
+```text
+/etc/ssl/praynr-cert.pem
+/etc/ssl/praynr-private-key.pem
+/etc/ssl/cloudflare.crt
+```
+
+When cutting over from host Nginx for the first time:
+
+```bash
+sudo systemctl stop nginx
+sudo systemctl disable nginx
+docker compose -f docker-compose.prod.yml up -d nginx
+```
 
 Production stores uploaded Bingo proof images in the Docker named volume `proof_uploads`, mounted into the API container at `/app/static/uploads`. The API writes proof files under `/app/static/uploads/proofs` and serves them from `/static/uploads/proofs/<filename>`. MongoDB stores only the proof image path, not the image bytes.
 

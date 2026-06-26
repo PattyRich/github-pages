@@ -19,14 +19,20 @@ jobs:
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
           script: |
+            set -e
             cd /var/www/server/github-pages
-            # Pull latest version of Dozzle (and other tools if added)
-            docker compose -f docker-compose.prod.yml pull dozzle
+            # Pull latest third-party images.
+            docker compose -f docker-compose.prod.yml pull mongo redis dozzle
             
-            # Rebuild API and Worker with the latest base images (--pull)
-            docker compose -f docker-compose.prod.yml build --pull api worker
+            # Rebuild custom images with the latest base images.
+            docker compose -f docker-compose.prod.yml build --pull api worker nginx
             
-            # Recreate containers if anything changed
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            # Recreate containers if anything changed. Before cutover, leave host nginx
+            # in charge of ports 80/443 and skip the Docker nginx container.
+            if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet nginx; then
+              docker compose -f docker-compose.prod.yml up -d --remove-orphans mongo redis api worker dozzle
+            else
+              docker compose -f docker-compose.prod.yml up -d --remove-orphans
+            fi
             # Optional: Clean up old images to save disk space
             docker image prune -f

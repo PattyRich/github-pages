@@ -13,8 +13,8 @@ root/
 ├── services/
 │   └── api/                # Unified Flask API + RQ background worker
 ├── scripts/                # Backup automation, data ingestion utilities
-├── nginx/                  # Production reverse proxy & SSL config
-└── .github/workflows/      # CI/CD pipelines (frontend SCP / backend SSH)
+├── nginx/                  # Dockerized production reverse proxy & SSL config
+└── .github/workflows/      # CI/CD pipelines (Docker rebuild/restart via SSH)
 ```
 
 ---
@@ -151,11 +151,11 @@ Separating concerns across key namespaces keeps Redis operationally simple — y
 
 **Hosting** — AWS Lightsail (Ubuntu 24.04). Lightsail gives predictable billing on a low-traffic community app without the operational overhead of EC2 + ALB + RDS.
 
-**Containers** — Docker Compose manages five services: `mongo`, `redis`, `api`, `worker`, `dozzle`. The API and worker share the same image but run different entry points — this avoids image drift between the two processes. Production also defines the named volume `proof_uploads`, mounted into the API container at `/app/static/uploads`, so uploaded proof images survive container rebuilds and restarts.
+**Containers** — Docker Compose manages six services: `nginx`, `mongo`, `redis`, `api`, `worker`, `dozzle`. The API and worker share the same image but run different entry points — this avoids image drift between the two processes. The Nginx image builds and serves the React SPA. Production also defines the named volume `proof_uploads`, mounted into the API container at `/app/static/uploads`, so uploaded proof images survive container rebuilds and restarts.
 
-**Networking** — Nginx terminates SSL and acts as the single entry point. It proxies API requests to uWSGI and serves the React SPA's static files from `/var/www/frontend`. Proof images are currently served by Flask from `/static/uploads/proofs/...` with long cache headers; they could be moved behind a direct Nginx `alias` later if image traffic grows. Cloudflare sits in front for DDoS mitigation and CDN.
+**Networking** — The `nginx` container terminates SSL and acts as the single entry point on ports 80/443. It proxies API requests to the `api` service over the Compose network, proxies Dozzle to the `dozzle` service, and serves the React SPA from `/usr/share/nginx/html` inside the image. TLS and Cloudflare authenticated-origin-pull certificates remain host-managed files mounted read-only into the container. Proof images are currently served by Flask from `/static/uploads/proofs/...` with long cache headers; they could be moved behind a direct Nginx `alias` later if image traffic grows. Cloudflare sits in front for DDoS mitigation and CDN.
 
-**CI/CD** — GitHub Actions runs on push to `main`. The frontend workflow typechecks, builds the Vite bundle, and SCPs the dist to the server. The backend workflow SSHes in and restarts only the `api` and `worker` containers — other services stay running. A weekly scheduled workflow prunes dangling images and updates base images.
+**CI/CD** — GitHub Actions runs on push to `main`. The frontend workflow typechecks, then SSHes into the server to rebuild and restart the Nginx image. The backend workflow SSHes in to rebuild and restart `api`, `worker`, and `nginx`. During the first transition, workflows skip starting Docker Nginx while the host Nginx system service is still active. A weekly scheduled workflow prunes dangling images and updates base images.
 
 **Monitoring** — Dozzle streams live container logs via a web UI at `dozzle.praynr.com`, authenticated via `dozzle/users.yml`. This means production debugging doesn't require SSH.
 

@@ -10,11 +10,13 @@ on:
     paths:
       - 'apps/frontend/src/**'
       - 'apps/frontend/public/**'
+      - 'apps/frontend/index.html'
       - 'apps/frontend/eslint.config.mjs'
       - 'apps/frontend/package.json'
       - 'apps/frontend/package-lock.json'
       - 'apps/frontend/tsconfig.json'
       - 'apps/frontend/vite.config.ts'
+      - '.dockerignore'
       - '.github/workflows/deploy-frontend.yml'
 
 jobs:
@@ -30,38 +32,35 @@ jobs:
           cache: 'npm'
           cache-dependency-path: apps/frontend/package-lock.json
           
-      - name: Build Frontend
+      - name: Typecheck Frontend
         working-directory: apps/frontend
         run: |
           npm ci
           npm run typecheck
-          CI=false npm run build
-          
-      - name: Upload to Temp Directory
-        uses: appleboy/scp-action@v0.1.7
-        with:
-          host: ${{ secrets.LIGHTSAIL_HOST }}
-          username: ${{ secrets.LIGHTSAIL_USER }}
-          key: ${{ secrets.LIGHTSAIL_KEY }}
-          source: "apps/frontend/dist/*"
-          target: "/tmp/frontend-release-${{ github.sha }}"
-          strip_components: 3
 
-      - name: Deploy Frontend Safely
+      - name: Rebuild Nginx Frontend Image
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
           script: |
-            # Ensure the target directory exists
-            mkdir -p /var/www/frontend
-            
-            # Sync new files to production seamlessly, deleting removed files
-            rsync -a --delete /tmp/frontend-release-${{ github.sha }}/ /var/www/frontend/
-            
-            # Clean up temp directory
-            rm -rf /tmp/frontend-release-${{ github.sha }}
+            set -e
+            cd /var/www/server/github-pages
+
+            git fetch origin main
+            git reset --hard origin/main
+
+            docker compose -f docker-compose.prod.yml config >/tmp/praynr-compose-config.yml
+            docker compose -f docker-compose.prod.yml build nginx
+            docker compose -f docker-compose.prod.yml run --rm --no-deps nginx nginx -t
+
+            if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet nginx; then
+              echo "Host nginx is still active; skipping Docker nginx start until cutover."
+              echo "After stopping/disabling host nginx, run: docker compose -f docker-compose.prod.yml up -d nginx"
+            else
+              docker compose -f docker-compose.prod.yml up -d nginx
+            fi
 
       - name: Notify Discord on failure
         if: failure()
