@@ -16,7 +16,9 @@ on:
       - 'apps/frontend/package-lock.json'
       - 'apps/frontend/tsconfig.json'
       - 'apps/frontend/vite.config.ts'
+      - 'docker-compose.prod.yml'
       - '.dockerignore'
+      - 'nginx/**'
       - '.github/workflows/deploy-frontend.yml'
 
 jobs:
@@ -57,9 +59,9 @@ jobs:
 
             if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet nginx; then
               echo "Host nginx is still active; skipping Docker nginx start until cutover."
-              echo "After stopping/disabling host nginx, run: docker compose -f docker-compose.prod.yml up -d nginx"
+              echo "After stopping/disabling host nginx, run: docker compose -f docker-compose.prod.yml up -d --no-deps nginx"
             else
-              docker compose -f docker-compose.prod.yml up -d nginx
+              docker compose -f docker-compose.prod.yml up -d --no-deps nginx
             fi
 
       - name: Notify Discord on failure

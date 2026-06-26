@@ -11,14 +11,13 @@ on:
       - 'services/api/**'
       - 'docker-compose.prod.yml'
       - '.dockerignore'
-      - 'nginx/**'
       - '.github/workflows/deploy-backend.yml'
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: SSH and Update Docker Stack
+      - name: SSH and Update Backend Containers
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
@@ -32,17 +31,8 @@ jobs:
             git reset --hard origin/main
 
             docker compose -f docker-compose.prod.yml config >/tmp/praynr-compose-config.yml
-            docker compose -f docker-compose.prod.yml build api worker nginx
-            docker compose -f docker-compose.prod.yml run --rm --no-deps nginx nginx -t
-
+            docker compose -f docker-compose.prod.yml build api worker
             docker compose -f docker-compose.prod.yml up -d --no-deps api worker
-
-            if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet nginx; then
-              echo "Host nginx is still active; skipping Docker nginx start until cutover."
-              echo "After stopping/disabling host nginx, run: docker compose -f docker-compose.prod.yml up -d nginx"
-            else
-              docker compose -f docker-compose.prod.yml up -d nginx
-            fi
 
       - name: Notify Discord on failure
         if: failure()

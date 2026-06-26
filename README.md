@@ -115,9 +115,9 @@ The Playwright suite drives a real Chromium browser against the running local st
 
 GitHub Actions handles all deployments automatically on push to `main`:
 
-- **Frontend** — Typechecked, then rebuilt into the production Nginx image on AWS Lightsail via SSH.
-- **Backend** — API, worker, and Nginx images rebuilt/restarted on AWS Lightsail via SSH.
-- **Maintenance** — Weekly job prunes old Docker images and updates base images.
+- **Frontend / Nginx** — Typechecked, then rebuilt into the production Nginx image on AWS Lightsail via SSH.
+- **Backend** — API and worker images rebuilt/restarted on AWS Lightsail via SSH without touching Nginx.
+- **Maintenance** — Weekly job prunes old Docker images and updates non-edge containers.
 
 ---
 
@@ -127,8 +127,13 @@ GitHub Actions handles all deployments automatically on push to `main`:
 # Start all services
 docker compose -f docker-compose.prod.yml up -d
 
-# Rebuild the API, worker, and Nginx after code/config changes
-docker compose -f docker-compose.prod.yml up -d --build api worker nginx
+# Rebuild/restart the API and worker without touching Nginx
+docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
+
+# Rebuild/restart Nginx only after frontend or reverse-proxy changes
+docker compose -f docker-compose.prod.yml build nginx
+docker compose -f docker-compose.prod.yml run --rm --no-deps nginx nginx -t
+docker compose -f docker-compose.prod.yml up -d --no-deps nginx
 
 # Stop (data is safe in named volumes)
 docker compose -f docker-compose.prod.yml down
@@ -145,12 +150,14 @@ Production Nginx runs as the `nginx` Compose service. Its image builds the React
 /etc/ssl/cloudflare.crt
 ```
 
+Recreating the `nginx` container briefly interrupts the edge process, so use the API/worker-only command for routine backend resets. Build and validate Nginx first, then recreate it only when frontend assets or reverse-proxy config actually changed.
+
 When cutting over from host Nginx for the first time:
 
 ```bash
 sudo systemctl stop nginx
 sudo systemctl disable nginx
-docker compose -f docker-compose.prod.yml up -d nginx
+docker compose -f docker-compose.prod.yml up -d --no-deps nginx
 ```
 
 Production stores uploaded Bingo proof images in the Docker named volume `proof_uploads`, mounted into the API container at `/app/static/uploads`. The API writes proof files under `/app/static/uploads/proofs` and serves them from `/static/uploads/proofs/<filename>`. MongoDB stores only the proof image path, not the image bytes.
