@@ -265,7 +265,7 @@ def validate_board_creation(data):
 def bingo_board_url(board_name, password):
   encoded_board_name = quote(str(board_name), safe='')
   encoded_password = quote(str(password), safe='')
-  return f'https://pattyrich.github.io/github-pages/#/bingo/{encoded_board_name}?password={encoded_password}'
+  return f'https://praynr.com/#/bingo/{encoded_board_name}?password={encoded_password}'
 
 def escape_discord_link_text(value):
   return str(value).replace('\\', '\\\\').replace('[', '\\[').replace(']', '\\]')
