@@ -2,6 +2,7 @@ from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask, jsonify, request, has_request_context, Response, stream_with_context
+from flask import g, request_finished, request_started
 from flask_cors import CORS
 import json
 import datetime
@@ -105,6 +106,12 @@ setup_indexes(mycol)
 # Request / response logging middleware
 # ---------------------------------------------------------------------------
 
+_SLOW_REQUEST_THRESHOLD_MS = 250
+
+@request_started.connect_via(app)
+def start_request_timer(sender, **extra):
+    g.request_start_time = time.perf_counter()
+
 @app.before_request
 def log_request():
     origin = request.headers.get('Origin', request.host)
@@ -114,6 +121,18 @@ def log_request():
 def log_response(response):
     log.info("<-- %s %s  status=%d", request.method, request.url, response.status_code)
     return response
+
+@request_finished.connect_via(app)
+def log_request_duration(sender, response, **extra):
+    duration_ms = (time.perf_counter() - g.request_start_time) * 1000
+    log_method = log.warning if duration_ms >= _SLOW_REQUEST_THRESHOLD_MS else log.info
+    log_method(
+        "Request completed  %s %s  status=%d  duration_ms=%.2f",
+        request.method,
+        request.url,
+        response.status_code,
+        duration_ms,
+    )
 
 @app.errorhandler(429)
 def rate_limit_handler(e):
