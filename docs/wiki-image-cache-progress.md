@@ -16,6 +16,7 @@ Implement a shared, lazy-loaded OSRS Wiki image cache. Wiki images should be dow
 - [x] Added deterministic SHA-256 URL keys, atomic writes, filesystem locks, redirect revalidation, byte/pixel limits, actual image validation, and SSRF protections.
 - [x] Added a separate persistent `wiki_image_cache` Docker volume mounted at `/app/static/wiki-images`.
 - [x] Added focused unit tests in `services/api/test_wiki_image_cache.py`.
+- [x] Expanded tests for board URL rewriting, animated GIF preservation, oversized responses, private redirect destinations, and invalid content.
 - [ ] Run the backend tests in a checkout/CI environment.
 - [ ] Perform a manual production-like smoke test with a real Wiki PNG and animated GIF/WebP.
 - [ ] Consider returning explicit 400/502 JSON responses from the cache route instead of Flask's default 500 for cache failures.
@@ -26,10 +27,12 @@ Implement a shared, lazy-loaded OSRS Wiki image cache. Wiki images should be dow
 - `835f24c` — Add shared lazy wiki image cache.
 - `cb69ec1` — Persist shared wiki image cache.
 - `221b68c` — Add wiki image cache tests.
+- `6267d33` — Update wiki image cache progress.
+- `3ca218e` — Expand wiki image cache coverage.
 
 ## Current branch diff
 
-The branch is four commits ahead of `main` and zero commits behind as of the implementation review. Changed files:
+The branch is ahead of `main` and zero commits behind as of the latest review. Changed files:
 
 - `services/api/imageManager.py`
 - `services/api/test_wiki_image_cache.py`
@@ -57,7 +60,7 @@ The branch is four commits ahead of `main` and zero commits behind as of the imp
    python -m pytest test_wiki_image_cache.py test_server.py -v
    ```
 
-3. Fix any failures before opening a PR.
+3. Fix any failures before marking the PR ready for review.
 4. Start the production Compose stack or an equivalent local setup and load a board containing a Wiki image.
 5. Confirm the first request creates one file in `/app/static/wiki-images` and later requests do not contact the Wiki.
 6. Confirm two boards using the same normalized Wiki URL share the same cached file.
@@ -66,6 +69,6 @@ The branch is four commits ahead of `main` and zero commits behind as of the imp
 
 ## Known limitations
 
-- No GitHub status checks were attached to the latest commit at the time of review, so tests have not been executed by CI yet.
+- Tests have not been executed in this chat environment because it has no runnable repository checkout.
 - The browser-facing cache URL lives under the existing board-upload route namespace for compatibility, although cached files are stored in a separate shared volume.
 - Failed downloads currently propagate through the existing Flask route and may produce a generic 500 response.
