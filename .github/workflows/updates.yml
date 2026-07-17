@@ -24,11 +24,12 @@ jobs:
             # Pull latest third-party images.
             docker compose -f docker-compose.prod.yml pull mongo redis dozzle
             
-            # Rebuild custom images with the latest base images.
+            # Rebuild custom images with the latest base images. A refreshed Nginx
+            # runtime is staged only; frontend deploys keep the live edge container
+            # in place and report when a maintenance restart is pending.
             docker compose -f docker-compose.prod.yml build --pull api worker nginx
             
-            # Recreate non-edge containers if anything changed. Nginx image rebuilds
-            # are applied by the frontend/Nginx deployment to avoid surprise 521s.
+            # Recreate non-edge containers if anything changed.
             docker compose -f docker-compose.prod.yml up -d --remove-orphans mongo redis api worker dozzle
             # Optional: Clean up old images to save disk space
             docker image prune -f

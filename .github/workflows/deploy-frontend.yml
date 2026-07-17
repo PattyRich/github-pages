@@ -16,6 +16,8 @@ on:
       - 'apps/frontend/package-lock.json'
       - 'apps/frontend/tsconfig.json'
       - 'apps/frontend/vite.config.ts'
+      - 'apps/frontend/Dockerfile'
+      - 'apps/frontend/install-release.sh'
       - 'docker-compose.prod.yml'
       - '.dockerignore'
       - 'nginx/**'
@@ -40,12 +42,15 @@ jobs:
           npm ci
           npm run typecheck
 
-      - name: Rebuild Nginx Frontend Image
+      - name: Publish Frontend Release
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          RELEASE_SHA: ${{ github.sha }}
         with:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
+          envs: RELEASE_SHA
           script: |
             set -e
             cd /var/www/server/github-pages
@@ -54,14 +59,33 @@ jobs:
             git reset --hard origin/main
 
             docker compose -f docker-compose.prod.yml config >/tmp/praynr-compose-config.yml
-            docker compose -f docker-compose.prod.yml build nginx
-            docker compose -f docker-compose.prod.yml run --rm --no-deps nginx nginx -t
+            docker compose -f docker-compose.prod.yml build frontend nginx
+            docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint nginx nginx -t
+            docker compose -f docker-compose.prod.yml run --rm --no-deps frontend "$RELEASE_SHA"
 
             if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet nginx; then
               echo "Host nginx is still active; skipping Docker nginx start until cutover."
               echo "After stopping/disabling host nginx, run: docker compose -f docker-compose.prod.yml up -d --no-deps nginx"
             else
-              docker compose -f docker-compose.prod.yml up -d --no-deps nginx
+              nginx_container="$(docker compose -f docker-compose.prod.yml ps -q nginx)"
+
+              if [ -z "$nginx_container" ] || ! docker inspect "$nginx_container" --format '{{range .Mounts}}{{println .Destination}}{{end}}' | grep -qx '/srv/frontend'; then
+                echo "Starting Nginx with the shared frontend release volume."
+                docker compose -f docker-compose.prod.yml up -d --no-deps nginx
+                nginx_container="$(docker compose -f docker-compose.prod.yml ps -q nginx)"
+              else
+                echo "Keeping the running Nginx edge container in place."
+              fi
+
+              docker exec "$nginx_container" test -s /srv/frontend/current/index.html
+              docker exec "$nginx_container" /usr/local/bin/reload-nginx-if-needed
+
+              desired_image="$(docker compose -f docker-compose.prod.yml images -q nginx)"
+              running_image="$(docker inspect "$nginx_container" --format '{{.Image}}')"
+              if [ "$desired_image" != "$running_image" ]; then
+                echo "A newer Nginx runtime image is staged but was not applied automatically."
+                echo "Recreate Nginx during a planned maintenance window to apply it."
+              fi
             fi
 
       - name: Notify Discord on failure
