@@ -6,15 +6,19 @@ import { ModalButton, ModalShell } from './ModalShell';
 import './FeedbackModal.css';
 
 interface FeedbackModalProps {
+  boardName?: string;
   handleClose: () => void;
 }
 
-const FeedbackModal = ({ handleClose }: FeedbackModalProps) => {
+const FeedbackModal = ({ boardName, handleClose }: FeedbackModalProps) => {
   const [feedback, setFeedback] = useState('');
   const [sent, setSent] = useState(false);
 
   function sendMessage(message: string) {
-    fetchPost('feedback', { message });
+    fetchPost('feedback', {
+      message,
+      ...(boardName ? { boardName } : {}),
+    });
     setSent(true);
   }
 

@@ -66,6 +66,26 @@ test('toggles completed and saves member progress', async () => {
   expect(props.handleClose).toHaveBeenCalled();
 });
 
+test('completes a tile without configured points as a zero-point tile', async () => {
+  const props = renderTileModal({
+    info: { ...baseInfo, points: '' },
+    teamInfo: { ...baseTeamInfo, currPoints: 0 },
+  });
+
+  fireEvent.click(screen.getByLabelText(/Completed\?/i));
+  fireEvent.click(screen.getByRole('button', { name: /Save/i }));
+
+  await waitFor(() => expect(props.change).toHaveBeenCalled());
+  expect(props.change).toHaveBeenCalledWith(
+    1,
+    2,
+    expect.objectContaining({
+      checked: true,
+      currPoints: 0,
+    })
+  );
+});
+
 test('general users can edit current points but not total points', () => {
   renderTileModal();
 

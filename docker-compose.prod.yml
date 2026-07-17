@@ -1,4 +1,12 @@
 services:
+  frontend:
+    build:
+      context: .
+      dockerfile: apps/frontend/Dockerfile
+    volumes:
+      - frontend_assets:/srv/frontend
+    restart: "no"
+
   nginx:
     build:
       context: .
@@ -10,9 +18,15 @@ services:
       - /etc/ssl/praynr-cert.pem:/etc/nginx/certs/praynr-cert.pem:ro
       - /etc/ssl/praynr-private-key.pem:/etc/nginx/certs/praynr-private-key.pem:ro
       - /etc/ssl/cloudflare.crt:/etc/nginx/certs/cloudflare.crt:ro
+      - ./nginx:/etc/nginx/praynr:ro
+      - frontend_assets:/srv/frontend:ro
     depends_on:
-      - api
-      - dozzle
+      frontend:
+        condition: service_completed_successfully
+      api:
+        condition: service_started
+      dozzle:
+        condition: service_started
     restart: unless-stopped
 
   mongo:
@@ -70,6 +84,7 @@ services:
     restart: unless-stopped
 
 volumes:
+  frontend_assets:
   mongo_data:
   redis_data:
   dozzle_data:

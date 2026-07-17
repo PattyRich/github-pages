@@ -115,7 +115,7 @@ The Playwright suite drives a real Chromium browser against the running local st
 
 GitHub Actions handles all deployments automatically on push to `main`:
 
-- **Frontend / Nginx** — Typechecked, then rebuilt into the production Nginx image on AWS Lightsail via SSH.
+- **Frontend / Nginx** — Typechecked, published atomically into the production frontend volume, then served by the existing Nginx edge container.
 - **Backend** — API and worker images rebuilt/restarted on AWS Lightsail via SSH without touching Nginx.
 - **Maintenance** — Weekly job prunes old Docker images and updates non-edge containers.
 
@@ -130,10 +130,16 @@ docker compose -f docker-compose.prod.yml up -d
 # Rebuild/restart the API and worker without touching Nginx
 docker compose -f docker-compose.prod.yml up -d --build --no-deps api worker
 
-# Rebuild/restart Nginx only after frontend or reverse-proxy changes
-docker compose -f docker-compose.prod.yml build nginx
-docker compose -f docker-compose.prod.yml run --rm --no-deps nginx nginx -t
-docker compose -f docker-compose.prod.yml up -d --no-deps nginx
+# Publish a frontend release without replacing Nginx
+docker compose -f docker-compose.prod.yml build frontend
+docker compose -f docker-compose.prod.yml run --rm --no-deps frontend "$(git rev-parse --short=12 HEAD)"
+
+# Validate and gracefully reload changed Nginx site configuration
+docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint nginx nginx -t
+docker exec "$(docker compose -f docker-compose.prod.yml ps -q nginx)" reload-nginx-if-needed
+
+# Apply a staged Nginx runtime/base-image update during a maintenance window
+docker compose -f docker-compose.prod.yml up -d --no-deps --force-recreate nginx
 
 # Stop (data is safe in named volumes)
 docker compose -f docker-compose.prod.yml down
@@ -142,7 +148,11 @@ docker compose -f docker-compose.prod.yml down
 > [!CAUTION]
 > **Never** use `docker compose down -v` in production — it destroys MongoDB, Redis, Dozzle, and proof image upload volumes permanently.
 
-Production Nginx runs as the `nginx` Compose service. Its image builds the React SPA and serves the generated files from `/usr/share/nginx/html`, so the production server no longer needs `/var/www/frontend`. TLS and Cloudflare authenticated-origin-pull certificates stay on the host and are mounted read-only from:
+Production Nginx runs as the long-lived `nginx` Compose service. The one-shot `frontend` service builds the React SPA and publishes it into the `frontend_assets` volume. Nginx serves `/srv/frontend/current`, an atomic symlink managed by the release installer. Hashed Vite assets are copied into `/srv/frontend/shared/assets`, so both the old and new HTML can resolve their assets during a deployment.
+
+The installer retains the active release plus four rollback releases. Shared assets are removed only when no retained release references them and they are older than seven days. Set `FRONTEND_ASSET_GRACE_DAYS` on the one-shot frontend service to adjust that browser-session grace period.
+
+TLS and Cloudflare authenticated-origin-pull certificates stay on the host and are mounted read-only from:
 
 ```text
 /etc/ssl/praynr-cert.pem
@@ -150,7 +160,12 @@ Production Nginx runs as the `nginx` Compose service. Its image builds the React
 /etc/ssl/cloudflare.crt
 ```
 
-Recreating the `nginx` container briefly interrupts the edge process, so use the API/worker-only command for routine backend resets. Build and validate Nginx first, then recreate it only when frontend assets or reverse-proxy config actually changed.
+Routine frontend deployments do not recreate Nginx. The release installer fully stages a new build and atomically switches the `current` symlink only after the copy succeeds. Nginx site configuration is mounted from `nginx/` and reloaded gracefully only when its hash changes.
+
+An actual Nginx runtime update, such as a new base image, `nginx/Dockerfile`, or top-level `nginx/nginx.conf`, still requires a planned container recreation because the single edge container owns ports 80/443. The deployment workflow stages that image and reports the pending restart instead of causing an unplanned outage.
+
+> [!IMPORTANT]
+> The first deployment after adopting the shared frontend volume recreates Nginx once to attach the volume. Frontend deployments after that cutover keep the edge container running.
 
 When cutting over from host Nginx for the first time:
 

@@ -2,6 +2,7 @@ from gevent import monkey
 monkey.patch_all()
 
 from flask import Flask, jsonify, request, has_request_context, Response, stream_with_context
+from flask import g
 from flask_cors import CORS
 import json
 import datetime
@@ -105,14 +106,25 @@ setup_indexes(mycol)
 # Request / response logging middleware
 # ---------------------------------------------------------------------------
 
+_SLOW_REQUEST_THRESHOLD_MS = 250
+
 @app.before_request
 def log_request():
+    g.request_start_time = time.perf_counter()
     origin = request.headers.get('Origin', request.host)
     log.info("--> %s %s  ip=%s  origin=%s", request.method, request.url, request.remote_addr, origin)
 
 @app.after_request
 def log_response(response):
-    log.info("<-- %s %s  status=%d", request.method, request.url, response.status_code)
+    duration_ms = (time.perf_counter() - g.request_start_time) * 1000
+    log_method = log.warning if duration_ms >= _SLOW_REQUEST_THRESHOLD_MS else log.info
+    log_method(
+        "<-- %s %s  status=%d  duration_ms=%.2f",
+        request.method,
+        request.url,
+        response.status_code,
+        duration_ms,
+    )
     return response
 
 @app.errorhandler(429)
@@ -185,9 +197,16 @@ def validate_curr_points(info, board_tile):
   if 'currPoints' not in info:
     return None
 
+  raw_curr_points = info['currPoints']
+  raw_tile_points = board_tile.get('points', 0)
+  if raw_curr_points is None or raw_curr_points == '':
+    raw_curr_points = 0
+  if raw_tile_points is None or raw_tile_points == '':
+    raw_tile_points = 0
+
   try:
-    curr_points = float(info['currPoints'])
-    tile_points = float(board_tile.get('points', 0))
+    curr_points = float(raw_curr_points)
+    tile_points = float(raw_tile_points)
   except (TypeError, ValueError):
     return 'Current points must be a number.'
 
@@ -751,6 +770,9 @@ def changeBoardSize(teamData, rows, cols, cache, boardName):
 def postFeedbackToDiscord():
   data = json.loads(request.data.decode(), parse_float=float)
   message = data.get('message')
+  board_name = data.get('boardName')
+  if isinstance(board_name, str) and board_name.strip():
+    message = f"Board: {board_name.strip()}\n\n{message}"
 
   result = postToDiscord(message, 'FEEDBACK_WEBHOOK')
   if not result:

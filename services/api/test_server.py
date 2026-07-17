@@ -562,6 +562,17 @@ class TestUpdateBoard(unittest.TestCase):
         )
         self.assertEqual(resp.status_code, 200)
 
+    def test_general_can_complete_tile_without_configured_points(self):
+        self.board["boardData"][0][0]["points"] = ""
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 0, "col": 0, "info": {"checked": True, "proof": "",
+                                           "currPoints": "", "teamId": 0}},
+        )
+        self.assertEqual(resp.status_code, 200)
+        updated_team = _mock_col.update_one.call_args[0][1]["$set"]["team-0"]
+        self.assertEqual(updated_team["teamData"][0][0]["currPoints"], 0)
+
     def test_general_rejects_points_above_tile_value(self):
         self.board["boardData"][0][0]["points"] = 10
         resp = self._put(
@@ -757,7 +768,7 @@ class TestFeedbackEndpoint(unittest.TestCase):
         self.client = _client(server.app)
 
     @patch("server.postToDiscord", return_value=True)
-    def test_feedback_success(self, _):
+    def test_feedback_success(self, post_to_discord):
         resp = self.client.post(
             "/feedback",
             data=json.dumps({"message": "Great app!"}),
@@ -765,6 +776,20 @@ class TestFeedbackEndpoint(unittest.TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         self.assertTrue(json.loads(resp.data)["success"])
+        post_to_discord.assert_called_once_with("Great app!", "FEEDBACK_WEBHOOK")
+
+    @patch("server.postToDiscord", return_value=True)
+    def test_bingo_feedback_includes_board_name(self, post_to_discord):
+        resp = self.client.post(
+            "/feedback",
+            data=json.dumps({"message": "A tile is stuck.", "boardName": "Clan Bingo"}),
+            content_type="application/json",
+        )
+        self.assertEqual(resp.status_code, 200)
+        post_to_discord.assert_called_once_with(
+            "Board: Clan Bingo\n\nA tile is stuck.",
+            "FEEDBACK_WEBHOOK",
+        )
 
     @patch("server.postToDiscord", return_value=False)
     def test_feedback_discord_failure_returns_400(self, _):
