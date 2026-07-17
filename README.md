@@ -150,6 +150,8 @@ docker compose -f docker-compose.prod.yml down
 
 Production Nginx runs as the long-lived `nginx` Compose service. The one-shot `frontend` service builds the React SPA and publishes it into the `frontend_assets` volume. Nginx serves `/srv/frontend/current`, an atomic symlink managed by the release installer. Hashed Vite assets are copied into `/srv/frontend/shared/assets`, so both the old and new HTML can resolve their assets during a deployment.
 
+The installer retains the active release plus four rollback releases. Shared assets are removed only when no retained release references them and they are older than seven days. Set `FRONTEND_ASSET_GRACE_DAYS` on the one-shot frontend service to adjust that browser-session grace period.
+
 TLS and Cloudflare authenticated-origin-pull certificates stay on the host and are mounted read-only from:
 
 ```text

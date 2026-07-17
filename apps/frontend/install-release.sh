@@ -4,10 +4,18 @@ set -eu
 source_dir="${FRONTEND_SOURCE_DIR:-/opt/frontend}"
 frontend_root="${FRONTEND_ROOT:-/srv/frontend}"
 requested_release="${1:-${FRONTEND_RELEASE:-manual}}"
+asset_grace_days="${FRONTEND_ASSET_GRACE_DAYS:-7}"
 
 case "$requested_release" in
   ''|*[!A-Za-z0-9._-]*)
     echo "Frontend release names may only contain letters, numbers, dots, underscores, and hyphens." >&2
+    exit 1
+    ;;
+esac
+
+case "$asset_grace_days" in
+  ''|*[!0-9]*)
+    echo "FRONTEND_ASSET_GRACE_DAYS must be a non-negative whole number." >&2
     exit 1
     ;;
 esac
@@ -64,5 +72,21 @@ for candidate in $(ls -1dt "$releases_dir"/* 2>/dev/null); do
     rm -rf "$candidate"
   fi
 done
+
+# Remove expired shared assets only when none of the retained releases reference them.
+export releases_dir shared_assets_dir
+find "$shared_assets_dir" -type f -mtime "+$asset_grace_days" -exec sh -c '
+  asset_path="$1"
+  relative_path="${asset_path#"$shared_assets_dir"/}"
+
+  for retained_release in "$releases_dir"/*; do
+    if [ -f "$retained_release/assets/$relative_path" ]; then
+      exit 0
+    fi
+  done
+
+  rm -f "$asset_path"
+  echo "Removed expired unreferenced asset: $relative_path"
+' sh '{}' \;
 
 echo "Frontend release $release is active."
