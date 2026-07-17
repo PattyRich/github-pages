@@ -185,9 +185,16 @@ def validate_curr_points(info, board_tile):
   if 'currPoints' not in info:
     return None
 
+  raw_curr_points = info['currPoints']
+  raw_tile_points = board_tile.get('points', 0)
+  if raw_curr_points is None or raw_curr_points == '':
+    raw_curr_points = 0
+  if raw_tile_points is None or raw_tile_points == '':
+    raw_tile_points = 0
+
   try:
-    curr_points = float(info['currPoints'])
-    tile_points = float(board_tile.get('points', 0))
+    curr_points = float(raw_curr_points)
+    tile_points = float(raw_tile_points)
   except (TypeError, ValueError):
     return 'Current points must be a number.'
 

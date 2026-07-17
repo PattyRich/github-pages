@@ -279,7 +279,8 @@ function TileModal({
     isDirtyRef.current = true;
     updateTileState((currentState) => ({
       checked: !currentState.checked,
-      currPoints: currentState.points,
+      currPoints:
+        currentState.points === '' || currentState.points == null ? 0 : currentState.points,
     }));
   }
 

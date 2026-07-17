@@ -562,6 +562,17 @@ class TestUpdateBoard(unittest.TestCase):
         )
         self.assertEqual(resp.status_code, 200)
 
+    def test_general_can_complete_tile_without_configured_points(self):
+        self.board["boardData"][0][0]["points"] = ""
+        resp = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {"row": 0, "col": 0, "info": {"checked": True, "proof": "",
+                                           "currPoints": "", "teamId": 0}},
+        )
+        self.assertEqual(resp.status_code, 200)
+        updated_team = _mock_col.update_one.call_args[0][1]["$set"]["team-0"]
+        self.assertEqual(updated_team["teamData"][0][0]["currPoints"], 0)
+
     def test_general_rejects_points_above_tile_value(self):
         self.board["boardData"][0][0]["points"] = 10
         resp = self._put(
