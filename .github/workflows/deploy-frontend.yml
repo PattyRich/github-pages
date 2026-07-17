@@ -80,9 +80,11 @@ jobs:
               docker exec "$nginx_container" test -s /srv/frontend/current/index.html
               docker exec "$nginx_container" /usr/local/bin/reload-nginx-if-needed
 
-              desired_image="$(docker compose -f docker-compose.prod.yml images -q nginx)"
               running_image="$(docker inspect "$nginx_container" --format '{{.Image}}')"
-              if [ "$desired_image" != "$running_image" ]; then
+              desired_image="$(docker compose -f docker-compose.prod.yml images -q nginx 2>/dev/null || true)"
+              if [ -z "$desired_image" ]; then
+                echo "Nginx runtime image metadata is unavailable; skipping the optional staged-image comparison."
+              elif [ "$desired_image" != "$running_image" ]; then
                 echo "A newer Nginx runtime image is staged but was not applied automatically."
                 echo "Recreate Nginx during a planned maintenance window to apply it."
               fi
