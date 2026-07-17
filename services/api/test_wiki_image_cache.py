@@ -9,12 +9,14 @@ import requests
 from flask import Flask
 from PIL import Image
 
+import wikiImageCache as wiki_image_cache_module
 from imageManager import ImageStore
 from wikiImageCache import (
   WikiImageCapacityError,
   WikiImageCache,
   WikiImageRequestError,
   WikiImageUpstreamError,
+  exclusive_file_lock,
 )
 
 
@@ -61,6 +63,26 @@ class FakeResponse:
   def iter_content(self, chunk_size):
     for offset in range(0, len(self.body), chunk_size):
       yield self.body[offset:offset + chunk_size]
+
+
+class TestExclusiveFileLock(unittest.TestCase):
+  def test_waits_without_using_a_blocking_lock(self):
+    with tempfile.TemporaryFile() as lock_file:
+      with (
+        patch.object(
+          wiki_image_cache_module,
+          "_try_lock_file",
+          side_effect=(False, False, True),
+        ),
+        patch.object(wiki_image_cache_module, "_unlock_file") as unlock,
+        patch.object(wiki_image_cache_module.time, "sleep") as sleep,
+      ):
+        with exclusive_file_lock(lock_file):
+          pass
+
+    self.assertEqual(sleep.call_count, 2)
+    sleep.assert_called_with(0.05)
+    unlock.assert_called_once_with(lock_file)
 
 
 class TestWikiImageCache(unittest.TestCase):

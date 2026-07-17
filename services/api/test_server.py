@@ -241,39 +241,6 @@ class TestWikiImageEndpoint(unittest.TestCase):
         self.assertIn("cache full", json.loads(resp.data)["message"])
 
 
-class TestPublicBoardImage(unittest.TestCase):
-    @patch.object(server.board_images, "public_url", return_value="/cached/pixel")
-    def test_pixel_image_is_normalized_before_caching(self, public_url):
-        image = {
-            "url": (
-                "https://oldschool.runescape.wiki/images/thumb/"
-                "Twisted_bow_detail.png/180px-Twisted_bow_detail.png"
-            ),
-            "usePixel": True,
-        }
-
-        result = server.public_board_image(image, "osrs")
-
-        self.assertEqual(result["url"], "/cached/pixel")
-        public_url.assert_called_once_with(
-            "https://oldschool.runescape.wiki/images/Twisted_bow.png"
-        )
-
-    @patch.object(server.board_images, "public_url", return_value="/cached/thumbnail")
-    def test_generic_board_keeps_thumbnail_source(self, public_url):
-        source_url = (
-            "https://oldschool.runescape.wiki/images/thumb/"
-            "Twisted_bow_detail.png/180px-Twisted_bow_detail.png"
-        )
-
-        server.public_board_image(
-            {"url": source_url, "usePixel": True},
-            "generic",
-        )
-
-        public_url.assert_called_once_with(source_url)
-
-
 # ---------------------------------------------------------------------------
 # Tests: auth() helper
 #

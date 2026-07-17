@@ -6,8 +6,8 @@ from flask import g
 from flask_cors import CORS
 import json
 import datetime
+import logging
 import math
-import re
 import time
 import requests
 import pymongo
@@ -23,7 +23,7 @@ from wikiImageCache import (
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import RequestEntityTooLarge
 import os
-from urllib.parse import quote, unquote
+from urllib.parse import quote
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -114,15 +114,27 @@ setup_indexes(mycol)
 # ---------------------------------------------------------------------------
 
 _SLOW_REQUEST_THRESHOLD_MS = 250
+_QUIET_REQUEST_ENDPOINTS = frozenset(("cached_wiki_image", "uploaded_board_image"))
+
+class _BoardImageAccessFilter(logging.Filter):
+    def filter(self, record):
+        return f"{board_images.url_prefix}/" not in record.getMessage()
+
+logging.getLogger("werkzeug").addFilter(_BoardImageAccessFilter())
 
 @app.before_request
 def log_request():
+    if request.endpoint in _QUIET_REQUEST_ENDPOINTS:
+        g.skip_request_log = True
+        return
     g.request_start_time = time.perf_counter()
     origin = request.headers.get('Origin', request.host)
     log.info("--> %s %s  ip=%s  origin=%s", request.method, request.url, request.remote_addr, origin)
 
 @app.after_request
 def log_response(response):
+    if getattr(g, 'skip_request_log', False):
+        return response
     duration_ms = (time.perf_counter() - g.request_start_time) * 1000
     log_method = log.warning if duration_ms >= _SLOW_REQUEST_THRESHOLD_MS else log.info
     log_method(
@@ -234,22 +246,12 @@ def clamp_visible_rows(value, rows):
     visible_rows = rows
   return max(1, min(visible_rows, rows))
 
-def pixel_image_url(image_url):
-  match = re.search(r'/thumb/([^/]+)_detail\.png/', image_url)
-  if not match:
-    return image_url
-  name = unquote(match.group(1))
-  name = name[:1].upper() + name[1:].lower()
-  return f"https://oldschool.runescape.wiki/images/{quote(name, safe='')}.png"
-
-def public_board_image(image, cache_board_type='osrs'):
+def public_board_image(image):
   if not isinstance(image, dict):
     return image
   image_url = image.get('url')
   if not image_url:
     return None
-  if cache_board_type == 'osrs' and image.get('usePixel') and not image.get('animated'):
-    image_url = pixel_image_url(image_url)
   return { **image, 'url': board_images.public_url(image_url) }
 
 def strip_image_opacity(image):
@@ -503,7 +505,7 @@ def getBoard(boardName, password, pwtype):
   visibleRows = board_visible_rows(cache)
   for row in boardData:
     for tile in row:
-      tile['image'] = public_board_image(tile.get('image'), cacheBoardType)
+      tile['image'] = public_board_image(tile.get('image'))
   if pwtype == 'general':
     boardData = slice_board_rows(boardData, visibleRows)
   teamData = []

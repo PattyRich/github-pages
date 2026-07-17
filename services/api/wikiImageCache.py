@@ -7,6 +7,7 @@ import re
 import secrets
 import socket
 import tempfile
+import time
 from contextlib import contextmanager
 from pathlib import Path
 from urllib.parse import parse_qs, urlencode, urljoin, urlparse, urlunparse
@@ -23,13 +24,17 @@ log = get_logger(__name__)
 if os.name == "nt":
   import msvcrt
 
-  def _lock_file(lock_file):
+  def _try_lock_file(lock_file):
     lock_file.seek(0)
     if lock_file.read(1) == b"":
       lock_file.write(b"\0")
       lock_file.flush()
     lock_file.seek(0)
-    msvcrt.locking(lock_file.fileno(), msvcrt.LK_LOCK, 1)
+    try:
+      msvcrt.locking(lock_file.fileno(), msvcrt.LK_NBLCK, 1)
+      return True
+    except OSError:
+      return False
 
   def _unlock_file(lock_file):
     lock_file.seek(0)
@@ -37,8 +42,12 @@ if os.name == "nt":
 else:
   import fcntl
 
-  def _lock_file(lock_file):
-    fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
+  def _try_lock_file(lock_file):
+    try:
+      fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
+      return True
+    except BlockingIOError:
+      return False
 
   def _unlock_file(lock_file):
     fcntl.flock(lock_file.fileno(), fcntl.LOCK_UN)
@@ -59,7 +68,9 @@ class WikiImageCapacityError(ValueError):
 @contextmanager
 def exclusive_file_lock(lock_file):
   """Hold an advisory exclusive lock on Linux or Windows."""
-  _lock_file(lock_file)
+  while not _try_lock_file(lock_file):
+    # gevent patches time.sleep, so this yields instead of freezing the worker.
+    time.sleep(0.05)
   try:
     yield
   finally:
@@ -306,7 +317,6 @@ class WikiImageCache:
 
     existing = self._find_existing(cache_key)
     if existing:
-      log.info("wiki image cache hit  key=%s", cache_key)
       return existing
 
     lock_path = self.cache_root / f".wiki-cache-{cache_key[:2]}.lock"
@@ -314,7 +324,6 @@ class WikiImageCache:
       with exclusive_file_lock(lock_file):
         existing = self._find_existing(cache_key)
         if existing:
-          log.info("wiki image cache hit after lock  key=%s", cache_key)
           return existing
         log.info("wiki image cache miss  key=%s", cache_key)
         return self._download(normalized_url, cache_key)
