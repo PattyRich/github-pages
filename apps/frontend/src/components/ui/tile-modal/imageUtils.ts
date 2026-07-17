@@ -10,6 +10,19 @@ export function detectURLs(message?: string) {
   return res || [];
 }
 
+export function normaliseExternalUrl(url: string) {
+  return /^https?:\/\//i.test(url) ? url : `https://${url}`;
+}
+
+export function formatProofLinkLabel(url: string) {
+  try {
+    const parsedUrl = new URL(normaliseExternalUrl(url));
+    return parsedUrl.hostname.replace(/^www\./i, '') || 'Proof link';
+  } catch {
+    return 'Proof link';
+  }
+}
+
 export function isAnimatedImageUrl(url?: string) {
   if (!url) return false;
   return /^data:image\/gif[;,]/i.test(url) || /\.gif(?:[?#]|$)/i.test(url);

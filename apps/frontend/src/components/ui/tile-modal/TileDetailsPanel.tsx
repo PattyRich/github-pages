@@ -4,7 +4,12 @@ import { CheckboxField } from '../FormControls';
 import ImageLightbox from '../ImageLightbox';
 import { ModalButton } from '../ModalShell';
 import ProofImageGrid from '../ProofImageGrid';
-import { detectURLs, isAnimatedTileImage } from './imageUtils';
+import {
+  detectURLs,
+  formatProofLinkLabel,
+  isAnimatedTileImage,
+  normaliseExternalUrl,
+} from './imageUtils';
 import type { TileModalState } from './types';
 
 interface TileDetailsPanelProps {
@@ -46,6 +51,12 @@ export default function TileDetailsPanel({
   toggleImageSelect,
   toggleUsePixel,
 }: TileDetailsPanelProps) {
+  const proofLinks = detectURLs(state.proof).map((url) => ({
+    href: normaliseExternalUrl(url),
+    label: formatProofLinkLabel(url),
+    url,
+  }));
+
   return (
     <>
       <EditableInput
@@ -177,24 +188,43 @@ export default function TileDetailsPanel({
 
       {isGeneral && (
         <>
-          <div className="flex">
+          <div className="tm-proof-row">
             <EditableInput
               placeholder="Paste imgur or any link"
               value={state.proof}
               textArea
+              autoGrow
+              autoGrowMaxHeight={220}
               stateKey="proof"
               change={inputState}
               title="Proof"
             />
-            <div className="flex" style={{ flexWrap: 'wrap' }}>
-              {detectURLs(state.proof).map((url, i) => (
-                <div key={url} style={{ margin: '5px' }}>
-                  <a target="_blank" href={url} rel="noreferrer">
-                    Link-{i}
-                  </a>
+            {proofLinks.length > 0 && (
+              <nav className="tm-proof-links" aria-label="Proof links">
+                <span className="tm-proof-links-label">Open proof</span>
+                <div className="tm-proof-links-list">
+                  {proofLinks.map(({ href, label, url }, i) => (
+                    <a
+                      key={`${url}-${i}`}
+                      className="tm-proof-link"
+                      target="_blank"
+                      href={href}
+                      rel="noreferrer"
+                      title={url}
+                      aria-label={`Open proof link ${i + 1}: ${label}, opens in a new tab`}
+                    >
+                      <span className="tm-proof-link-number" aria-hidden="true">
+                        {i + 1}
+                      </span>
+                      <span className="tm-proof-link-label">{label}</span>
+                      <span className="tm-proof-link-icon" aria-hidden="true">
+                        &#8599;
+                      </span>
+                    </a>
+                  ))}
                 </div>
-              ))}
-            </div>
+              </nav>
+            )}
           </div>
 
           <ProofImageGrid
