@@ -1,217 +1,18 @@
 import base64
-import fcntl
-import hashlib
 import io
-import ipaddress
 import os
-import socket
-import tempfile
 import uuid
 from pathlib import Path
-from urllib.parse import quote, urlparse, urlunparse
+from urllib.parse import urlparse
 
-import requests
-from flask import request, send_file, send_from_directory
+from flask import request, send_from_directory
 from PIL import Image
 
 from imgSizeReducer import reduce_image_size
 from logger import get_logger
+from wikiImageCache import WikiImageCache, WikiImageRequestError
 
 log = get_logger(__name__)
-
-
-class WikiImageCache:
-  """Shared, persistent, download-on-first-use cache for approved Wiki images."""
-
-  FORMAT_EXTENSIONS = {
-    "GIF": "gif",
-    "PNG": "png",
-    "JPEG": "jpg",
-    "WEBP": "webp",
-  }
-
-  def __init__(
-    self,
-    cache_root,
-    allowed_hosts=None,
-    max_source_bytes=8 * 1024 * 1024,
-    max_pixels=16_000_000,
-    connect_timeout=5,
-    read_timeout=30,
-  ):
-    self.cache_root = Path(cache_root)
-    self.allowed_hosts = frozenset(
-      host.lower().rstrip(".")
-      for host in (allowed_hosts or ("oldschool.runescape.wiki", "runescape.wiki"))
-    )
-    self.max_source_bytes = max_source_bytes
-    self.max_pixels = max_pixels
-    self.connect_timeout = connect_timeout
-    self.read_timeout = read_timeout
-
-  def normalize_url(self, source_url):
-    if not isinstance(source_url, str) or not source_url.strip():
-      raise ValueError("Expected a Wiki image URL")
-
-    parsed = urlparse(source_url.strip())
-    hostname = (parsed.hostname or "").lower().rstrip(".")
-    if parsed.scheme != "https":
-      raise ValueError("Only HTTPS Wiki image URLs are supported")
-    if parsed.username or parsed.password:
-      raise ValueError("Wiki image URLs cannot contain credentials")
-    if hostname not in self.allowed_hosts:
-      raise ValueError("Image URL is not from an approved Wiki host")
-
-    return urlunparse(("https", hostname, parsed.path, parsed.params, parsed.query, ""))
-
-  def is_allowed_url(self, source_url):
-    try:
-      self.normalize_url(source_url)
-      return True
-    except ValueError:
-      return False
-
-  def cache_key(self, normalized_url):
-    return hashlib.sha256(normalized_url.encode("utf-8")).hexdigest()
-
-  def _validate_public_host(self, source_url):
-    hostname = urlparse(source_url).hostname
-    try:
-      results = socket.getaddrinfo(hostname, 443, type=socket.SOCK_STREAM)
-    except socket.gaierror as exc:
-      raise ValueError("Wiki image host could not be resolved") from exc
-
-    for result in results:
-      address = ipaddress.ip_address(result[4][0])
-      if (
-        address.is_private
-        or address.is_loopback
-        or address.is_link_local
-        or address.is_reserved
-        or address.is_multicast
-        or address.is_unspecified
-      ):
-        raise ValueError("Wiki image host resolved to a non-public address")
-
-  def _find_existing(self, cache_key):
-    matches = sorted(self.cache_root.glob(f"{cache_key}.*"))
-    return matches[0] if matches else None
-
-  def _validate_image(self, image_bytes):
-    try:
-      with Image.open(io.BytesIO(image_bytes)) as image:
-        if image.width * image.height > self.max_pixels:
-          raise ValueError("Wiki image dimensions are too large")
-        extension = self.FORMAT_EXTENSIONS.get(image.format)
-        if not extension:
-          raise ValueError("Unsupported Wiki image format")
-        image.verify()
-        return extension
-    except ValueError:
-      raise
-    except Exception as exc:
-      raise ValueError("Downloaded resource is not a readable image") from exc
-
-  def _download(self, normalized_url, cache_key):
-    self._validate_public_host(normalized_url)
-    headers = {
-      "User-Agent": "Praynr OSRS shared image cache (contact: patrickrich95@gmail.com)",
-      "Accept": "image/gif,image/webp,image/png,image/jpeg",
-    }
-
-    try:
-      with requests.get(
-        normalized_url,
-        headers=headers,
-        stream=True,
-        timeout=(self.connect_timeout, self.read_timeout),
-        allow_redirects=True,
-      ) as response:
-        response.raise_for_status()
-        final_url = self.normalize_url(response.url)
-        self._validate_public_host(final_url)
-
-        content_length = response.headers.get("Content-Length")
-        if content_length:
-          try:
-            if int(content_length) > self.max_source_bytes:
-              raise ValueError("Wiki image is too large")
-          except ValueError as exc:
-            if str(exc) == "Wiki image is too large":
-              raise
-
-        image_bytes = bytearray()
-        for chunk in response.iter_content(chunk_size=64 * 1024):
-          if not chunk:
-            continue
-          image_bytes.extend(chunk)
-          if len(image_bytes) > self.max_source_bytes:
-            raise ValueError("Wiki image is too large")
-    except ValueError:
-      raise
-    except requests.RequestException as exc:
-      raise ValueError("Unable to download Wiki image") from exc
-
-    extension = self._validate_image(bytes(image_bytes))
-    destination = self.cache_root / f"{cache_key}.{extension}"
-
-    with tempfile.NamedTemporaryFile(
-      dir=self.cache_root,
-      prefix=f".{cache_key}-",
-      delete=False,
-    ) as temporary:
-      temporary.write(image_bytes)
-      temporary_path = Path(temporary.name)
-
-    try:
-      os.replace(temporary_path, destination)
-    finally:
-      if temporary_path.exists():
-        temporary_path.unlink()
-
-    log.info(
-      "wiki image cached  host=%s  key=%s  bytes=%d",
-      urlparse(normalized_url).hostname,
-      cache_key,
-      len(image_bytes),
-    )
-    return destination
-
-  def get_or_download(self, source_url):
-    normalized_url = self.normalize_url(source_url)
-    cache_key = self.cache_key(normalized_url)
-    self.cache_root.mkdir(parents=True, exist_ok=True)
-
-    existing = self._find_existing(cache_key)
-    if existing:
-      log.info("wiki image cache hit  key=%s", cache_key)
-      return existing
-
-    lock_path = self.cache_root / f".{cache_key}.lock"
-    with lock_path.open("a+b") as lock_file:
-      fcntl.flock(lock_file.fileno(), fcntl.LOCK_EX)
-      existing = self._find_existing(cache_key)
-      if existing:
-        log.info("wiki image cache hit after lock  key=%s", cache_key)
-        return existing
-      log.info("wiki image cache miss  key=%s", cache_key)
-      return self._download(normalized_url, cache_key)
-
-  def public_url(self, source_url, route_prefix):
-    normalized_url = self.normalize_url(source_url)
-    return (
-      request.host_url.rstrip("/")
-      + route_prefix
-      + "/wiki-cache?url="
-      + quote(normalized_url, safe="")
-    )
-
-  def serve(self, source_url):
-    path = self.get_or_download(source_url)
-    response = send_file(path, conditional=True)
-    response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
-    response.headers["X-Content-Type-Options"] = "nosniff"
-    return response
 
 
 class ImageStore:
@@ -323,9 +124,15 @@ class ImageStore:
   def storage_url(self, image):
     if not isinstance(image, str):
       return image
+    parsed = urlparse(image)
+    if self.remote_cache:
+      source_url = self.remote_cache.source_url_from_cache_url(image, self.url_prefix)
+      if source_url:
+        return source_url
+      if parsed.path == f"{self.url_prefix}/wiki-cache":
+        return image
     if image.startswith(self.url_prefix + "/"):
       return image
-    parsed = urlparse(image)
     if parsed.path.startswith(self.url_prefix + "/"):
       return parsed.path
     return image
@@ -349,14 +156,14 @@ class ImageStore:
       self.delete(image)
 
   def serve(self, filename):
-    if filename == "wiki-cache" and self.remote_cache:
-      source_url = request.args.get("url", "").strip()
-      if not source_url:
-        raise ValueError("Missing Wiki image URL")
-      return self.remote_cache.serve(source_url)
     response = send_from_directory(self.upload_root, filename)
     response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     return response
+
+  def serve_remote(self, source_url, signature):
+    if not self.remote_cache:
+      raise WikiImageRequestError("Wiki image caching is not configured")
+    return self.remote_cache.serve(source_url, signature)
 
 
 _static = Path(__file__).parent / "static" / "uploads"
@@ -369,13 +176,7 @@ _max_animation_total_pixels = int(os.environ.get("IMAGE_UPLOAD_MAX_ANIMATION_TOT
 _animation_workers = int(os.environ.get("IMAGE_UPLOAD_ANIMATION_WORKERS", min(4, os.cpu_count() or 1)))
 _animated_webp_method = int(os.environ.get("IMAGE_UPLOAD_ANIMATION_WEBP_METHOD", 4))
 
-wiki_image_cache = WikiImageCache(
-  cache_root=Path(os.environ.get("WIKI_IMAGE_CACHE_DIR", Path(__file__).parent / "static" / "wiki-images")),
-  max_source_bytes=int(os.environ.get("WIKI_IMAGE_MAX_SOURCE_BYTES", _max_source_bytes)),
-  max_pixels=int(os.environ.get("WIKI_IMAGE_MAX_PIXELS", _max_pixels)),
-  connect_timeout=float(os.environ.get("WIKI_IMAGE_CONNECT_TIMEOUT", 5)),
-  read_timeout=float(os.environ.get("WIKI_IMAGE_READ_TIMEOUT", 30)),
-)
+wiki_image_cache = WikiImageCache()
 
 proof_images = ImageStore(
   url_prefix="/static/uploads/proofs",

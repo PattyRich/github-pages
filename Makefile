@@ -94,7 +94,7 @@ test:
 	$(MAKE) --no-print-directory test-e2e
 
 test-backend:
-	$(PYTHON) -m pytest $(SERVER_DIR)/test_server.py -q
+	$(PYTHON) -m pytest $(SERVER_DIR)/test_server.py $(SERVER_DIR)/test_wiki_image_cache.py -q
 
 test-frontend-typecheck:
 	cd $(FRONTEND_DIR) && npm run typecheck

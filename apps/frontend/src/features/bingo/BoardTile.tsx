@@ -105,7 +105,7 @@ export default function BoardTile({
               maxHeight: showTileTitle ? '78%' : 'calc(100% - 8px)',
               imageRendering: usePixelImage ? 'pixelated' : 'auto',
             }}
-            src={usePixelImage ? getPixelUrl(info.image.url) : info.image.url}
+            src={info.image.url}
             alt=""
           />
         )}
@@ -168,16 +168,6 @@ function getTileTitleFontSize(title = '') {
 
 function getTileImageOpacity(image?: TileInfo['image']) {
   return `${image?.opacity ?? 100}%`;
-}
-
-function getPixelUrl(url?: string) {
-  if (!url) return url;
-  const match = url.match(/\/thumb\/([^/]+)_detail\.png\//);
-  if (match) {
-    const name = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
-    return `https://oldschool.runescape.wiki/images/${name}.png`;
-  }
-  return url;
 }
 
 function isAnimatedTileImage(image?: TileInfo['image']) {

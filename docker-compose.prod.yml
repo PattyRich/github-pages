@@ -50,8 +50,6 @@ services:
       - "8000"
     env_file:
       - ./services/api/.env
-    environment:
-      WIKI_IMAGE_CACHE_DIR: /app/static/wiki-images
     volumes:
       - proof_uploads:/app/static/uploads
       - wiki_image_cache:/app/static/wiki-images

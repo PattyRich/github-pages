@@ -7,17 +7,23 @@ from flask_cors import CORS
 import json
 import datetime
 import math
+import re
 import time
 import requests
 import pymongo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from imgSizeReducer import reduce_image_size
-from imageManager import proof_images, board_images
+from imageManager import board_images, proof_images
+from wikiImageCache import (
+    WikiImageCapacityError,
+    WikiImageRequestError,
+    WikiImageUpstreamError,
+)
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import RequestEntityTooLarge
 import os
-from urllib.parse import quote
+from urllib.parse import quote, unquote
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -76,6 +82,7 @@ disallowedRouteChars = ['?', '#', '/', '\\']
 testBoardPrefix = os.environ.get("PLAYWRIGHT_E2E_BOARD_PREFIX", os.environ.get("SELENIUM_E2E_BOARD_PREFIX", "__playwright_e2e__"))
 maxProofImages = int(os.environ.get("MAX_PROOF_IMAGES_PER_TILE", 10))
 healthAnalyticsCacheSeconds = max(0, int(os.environ.get("HEALTH_ANALYTICS_CACHE_SECONDS", 60)))
+WIKI_IMAGE_CACHE_RATE_LIMIT = "120 per minute"
 defaultTeamObj = {
   'checked': False,
   'proof': '',
@@ -227,12 +234,22 @@ def clamp_visible_rows(value, rows):
     visible_rows = rows
   return max(1, min(visible_rows, rows))
 
-def public_board_image(image):
+def pixel_image_url(image_url):
+  match = re.search(r'/thumb/([^/]+)_detail\.png/', image_url)
+  if not match:
+    return image_url
+  name = unquote(match.group(1))
+  name = name[:1].upper() + name[1:].lower()
+  return f"https://oldschool.runescape.wiki/images/{quote(name, safe='')}.png"
+
+def public_board_image(image, cache_board_type='osrs'):
   if not isinstance(image, dict):
     return image
   image_url = image.get('url')
   if not image_url:
     return None
+  if cache_board_type == 'osrs' and image.get('usePixel') and not image.get('animated'):
+    image_url = pixel_image_url(image_url)
   return { **image, 'url': board_images.public_url(image_url) }
 
 def strip_image_opacity(image):
@@ -331,6 +348,23 @@ def normalize_proof_images(images):
 @limiter.exempt
 def uploaded_proof_image(filename):
   return proof_images.serve(filename)
+
+@app.route(f'{board_images.url_prefix}/wiki-cache', methods=['GET'])
+@limiter.limit(WIKI_IMAGE_CACHE_RATE_LIMIT)
+def cached_wiki_image():
+  source_url = request.args.get("url", "").strip()
+  signature = request.args.get("sig", "").strip()
+  try:
+    return board_images.serve_remote(source_url, signature)
+  except WikiImageRequestError as e:
+    log.warning("wiki image request rejected  ip=%s  error=%s", request.remote_addr, e)
+    return jsonify(error="Invalid Wiki image request", message=str(e)), 400
+  except WikiImageCapacityError as e:
+    log.error("wiki image cache capacity reached  error=%s", e)
+    return jsonify(error="Wiki image cache unavailable", message=str(e)), 507
+  except WikiImageUpstreamError as e:
+    log.warning("wiki image upstream failed  error=%s", e)
+    return jsonify(error="Wiki image unavailable", message=str(e)), 502
 
 @app.route(f'{board_images.url_prefix}/<path:filename>', methods=['GET'])
 @limiter.exempt
@@ -464,18 +498,17 @@ def getBoard(boardName, password, pwtype):
   if err:
     return err
 
+  cacheBoardType = board_type(cache)
   boardData = cache['boardData']
   visibleRows = board_visible_rows(cache)
   for row in boardData:
     for tile in row:
-      tile['image'] = public_board_image(tile.get('image'))
+      tile['image'] = public_board_image(tile.get('image'), cacheBoardType)
   if pwtype == 'general':
     boardData = slice_board_rows(boardData, visibleRows)
   teamData = []
   generalPassword = cache['generalPassword']
   passwordRequired = cache.get('requirePassword', False)
-  cacheBoardType = board_type(cache)
-
   for i in range(cache['teams']):
     team = 'team-' + str(i)
     if (pwtype != 'admin' and 'password' in cache[team]):
@@ -559,6 +592,8 @@ def updateBoard(boardName, password, pwtype, teampw):
       except Exception as e:
         log.error("updateBoard - board image save failed  board=%s  error=%s", boardName, e)
         return bad_request('Failed to save tile image.')
+    elif image and isinstance(image_url, str):
+      data['info']['image'] = { **image, 'url': board_images.storage_url(image_url) }
 
     boardData = cache['boardData']
     boardData[data['row']][data['col']] = { **boardData[data['row']][data['col']], **data['info']}

@@ -15,4 +15,5 @@
 **/*.pyc
 
 services/api/static/uploads
+services/api/static/wiki-images
 tests/e2e/artifacts
