@@ -21,7 +21,8 @@ RUN pip install --no-cache-dir uwsgi
 
 COPY --chown=appuser:appuser . .
 
-RUN mkdir -p /app/static/uploads && chown -R appuser:appuser /app/static
+RUN mkdir -p /app/static/uploads /app/static/wiki-images \
+    && chown -R appuser:appuser /app/static
 
 # Switch to the non-root user
 USER appuser

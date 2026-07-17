@@ -132,6 +132,17 @@ The public URL shape is:
 
 `proof_images.py` normalizes these paths so MongoDB keeps portable relative paths, while API responses return absolute URLs such as `https://praynr.com/static/uploads/proofs/<uuid>.webp`. This matters because the production frontend may be served from GitHub Pages while the API and images are served from `praynr.com`.
 
+### Local Filesystem — Shared Wiki Image Cache
+
+Approved OSRS Wiki tile images are downloaded lazily and stored once in a separate shared cache:
+
+```
+services/api/static/wiki-images/<sha256>.<ext>   # local development
+/app/static/wiki-images/<sha256>.<ext>           # production container
+```
+
+MongoDB continues to store the original Wiki URL. Board responses rewrite approved HTTPS `/images/` URLs to a signed local cache endpoint. A 256-bit HMAC key is generated once inside the persistent cache volume and reused across restarts. The endpoint validates the signature, host DNS results, and each redirect before downloading; it also enforces source byte, pixel, cache-entry, and total-cache-size limits.
+
 ### Redis — Cache, Graph, and Queue
 
 Redis serves three distinct roles:
@@ -151,7 +162,7 @@ Separating concerns across key namespaces keeps Redis operationally simple — y
 
 **Hosting** — AWS Lightsail (Ubuntu 24.04). Lightsail gives predictable billing on a low-traffic community app without the operational overhead of EC2 + ALB + RDS.
 
-**Containers** — Docker Compose manages six long-running services: `nginx`, `mongo`, `redis`, `api`, `worker`, `dozzle`, plus a one-shot `frontend` release service. The API and worker share the same image but run different entry points — this avoids image drift between the two processes. The frontend service builds the React SPA and publishes it into a shared volume without replacing Nginx. Production also defines the named volume `proof_uploads`, mounted into the API container at `/app/static/uploads`, so uploaded proof images survive container rebuilds and restarts.
+**Containers** — Docker Compose manages six long-running services: `nginx`, `mongo`, `redis`, `api`, `worker`, `dozzle`, plus a one-shot `frontend` release service. The API and worker share the same image but run different entry points — this avoids image drift between the two processes. The frontend service builds the React SPA and publishes it into a shared volume without replacing Nginx. Production defines the named volume `proof_uploads`, mounted at `/app/static/uploads`, and the separate `wiki_image_cache` volume, mounted at `/app/static/wiki-images`, so user uploads and shared cached images both survive container rebuilds without sharing storage.
 
 **Networking** — The `nginx` container terminates SSL and acts as the single entry point on ports 80/443. It proxies API requests to the `api` service over the Compose network, proxies Dozzle to the `dozzle` service, and serves the React SPA from the `frontend_assets` volume. TLS and Cloudflare authenticated-origin-pull certificates remain host-managed files mounted read-only into the container. Proof images are currently served by Flask from `/static/uploads/proofs/...` with long cache headers; they could be moved behind a direct Nginx `alias` later if image traffic grows. Cloudflare sits in front for DDoS mitigation and CDN.
 

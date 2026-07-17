@@ -194,6 +194,53 @@ class TestImageStore(unittest.TestCase):
                 store.save(_animated_image_data_uri("WEBP", "image/webp"))
 
 
+class TestWikiImageEndpoint(unittest.TestCase):
+    def setUp(self):
+        self.client = _client(server.app)
+
+    @patch.object(server.board_images, "serve_remote", return_value=("image", 200))
+    def test_serves_signed_cache_request(self, serve_remote):
+        resp = self.client.get(
+            "/static/uploads/board-images/wiki-cache",
+            query_string={"url": "https://oldschool.runescape.wiki/images/Test.png", "sig": "signed"},
+        )
+        self.assertEqual(resp.status_code, 200)
+        serve_remote.assert_called_once_with(
+            "https://oldschool.runescape.wiki/images/Test.png",
+            "signed",
+        )
+
+    @patch.object(
+        server.board_images,
+        "serve_remote",
+        side_effect=server.WikiImageRequestError("bad signature"),
+    )
+    def test_invalid_cache_request_returns_400(self, _serve_remote):
+        resp = self.client.get("/static/uploads/board-images/wiki-cache")
+        self.assertEqual(resp.status_code, 400)
+        self.assertIn("bad signature", json.loads(resp.data)["message"])
+
+    @patch.object(
+        server.board_images,
+        "serve_remote",
+        side_effect=server.WikiImageUpstreamError("upstream failed"),
+    )
+    def test_upstream_cache_failure_returns_502(self, _serve_remote):
+        resp = self.client.get("/static/uploads/board-images/wiki-cache")
+        self.assertEqual(resp.status_code, 502)
+        self.assertIn("upstream failed", json.loads(resp.data)["message"])
+
+    @patch.object(
+        server.board_images,
+        "serve_remote",
+        side_effect=server.WikiImageCapacityError("cache full"),
+    )
+    def test_cache_capacity_failure_returns_507(self, _serve_remote):
+        resp = self.client.get("/static/uploads/board-images/wiki-cache")
+        self.assertEqual(resp.status_code, 507)
+        self.assertIn("cache full", json.loads(resp.data)["message"])
+
+
 # ---------------------------------------------------------------------------
 # Tests: auth() helper
 #

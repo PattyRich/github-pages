@@ -14,6 +14,7 @@ scripts/backup_config.ps1
 # Backend
 **/__pycache__/
 services/api/static/uploads/
+services/api/static/wiki-images/
 
 # Monitoring & Backups
 dozzle/*

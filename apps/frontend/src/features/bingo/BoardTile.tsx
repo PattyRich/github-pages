@@ -172,12 +172,23 @@ function getTileImageOpacity(image?: TileInfo['image']) {
 
 function getPixelUrl(url?: string) {
   if (!url) return url;
-  const match = url.match(/\/thumb\/([^/]+)_detail\.png\//);
+
+  let sourceUrl = url;
+  try {
+    const parsed = new URL(url);
+    if (parsed.pathname.endsWith('/wiki-cache')) {
+      sourceUrl = parsed.searchParams.get('url') || url;
+    }
+  } catch {
+    // Relative and legacy image URLs are handled by the existing path matcher.
+  }
+
+  const match = sourceUrl.match(/\/thumb\/([^/]+)_detail\.png\//);
   if (match) {
     const name = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
     return `https://oldschool.runescape.wiki/images/${name}.png`;
   }
-  return url;
+  return sourceUrl;
 }
 
 function isAnimatedTileImage(image?: TileInfo['image']) {

@@ -1,7 +1,7 @@
 import base64
+import io
 import os
 import uuid
-import io
 from pathlib import Path
 from urllib.parse import urlparse
 
@@ -10,6 +10,7 @@ from PIL import Image
 
 from imgSizeReducer import reduce_image_size
 from logger import get_logger
+from wikiImageCache import WikiImageCache, WikiImageRequestError
 
 log = get_logger(__name__)
 
@@ -29,6 +30,7 @@ class ImageStore:
     max_animation_total_pixels=120_000_000,
     animation_workers=None,
     animated_webp_method=4,
+    remote_cache=None,
   ):
     self.url_prefix = url_prefix
     self.upload_root = Path(upload_root)
@@ -44,6 +46,7 @@ class ImageStore:
     self.max_animation_total_pixels = max_animation_total_pixels
     self.animation_workers = animation_workers
     self.animated_webp_method = max(0, min(6, animated_webp_method))
+    self.remote_cache = remote_cache
 
   def decode_data_uri(self, data_uri):
     if not isinstance(data_uri, str) or not data_uri.startswith("data:"):
@@ -114,14 +117,22 @@ class ImageStore:
   def public_url(self, image):
     if isinstance(image, str) and image.startswith(self.url_prefix + "/"):
       return request.host_url.rstrip("/") + image
+    if self.remote_cache and self.remote_cache.is_allowed_url(image):
+      return self.remote_cache.public_url(image, self.url_prefix)
     return image
 
   def storage_url(self, image):
     if not isinstance(image, str):
       return image
+    parsed = urlparse(image)
+    if self.remote_cache:
+      source_url = self.remote_cache.source_url_from_cache_url(image, self.url_prefix)
+      if source_url:
+        return source_url
+      if parsed.path == f"{self.url_prefix}/wiki-cache":
+        return image
     if image.startswith(self.url_prefix + "/"):
       return image
-    parsed = urlparse(image)
     if parsed.path.startswith(self.url_prefix + "/"):
       return parsed.path
     return image
@@ -149,6 +160,11 @@ class ImageStore:
     response.headers["Cache-Control"] = "public, max-age=31536000, immutable"
     return response
 
+  def serve_remote(self, source_url, signature):
+    if not self.remote_cache:
+      raise WikiImageRequestError("Wiki image caching is not configured")
+    return self.remote_cache.serve(source_url, signature)
+
 
 _static = Path(__file__).parent / "static" / "uploads"
 _max_source_bytes = int(os.environ.get("IMAGE_UPLOAD_MAX_SOURCE_BYTES", 8 * 1024 * 1024))
@@ -159,6 +175,8 @@ _max_animation_frames = int(os.environ.get("IMAGE_UPLOAD_MAX_ANIMATION_FRAMES", 
 _max_animation_total_pixels = int(os.environ.get("IMAGE_UPLOAD_MAX_ANIMATION_TOTAL_PIXELS", 120_000_000))
 _animation_workers = int(os.environ.get("IMAGE_UPLOAD_ANIMATION_WORKERS", min(4, os.cpu_count() or 1)))
 _animated_webp_method = int(os.environ.get("IMAGE_UPLOAD_ANIMATION_WEBP_METHOD", 4))
+
+wiki_image_cache = WikiImageCache()
 
 proof_images = ImageStore(
   url_prefix="/static/uploads/proofs",
@@ -187,4 +205,5 @@ board_images = ImageStore(
   max_animation_total_pixels=_max_animation_total_pixels,
   animation_workers=_animation_workers,
   animated_webp_method=_animated_webp_method,
+  remote_cache=wiki_image_cache,
 )

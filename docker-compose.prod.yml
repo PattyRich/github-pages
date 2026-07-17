@@ -52,6 +52,7 @@ services:
       - ./services/api/.env
     volumes:
       - proof_uploads:/app/static/uploads
+      - wiki_image_cache:/app/static/wiki-images
     depends_on:
       - mongo
       - redis
@@ -86,3 +87,4 @@ volumes:
   redis_data:
   dozzle_data:
   proof_uploads:
+  wiki_image_cache:

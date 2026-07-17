@@ -6,6 +6,7 @@ from flask import g
 from flask_cors import CORS
 import json
 import datetime
+import logging
 import math
 import time
 import requests
@@ -13,7 +14,12 @@ import pymongo
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from imgSizeReducer import reduce_image_size
-from imageManager import proof_images, board_images
+from imageManager import board_images, proof_images
+from wikiImageCache import (
+    WikiImageCapacityError,
+    WikiImageRequestError,
+    WikiImageUpstreamError,
+)
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import RequestEntityTooLarge
 import os
@@ -76,6 +82,7 @@ disallowedRouteChars = ['?', '#', '/', '\\']
 testBoardPrefix = os.environ.get("PLAYWRIGHT_E2E_BOARD_PREFIX", os.environ.get("SELENIUM_E2E_BOARD_PREFIX", "__playwright_e2e__"))
 maxProofImages = int(os.environ.get("MAX_PROOF_IMAGES_PER_TILE", 10))
 healthAnalyticsCacheSeconds = max(0, int(os.environ.get("HEALTH_ANALYTICS_CACHE_SECONDS", 60)))
+WIKI_IMAGE_CACHE_RATE_LIMIT = "120 per minute"
 defaultTeamObj = {
   'checked': False,
   'proof': '',
@@ -107,15 +114,27 @@ setup_indexes(mycol)
 # ---------------------------------------------------------------------------
 
 _SLOW_REQUEST_THRESHOLD_MS = 250
+_QUIET_REQUEST_ENDPOINTS = frozenset(("cached_wiki_image", "uploaded_board_image"))
+
+class _BoardImageAccessFilter(logging.Filter):
+    def filter(self, record):
+        return f"{board_images.url_prefix}/" not in record.getMessage()
+
+logging.getLogger("werkzeug").addFilter(_BoardImageAccessFilter())
 
 @app.before_request
 def log_request():
+    if request.endpoint in _QUIET_REQUEST_ENDPOINTS:
+        g.skip_request_log = True
+        return
     g.request_start_time = time.perf_counter()
     origin = request.headers.get('Origin', request.host)
     log.info("--> %s %s  ip=%s  origin=%s", request.method, request.url, request.remote_addr, origin)
 
 @app.after_request
 def log_response(response):
+    if getattr(g, 'skip_request_log', False):
+        return response
     duration_ms = (time.perf_counter() - g.request_start_time) * 1000
     log_method = log.warning if duration_ms >= _SLOW_REQUEST_THRESHOLD_MS else log.info
     log_method(
@@ -332,6 +351,23 @@ def normalize_proof_images(images):
 def uploaded_proof_image(filename):
   return proof_images.serve(filename)
 
+@app.route(f'{board_images.url_prefix}/wiki-cache', methods=['GET'])
+@limiter.limit(WIKI_IMAGE_CACHE_RATE_LIMIT)
+def cached_wiki_image():
+  source_url = request.args.get("url", "").strip()
+  signature = request.args.get("sig", "").strip()
+  try:
+    return board_images.serve_remote(source_url, signature)
+  except WikiImageRequestError as e:
+    log.warning("wiki image request rejected  ip=%s  error=%s", request.remote_addr, e)
+    return jsonify(error="Invalid Wiki image request", message=str(e)), 400
+  except WikiImageCapacityError as e:
+    log.error("wiki image cache capacity reached  error=%s", e)
+    return jsonify(error="Wiki image cache unavailable", message=str(e)), 507
+  except WikiImageUpstreamError as e:
+    log.warning("wiki image upstream failed  error=%s", e)
+    return jsonify(error="Wiki image unavailable", message=str(e)), 502
+
 @app.route(f'{board_images.url_prefix}/<path:filename>', methods=['GET'])
 @limiter.exempt
 def uploaded_board_image(filename):
@@ -464,6 +500,7 @@ def getBoard(boardName, password, pwtype):
   if err:
     return err
 
+  cacheBoardType = board_type(cache)
   boardData = cache['boardData']
   visibleRows = board_visible_rows(cache)
   for row in boardData:
@@ -474,8 +511,6 @@ def getBoard(boardName, password, pwtype):
   teamData = []
   generalPassword = cache['generalPassword']
   passwordRequired = cache.get('requirePassword', False)
-  cacheBoardType = board_type(cache)
-
   for i in range(cache['teams']):
     team = 'team-' + str(i)
     if (pwtype != 'admin' and 'password' in cache[team]):
@@ -559,6 +594,8 @@ def updateBoard(boardName, password, pwtype, teampw):
       except Exception as e:
         log.error("updateBoard - board image save failed  board=%s  error=%s", boardName, e)
         return bad_request('Failed to save tile image.')
+    elif image and isinstance(image_url, str):
+      data['info']['image'] = { **image, 'url': board_images.storage_url(image_url) }
 
     boardData = cache['boardData']
     boardData[data['row']][data['col']] = { **boardData[data['row']][data['col']], **data['info']}

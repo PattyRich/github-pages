@@ -59,14 +59,17 @@ test('opens the tile modal when Enter is pressed', () => {
   expect(screen.getByRole('dialog')).toBeInTheDocument();
 });
 
-test('uses the pixel image URL when requested', () => {
+test('uses the full-size Wiki image when pixel mode is requested', () => {
+  const sourceUrl =
+    'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png';
+  const cacheUrl = `https://example.test/static/uploads/board-images/wiki-cache?url=${encodeURIComponent(sourceUrl)}&sig=signed`;
   const { container } = renderBoardTile({
     info: {
       ...info,
       image: {
         opacity: 100,
         usePixel: true,
-        url: 'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png',
+        url: cacheUrl,
       },
     },
   });

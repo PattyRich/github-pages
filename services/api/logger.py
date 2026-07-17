@@ -14,7 +14,21 @@ Set LOG_LEVEL=DEBUG in your .env for verbose output during development.
 from datetime import datetime
 import logging
 import os
-from zoneinfo import ZoneInfo
+import time
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
+
+
+try:
+    _LOG_TIME_ZONE = ZoneInfo("America/New_York")
+except ZoneInfoNotFoundError:
+    # Windows Python installations may not include the IANA timezone database.
+    _LOG_TIME_ZONE = None
+
+
+def _log_time(timestamp):
+    if _LOG_TIME_ZONE is None:
+        return time.localtime(timestamp)
+    return datetime.fromtimestamp(timestamp, _LOG_TIME_ZONE).timetuple()
 
 
 def get_logger(name: str) -> logging.Logger:
@@ -42,8 +56,8 @@ def _configure_root():
         fmt="%(asctime)s [%(levelname)s] %(name)s - %(message)s",
         datefmt="%Y-%m-%d %H:%M:%S",
     )
-    # Set logging time to US East Coast time (America/New_York)
-    formatter.converter = lambda ts: datetime.fromtimestamp(ts, ZoneInfo("America/New_York")).timetuple()
+    # Use US East Coast time when available and the system timezone otherwise.
+    formatter.converter = _log_time
     handler.setFormatter(formatter)
 
     root = logging.getLogger()
