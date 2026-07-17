@@ -669,7 +669,10 @@ function BoardView() {
         ''
       )}
       {state.showFeedback && (
-        <FeedbackModal handleClose={() => setBoardState({ showFeedback: false })} />
+        <FeedbackModal
+          boardName={state.boardName}
+          handleClose={() => setBoardState({ showFeedback: false })}
+        />
       )}
       {passwordPrompt && (
         <PasswordModal

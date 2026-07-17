@@ -758,6 +758,9 @@ def changeBoardSize(teamData, rows, cols, cache, boardName):
 def postFeedbackToDiscord():
   data = json.loads(request.data.decode(), parse_float=float)
   message = data.get('message')
+  board_name = data.get('boardName')
+  if isinstance(board_name, str) and board_name.strip():
+    message = f"Board: {board_name.strip()}\n\n{message}"
 
   result = postToDiscord(message, 'FEEDBACK_WEBHOOK')
   if not result:
