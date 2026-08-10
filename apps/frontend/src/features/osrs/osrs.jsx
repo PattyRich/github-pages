@@ -386,14 +386,15 @@ class Osrs extends React.Component {
         ? requestedRolls
         : lastKillCount(rewards);
     const drops = countDrops(rewards);
-    const lastSimulation = rolls > 0
-      ? {
-          rolls,
-          drops,
-          averageKillsPerDrop: drops ? rolls / drops : null,
-          expectedAverageKillsPerDrop: this.state.averageKillsPerDrop,
-        }
-      : null;
+    const lastSimulation =
+      rolls > 0
+        ? {
+            rolls,
+            drops,
+            averageKillsPerDrop: drops ? rolls / drops : null,
+            expectedAverageKillsPerDrop: this.state.averageKillsPerDrop,
+          }
+        : null;
     this.setState({ rewards: rewards, lastSimulation });
     if (this.state.mode === 'create') {
       this.completion(this.state.mode);
@@ -797,9 +798,7 @@ class Osrs extends React.Component {
               ? 'Nothing x' + this.state.nothingCounter
               : null}
           </div>
-          {this.state.lastSimulation && (
-            <SimulationResult simulation={this.state.lastSimulation} />
-          )}
+          {this.state.lastSimulation && <SimulationResult simulation={this.state.lastSimulation} />}
         </div>
         {this.state.rewardList.length ? (
           <div className="box">
@@ -846,16 +845,10 @@ class Osrs extends React.Component {
         {this.state.progress > 0 && (
           <div className="osrs-plot-controls">
             <div className="osrs-progress"> {this.state.progress}% done </div>
-            <button
-              disabled={!this.state.bestRewards}
-              onClick={() => this.showPlotData('best')}
-            >
+            <button disabled={!this.state.bestRewards} onClick={() => this.showPlotData('best')}>
               Show best simulation
             </button>
-            <button
-              disabled={!this.state.worstRewards}
-              onClick={() => this.showPlotData('worst')}
-            >
+            <button disabled={!this.state.worstRewards} onClick={() => this.showPlotData('worst')}>
               Show worst simulation
             </button>
             <button onClick={() => this.clearPlots()}> Clear </button>
@@ -932,8 +925,7 @@ function buildChanceCurve(sortedKillCounts) {
 
 function summarizeKillCounts(sortedKillCounts) {
   const total = sortedKillCounts.length;
-  const average =
-    sortedKillCounts.reduce((sum, killCount) => sum + killCount, 0) / total;
+  const average = sortedKillCounts.reduce((sum, killCount) => sum + killCount, 0) / total;
 
   return {
     total,
@@ -957,11 +949,7 @@ function percentileNearest(sortedValues, percentile) {
 function buildSimulationFigure(simulationPlot, plotMode, completion) {
   const theme = getPlotTheme();
   const expectedCompletion = getExpectedCompletion(completion);
-  const markerLayer = buildSimulationMarkers(
-    simulationPlot.summary,
-    expectedCompletion,
-    theme
-  );
+  const markerLayer = buildSimulationMarkers(simulationPlot.summary, expectedCompletion, theme);
   const xMax = Math.max(simulationPlot.summary.max, expectedCompletion || 0);
   const commonLayout = {
     autosize: true,
@@ -970,8 +958,7 @@ function buildSimulationFigure(simulationPlot, plotMode, completion) {
     plot_bgcolor: hexToRgba(theme.bgDark, 0.62),
     font: {
       color: theme.textNormal,
-      family:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
+      family: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif',
     },
     margin: { t: 26, r: 24, b: 56, l: 68 },
     xaxis: {
@@ -1150,9 +1137,7 @@ function SimulationPlotPanel({ mode, onModeChange, summary }) {
       <div className="osrs-simulation-panel-header">
         <div>
           <h3 className="osrs-simulation-title">Completion odds</h3>
-          <p className="osrs-simulation-meta">
-            {summary.total.toLocaleString()} simulated runs
-          </p>
+          <p className="osrs-simulation-meta">{summary.total.toLocaleString()} simulated runs</p>
         </div>
         <div className="osrs-chart-tabs" role="tablist" aria-label="Simulation chart view">
           <button
@@ -1196,9 +1181,7 @@ function SimulationResult({ simulation }) {
 
   if (!drops) {
     return (
-      <div className="osrs-simulation-result">
-        This simulation: no regular drops in {rolls} KC.
-      </div>
+      <div className="osrs-simulation-result">This simulation: no regular drops in {rolls} KC.</div>
     );
   }
 
@@ -1222,11 +1205,7 @@ function SimulationResult({ simulation }) {
   );
 }
 
-function getSimulationComparison({
-  drops,
-  averageKillsPerDrop,
-  expectedAverageKillsPerDrop,
-}) {
+function getSimulationComparison({ drops, averageKillsPerDrop, expectedAverageKillsPerDrop }) {
   if (!drops || !Number.isFinite(expectedAverageKillsPerDrop) || !expectedAverageKillsPerDrop) {
     return null;
   }

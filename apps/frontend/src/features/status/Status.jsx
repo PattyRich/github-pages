@@ -225,7 +225,11 @@ export default function Status() {
           <h2 className="status-section-label">Analytics</h2>
           <div className="stat-grid analytics-grid">
             {loading ? (
-              <StatCard label="Analytics snapshot" value="Loading…" sub="collecting board activity" />
+              <StatCard
+                label="Analytics snapshot"
+                value="Loading…"
+                sub="collecting board activity"
+              />
             ) : !analyticsAvailable ? (
               <StatCard
                 label="Analytics snapshot"
@@ -262,7 +266,11 @@ export default function Status() {
                 <StatCard
                   label="Most common active board"
                   value={formatLayout(commonLayout)}
-                  sub={commonLayout ? `${formatNumber(commonLayout.boards)} boards use this layout` : 'no board layouts yet'}
+                  sub={
+                    commonLayout
+                      ? `${formatNumber(commonLayout.boards)} boards use this layout`
+                      : 'no board layouts yet'
+                  }
                 />
                 <StatCard
                   label="Active board capacity"
