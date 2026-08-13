@@ -127,9 +127,10 @@ export function loot(
         }
       }
 
-      if (data.name === 'cox') {
+      if (data.name === 'cox' || data.name === 'cox-cm') {
         data.chance = options.points / 8678;
-        if (options.cms) {
+        console.log(data.name)
+        if (data.name == 'cox-cm') {
           data.rollCms = true;
         }
       }
@@ -349,7 +350,7 @@ function looter(rolls, data, clueType) {
     }
     let x = getRandomInt(data.pet.rate);
     if (x === data.pet.rate) {
-      if (data.name === 'cox') {
+      if (data.name.startsWith('cox')) {
         if (
           rewards.length &&
           rewards[rewards.length - 1].kc === kc + 1 &&

@@ -132,6 +132,7 @@ class Osrs extends React.Component {
   };
 
   async onChangeValue(event) {
+    console.log(event.target.value)
     this.setState({
       mode: event.target.value,
       lastSimulation: null,
@@ -518,6 +519,7 @@ class Osrs extends React.Component {
   render() {
     const bossModes = [
       { value: 'cox', label: 'Cox' },
+      { value: 'cox-cm', label: 'Cox CM' },
       { value: 'tob', label: 'ToB' },
       { value: 'toa', label: 'ToA' },
       { value: 'cg', label: 'Corrupted Gauntlet' },
@@ -689,27 +691,13 @@ class Osrs extends React.Component {
               <br />
             </>
           )}
-          {this.state.mode === 'cox' && (
+          {this.state.mode.startsWith('cox') && (
             <span>
               <label>Number of cox points per raid </label>
               <input
                 type="text"
                 value={this.state.points}
                 onChange={(e) => this.onChangeValueInput('points', e)}
-              />
-              &nbsp; Challenge Mode?{' '}
-              <input
-                type="checkbox"
-                onChange={() =>
-                  this.setState({
-                    cms: !this.state.cms,
-                    simulationPlot: null,
-                    progress: 0,
-                    bestRewards: null,
-                    worstRewards: null,
-                  })
-                }
-                checked={this.state.cms}
               />
             </span>
           )}

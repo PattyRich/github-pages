@@ -14,6 +14,7 @@ export let data = {
     'Tiny tempor',
     'Quetzin',
     'Soup',
+    'Mr McGroot'
   ],
   Slayer: [
     'Abyssal orphan',
@@ -45,12 +46,14 @@ export let data = {
     'Vorki',
     'Youngllef',
     'Smol heredit',
+    'Maggot marquess',
     'Moxi',
     'Huberte',
     'Dom',
     'Beef',
     'Yami',
     'Bran',
+    'Aggy'
   ],
   Wilderness: [
     'Pet chaos elemental',

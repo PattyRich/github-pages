@@ -7,16 +7,25 @@ import urllib.parse
 import string
 import os
 
-def tryToGetPet(name, urlBase, detailed = False):
-  assetDestination = 'public/assets/pets_pixel/' if not detailed else 'public/assets/detailed_pets/'
-  if (os.path.isfile(assetDestination + data[i] + '.png')):
-    print('Already have' + name)
+## Pet image collector. Just put their names in itemsToGet.json
+# Ex:
+# [
+#  "Aggy",
+#  "Mr McGroot"
+# ]
+
+def tryToGetPet(url, petName, detailed = False):
+  assetDestination = '../apps/frontend/src/assets/pets_pixel/' if not detailed else '../apps/frontend/src/assets/detailed_pets/'
+  if (os.path.isfile(assetDestination + petName + '.png')):
+    print('Already have' + petName)
     return True
-  name = name.replace(" ", "_")
-  name = urllib.parse.quote(name)
-  url = urlBase + name + '.png'
   response = requests.get(url)
   print(response.status_code, url)
+  if (response.status_code != 200 and len(petName.split()) >= 2):
+    url = url.replace(" ", "_")
+    url = url.replace("%20", "%5F")
+    response = requests.get(url)
+    print(response.status_code, url)
   if (response.status_code == 200):
     with open(assetDestination + data[i] + '.png', 'wb') as f:
       f.write(response.content)
@@ -27,11 +36,11 @@ def tryToGetPet(name, urlBase, detailed = False):
 with open('itemsToGet.json', 'r') as f:
   data = json.load(f)
   for i in range(len(data)): 
-    detailedURL = 'https://oldschool.runescape.wiki/images/thumb/' + data[i] + '_(follower).png'
-    detailedURL += '/300px-' + data[i] + '_(follower).png'
-    tryToGetPet(data[i], 'https://oldschool.runescape.wiki/images/')
-    tryToGetPet(data[i], detailedURL, True)
-    print(data[i])
+    encodedPet = urllib.parse.quote(data[i])
+    detailedURL = 'https://oldschool.runescape.wiki/images/thumb/' + encodedPet + '_(follower).png'
+    detailedURL += '/300px-' + encodedPet + '_(follower).png'
+    tryToGetPet('https://oldschool.runescape.wiki/images/' + encodedPet + '.png', data[i])
+    tryToGetPet(detailedURL, data[i], True)
 
 # def tryToGetPet(name, urlBase):
 #   name = name.replace(" ", "_")
