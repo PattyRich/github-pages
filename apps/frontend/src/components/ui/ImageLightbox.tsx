@@ -7,6 +7,7 @@ interface ImageLightboxProps {
   index?: number | null;
   onClose: () => void;
   onCycle: (direction: -1 | 1) => void;
+  onImageError?: () => void;
 }
 
 export default function ImageLightbox({
@@ -14,6 +15,7 @@ export default function ImageLightbox({
   index,
   onClose,
   onCycle,
+  onImageError,
 }: ImageLightboxProps) {
   if (index === null || index === undefined || images.length === 0) return null;
 
@@ -36,7 +38,12 @@ export default function ImageLightbox({
             &#8249;
           </button>
         )}
-        <img src={image} className="image-lightbox-img" alt="Proof enlarged" />
+        <img
+          src={image}
+          className="image-lightbox-img"
+          alt="Proof enlarged"
+          onError={onImageError}
+        />
         {hasMultiple && (
           <button
             type="button"

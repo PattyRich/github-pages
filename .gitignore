@@ -5,6 +5,7 @@
 *.DS_Store
 vite-dev*.log
 .tmp/
+showcase.txt
 
 # Secrets & Environment
 **/.env

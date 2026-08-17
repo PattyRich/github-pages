@@ -1,6 +1,7 @@
 import './App.css';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import BingoCarousel from './components/BingoCarousel';
 import FeedbackModal from './components/ui/FeedbackModal';
 
 interface ToolRoute {
@@ -125,18 +126,7 @@ export default function App() {
                 </div>
               </div>
 
-              <div className="bingo-previews">
-                <img
-                  className="preview-img"
-                  src={`${import.meta.env.BASE_URL}board-min2.png`}
-                  alt="Bingo Board Preview"
-                />
-                <img
-                  className="preview-img"
-                  src={`${import.meta.env.BASE_URL}create-min.png`}
-                  alt="Bingo Create Preview"
-                />
-              </div>
+              <BingoCarousel />
             </div>
           </section>
         </main>

@@ -7,6 +7,7 @@ on:
   push:
     branches:
       - main
+    # Avoid deploying when a commit cannot affect the frontend or its web server.
     paths:
       - 'apps/frontend/src/**'
       - 'apps/frontend/public/**'
@@ -29,6 +30,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       
+      # Node is installed on the GitHub runner only for pre-deploy validation.
+      # The deployable frontend is built separately by Docker on production.
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -55,20 +58,34 @@ jobs:
             set -e
             cd /var/www/server/github-pages
 
+            # Make the production checkout exactly match the triggering main branch.
             git fetch origin main
             git reset --hard origin/main
 
+            # Validate Compose, then build the frontend installer and stage the
+            # latest Nginx image. The frontend Dockerfile runs its own npm ci
+            # because this build happens on production, not on the GitHub runner.
             docker compose -f docker-compose.prod.yml config >/tmp/praynr-compose-config.yml
             docker compose -f docker-compose.prod.yml build frontend nginx
+
+            # Test the new Nginx configuration in a temporary container before
+            # changing the live frontend release.
             docker compose -f docker-compose.prod.yml run --rm --no-deps --entrypoint nginx nginx -t
+
+            # Run the one-shot frontend container. Its entrypoint publishes the
+            # build to frontend_assets and atomically switches the current symlink.
             docker compose -f docker-compose.prod.yml run --rm --no-deps frontend "$RELEASE_SHA"
 
+            # During migration, a legacy host Nginx may still own ports 80/443.
+            # Do not attempt to start the Docker Nginx until that cutover is done.
             if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet nginx; then
               echo "Host nginx is still active; skipping Docker nginx start until cutover."
               echo "After stopping/disabling host nginx, run: docker compose -f docker-compose.prod.yml up -d --no-deps nginx"
             else
               nginx_container="$(docker compose -f docker-compose.prod.yml ps -q nginx)"
 
+              # Start Nginx only when it is absent or still lacks the shared
+              # frontend volume. Normal frontend releases leave it running.
               if [ -z "$nginx_container" ] || ! docker inspect "$nginx_container" --format '{{range .Mounts}}{{println .Destination}}{{end}}' | grep -qx '/srv/frontend'; then
                 echo "Starting Nginx with the shared frontend release volume."
                 docker compose -f docker-compose.prod.yml up -d --no-deps nginx
@@ -77,9 +94,13 @@ jobs:
                 echo "Keeping the running Nginx edge container in place."
               fi
 
+              # Confirm the release is visible from Nginx, then gracefully reload
+              # only if the mounted Nginx configuration has changed.
               docker exec "$nginx_container" test -s /srv/frontend/current/index.html
               docker exec "$nginx_container" /usr/local/bin/reload-nginx-if-needed
 
+              # Building Nginx stages runtime changes, but applying that image
+              # requires a planned container recreation to avoid an edge outage.
               running_image="$(docker inspect "$nginx_container" --format '{{.Image}}')"
               desired_image="$(docker compose -f docker-compose.prod.yml images -q nginx 2>/dev/null || true)"
               if [ -z "$desired_image" ]; then
@@ -90,6 +111,7 @@ jobs:
               fi
             fi
 
+      # Deployment failures are reported without making the webhook mandatory.
       - name: Notify Discord on failure
         if: failure()
         env:

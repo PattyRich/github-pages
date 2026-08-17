@@ -179,6 +179,25 @@ Production stores uploaded Bingo proof images in the Docker named volume `proof_
 
 Local development uses the bind mount `./services/api:/app`, so proof uploads are written to `services/api/static/uploads/proofs` on your machine. That directory is ignored by Git.
 
+### Homepage Bingo Showcase
+
+The homepage carousel is curated from proof images already in `proof_uploads`. Create a text file containing one proof filename per line:
+
+```text
+# Blank lines and comments are ignored.
+0f3a8b7c.webp
+ca91d22e.webp
+18bb4790.webp
+```
+
+The filename is the final segment of its `/static/uploads/proofs/<filename>` URL. From the production checkout, publish the list through standard input:
+
+```bash
+docker compose -f docker-compose.prod.yml exec -T api python showcase.py < showcase.txt
+```
+
+Publishing is all-or-nothing: every filename is validated and copied from `proofs/`, then the existing showcase batch is replaced. An empty list clears the showcase and makes the homepage use its bundled preview images. The browser randomizes the published batch on each visit.
+
 ---
 
 ## Monitoring

@@ -40,6 +40,7 @@ def _mock_init(self, *args, **kwargs):
 flask_limiter.Limiter.__init__ = _mock_init
 
 import server  # noqa: E402  (must come after patch)
+import showcase  # noqa: E402
 
 # Point server's module-level `mycol` at our controllable mock
 server.mycol = _mock_col
@@ -192,6 +193,99 @@ class TestImageStore(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "Animated images are only supported"):
                 store.save(_animated_image_data_uri("WEBP", "image/webp"))
+
+
+class TestShowcase(unittest.TestCase):
+    def test_parses_newline_list_and_ignores_blank_lines_and_comments(self):
+        filenames = showcase.parse_showcase_list([
+            "first.webp\n",
+            "\n",
+            "# chosen from a proof URL\n",
+            " second.webp \n",
+        ])
+
+        self.assertEqual(filenames, ["first.webp", "second.webp"])
+
+    def test_rejects_duplicate_or_unsafe_filenames(self):
+        with self.assertRaisesRegex(ValueError, "duplicate"):
+            showcase.parse_showcase_list(["same.webp\n", "same.webp\n"])
+        with self.assertRaisesRegex(ValueError, "Invalid"):
+            showcase.parse_showcase_list(["../proof.webp\n"])
+
+    def test_replaces_existing_showcase_as_one_batch(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proofs = root / "proofs"
+            destination = root / "showcase"
+            proofs.mkdir()
+            destination.mkdir()
+            (proofs / "first.webp").write_bytes(b"first")
+            (proofs / "second.webp").write_bytes(b"second")
+            (destination / "old.webp").write_bytes(b"old")
+            (destination / showcase.MANIFEST_NAME).write_text(
+                json.dumps({"version": 1, "images": ["old.webp"]}),
+                encoding="utf-8",
+            )
+
+            showcase.replace_showcase(
+                ["second.webp", "first.webp"],
+                proof_dir=proofs,
+                showcase_dir=destination,
+            )
+
+            self.assertFalse((destination / "old.webp").exists())
+            self.assertEqual(
+                showcase.load_showcase_filenames(destination),
+                ["second.webp", "first.webp"],
+            )
+
+    def test_missing_proof_keeps_existing_showcase(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            proofs = root / "proofs"
+            destination = root / "showcase"
+            proofs.mkdir()
+            destination.mkdir()
+            (destination / "old.webp").write_bytes(b"old")
+            (destination / showcase.MANIFEST_NAME).write_text(
+                json.dumps({"version": 1, "images": ["old.webp"]}),
+                encoding="utf-8",
+            )
+
+            with self.assertRaisesRegex(FileNotFoundError, "missing.webp"):
+                showcase.replace_showcase(
+                    ["missing.webp"],
+                    proof_dir=proofs,
+                    showcase_dir=destination,
+                )
+
+            self.assertEqual(showcase.load_showcase_filenames(destination), ["old.webp"])
+
+
+class TestShowcaseEndpoint(unittest.TestCase):
+    def setUp(self):
+        self.client = _client(server.app)
+
+    @patch.object(server, "load_showcase_filenames", return_value=["first.webp", "second.webp"])
+    def test_returns_public_showcase_urls(self, _load):
+        response = self.client.get("/showcase")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(
+            json.loads(response.data)["images"],
+            [
+                "http://localhost/static/uploads/showcase/first.webp",
+                "http://localhost/static/uploads/showcase/second.webp",
+            ],
+        )
+        self.assertEqual(response.headers["Cache-Control"], "public, max-age=60")
+
+    @patch.object(server, "load_showcase_filenames", side_effect=ValueError("bad manifest"))
+    def test_manifest_failure_returns_empty_fallback_payload(self, _load):
+        response = self.client.get("/showcase")
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(json.loads(response.data), {"images": []})
 
 
 # ---------------------------------------------------------------------------

@@ -14,6 +14,7 @@ from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 from imgSizeReducer import reduce_image_size
 from imageManager import proof_images, board_images
+from showcase import load_showcase_filenames, serve_showcase_image
 from werkzeug.middleware.proxy_fix import ProxyFix
 from werkzeug.exceptions import RequestEntityTooLarge
 import os
@@ -336,6 +337,30 @@ def uploaded_proof_image(filename):
 @limiter.exempt
 def uploaded_board_image(filename):
   return board_images.serve(filename)
+
+@app.route('/static/uploads/showcase/<path:filename>', methods=['GET'])
+@limiter.exempt
+def uploaded_showcase_image(filename):
+  return serve_showcase_image(filename)
+
+@app.route('/showcase', methods=['GET'])
+@limiter.limit("120 per minute")
+def get_showcase():
+  try:
+    filenames = load_showcase_filenames()
+  except ValueError as exc:
+    log.warning("showcase manifest load failed  error=%s", exc)
+    filenames = []
+
+  base_url = request.host_url.rstrip('/')
+  response = jsonify({
+    'images': [
+      f"{base_url}/static/uploads/showcase/{quote(filename, safe='')}"
+      for filename in filenames
+    ]
+  })
+  response.headers['Cache-Control'] = 'public, max-age=60'
+  return response
 
 
 @app.route('/health', methods=['GET'])
