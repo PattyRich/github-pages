@@ -198,6 +198,20 @@ docker compose -f docker-compose.prod.yml exec -T api python showcase.py < showc
 
 Publishing is all-or-nothing: every filename is validated and copied from `proofs/`, then the existing showcase batch is replaced. An empty list clears the showcase and makes the homepage use its bundled preview images. The browser randomizes the published batch on each visit.
 
+From Git Bash, the local publishing helper reads `SERVER_HOST`, `SERVER_USER`, `PEM_PATH`, and the optional `REMOTE_REPO_DIR` from the ignored local file `scripts/showcase_config.sh`. It defaults to `showcase.txt` in the repository root:
+
+```bash
+bash scripts/publish_showcase.sh
+```
+
+Pass another list location when needed:
+
+```bash
+bash scripts/publish_showcase.sh /c/path/to/showcase.txt
+```
+
+The helper uploads the list to a temporary server path, runs the same container command, and removes the temporary file afterward.
+
 ---
 
 ## Monitoring

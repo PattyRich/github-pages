@@ -11,6 +11,7 @@ showcase.txt
 **/.env
 services/api/.env
 scripts/backup_config.ps1
+scripts/showcase_config.sh
 
 # Backend
 **/__pycache__/
