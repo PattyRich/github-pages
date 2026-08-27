@@ -162,7 +162,7 @@ TLS and Cloudflare authenticated-origin-pull certificates stay on the host and a
 
 Routine frontend deployments do not recreate Nginx. The release installer fully stages a new build and atomically switches the `current` symlink only after the copy succeeds. Nginx site configuration is mounted from `nginx/` and reloaded gracefully only when its hash changes.
 
-Umami analytics is enabled only when `VITE_UMAMI_WEBSITE_ID` is set while building the production frontend. Add the public website ID to the repository root `.env` on the production host; route names are recorded without query strings, and dynamic Bingo board names are grouped under `/bingo/:boardName`.
+Umami analytics runs only on `praynr.com`; route names are recorded without query strings, and dynamic Bingo board names are grouped under `/bingo/:boardName`.
 
 An actual Nginx runtime update, such as a new base image, `nginx/Dockerfile`, or top-level `nginx/nginx.conf`, still requires a planned container recreation because the single edge container owns ports 80/443. The deployment workflow stages that image and reports the pending restart instead of causing an unplanned outage.
 

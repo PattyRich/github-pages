@@ -6,8 +6,6 @@ COPY apps/frontend/package.json apps/frontend/package-lock.json ./
 RUN npm ci
 
 COPY apps/frontend/ ./
-ARG VITE_UMAMI_WEBSITE_ID
-ENV VITE_UMAMI_WEBSITE_ID=$VITE_UMAMI_WEBSITE_ID
 RUN npm run build
 
 FROM alpine:3.21

@@ -3,8 +3,6 @@ services:
     build:
       context: .
       dockerfile: apps/frontend/Dockerfile
-      args:
-        VITE_UMAMI_WEBSITE_ID: ${VITE_UMAMI_WEBSITE_ID:-}
     volumes:
       - frontend_assets:/srv/frontend
     restart: "no"

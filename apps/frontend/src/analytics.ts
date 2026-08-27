@@ -1,5 +1,6 @@
 const UMAMI_SCRIPT_URL = 'https://cloud.umami.is/script.js';
 const UMAMI_HOSTNAME = 'praynr.com';
+const UMAMI_WEBSITE_ID = '7653485f-733c-4d4f-8cc2-ad783f8216b4';
 
 type UmamiPayload = {
   url?: string;
@@ -35,16 +36,14 @@ export function normalizeUmamiPayload(_type: string, payload: UmamiPayload): Uma
 }
 
 export function initializeAnalytics(): void {
-  const websiteId = import.meta.env.VITE_UMAMI_WEBSITE_ID;
-
-  if (!websiteId || window.location.hostname !== UMAMI_HOSTNAME) return;
+  if (window.location.hostname !== UMAMI_HOSTNAME) return;
 
   window.normalizeUmamiPayload = normalizeUmamiPayload;
 
   const script = document.createElement('script');
   script.defer = true;
   script.src = UMAMI_SCRIPT_URL;
-  script.dataset.websiteId = websiteId;
+  script.dataset.websiteId = UMAMI_WEBSITE_ID;
   script.dataset.domains = UMAMI_HOSTNAME;
   script.dataset.beforeSend = 'normalizeUmamiPayload';
   document.head.appendChild(script);
