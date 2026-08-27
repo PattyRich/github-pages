@@ -129,7 +129,6 @@ export function loot(
 
       if (data.name === 'cox' || data.name === 'cox-cm') {
         data.chance = options.points / 8678;
-        console.log(data.name)
         if (data.name == 'cox-cm') {
           data.rollCms = true;
         }
@@ -193,8 +192,19 @@ function getRandomInt(max) {
   return Math.floor(Math.random() * max) + 1;
 }
 
+function rollsUntilSuccess(chance) {
+  if (!Number.isFinite(chance) || chance <= 0) {
+    return Infinity;
+  }
+  if (chance >= 1) {
+    return 1;
+  }
+
+  // Inverse CDF for a geometric distribution: skip directly to the next hit.
+  return Math.floor(Math.log1p(-Math.random()) / Math.log1p(-chance)) + 1;
+}
+
 function looter(rolls, data, clueType) {
-  console.log(data);
   let rewards = [];
   let finish = rolls === 'f';
   let checkList = [];
@@ -224,122 +234,177 @@ function looter(rolls, data, clueType) {
   }
   let sequence = 1;
 
-  for (let i = 0; i < rolls; i++) {
-    rollItem(i);
-
-    //seperated this out so that we could run it multiple times for zulrah or multi drop bosses
-    if (data.name === 'zulrah') {
-      rollItem(i);
-    }
-
-    //previous check only adds if this is cox
-    if (data.rollCms) {
-      rollItemAdHoc(i, data.cms, false, true);
-    }
-
-    if (clueType) {
-      let numRolls = getClueMultiRolls(clueType);
-      for (let j = 1; j < numRolls; j++) {
-        rollItemAdHoc(i, data.items, true);
-      }
-    }
-
-    rollPet(i);
-    if (finish) {
-      if (!checkList.some((item) => item <= 0)) {
-        break;
-      }
-    }
+  if (clueType) {
+    rollEveryKill();
+  } else {
+    rollByEvent();
   }
 
   if (clueType) {
     return cleanClueRewards(rewards);
   }
 
-  if (data.allPets) {
+  if (data.allPets && rewards.length) {
     rewards[0].rate = rewards[0].kc / (1 / data.items[0].rate);
   }
   return rewards;
 
+  function rollEveryKill() {
+    for (let i = 0; i < rolls; i++) {
+      rollItem(i);
+
+      let numRolls = getClueMultiRolls(clueType);
+      for (let j = 1; j < numRolls; j++) {
+        rollItemAdHoc(i, data.items, true);
+      }
+
+      rollPet(i);
+      if (finish && isComplete()) {
+        break;
+      }
+    }
+  }
+
+  function rollByEvent() {
+    const uniqueChance = data.chance / 100;
+    // Keep Zulrah's two independent rolls as consecutive slots on the same KC.
+    const uniqueRollsPerKill = data.name === 'zulrah' ? 2 : 1;
+    const coxPet = Boolean(data.pet && data.name?.startsWith('cox'));
+    const petChance = data.pet && !coxPet ? 1 / data.pet.rate : 0;
+    const bonusWeight = data.rollCms ? totalWeight(data.cms) : 0;
+
+    let nextUniqueRoll = rollsUntilSuccess(uniqueChance);
+    let nextUniqueKc = rollToKill(nextUniqueRoll, uniqueRollsPerKill);
+    let nextBonusKc = rollsUntilSuccess(bonusWeight);
+    let nextPetKc = rollsUntilSuccess(petChance);
+
+    while (true) {
+      const kc = Math.min(nextUniqueKc, nextBonusKc, nextPetKc);
+      if (!Number.isFinite(kc) || kc > rolls) {
+        break;
+      }
+
+      let gotUnique = false;
+      while (nextUniqueKc === kc) {
+        awardItem(kc - 1);
+        gotUnique = true;
+        nextUniqueRoll += rollsUntilSuccess(uniqueChance);
+        nextUniqueKc = rollToKill(nextUniqueRoll, uniqueRollsPerKill);
+      }
+
+      let gotBonus = false;
+      if (nextBonusKc === kc) {
+        awardItemAdHoc(kc - 1, data.cms, false, true, bonusWeight);
+        gotBonus = true;
+        nextBonusKc += rollsUntilSuccess(bonusWeight);
+      }
+
+      // CoX pets are conditional on a purple and are blocked by a same-KC CM bonus drop.
+      if (coxPet && gotUnique && !gotBonus && getRandomInt(data.pet.rate) === data.pet.rate) {
+        awardPet(kc - 1);
+      } else if (nextPetKc === kc) {
+        awardPet(kc - 1);
+        nextPetKc += rollsUntilSuccess(petChance);
+      }
+
+      if (finish && isComplete()) {
+        break;
+      }
+    }
+  }
+
+  function isComplete() {
+    return !checkList.some((item) => item <= 0);
+  }
+
+  function rollToKill(roll, rollsPerKill) {
+    return Math.ceil(roll / rollsPerKill);
+  }
+
+  function totalWeight(items) {
+    return items.reduce((weight, item) => weight + item.rate, 0);
+  }
+
   function rollItemAdHoc(kc, items, checkListBool = false, isBonusDrop = false) {
     let rng = Math.random();
-    //they got loot
-    let weight = 0;
-
-    items.forEach((item) => {
-      weight += item.rate;
-    });
+    let weight = totalWeight(items);
 
     if (rng < weight) {
-      let item_per = random_generator(weight, 0);
-      let cnt = 0;
-      for (let j = 0; j < items.length; j++) {
-        cnt += items[j].rate;
-        if (cnt >= item_per) {
-          if (items[j].name === 'Bloodhound') {
-            return;
-          }
-          rewards.push({
-            kc: kc + 1,
-            name: items[j].name,
-            isBonusDrop,
-          });
-          if (checkListBool) {
-            checkList[j] += 1;
-          }
-          break;
+      awardItemAdHoc(kc, items, checkListBool, isBonusDrop, weight);
+    }
+  }
+
+  function awardItemAdHoc(kc, items, checkListBool, isBonusDrop, weight) {
+    let item_per = random_generator(weight, 0);
+    let cnt = 0;
+    for (let j = 0; j < items.length; j++) {
+      cnt += items[j].rate;
+      if (cnt >= item_per) {
+        if (items[j].name === 'Bloodhound') {
+          return;
         }
+        rewards.push({
+          kc: kc + 1,
+          name: items[j].name,
+          isBonusDrop,
+        });
+        if (checkListBool) {
+          checkList[j] += 1;
+        }
+        break;
       }
     }
   }
 
   function rollItem(kcc) {
     let rng = Math.random() * 100;
-    //they got loot
-
     if (rng < data.chance) {
-      let item_per = random_generator(itemWeights, 0);
+      awardItem(kcc);
+    }
+  }
 
-      let cnt = 0;
-      for (let j = 0; j < data.items.length; j++) {
-        cnt += data.items[j].rate;
-        if (cnt >= item_per) {
-          if (dt2Check) {
-            if (data.items[j].name.includes('vestige')) {
-              dt2 += 1;
-              if (dt2 > 2) {
-                dt2 = 0;
-              } else {
-                rewards.push({
-                  kc: kcc + 1,
-                  name: 'Gold ring',
-                });
-                return;
-              }
+  function awardItem(kcc) {
+    let item_per = random_generator(itemWeights, 0);
+
+    let cnt = 0;
+    for (let j = 0; j < data.items.length; j++) {
+      cnt += data.items[j].rate;
+      if (cnt >= item_per) {
+        if (dt2Check) {
+          if (data.items[j].name.includes('vestige')) {
+            dt2 += 1;
+            if (dt2 > 2) {
+              dt2 = 0;
+            } else {
+              rewards.push({
+                kc: kcc + 1,
+                name: 'Gold ring',
+              });
+              return;
             }
           }
-          let name = data.items[j].name;
-          let index = j;
-          //yucky code lazy atm
-          if (data.items[j].sequence) {
-            let seqItem = data.items.find((item) => item.sequence === sequence);
-            if (!seqItem) {
-              sequence = 1;
-              seqItem = data.items.find((item) => item.sequence === sequence);
-            }
-            name = seqItem.name;
-            index = data.items.findIndex((item) => item.sequence === sequence);
-            sequence += 1;
-          }
-          rewards.push({
-            kc: kcc + 1,
-            name: name,
-          });
-          if (!data.items[index].extra) {
-            checkList[index] += 1;
-          }
-          break;
         }
+        let name = data.items[j].name;
+        let index = j;
+        //yucky code lazy atm
+        if (data.items[j].sequence) {
+          let seqItem = data.items.find((item) => item.sequence === sequence);
+          if (!seqItem) {
+            sequence = 1;
+            seqItem = data.items.find((item) => item.sequence === sequence);
+          }
+          name = seqItem.name;
+          index = data.items.findIndex((item) => item.sequence === sequence);
+          sequence += 1;
+        }
+        rewards.push({
+          kc: kcc + 1,
+          name: name,
+        });
+        if (!data.items[index].extra) {
+          checkList[index] += 1;
+        }
+        break;
       }
     }
   }
@@ -350,30 +415,26 @@ function looter(rolls, data, clueType) {
     }
     let x = getRandomInt(data.pet.rate);
     if (x === data.pet.rate) {
-      if (data.name.startsWith('cox')) {
-        if (
-          rewards.length &&
+      if (
+        !data.name?.startsWith('cox') ||
+        (rewards.length &&
           rewards[rewards.length - 1].kc === kc + 1 &&
           !['Twisted ancestral colour kit', 'Metamorphic dust'].includes(
             rewards[rewards.length - 1].name
-          )
-        ) {
-          rewards.push({
-            kc: kc + 1,
-            name: data.pet.name,
-            isPet: true,
-          });
-          if (data.pet.getPet) checkList[checkList.length - 1] += 1;
-        }
-      } else {
-        rewards.push({
-          kc: kc + 1,
-          name: data.pet.name,
-          isPet: true,
-        });
-        if (data.pet.getPet) checkList[checkList.length - 1] += 1;
+          ))
+      ) {
+        awardPet(kc);
       }
     }
+  }
+
+  function awardPet(kc) {
+    rewards.push({
+      kc: kc + 1,
+      name: data.pet.name,
+      isPet: true,
+    });
+    if (data.pet.getPet) checkList[checkList.length - 1] += 1;
   }
 }
 
