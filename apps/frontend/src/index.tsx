@@ -16,6 +16,9 @@ import HomeButton from './components/HomeButton';
 import NotFound from './pages/NotFound';
 import Recents from './pages/Recents';
 import { HashRouter, Routes, Route } from 'react-router-dom';
+import { initializeAnalytics } from './analytics';
+
+initializeAnalytics();
 
 const rootElement = document.getElementById('root');
 
