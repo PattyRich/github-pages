@@ -50,17 +50,17 @@ install-hooks:
 # DEVELOPMENT
 # -----------------------
 dev:
-	$(DOCKER_COMPOSE) up -d --build
+	$(DOCKER_COMPOSE) up -d --build --pull always
 	cd $(FRONTEND_DIR) && npm start
 
 frontend:
 	cd $(FRONTEND_DIR) && npm start
 
 backend:
-	$(DOCKER_COMPOSE) up -d --build
+	$(DOCKER_COMPOSE) up -d --build --pull always
 
 backend-logs:
-	$(DOCKER_COMPOSE) up --build
+	$(DOCKER_COMPOSE) up --build --pull always
 
 # -----------------------
 # DOCKER CONTROL
