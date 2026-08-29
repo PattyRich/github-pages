@@ -169,7 +169,7 @@ The backend workflow rebuilds and restarts only `api` and `worker`. Weekly maint
 
 **Unified API + Worker image** — A single Docker image for both the Flask API and the RQ worker means one Dockerfile to maintain. The trade-off is a slightly larger image than strictly necessary for each role.
 
-**SSE for Bingo, polling for jobs** — Bingo board updates use Server-Sent Events backed by Redis pub/sub so open boards can refresh quickly after changes. LoL-Beat job status still uses simple HTTP polling because crawl jobs are long-running and low-frequency.
+**SSE for Bingo, polling for jobs** — Bingo board updates use Server-Sent Events backed by Redis pub/sub so open boards can refresh quickly after changes. Each API process keeps one Redis pattern subscription and fans messages out to its local SSE clients, so Redis connection usage does not grow with the number of open browsers. LoL-Beat job status still uses simple HTTP polling because crawl jobs are long-running and low-frequency.
 
 **Flask over FastAPI** — Flask's synchronous model is straightforward for this workload. The async work (crawling) is offloaded to RQ workers anyway, so async-native routing doesn't add meaningful value here.
 

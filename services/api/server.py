@@ -1,5 +1,6 @@
 from gevent import monkey
 monkey.patch_all()
+from gevent.queue import Empty as GeventQueueEmpty
 
 from flask import Flask, jsonify, request, has_request_context, Response, stream_with_context
 from flask import g
@@ -25,6 +26,7 @@ load_dotenv()
 from rq import Worker
 from logger import get_logger
 from lol_server import lol_api
+from redis_events import BROKER_DISCONNECTED, RedisEventBroker
 from utils import postToDiscord
 import analytics
 
@@ -61,7 +63,30 @@ limiter = Limiter(
 )
 
 import redis as redis_lib
-_redis = redis_lib.from_url(redis_url, decode_responses=True)
+from redis.backoff import NoBackoff
+from redis.retry import Retry
+
+redis_command_pool_size = max(1, int(os.environ.get("REDIS_COMMAND_POOL_SIZE", 64)))
+redis_event_pool_size = max(1, int(os.environ.get("REDIS_EVENT_POOL_SIZE", 4)))
+
+_redis_pool = redis_lib.BlockingConnectionPool.from_url(
+    redis_url,
+    max_connections=redis_command_pool_size,
+    timeout=2,
+    decode_responses=True,
+)
+_redis = redis_lib.Redis(connection_pool=_redis_pool)
+
+_event_redis_pool = redis_lib.ConnectionPool.from_url(
+    redis_url,
+    max_connections=redis_event_pool_size,
+    # Pub/Sub delivery is not durable, so the broker must observe every
+    # disconnect and force clients to resync after its own reconnect loop.
+    retry=Retry(NoBackoff(), 0),
+    decode_responses=True,
+)
+_event_redis = redis_lib.Redis(connection_pool=_event_redis_pool)
+_board_event_broker = RedisEventBroker(_event_redis, log)
 
 mongo_uri = os.environ.get("MONGO_URI", "mongodb://localhost:27017/")
 myclient = pymongo.MongoClient(mongo_uri)
@@ -391,7 +416,11 @@ def health():
     t0 = time.time()
     _redis.ping()
     redis_ms = round((time.time() - t0) * 1000)
-    result['redis'] = {'status': 'ok', 'latency_ms': redis_ms}
+    result['redis'] = {
+      'status': 'ok',
+      'latency_ms': redis_ms,
+      'sse_subscribers_local': _board_event_broker.subscriber_count(),
+    }
   except Exception as e:
     log.error("health - redis check failed: %s", e)
     result['redis'] = {'status': 'error', 'error': str(e)}
@@ -527,23 +556,25 @@ def board_events(boardName, password, pwtype):
     return err
 
   def event_stream():
-    pubsub = _redis.pubsub()
-    pubsub.subscribe(f"board:{boardName}")
+    channel = f"board:{boardName}"
+    subscription = _board_event_broker.subscribe(channel)
     log.info("SSE open  board=%s  pwtype=%s  ip=%s", boardName, pwtype, request.remote_addr)
     try:
       yield "retry: 3000\n\n"
-      last_heartbeat = time.time()
       while True:
-        message = pubsub.get_message(timeout=25)
-        if message and message['type'] == 'message':
+        try:
+          message = subscription.get(timeout=25)
+        except GeventQueueEmpty:
+          message = None
+
+        if message is BROKER_DISCONNECTED:
+          return
+        if message is not None:
           yield "data: refresh\n\n"
-        now = time.time()
-        if now - last_heartbeat > 25:
+        else:
           yield ": heartbeat\n\n"
-          last_heartbeat = now
     finally:
-      pubsub.unsubscribe()
-      pubsub.close()
+      _board_event_broker.unsubscribe(channel, subscription)
       log.info("SSE closed  board=%s", boardName)
 
   return Response(

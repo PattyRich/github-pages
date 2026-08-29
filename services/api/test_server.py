@@ -40,6 +40,7 @@ def _mock_init(self, *args, **kwargs):
 flask_limiter.Limiter.__init__ = _mock_init
 
 import server  # noqa: E402  (must come after patch)
+import redis_events  # noqa: E402
 import showcase  # noqa: E402
 
 # Point server's module-level `mycol` at our controllable mock
@@ -77,6 +78,138 @@ def _make_board(rows=2, cols=2, teams=2,
 def _client(app):
     app.config["TESTING"] = True
     return app.test_client()
+
+
+class TestRedisEventBroker(unittest.TestCase):
+    class StopBrokerLoop(BaseException):
+        pass
+
+    def setUp(self):
+        self.spawn_patch = patch("redis_events.spawn")
+        self.mock_spawn = self.spawn_patch.start()
+        self.mock_spawn.return_value.dead = False
+        self.broker = redis_events.RedisEventBroker(MagicMock(), MagicMock())
+
+    def tearDown(self):
+        self.spawn_patch.stop()
+
+    def test_fans_out_only_to_matching_board_subscribers(self):
+        first = self.broker.subscribe("board:first")
+        second = self.broker.subscribe("board:second")
+
+        refresh = object()
+        self.broker._dispatch("board:first", refresh)
+
+        self.assertIs(first.get_nowait(), refresh)
+        self.assertTrue(second.empty())
+        self.assertEqual(self.broker.subscriber_count(), 2)
+        self.mock_spawn.assert_called_once_with(self.broker._run)
+
+    def test_coalesces_refreshes_and_prioritizes_disconnect(self):
+        subscriber = self.broker.subscribe("board:first")
+
+        self.broker._dispatch("board:first", object())
+        self.broker._dispatch("board:first", object())
+        self.assertEqual(subscriber.qsize(), 1)
+
+        self.broker._disconnect_subscribers()
+        self.assertIs(subscriber.get_nowait(), redis_events.BROKER_DISCONNECTED)
+
+    def test_unsubscribe_removes_empty_board_channel(self):
+        subscriber = self.broker.subscribe("board:first")
+
+        self.broker.unsubscribe("board:first", subscriber)
+
+        self.assertEqual(self.broker.subscriber_count(), 0)
+
+    def test_sse_stream_releases_subscription_when_broker_disconnects(self):
+        subscription = MagicMock()
+        subscription.get.return_value = redis_events.BROKER_DISCONNECTED
+
+        with (
+            patch.object(server, "auth", return_value=({}, None)),
+            patch.object(server._board_event_broker, "subscribe", return_value=subscription),
+            patch.object(server._board_event_broker, "unsubscribe") as unsubscribe,
+        ):
+            response = _client(server.app).get(
+                "/events/TestBoard/gen123/general",
+                buffered=False,
+            )
+            self.assertEqual(next(response.response), b"retry: 3000\n\n")
+            with self.assertRaises(StopIteration):
+                next(response.response)
+
+        unsubscribe.assert_called_once_with("board:TestBoard", subscription)
+
+    def test_listener_subscribes_routes_pattern_message_and_closes(self):
+        first = self.broker.subscribe("board:first")
+        second = self.broker.subscribe("board:second")
+        pubsub = self.broker._redis.pubsub.return_value
+        calls = 0
+
+        def get_message(timeout):
+            nonlocal calls
+            calls += 1
+            if calls == 1:
+                return None  # PSUBSCRIBE acknowledgement is hidden.
+            if calls == 2:
+                # Drain the broker's initial reconciliation refresh so the
+                # pattern message itself is what remains in the target queue.
+                first.get_nowait()
+                second.get_nowait()
+                return {
+                    "type": "pmessage",
+                    "channel": b"board:first",
+                    "data": b"refresh",
+                }
+            raise self.StopBrokerLoop()
+
+        pubsub.get_message.side_effect = get_message
+
+        with self.assertRaises(self.StopBrokerLoop):
+            self.broker._run()
+
+        pubsub.psubscribe.assert_called_once_with("board:*")
+        self.assertEqual(first.qsize(), 1)
+        self.assertTrue(second.empty())
+        pubsub.close.assert_called_once()
+
+    def test_listener_disconnects_clients_then_reconciles_after_retry(self):
+        old_subscription = self.broker.subscribe("board:first")
+        failed_pubsub = MagicMock()
+        recovered_pubsub = MagicMock()
+        failed_pubsub.get_message.side_effect = server.redis_lib.exceptions.ConnectionError(
+            "connection lost"
+        )
+        recovered_pubsub.get_message.side_effect = [None, self.StopBrokerLoop()]
+        self.broker._redis.pubsub.side_effect = [failed_pubsub, recovered_pubsub]
+        new_subscription = None
+
+        def reconnect_sleep(delay):
+            nonlocal new_subscription
+            self.assertEqual(delay, 1)
+            self.assertIs(
+                old_subscription.get_nowait(),
+                redis_events.BROKER_DISCONNECTED,
+            )
+            self.broker.unsubscribe("board:first", old_subscription)
+            new_subscription = self.broker.subscribe("board:first")
+
+        with (
+            patch("redis_events.sleep", side_effect=reconnect_sleep) as sleep,
+            self.assertRaises(self.StopBrokerLoop),
+        ):
+            self.broker._run()
+
+        sleep.assert_called_once_with(1)
+        failed_pubsub.close.assert_called_once()
+        recovered_pubsub.close.assert_called_once()
+        self.assertIsNotNone(new_subscription)
+        self.assertEqual(new_subscription.qsize(), 1)
+
+    def test_event_pool_disables_internal_redis_retries(self):
+        retry = server._event_redis_pool.connection_kwargs["retry"]
+        self.assertEqual(retry.get_retries(), 0)
 
 
 TINY_PNG_DATA_URI = (
