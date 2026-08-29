@@ -79,7 +79,7 @@ export default function BoardTile({
   return (
     <>
       <span
-        className={`tile-wrapper ${!completeStyle && checked ? 'green-bg' : ''}`}
+        className={`tile-wrapper ${!completeStyle && bgHeight !== null ? 'green-bg' : ''}`}
         style={{ '--bgHeight': bgHeight } as CSSProperties}
       >
         {showTitlePopup && (

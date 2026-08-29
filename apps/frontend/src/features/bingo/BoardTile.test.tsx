@@ -102,6 +102,14 @@ test('shows green-bg class when tile is checked and completeStyle is off', () =>
   expect(container.querySelector('.tile-wrapper')).toHaveClass('green-bg');
 });
 
+test('fills the tile background to match partial team progress', () => {
+  const { container } = renderBoardTile();
+  const tile = container.querySelector('.tile-wrapper');
+
+  expect(tile).toHaveClass('green-bg');
+  expect(tile).toHaveStyle({ '--bgHeight': '25%' });
+});
+
 test('does not show green-bg when completeStyle setting is on', () => {
   localStorage.setItem('completeStyle', 'true');
   const { container } = renderBoardTile({
