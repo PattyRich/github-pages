@@ -54,19 +54,32 @@ jobs:
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
           envs: RELEASE_SHA
+          command_timeout: 40m
           script: |
             set -e
+            # All production workflows share this host lock. Git resets leave
+            # files under .git intact, including the locked file.
+            exec 9>/var/www/server/github-pages/.git/praynr-deploy.lock
+            flock -w 1200 9
             cd /var/www/server/github-pages
 
-            # Make the production checkout exactly match the triggering main branch.
             git fetch origin main
-            git reset --hard origin/main
+            git cat-file -e "$RELEASE_SHA^{commit}"
+            revision_file="$(git rev-parse --git-path praynr-frontend-revision)"
+            deployed_sha="$(cat "$revision_file" 2>/dev/null || true)"
+            if [ -n "$deployed_sha" ] && [ "$deployed_sha" != "$RELEASE_SHA" ] && git merge-base --is-ancestor "$RELEASE_SHA" "$deployed_sha"; then
+              echo "Skipping a frontend release superseded by $deployed_sha."
+              exit 0
+            fi
+            # Build the exact commit validated by this workflow, even if main
+            # advanced while validation or the deployment lock was pending.
+            git reset --hard "$RELEASE_SHA"
 
             # Validate Compose, then build the frontend installer and stage the
             # latest Nginx image. The frontend Dockerfile runs its own npm ci
             # because this build happens on production, not on the GitHub runner.
-            docker compose -f docker-compose.prod.yml config >/tmp/praynr-compose-config.yml
-            docker compose -f docker-compose.prod.yml build frontend nginx
+            docker compose -f docker-compose.prod.yml config --quiet
+            docker compose -f docker-compose.prod.yml build --pull frontend nginx
 
             # Test the new Nginx configuration in a temporary container before
             # changing the live frontend release.
@@ -110,6 +123,8 @@ jobs:
                 echo "Recreate Nginx during a planned maintenance window to apply it."
               fi
             fi
+
+            printf '%s\n' "$RELEASE_SHA" > "$revision_file"
 
       # Deployment failures are reported without making the webhook mandatory.
       - name: Notify Discord on failure

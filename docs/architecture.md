@@ -95,9 +95,11 @@ Document shape:
 {
   boardName:  string,          // unique identifier (indexed)
   boardType:  "osrs"|"generic", // OSRS remains the default for legacy boards
-  boardData:  Tile[][],        // 2D array of { title, image, points }
+  boardData:  Tile[][],        // column-major array of { title, image, points, revision }
   "team-1":   TeamState,       // { name, optional team secret, teamData: TeamTile[][] }
   "team-2":   TeamState,
+  boardMutationRevision: number, // monotonic revision for any board write
+  boardSettingsRevision: number, // monotonic revision for settings/resize/roster writes
   expiresAt:  Date             // TTL index, ~3 years from creation
 }
 ```
@@ -111,9 +113,26 @@ TeamTile {
   checked:      bool,
   proof:        string,
   proofImages:  string[],      // /static/uploads/proofs/<uuid>.webp or legacy data URI
-  currPoints:   number
+  currPoints:   number,
+  revision:     number         // per-tile compare-and-set revision; legacy data is 0
 }
 ```
+
+Tile updates use a MongoDB compare-and-set query against the authenticated board
+`_id`, the submitted settings revision, and the tile's own revision. General
+updates also include the matching board tile revision so progress cannot be
+applied to a tile whose definition changed. The update changes only the targeted
+tile fields and increments that tile revision plus `boardMutationRevision`.
+Settings metadata is written to targeted fields so it can proceed alongside
+independent progress updates. Resizes and roster changes are one atomic update,
+guarded by both the submitted `boardSettingsRevision` and the fresh board
+mutation revision. A failed match returns HTTP 409 and never publishes an event.
+Legacy boards without revision fields are read as revision zero and accept the
+first revision-zero write, which initializes the fields through `$inc`.
+Clients from before the revision rollout omit the expected-revision fields; the
+API temporarily derives those values from its authenticated read while retaining
+the same atomic MongoDB compare-and-set guard. New clients submit their original
+tile and settings revisions so edits made before the request are also detected.
 
 ### Local Filesystem — Bingo Proof Images
 
@@ -130,7 +149,13 @@ The public URL shape is:
 /static/uploads/proofs/<uuid>.webp
 ```
 
-`proof_images.py` normalizes these paths so MongoDB keeps portable relative paths, while API responses return absolute URLs such as `https://praynr.com/static/uploads/proofs/<uuid>.webp`. This matters because the production frontend may be served from GitHub Pages while the API and images are served from `praynr.com`.
+`imageManager.py` normalizes these paths so MongoDB keeps portable relative paths, while API responses return absolute URLs such as `https://praynr.com/static/uploads/proofs/<uuid>.webp`. This matters because the production frontend may be served from GitHub Pages while the API and images are served from `praynr.com`.
+
+Proof and board-image URLs may be shared by copied or imported boards, so write
+requests do not immediately delete replaced files. A daily maintenance workflow
+scans every board for live upload references and removes unreferenced direct-child
+image files after a seven-day grace period. The delay also protects newly staged
+files when the outcome of a MongoDB write was temporarily unknown.
 
 ### Redis — Cache, Graph, and Queue
 
@@ -157,7 +182,7 @@ Separating concerns across key namespaces keeps Redis operationally simple — y
 
 **CI/CD** — GitHub Actions runs on push to `main`. The frontend workflow typechecks, builds a release image, copies the complete build into a versioned directory in `frontend_assets`, and atomically switches `/srv/frontend/current`. The running Nginx process is not replaced. Hashed assets are retained in a shared directory so requests crossing the switch remain valid. The active release and four rollback releases are kept; a shared asset is garbage-collected only when none of those releases reference it and its seven-day browser-session grace period has elapsed. Site configuration changes use `nginx -s reload`, which starts new workers before gracefully retiring the old workers. The first rollout of this architecture recreates Nginx once to attach the shared volume.
 
-The backend workflow rebuilds and restarts only `api` and `worker`. Weekly maintenance updates non-edge containers and may stage a newer Nginx runtime image, but automated frontend deploys do not apply that image. Runtime changes are applied in a planned maintenance window because the single edge container owns ports 80/443.
+The backend workflow rebuilds and restarts only `api` and `worker`. Weekly maintenance updates MongoDB, Redis, and Dozzle; product deployments rebuild their custom images with current bases. Automated frontend deploys can stage a newer Nginx runtime image but do not replace the live edge container. Runtime changes are applied in a planned maintenance window because that container owns ports 80/443. A separate daily workflow performs reference-aware upload cleanup inside the API container.
 
 **Monitoring** — Dozzle streams live container logs via a web UI at `dozzle.praynr.com`, authenticated via `dozzle/users.yml`. This means production debugging doesn't require SSH.
 

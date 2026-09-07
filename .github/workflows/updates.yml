@@ -18,18 +18,17 @@ jobs:
           host: ${{ secrets.LIGHTSAIL_HOST }}
           username: ${{ secrets.LIGHTSAIL_USER }}
           key: ${{ secrets.LIGHTSAIL_KEY }}
+          command_timeout: 40m
           script: |
             set -e
+            exec 9>/var/www/server/github-pages/.git/praynr-deploy.lock
+            flock -w 1200 9
             cd /var/www/server/github-pages
             # Pull latest third-party images.
             docker compose -f docker-compose.prod.yml pull mongo redis dozzle
             
-            # Rebuild custom images with the latest base images. A refreshed Nginx
-            # runtime is staged only; frontend deploys keep the live edge container
-            # in place and report when a maintenance restart is pending.
-            docker compose -f docker-compose.prod.yml build --pull api worker nginx
-            
-            # Recreate non-edge containers if anything changed.
-            docker compose -f docker-compose.prod.yml up -d --remove-orphans mongo redis api worker dozzle
+            # Custom images are rebuilt by their SHA-pinned deployment workflows.
+            # The shared checkout may belong to a different product's release.
+            docker compose -f docker-compose.prod.yml up -d --no-deps mongo redis dozzle
             # Optional: Clean up old images to save disk space
             docker image prune -f

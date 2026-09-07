@@ -15,6 +15,7 @@ export interface TileInfo {
   description?: string;
   image?: TileImage | null;
   points?: number | string;
+  revision?: number;
   rowBingo?: number | string;
   title?: string;
 }
@@ -24,6 +25,19 @@ export interface TeamTileInfo {
   currPoints?: number | string;
   proof?: string;
   proofImages?: string[];
+  revision?: number;
+}
+
+export interface TileSaveContext {
+  expectedBoardTileRevision?: number;
+  expectedRevision: number;
+  expectedSettingsRevision: number;
+  teamId?: number;
+}
+
+export function normalizeRevision(value: unknown): number {
+  const revision = Number(value);
+  return Number.isSafeInteger(revision) && revision >= 0 ? revision : 0;
 }
 
 export interface ImageSuggestion {

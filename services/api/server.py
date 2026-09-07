@@ -9,6 +9,7 @@ import json
 import datetime
 import math
 import time
+import copy
 import requests
 import pymongo
 from flask_limiter import Limiter
@@ -106,7 +107,8 @@ defaultTeamObj = {
   'checked': False,
   'proof': '',
   'proofImages': [],
-  'currPoints': 0
+  'currPoints': 0,
+  'revision': 0,
 }
 defaultBoardObj = {
   'points': 0,
@@ -114,7 +116,8 @@ defaultBoardObj = {
   'description': '',
   'image': None,
   'rowBingo': 0,
-  'colBingo': 0
+  'colBingo': 0,
+  'revision': 0,
 }
 
 def setup_indexes(collection):
@@ -328,7 +331,7 @@ def publish_board_update(board_name):
   except Exception as e:
     log.warning("publish_board_update failed  board=%s  error=%s", board_name, e)
 
-def normalize_proof_images(images):
+def normalize_proof_images(images, staged_images=None):
   if images is None:
     return []
   if not isinstance(images, list):
@@ -341,13 +344,149 @@ def normalize_proof_images(images):
     if not isinstance(img_uri, str):
       raise ValueError("Proof images must be image URLs or uploads.")
     if img_uri.startswith('data:'):
-      saved_images.append(proof_images.save(img_uri))
+      saved_image = proof_images.save(img_uri)
+      saved_images.append(saved_image)
+      if staged_images is not None:
+        staged_images.append(saved_image)
       continue
     storage_url = proof_images.storage_url(img_uri)
     if not isinstance(storage_url, str) or not storage_url.startswith(proof_images.url_prefix + "/"):
       raise ValueError("Proof images must be uploaded through this board.")
     saved_images.append(storage_url)
   return saved_images
+
+
+class BoardConflict(Exception):
+  """Raised when a board write loses its compare-and-set race."""
+
+
+def conflict_response(message='This board changed while you were editing. Refresh and try again.'):
+  response = jsonify({
+    'error': 'conflict',
+    'message': message,
+  })
+  response.status_code = 409
+  return response
+
+
+def revision_value(value):
+  """Return a non-negative integer revision, treating legacy data as zero."""
+  if isinstance(value, bool):
+    return 0
+  try:
+    parsed = int(value)
+  except (TypeError, ValueError):
+    return 0
+  return parsed if parsed >= 0 else 0
+
+
+def required_revision(data, field):
+  """Read a required client revision or raise a refresh-required conflict."""
+  if field not in data or isinstance(data[field], bool):
+    raise BoardConflict()
+  try:
+    parsed = int(data[field])
+  except (TypeError, ValueError):
+    raise BoardConflict()
+  if parsed < 0 or parsed != data[field]:
+    raise BoardConflict()
+  return parsed
+
+
+def compatible_revision(data, field, current_value):
+  """Use server-side CAS for pre-revision clients during the rollout window."""
+  if field not in data:
+    return revision_value(current_value)
+  return required_revision(data, field)
+
+
+def legacy_revision_clause(field, expected):
+  if expected == 0:
+    return {'$or': [{field: 0}, {field: {'$exists': False}}]}
+  return {field: expected}
+
+
+def board_revision_query(board_name, revisions, identity):
+  # The authenticated document identity is part of every CAS predicate.  The
+  # board name remains useful for readability, but is never the identity
+  # fallback when a malformed document lacks `_id`.
+  query = {'boardName': board_name, '_id': identity}
+  clauses = [legacy_revision_clause(field, revision) for field, revision in revisions.items()]
+  if clauses:
+    query['$and'] = clauses
+  return query
+
+
+def update_matched(update_result):
+  """Treat Mongo's matched_count as the compare-and-set result."""
+  matched_count = getattr(update_result, 'matched_count', None)
+  return isinstance(matched_count, int) and matched_count == 1
+
+
+def board_tile_at(cache, row, col):
+  board_data = cache.get('boardData') or []
+  if not isinstance(row, int) or isinstance(row, bool) or not isinstance(col, int) or isinstance(col, bool):
+    raise ValueError('Tile coordinates must be integers.')
+  if row < 0 or row >= len(board_data):
+    raise ValueError('That tile does not exist.')
+  if not isinstance(board_data[row], list) or col < 0 or col >= len(board_data[row]):
+    raise ValueError('That tile does not exist.')
+  return board_data[row][col]
+
+
+def team_tile_at(team, row, col):
+  team_data = team.get('teamData') if isinstance(team, dict) else None
+  if not isinstance(team_data, list) or row < 0 or row >= len(team_data):
+    raise ValueError('That tile does not exist.')
+  if not isinstance(team_data[row], list) or col < 0 or col >= len(team_data[row]):
+    raise ValueError('That tile does not exist.')
+  return team_data[row][col]
+
+
+def tile_revision_path(root, row, col):
+  return f'{root}.{row}.{col}.revision'
+
+
+def tile_field_updates(root, row, col, info):
+  return {f'{root}.{row}.{col}.{key}': value for key, value in info.items()}
+
+
+def cleanup_staged_images(store, staged_images):
+  for image in staged_images:
+    store.delete(image)
+
+
+def resize_grid(grid, columns, rows, default_tile):
+  """Resize the column-major grid without changing its storage orientation."""
+  source = grid if isinstance(grid, list) else []
+  resized = []
+  for column in range(columns):
+    existing = source[column] if column < len(source) and isinstance(source[column], list) else []
+    next_column = copy.deepcopy(existing[:rows])
+    while len(next_column) < rows:
+      next_column.append(copy.deepcopy(default_tile))
+    resized.append(next_column)
+  return resized
+
+
+def board_dimensions(cache):
+  board_data = cache.get('boardData') if isinstance(cache, dict) else None
+  columns = len(board_data) if isinstance(board_data, list) else 0
+  rows = len(board_data[0]) if columns and isinstance(board_data[0], list) else 0
+  return rows, columns
+
+
+def team_payload_entry(entry):
+  if not isinstance(entry, dict) or not isinstance(entry.get('data'), dict):
+    raise ValueError('Each team must include its metadata.')
+  team = entry['data']
+  name = team.get('name')
+  if not isinstance(name, str) or not name.strip():
+    raise ValueError('Team names cannot be empty.')
+  return {
+    'name': name,
+    'password': team.get('password', ''),
+  }
 
 # ---------------------------------------------------------------------------
 # Routes
@@ -494,6 +633,8 @@ def createBoard():
   ts = time.time()
   isodate = datetime.datetime.fromtimestamp(ts, None)
   data['date'] = isodate
+  data['boardMutationRevision'] = 0
+  data['boardSettingsRevision'] = 0
   insert = mycol.insert_one(data)
   if (not insert):
     log.error("createBoard - MongoDB insert failed  board=%s", data['boardName'])
@@ -518,10 +659,11 @@ def getBoard(boardName, password, pwtype):
   if err:
     return err
 
-  boardData = cache['boardData']
+  boardData = copy.deepcopy(cache['boardData'])
   visibleRows = board_visible_rows(cache)
   for row in boardData:
     for tile in row:
+      tile['revision'] = revision_value(tile.get('revision'))
       tile['image'] = public_board_image(tile.get('image'))
   if pwtype == 'general':
     boardData = slice_board_rows(boardData, visibleRows)
@@ -532,21 +674,32 @@ def getBoard(boardName, password, pwtype):
 
   for i in range(cache['teams']):
     team = 'team-' + str(i)
-    if (pwtype != 'admin' and 'password' in cache[team]):
-      del cache[team]['password']
+    team_cache = copy.deepcopy(cache[team])
+    if (pwtype != 'admin' and 'password' in team_cache):
+      del team_cache['password']
 
-    for row in cache[team]['teamData']:
+    for row in team_cache.get('teamData', []):
       for tile in row:
+        tile['revision'] = revision_value(tile.get('revision'))
         if 'proofImages' in tile:
           tile['proofImages'] = [proof_images.public_url(image) for image in tile['proofImages']]
           
     teamData.append({
       'team': i,
-      'data': cache[team]
+      'data': team_cache
     })
 
   log.info("getBoard - success  board=%s  pwtype=%s", boardName, pwtype)
-  return jsonify(boardData=boardData, teamData=teamData, generalPassword=generalPassword, teamPasswordsRequired=passwordRequired, visibleRows=visibleRows, boardType=cacheBoardType)
+  return jsonify(
+    boardData=boardData,
+    teamData=teamData,
+    generalPassword=generalPassword,
+    teamPasswordsRequired=passwordRequired,
+    visibleRows=visibleRows,
+    boardType=cacheBoardType,
+    boardMutationRevision=revision_value(cache.get('boardMutationRevision')),
+    boardSettingsRevision=revision_value(cache.get('boardSettingsRevision')),
+  )
 
 @app.route('/events/<boardName>/<password>/<pwtype>')
 @limiter.limit("2000 per hour")
@@ -594,84 +747,182 @@ def updateBoard(boardName, password, pwtype, teampw):
   cache, err = auth(boardName, password, pwtype)
   if err:
     return err
-  data = json.loads(request.data.decode(), parse_float=float)
-  if (pwtype == 'admin'):
-    data['info'] = clearBadData(data['info'], adminTileKeys)
-    if 'image' in data['info']:
-      data['info']['image'] = strip_image_opacity(data['info']['image'])
+  data = request.get_json(silent=True)
+  if not isinstance(data, dict) or not isinstance(data.get('info'), dict):
+    return bad_request('A tile update is required.')
 
-    image = data.get('info', {}).get('image') if isinstance(data.get('info'), dict) else None
+  try:
+    row = data['row']
+    col = data['col']
+    if isinstance(row, bool) or isinstance(col, bool) or int(row) != row or int(col) != col:
+      raise ValueError('Tile coordinates must be integers.')
+    row = int(row)
+    col = int(col)
+    expected_settings = compatible_revision(
+      data,
+      'expectedSettingsRevision',
+      cache.get('boardSettingsRevision'),
+    )
+  except (KeyError, TypeError, ValueError):
+    return bad_request('Tile coordinates and revisions are required.')
+  except BoardConflict:
+    return conflict_response()
+
+  if expected_settings != revision_value(cache.get('boardSettingsRevision')):
+    return conflict_response()
+
+  try:
+    board_tile = board_tile_at(cache, row, col)
+  except ValueError as exc:
+    return bad_request(str(exc))
+  if not isinstance(board_tile, dict):
+    return bad_request('That tile does not exist.')
+
+  if pwtype == 'admin':
+    try:
+      expected_revision = compatible_revision(data, 'expectedRevision', board_tile.get('revision'))
+    except BoardConflict:
+      return conflict_response()
+    if expected_revision != revision_value(board_tile.get('revision')):
+      return conflict_response()
+    info = clearBadData(data['info'], adminTileKeys)
+    if 'image' in info:
+      info['image'] = strip_image_opacity(info['image'])
+
+    image = info.get('image')
     image_url = image.get('url', '') if isinstance(image, dict) else ''
-    previous_image_url = ''
-    if image and isinstance(image_url, str) and image_url[0:5] == 'data:':
+    staged_image = []
+    if isinstance(image_url, str) and image_url.startswith('data:'):
       try:
         saved_url = board_images.save(image_url)
-        previous_image_url = cache['boardData'][data['row']][data['col']].get('image', {}) or {}
-        previous_image_url = previous_image_url.get('url', '') if isinstance(previous_image_url, dict) else ''
-        data['info']['image'] = { **image, 'url': saved_url }
-      except ValueError as e:
-        log.warning("updateBoard - board image rejected  board=%s  error=%s", boardName, e)
-        return bad_request(str(e))
-      except Exception as e:
-        log.error("updateBoard - board image save failed  board=%s  error=%s", boardName, e)
+        staged_image.append(saved_url)
+        info['image'] = {**image, 'url': saved_url}
+      except ValueError as exc:
+        log.warning("updateBoard - board image rejected  board=%s  error=%s", boardName, exc)
+        return bad_request(str(exc))
+      except Exception as exc:
+        log.error("updateBoard - board image save failed  board=%s  error=%s", boardName, exc)
         return bad_request('Failed to save tile image.')
 
-    boardData = cache['boardData']
-    boardData[data['row']][data['col']] = { **boardData[data['row']][data['col']], **data['info']}
-    if previous_image_url:
-      board_images.delete(previous_image_url)
+    tile_path = tile_revision_path('boardData', row, col)
+    update_document = {
+      '$set': tile_field_updates('boardData', row, col, info),
+      '$inc': {tile_path: 1, 'boardMutationRevision': 1},
+    }
+    query = board_revision_query(boardName, {
+      tile_path: expected_revision,
+      'boardSettingsRevision': expected_settings,
+    }, cache.get('_id'))
+    try:
+      update = mycol.update_one(query, update_document)
+    except Exception as exc:
+      # Mongo outcome is unknown. Keep both the newly staged image and any
+      # previous reference until a later reconciliation can inspect the board.
+      log.error("updateBoard - admin tile write failed  board=%s  error=%s", boardName, exc)
+      return bad_request('Failed to save board tile.')
+    if not update_matched(update):
+      cleanup_staged_images(board_images, staged_image)
+      return conflict_response()
+    # Retired files are pruned by the reference-aware upload maintenance job.
+    # They cannot be deleted here because another board may share the URL.
+    log.info("updateBoard - admin tile update  board=%s  row=%s  col=%s", boardName, row, col)
+    publish_board_update(boardName)
+    return jsonify(success=True, revision=expected_revision + 1, boardSettingsRevision=expected_settings)
 
-    newvalue = { "$set": {'boardData': boardData}}
-    mycol.update_one({"boardName": boardName}, newvalue)
-    log.info("updateBoard - admin tile update  board=%s  row=%s  col=%s", boardName, data.get('row'), data.get('col'))
-
-  if (pwtype == 'general'):
-    if int(data['row']) >= board_visible_rows(cache):
-      log.warning("updateBoard - hidden row update rejected  board=%s  row=%s  ip=%s", boardName, data.get('row'), request.remote_addr)
+  if pwtype == 'general':
+    if row >= board_visible_rows(cache):
+      log.warning("updateBoard - hidden row update rejected  board=%s  row=%s  ip=%s", boardName, row, request.remote_addr)
       return bad_request('That row has not been revealed yet.')
 
-    teamKey = 'team-' + str(data['info']['teamId'])
-    teamData = cache.get(teamKey)
-    if not teamData:
-      log.warning("updateBoard - team not found  board=%s  team=%s  ip=%s", boardName, teamKey, request.remote_addr)
+    info = data['info']
+    team_id = info.get('teamId')
+    if isinstance(team_id, bool):
+      return bad_request('Team does not exist.')
+    try:
+      team_id = int(team_id)
+    except (TypeError, ValueError):
+      return bad_request('Team does not exist.')
+    if team_id < 0 or team_id >= revision_value(cache.get('teams')):
+      log.warning("updateBoard - team not found  board=%s  team=%s  ip=%s", boardName, team_id, request.remote_addr)
       return bad_request('Team does not exist.')
 
-    data['info'] = clearBadData(data['info'], generalTileKeys)
+    team_key = 'team-' + str(team_id)
+    team_data = cache.get(team_key)
+    if not isinstance(team_data, dict):
+      return bad_request('Team does not exist.')
+    try:
+      existing_tile = team_tile_at(team_data, row, col)
+    except ValueError as exc:
+      return bad_request(str(exc))
+    if not isinstance(existing_tile, dict):
+      return bad_request('That tile does not exist.')
+    try:
+      expected_revision = compatible_revision(data, 'expectedRevision', existing_tile.get('revision'))
+      expected_board_revision = compatible_revision(
+        data,
+        'expectedBoardTileRevision',
+        board_tile.get('revision'),
+      )
+    except BoardConflict:
+      return conflict_response()
+    if expected_revision != revision_value(existing_tile.get('revision')):
+      return conflict_response()
+    if expected_board_revision != revision_value(board_tile.get('revision')):
+      return conflict_response()
 
-    if cache.get('requirePassword', False): 
-      if (teampw != teamData.get('password', '')):
-        log.warning("updateBoard - wrong team password  board=%s  team=%s  ip=%s", boardName, teamKey, request.remote_addr)
-        return bad_request('Your team password was incorrect.')
-    
-    existing_tile = teamData['teamData'][data['row']][data['col']]
-    points_error = validate_curr_points(data['info'], cache['boardData'][data['row']][data['col']])
+    if cache.get('requirePassword', False) and teampw != team_data.get('password', ''):
+      log.warning("updateBoard - wrong team password  board=%s  team=%s  ip=%s", boardName, team_key, request.remote_addr)
+      return bad_request('Your team password was incorrect.')
+
+    info = clearBadData(info, generalTileKeys)
+    points_error = validate_curr_points(info, board_tile)
     if points_error:
-      log.warning("updateBoard - invalid current points  board=%s  team=%s  row=%s  col=%s", boardName, teamKey, data.get('row'), data.get('col'))
+      log.warning("updateBoard - invalid current points  board=%s  team=%s  row=%s  col=%s", boardName, team_key, row, col)
       return bad_request(points_error)
-    previous_proof_images = existing_tile.get('proofImages', [])
 
-    # Save newly uploaded proof images to disk and keep MongoDB lightweight.
-    incoming_proof_images = data['info'].get('proofImages', [])
-    if 'proofImages' in data['info']:
+    staged_images = []
+    if 'proofImages' in info:
       try:
-        data['info']['proofImages'] = normalize_proof_images(incoming_proof_images)
-      except ValueError as e:
-        log.warning("updateBoard - proof image rejected  board=%s  error=%s", boardName, e)
-        return bad_request(str(e))
-      except Exception as e:
-        log.error("updateBoard - proof image save failed  board=%s  error=%s", boardName, e)
+        info['proofImages'] = normalize_proof_images(info.get('proofImages', []), staged_images)
+      except ValueError as exc:
+        cleanup_staged_images(proof_images, staged_images)
+        log.warning("updateBoard - proof image rejected  board=%s  error=%s", boardName, exc)
+        return bad_request(str(exc))
+      except Exception as exc:
+        cleanup_staged_images(proof_images, staged_images)
+        log.error("updateBoard - proof image save failed  board=%s  error=%s", boardName, exc)
         return bad_request('Failed to save proof image.')
 
-    teamData['teamData'][data['row']][data['col']] = { **teamData['teamData'][data['row']][data['col']], **data['info']}
-    
-    newvalue = { "$set": {teamKey: teamData}}
-    update = mycol.update_one({"boardName": boardName}, newvalue)
-    if 'proofImages' in data['info']:
-      proof_images.cleanup_removed(previous_proof_images, data['info']['proofImages'])
-    log.info("updateBoard - general tile update  board=%s  team=%s  row=%s  col=%s", boardName, teamKey, data.get('row'), data.get('col'))
+    tile_path = tile_revision_path(team_key + '.teamData', row, col)
+    update_document = {
+      '$set': tile_field_updates(team_key + '.teamData', row, col, info),
+      '$inc': {tile_path: 1, 'boardMutationRevision': 1},
+    }
+    query = board_revision_query(boardName, {
+      tile_path: expected_revision,
+      'boardSettingsRevision': expected_settings,
+      tile_revision_path('boardData', row, col): expected_board_revision,
+    }, cache.get('_id'))
+    try:
+      update = mycol.update_one(query, update_document)
+    except Exception as exc:
+      log.error("updateBoard - general tile write failed  board=%s  error=%s", boardName, exc)
+      return bad_request('Failed to save board tile.')
+    if not update_matched(update):
+      cleanup_staged_images(proof_images, staged_images)
+      return conflict_response()
+    # Retired proof files are pruned by the reference-aware upload maintenance
+    # job after its race-safety grace period.
+    log.info("updateBoard - general tile update  board=%s  team=%s  row=%s  col=%s", boardName, team_key, row, col)
+    publish_board_update(boardName)
+    return jsonify(
+      success=True,
+      revision=expected_revision + 1,
+      boardTileRevision=expected_board_revision,
+      boardSettingsRevision=expected_settings,
+    )
 
-  publish_board_update(boardName)
-  return jsonify(success=True)
+  return bad_request('Invalid auth type.')
 
 @app.route('/updateTeams/<boardName>/<password>/<pwtype>', methods=['PUT'])
 @limiter.limit("1000 per hour")
@@ -680,146 +931,147 @@ def updateTeams(boardName, password, pwtype):
   if err:
     return err
 
-  data = json.loads(request.data.decode(), parse_float=float)
-  requirePassword = data['dataToSend']['passwordRequired']
-  rows = int(data['dataToSend']['rows'])
-  cols = int(data['dataToSend']['columns'])
-  visibleRows = clamp_visible_rows(data['dataToSend'].get('visibleRows'), cols)
-  data = data['dataToSend']['teamData']
-  size = len(data)
+  data = request.get_json(silent=True)
+  if not isinstance(data, dict) or not isinstance(data.get('dataToSend'), dict):
+    return bad_request('Team settings are required.')
+  payload = data['dataToSend']
+  try:
+    expected_settings = compatible_revision(
+      payload,
+      'expectedSettingsRevision',
+      cache.get('boardSettingsRevision'),
+    )
+  except BoardConflict:
+    return conflict_response()
+  if expected_settings != revision_value(cache.get('boardSettingsRevision')):
+    return conflict_response()
 
-  changed = changeBoardSize(data, rows, cols, cache, boardName)
-  if changed:
-    log.info("updateTeams - board resized  board=%s  rows=%d  cols=%d", boardName, rows, cols)
-    cache = auth(boardName, password, pwtype)[0]
+  try:
+    rows = payload['rows']
+    cols = payload['columns']
+    if isinstance(rows, bool) or isinstance(cols, bool) or int(rows) != rows or int(cols) != cols:
+      raise ValueError('Board dimensions must be integers.')
+    rows = int(rows)
+    cols = int(cols)
+    if rows < 1 or cols < 1:
+      raise ValueError('Board dimensions must be positive.')
+    submitted_teams = payload['teamData']
+    if not isinstance(submitted_teams, list) or not submitted_teams:
+      raise ValueError('At least one team is required.')
+    team_metadata_list = [team_payload_entry(entry) for entry in submitted_teams]
+  except (KeyError, TypeError, ValueError) as exc:
+    return bad_request(str(exc))
 
-  updateOlderTeams = data[:cache['teams']]
-  ## adding a team // init an empty one here and we overwrite it with relevant data at end
-  if (size) > cache['teams']:
-    added = size - cache['teams']
-    log.info("updateTeams - adding %d team(s)  board=%s", added, boardName)
-    for i in range(added):
-      teamKey = 'team-' + str(cache['teams'] + i)
-      newTeam = data[cache['teams'] + i]['data']
-      teamData = initEmptyTeamData(cols, rows)
-      teamData = {
-        'name': newTeam['name'],
-        'teamData': teamData,
-        'password': newTeam.get('password', '')
-      }
-      newvalue = { "$set": {teamKey: teamData}}
-      update = mycol.update_one({"boardName": boardName}, newvalue)
-  ## removing a team
-  elif size < cache['teams']:
-    removed = cache['teams'] - size
-    log.info("updateTeams - removing %d team(s)  board=%s", removed, boardName)
-    for i in range(removed):
-      teamKey = 'team-' + str(cache['teams'] -1 -i)
-      newvalue = { "$unset": {teamKey: ''}}
-      update = mycol.update_one({"boardName": boardName}, newvalue)
+  require_password = bool(payload.get('passwordRequired', False))
+  visible_rows = clamp_visible_rows(payload.get('visibleRows'), cols)
+  current_rows, current_cols = board_dimensions(cache)
+  current_team_count = revision_value(cache.get('teams'))
+  dimensions_changed = rows != current_rows or cols != current_cols
+  roster_changed = len(team_metadata_list) != current_team_count
+  structural_change = dimensions_changed or roster_changed
 
-  ## is where we apply actual changes made other than adds + deletes
-  overWrite = {}
-  for i in range(len(updateOlderTeams)):
-    teamKey = 'team-' + str(i)
-    overWrite[teamKey] = {
-      'name': updateOlderTeams[i]['data']['name'],
-      'teamData': cache[teamKey]['teamData'],
-      'password': updateOlderTeams[i]['data'].get('password', '')
+  if structural_change:
+    try:
+      update_document = build_structure_update(
+        cache,
+        rows,
+        cols,
+        team_metadata_list,
+        require_password,
+        visible_rows,
+      )
+      query = board_revision_query(boardName, {
+        'boardMutationRevision': revision_value(cache.get('boardMutationRevision')),
+        'boardSettingsRevision': expected_settings,
+      }, cache.get('_id'))
+      update = mycol.update_one(query, update_document)
+    except BoardConflict:
+      return conflict_response()
+    except Exception as exc:
+      log.error("updateTeams - structural write failed  board=%s  error=%s", boardName, exc)
+      return bad_request('Failed to save board settings.')
+    if not update_matched(update):
+      return conflict_response()
+    log.info("updateTeams - structural update  board=%s  rows=%d  cols=%d  teams=%d", boardName, rows, cols, len(team_metadata_list))
+  else:
+    set_updates = {
+      'requirePassword': require_password,
+      'visibleRows': visible_rows,
     }
+    for index, metadata in enumerate(team_metadata_list):
+      team_key = 'team-' + str(index)
+      set_updates[f'{team_key}.name'] = metadata['name']
+      set_updates[f'{team_key}.password'] = metadata['password']
+    update_document = {
+      '$set': set_updates,
+      '$inc': {'boardMutationRevision': 1, 'boardSettingsRevision': 1},
+    }
+    query = board_revision_query(boardName, {
+      'boardSettingsRevision': expected_settings,
+    }, cache.get('_id'))
+    try:
+      update = mycol.update_one(query, update_document)
+    except Exception as exc:
+      log.error("updateTeams - settings write failed  board=%s  error=%s", boardName, exc)
+      return bad_request('Failed to save board settings.')
+    if not update_matched(update):
+      return conflict_response()
+    log.info("updateTeams - settings update  board=%s  teams=%d", boardName, len(team_metadata_list))
 
-  # Single write for all team updates, team count, requirePassword, and visibleRows
-  mycol.update_one(
-    {"boardName": boardName},
-    {"$set": {**overWrite, 'teams': size, 'requirePassword': requirePassword, 'visibleRows': visibleRows}}
+  publish_board_update(boardName)
+  return jsonify(
+    success=True,
+    boardSettingsRevision=expected_settings + 1,
   )
 
-  log.info("updateTeams - complete  board=%s  teams=%d", boardName, size)
-  publish_board_update(boardName)
-  return jsonify(success=True)
+def build_structure_update(cache, rows, cols, team_metadata_list, require_password, visible_rows):
+  """Build one CAS update for a resize or roster mutation."""
+  current_team_count = revision_value(cache.get('teams'))
+  _current_rows, current_cols = board_dimensions(cache)
+  dimensions_changed = rows != _current_rows or cols != current_cols
+  set_updates = {
+    'rows': rows,
+    'columns': cols,
+    'teams': len(team_metadata_list),
+    'requirePassword': require_password,
+    'visibleRows': visible_rows,
+  }
+  unset_updates = {}
 
-def changeBoardSize(teamData, rows, cols, cache, boardName):
-  currCols = len(cache['boardData'])
-  currRows = len(cache['boardData'][0])
-  if(currCols != cols or currRows != rows):
+  if dimensions_changed:
+    set_updates['boardData'] = resize_grid(cache.get('boardData'), cols, rows, defaultBoardObj)
 
-    lessRows = False
-    moreRows = False
-    lessCols = False
-    moreCols = False
-    overWrite = {}
-    
-    if rows < currRows:
-      lessRows = True
-    elif rows > currRows:
-      moreRows = True
-    
-    if cols < currCols:
-      lessCols = True 
-    elif cols > currCols:
-      moreCols = True
-
-    # team changes
-    for i in range(cache['teams']):
-      teamKey = 'team-' + str(i)
-      tile_data = cache[teamKey]['teamData']
-
-      overWrite[teamKey] = {
-        'name': cache[teamKey]['name'],
-        'password': cache[teamKey].get('password', '')
+  for index, metadata in enumerate(team_metadata_list):
+    team_key = 'team-' + str(index)
+    if index < current_team_count and isinstance(cache.get(team_key), dict):
+      existing_team = cache[team_key]
+      if dimensions_changed:
+        updated_team = copy.deepcopy(existing_team)
+        updated_team['name'] = metadata['name']
+        updated_team['password'] = metadata['password']
+        updated_team['teamData'] = resize_grid(existing_team.get('teamData'), cols, rows, defaultTeamObj)
+        set_updates[team_key] = updated_team
+      else:
+        set_updates[f'{team_key}.name'] = metadata['name']
+        set_updates[f'{team_key}.password'] = metadata['password']
+    else:
+      set_updates[team_key] = {
+        'name': metadata['name'],
+        'password': metadata['password'],
+        'teamData': initEmptyTeamData(cols, rows),
       }
 
-      if lessRows:
-        for j in range(len(tile_data)):
-          tile_data[j] = tile_data[j][:rows]
-      elif moreRows:
-        for j in range(len(tile_data)):
-          for k in range(rows - currRows):
-            tile_data[j].append(defaultTeamObj.copy())
+  for index in range(len(team_metadata_list), current_team_count):
+    unset_updates['team-' + str(index)] = ''
 
-      if lessCols:
-        tile_data = tile_data[:cols]
-      elif moreCols:
-        for j in range(cols - currCols):
-          tile_data.append([])
-          for k in range(rows):
-            tile_data[len(tile_data) -1].append(defaultTeamObj.copy())
-      
-      overWrite[teamKey]['teamData'] = tile_data
+  update_document = {
+    '$set': set_updates,
+    '$inc': {'boardMutationRevision': 1, 'boardSettingsRevision': 1},
+  }
+  if unset_updates:
+    update_document['$unset'] = unset_updates
+  return update_document
 
-    overWrite['rows'] = rows
-    overWrite['columns'] = cols 
-
-    # board data changes
-    if lessRows:
-      boardData = cache['boardData']
-      for i in range(len(boardData)):
-        boardData[i] = boardData[i][:rows]
-      overWrite['boardData'] = boardData
-    elif moreRows:
-      boardData = cache['boardData']
-      for i in range(len(boardData)):
-        for j in range(rows - currRows):
-          boardData[i].append(defaultBoardObj.copy())
-      overWrite['boardData'] = boardData
-      
-    if lessCols:
-      boardData = cache['boardData'][:cols]
-      overWrite['boardData'] = boardData
-    elif moreCols:
-      boardData = cache['boardData']
-      for i in range(cols - currCols):
-        boardData.append([])
-        for j in range(rows):
-          boardData[len(boardData) -1].append(defaultBoardObj.copy())
-      overWrite['boardData'] = boardData
-    
-    newvalue = { "$set": { **overWrite }}
-    update = mycol.update_one({"boardName": boardName}, newvalue)
-
-    return True
-  else:
-    return False
 
 @app.route('/feedback', methods=['POST'])
 @limiter.limit("10 per hour")

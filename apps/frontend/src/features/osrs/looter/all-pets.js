@@ -12,7 +12,7 @@ export let data = {
       items: [
         {
           name: 'Baby chinchompa',
-          rate: '1/95898',
+          rate: '1/82758',
         },
       ],
     },
@@ -542,6 +542,30 @@ export let data = {
         {
           name: 'Soup',
           rate: '1/4500',
+        },
+      ],
+    },
+    {
+      items: [
+        {
+          name: 'Maggot marquess',
+          rate: '1/1502.4',
+        },
+      ],
+    },
+    {
+      items: [
+        {
+          name: 'Aggy',
+          rate: '1/2000',
+        },
+      ],
+    },
+    {
+      items: [
+        {
+          name: 'Mr McGroot',
+          rate: '1/37525',
         },
       ],
     },

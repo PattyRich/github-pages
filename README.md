@@ -117,7 +117,10 @@ GitHub Actions handles all deployments automatically on push to `main`:
 
 - **Frontend / Nginx** — Typechecked, published atomically into the production frontend volume, then served by the existing Nginx edge container.
 - **Backend** — API and worker images rebuilt/restarted on AWS Lightsail via SSH without touching Nginx.
-- **Maintenance** — Weekly job prunes old Docker images and updates non-edge containers.
+- **Maintenance** — Weekly job prunes old Docker images and updates MongoDB, Redis, and Dozzle. Custom images refresh their base images during their respective deployments.
+- **Upload cleanup** — Daily reference scan removes abandoned proof and board-image files after a seven-day grace period.
+
+Frontend and backend deployments build the triggering commit SHA. All production workflows hold the same host-side lock at `/var/www/server/github-pages/.git/praynr-deploy.lock` while operating on the shared checkout and containers. Each product records its last successful deployment under `.git/praynr-frontend-revision` or `.git/praynr-backend-revision`; delayed runs for older ancestor commits are skipped. Use a new revert commit for a normal rollback. Manual production maintenance should acquire the same lock before changing the checkout or containers.
 
 ---
 
@@ -179,6 +182,8 @@ docker compose -f docker-compose.prod.yml up -d --no-deps nginx
 
 Production stores uploaded Bingo proof images in the Docker named volume `proof_uploads`, mounted into the API container at `/app/static/uploads`. The API writes proof files under `/app/static/uploads/proofs` and serves them from `/static/uploads/proofs/<filename>`. MongoDB stores only the proof image path, not the image bytes.
 
+A daily reference-aware cleanup removes uploaded proof and board-image files that are at least seven days old and no longer referenced by any board. The grace period protects uploads whose database outcome was temporarily unknown, while the reference scan preserves URLs shared by copied or imported boards. Run `python upload_gc.py --dry-run` inside the API container to inspect the cleanup without deleting files.
+
 Local development uses the bind mount `./services/api:/app`, so proof uploads are written to `services/api/static/uploads/proofs` on your machine. That directory is ignored by Git.
 
 ### Homepage Bingo Showcase
@@ -229,10 +234,17 @@ Daily SSH-streamed backups from the server to local storage, managed by Windows 
 
 ```powershell
 # Manual backup
-powershell -ExecutionPolicy Bypass -File "scripts/backup.ps1"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File "scripts/backup.ps1"
 ```
 
-Keeps the 5 most recent backups automatically.
+The script copies SSH stdout as raw bytes, validates both gzip archives (including
+the uploads tar stream), and marks a folder complete only after both checks pass.
+It keeps the 5 most recent verified backup folders. Incomplete or legacy folders
+are preserved, and a failed run exits nonzero without running retention cleanup.
+Validation requires `gzip.exe` from Git for Windows (on `PATH` or in its standard
+install location) and the Windows `tar.exe`. It checks archive integrity; restore
+verification still requires exercising the applicable MongoDB and uploads restore
+procedures.
 
 ### MongoDB Restore
 

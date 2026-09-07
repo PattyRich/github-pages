@@ -9,6 +9,8 @@ import {
   pwUrlBuilder,
   addToRecent,
   decodePathSegment,
+  isApiConflictError,
+  SaveConflictError,
 } from '../../utils/utils';
 import { apiUrl } from '../../config';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -20,7 +22,13 @@ import SettingsModal from '../../components/ui/SettingsModal';
 import FeedbackModal from '../../components/ui/FeedbackModal';
 import PasswordModal from '../../components/ui/PasswordModal';
 import { useAlert } from '../../utils/useAlert';
-import type { TeamTileInfo, TileInfo, TileModalState } from '../../components/ui/tile-modal/types';
+import {
+  normalizeRevision,
+  type TeamTileInfo,
+  type TileInfo,
+  type TileModalState,
+  type TileSaveContext,
+} from '../../components/ui/tile-modal/types';
 import { DEFAULT_BOARD_TYPE, normalizeBoardType, type BoardType } from '../../types';
 
 interface BoardTeamData {
@@ -36,7 +44,9 @@ interface BoardTeam extends TeamInfo {
 }
 
 interface BoardApiResponse {
+  boardMutationRevision?: number;
   boardData: TileInfo[][];
+  boardSettingsRevision?: number;
   boardType?: BoardType;
   generalPassword: string;
   teamData: BoardTeam[];
@@ -48,9 +58,11 @@ interface BoardState {
   activeTeamIndex: number;
   adminPassword?: string;
   boardData?: TileInfo[][];
+  boardMutationRevision: number;
   boardType: BoardType;
   boardJustCreated?: boolean | null;
   boardName?: string;
+  boardSettingsRevision: number;
   cameFromCreate?: boolean;
   canSwitchPriv?: boolean;
   generalPassword?: string;
@@ -78,6 +90,8 @@ const initialBoardState = {
   privilege: 'general',
   teams: 5,
   activeTeamIndex: 0,
+  boardMutationRevision: 0,
+  boardSettingsRevision: 0,
   boardType: DEFAULT_BOARD_TYPE,
   showEditTeams: false,
   generalPasswordCopy: '',
@@ -109,6 +123,10 @@ function BoardView() {
   const [boardGuideStep, setBoardGuideStep] = useState<BoardGuideStep>(null);
   const rowsRef = useRef<number | null>(null);
   const columnsRef = useRef<number | null>(null);
+  const refreshRequestSeqRef = useRef(0);
+  const refreshDataRef = useRef<() => Promise<boolean>>(async () => false);
+  const dirtyDraftRef = useRef(false);
+  const deferredRefreshRef = useRef(false);
 
   const setBoardState = useCallback((newState: BoardStateUpdater, callback?: () => void) => {
     setState((previousState) => {
@@ -196,54 +214,85 @@ function BoardView() {
     setBoardState({ teamData });
   }
 
-  async function refreshData(firstLoad = false, changeTeam = false): Promise<void> {
+  async function refreshData(
+    firstLoad = false,
+    changeTeam = false,
+    allowDirtyDraft = false
+  ): Promise<boolean> {
+    const requestSeq = ++refreshRequestSeqRef.current;
+    if (allowDirtyDraft) deferredRefreshRef.current = false;
     const currentState = stateRef.current;
     if (!currentState.adminPassword && !currentState.generalPassword) {
       alert('danger', 'No Password is set, return to main page and start again.', true);
-      return;
+      return false;
     }
     const url = pwUrlBuilder(currentState);
     const [data, err] = await fetchGet<BoardApiResponse>(`getBoard/${url}`);
+    // A newer refresh owns the state now. Report this request as unsuccessful so
+    // an explicit "discard draft and reload" action cannot close its modal based
+    // on a response that was superseded by another (possibly failed) GET.
+    if (requestSeq !== refreshRequestSeqRef.current) return false;
+    if (dirtyDraftRef.current && !allowDirtyDraft) {
+      deferredRefreshRef.current = true;
+      return false;
+    }
     if (err) {
       alert('danger', err.message);
-      return;
+      return false;
     }
-    if (!data) return;
-    let activeTeamValue = 0;
-    if (changeTeam) {
-      const activeTeam = localStorage.getItem('activeTeam');
-      if (activeTeam) {
-        const activeTeamId = Number(activeTeam);
-        if (activeTeamId <= data.teamData.length - 1 && activeTeamId >= 0) {
-          activeTeamValue = activeTeamId;
-        }
-      }
-    }
+    if (!data) return false;
+    const activeTeamId = changeTeam ? Number(localStorage.getItem('activeTeam')) : NaN;
+    const requestedTeamIndex = Number.isInteger(activeTeamId)
+      ? activeTeamId
+      : stateRef.current.activeTeamIndex;
+    const teamCount = data.teamData.length;
+    const activeTeamIndex = teamCount
+      ? Math.min(Math.max(requestedTeamIndex, 0), teamCount - 1)
+      : 0;
 
-    setBoardState(
-      {
-        boardData: data.boardData,
-        boardType: normalizeBoardType(data.boardType),
-        teams: data.teamData.length,
-        teamData: data.teamData,
-        activeTeamIndex: stateRef.current.activeTeamIndex || activeTeamValue,
-        generalPasswordCopy: data.generalPassword,
-        teamPasswordsRequired: data.teamPasswordsRequired,
-        visibleRows: data.visibleRows ?? null,
-      },
-      () => {
-        calculateTeamPoints();
-        if (firstLoad) {
-          if (stateRef.current.privilege === 'admin') {
-            switchPrivilege();
-          }
-        }
-      }
+    await new Promise<void>((resolve) =>
+      setBoardState(
+        {
+          boardData: data.boardData,
+          boardMutationRevision: normalizeRevision(data.boardMutationRevision),
+          boardSettingsRevision: normalizeRevision(data.boardSettingsRevision),
+          boardType: normalizeBoardType(data.boardType),
+          teams: teamCount,
+          teamData: data.teamData,
+          activeTeamIndex,
+          generalPasswordCopy: data.generalPassword,
+          teamPasswordsRequired: data.teamPasswordsRequired,
+          visibleRows: data.visibleRows ?? null,
+        },
+        resolve
+      )
     );
+
+    if (requestSeq !== refreshRequestSeqRef.current) return false;
+    calculateTeamPoints();
+    if (firstLoad && stateRef.current.privilege === 'admin') {
+      void switchPrivilege();
+    }
 
     rowsRef.current = data.boardData[0]?.length || 0;
     columnsRef.current = data.boardData.length;
+    return true;
   }
+
+  refreshDataRef.current = refreshData;
+
+  const handleDraftStateChange = useCallback(
+    (dirty: boolean) => {
+      dirtyDraftRef.current = dirty;
+      if (!dirty && deferredRefreshRef.current) {
+        deferredRefreshRef.current = false;
+        void refreshDataRef.current();
+      }
+    },
+    // refreshData reads refs and stable callbacks only; it intentionally does not
+    // depend on render-time state.
+    []
+  );
 
   function connectSSE(): void {
     if (eventSourceRef.current) {
@@ -355,14 +404,22 @@ function BoardView() {
   async function changeBoardTileInfo(
     row: number,
     col: number,
-    data: Partial<TileModalState>
-  ): Promise<void> {
-    const activeTeam = stateRef.current.teamData?.[stateRef.current.activeTeamIndex];
-    if (!activeTeam) {
-      alert('danger', 'No active team selected.');
-      return;
+    data: Partial<TileModalState>,
+    saveContext: TileSaveContext
+  ): Promise<boolean> {
+    let info: BoardUpdateInfo = data;
+    if (stateRef.current.privilege !== 'admin') {
+      const targetTeam = stateRef.current.teamData?.find(
+        (team) => team.team === saveContext.teamId
+      );
+      if (!targetTeam) {
+        throw new SaveConflictError(
+          'This team changed while you were editing. Load the latest board data and try again.'
+        );
+      }
+      info = { ...data, teamId: targetTeam.team };
     }
-    return updateBoard(row, col, { ...data, teamId: activeTeam.team });
+    return updateBoard(row, col, info, saveContext);
   }
 
   async function updateTeams(
@@ -370,24 +427,37 @@ function BoardView() {
     passwordRequired: boolean,
     rows: number,
     columns: number,
-    visibleRows: number
-  ): Promise<void> {
+    visibleRows: number,
+    expectedSettingsRevision: number
+  ): Promise<boolean> {
     const dataToSend = {
       teamData: info,
       passwordRequired,
       rows,
       columns,
+      expectedSettingsRevision,
       visibleRows,
     };
     alert('loading');
     const url = pwUrlBuilder(stateRef.current);
     const [, err] = await fetchPut(`updateTeams/${url}`, { dataToSend });
     if (err) {
+      if (isApiConflictError(err)) {
+        throw new SaveConflictError(err.message);
+      }
       alert('danger', err.message);
-      return;
+      return false;
     }
-    await refreshData();
+    // The editor still owns a dirty draft until this function reports success.
+    // This refresh is the authoritative result of that draft's successful save,
+    // so it must be allowed to replace the pre-save board state.
+    const refreshed = await refreshData(false, false, true);
+    if (!refreshed) {
+      alert('danger', 'Board settings were saved, but the latest data could not be loaded.');
+      return false;
+    }
     alert('success', 'Teams Successfully Updated!');
+    return true;
   }
 
   function changeTeam(teamId: number): void {
@@ -457,18 +527,22 @@ function BoardView() {
     row: number,
     col: number,
     info: BoardUpdateInfo,
+    saveContext: TileSaveContext,
     forcePrompt = false
-  ): Promise<void> {
+  ): Promise<boolean> {
     alert('loading');
     let needToAddTeamPassword = false;
     let pw: string | null = null;
     if (stateRef.current.teamPasswordsRequired && stateRef.current.privilege !== 'admin') {
-      const activeTeam = stateRef.current.teamData?.[stateRef.current.activeTeamIndex];
-      if (!activeTeam) {
-        alert('danger', 'No active team selected.');
-        return;
+      const targetTeam = stateRef.current.teamData?.find(
+        (team) => team.team === saveContext.teamId
+      );
+      if (!targetTeam) {
+        throw new SaveConflictError(
+          'This team changed while you were editing. Load the latest board data and try again.'
+        );
       }
-      pw = getTeamPassword(stateRef.current.boardName, activeTeam.data.name);
+      pw = getTeamPassword(stateRef.current.boardName, targetTeam.data.name);
       if (pw === null || forcePrompt) {
         needToAddTeamPassword = true;
         const promptText = forcePrompt
@@ -476,38 +550,60 @@ function BoardView() {
           : 'Enter Team Password';
         pw = await showPasswordModal(promptText);
         if (pw === null) {
-          alert('danger', 'No password entered aborting update.');
-          return;
+          alert('danger', 'Update canceled. Enter your team password to try again.');
+          return false;
         }
       }
     }
     const url = pwUrlBuilder(stateRef.current, pw);
-    const [, err] = await fetchPut(`updateBoard/${url}`, { row, col, info });
+    const [, err] = await fetchPut(`updateBoard/${url}`, {
+      row,
+      col,
+      info,
+      expectedRevision: saveContext.expectedRevision,
+      expectedSettingsRevision: saveContext.expectedSettingsRevision,
+      ...(saveContext.expectedBoardTileRevision === undefined
+        ? {}
+        : { expectedBoardTileRevision: saveContext.expectedBoardTileRevision }),
+    });
     if (err) {
+      if (isApiConflictError(err)) {
+        throw new SaveConflictError(err.message);
+      }
       alert('danger', err.message);
       if (err.message === 'Your team password was incorrect.') {
-        await updateBoard(row, col, info, true);
+        return updateBoard(row, col, info, saveContext, true);
       }
-      return;
+      return false;
     }
     if (needToAddTeamPassword) {
-      const activeTeam = stateRef.current.teamData?.[stateRef.current.activeTeamIndex];
-      if (!activeTeam) return;
-      setTeamPassword(stateRef.current.boardName, activeTeam.data.name, pw);
+      const targetTeam = stateRef.current.teamData?.find(
+        (team) => team.team === saveContext.teamId
+      );
+      if (targetTeam) {
+        // Caching is only a convenience. The API request above already succeeded, so a
+        // storage failure must not make the confirmed update look like it failed.
+        try {
+          setTeamPassword(stateRef.current.boardName, targetTeam.data.name, pw);
+        } catch {
+          // Ignore quota or storage availability errors from this optional cache.
+        }
+      }
     }
     alert('success', 'Board Successfully Updated!');
+    return true;
   }
 
   const showFeedback = localStorage.getItem('showFeedback') === 'true';
-  let height = document.documentElement.clientHeight;
-  let width = document.documentElement.clientWidth;
+  const height = document.documentElement.clientHeight;
+  const width = document.documentElement.clientWidth;
   const boardDataToShow = visibleBoardData(state);
   const activeTeam = state.teamData?.[state.activeTeamIndex];
   const renderColumns = boardDataToShow.length || columnsRef.current || 1;
   const renderRows = boardDataToShow[0]?.length || rowsRef.current || 1;
-  let maxWidth = (width * 0.75) / renderRows;
-  let maxHeight = (height * 0.75) / renderColumns;
-  let dem = maxHeight < maxWidth ? maxHeight : maxWidth;
+  const maxWidth = (width * 0.75) / renderRows;
+  const maxHeight = (height * 0.75) / renderColumns;
+  const dem = maxHeight < maxWidth ? maxHeight : maxWidth;
   //let dem = width < height ? (width / rowsRef.current)-40 : (height / columnsRef.current)-40;
   return (
     <div className="flex-wrapper-create">
@@ -597,6 +693,7 @@ function BoardView() {
             <span key={i} className="flex">
               {row.map((tile, j) => (
                 <BoardTile
+                  boardSettingsRevision={state.boardSettingsRevision}
                   cord={[i, j]}
                   change={changeBoardTileInfo}
                   info={tile}
@@ -611,6 +708,9 @@ function BoardView() {
                   bb={boardDataToShow.length === i + 1}
                   privilege={state.privilege}
                   boardType={state.boardType}
+                  onConflictReload={() => refreshData(false, false, true)}
+                  onDraftStateChange={handleDraftStateChange}
+                  teamId={state.privilege === 'admin' ? undefined : activeTeam?.team}
                   onOpen={handleTileOpen}
                 />
               ))}
@@ -631,6 +731,9 @@ function BoardView() {
           columns={columnsRef.current || 1}
           rows={rowsRef.current || 1}
           visibleRows={state.visibleRows}
+          boardSettingsRevision={state.boardSettingsRevision}
+          onConflictReload={() => refreshData(false, false, true)}
+          onDraftStateChange={handleDraftStateChange}
         />
       )}
       {state.showToast && (

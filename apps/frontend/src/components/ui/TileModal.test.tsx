@@ -1,7 +1,8 @@
-import { fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import type { ComponentProps } from 'react';
 import { beforeEach, expect, test, vi } from 'vitest';
 import TileModal from './TileModal';
+import { SaveConflictError } from '../../utils/utils';
 
 type TileModalProps = ComponentProps<typeof TileModal>;
 
@@ -18,7 +19,7 @@ const baseTeamInfo = {
 } satisfies TileModalProps['teamInfo'];
 
 function renderTileModal(overrides: Partial<TileModalProps> = {}) {
-  const change = vi.fn();
+  const change = vi.fn().mockResolvedValue(true);
   const handleClose = vi.fn();
   const props = {
     cord: [1, 2],
@@ -31,9 +32,15 @@ function renderTileModal(overrides: Partial<TileModalProps> = {}) {
     ...overrides,
   } satisfies TileModalProps;
 
-  render(<TileModal {...props} />);
+  const rendered = render(<TileModal {...props} />);
 
-  return { ...props, change, handleClose };
+  return {
+    ...props,
+    change,
+    handleClose,
+    rerender: (nextProps: Partial<TileModalProps>) =>
+      rendered.rerender(<TileModal {...props} {...nextProps} />),
+  };
 }
 
 beforeEach(() => {
@@ -61,9 +68,232 @@ test('toggles completed and saves member progress', async () => {
       checked: true,
       currPoints: 50,
       proof: '',
+    }),
+    expect.objectContaining({
+      expectedBoardTileRevision: 0,
+      expectedRevision: 0,
+      expectedSettingsRevision: 0,
+      teamId: undefined,
     })
   );
   expect(props.handleClose).toHaveBeenCalled();
+});
+
+test('keeps the draft open when the parent reports a failed save', async () => {
+  const change = vi.fn().mockResolvedValue(false);
+  const props = renderTileModal({ change });
+  const currentPoints = screen.getByLabelText(/Current Points/i);
+
+  fireEvent.change(currentPoints, { target: { value: '20' } });
+  fireEvent.click(screen.getByRole('button', { name: /Save/i }));
+
+  await waitFor(() => expect(change).toHaveBeenCalled());
+  expect(props.handleClose).not.toHaveBeenCalled();
+  expect(currentPoints).toHaveValue('20');
+});
+
+test('shows a retryable error when the parent save rejects', async () => {
+  const change = vi.fn().mockRejectedValue(new Error('network error'));
+  const props = renderTileModal({ change });
+  const currentPoints = screen.getByLabelText(/Current Points/i);
+
+  fireEvent.change(currentPoints, { target: { value: '20' } });
+  fireEvent.click(screen.getByRole('button', { name: /Save/i }));
+
+  await waitFor(() => {
+    expect(screen.getByRole('alert')).toHaveTextContent(/Could not save this tile/i);
+  });
+  expect(props.handleClose).not.toHaveBeenCalled();
+  expect(currentPoints).toHaveValue('20');
+  expect(screen.getByRole('button', { name: /Save/i })).toBeEnabled();
+});
+
+test('keeps tile drafts on conflict and offers to load the latest data', async () => {
+  const change = vi.fn().mockRejectedValue(new SaveConflictError('Tile changed elsewhere.'));
+  const onConflictReload = vi.fn().mockResolvedValue(true);
+  const props = renderTileModal({
+    boardSettingsRevision: 4,
+    change,
+    info: { ...baseInfo, revision: 7 },
+    onConflictReload,
+    teamId: 0,
+    teamInfo: { ...baseTeamInfo, revision: 3 },
+  });
+
+  fireEvent.change(screen.getByLabelText(/Current Points/i), { target: { value: '20' } });
+  fireEvent.click(screen.getByRole('button', { name: /Save/i }));
+
+  await waitFor(() => {
+    expect(screen.getByRole('alert')).toHaveTextContent(/Tile changed elsewhere/i);
+  });
+  expect(change).toHaveBeenCalledWith(
+    1,
+    2,
+    expect.anything(),
+    expect.objectContaining({
+      expectedBoardTileRevision: 7,
+      expectedRevision: 3,
+      expectedSettingsRevision: 4,
+      teamId: 0,
+    })
+  );
+  expect(props.handleClose).not.toHaveBeenCalled();
+
+  fireEvent.click(screen.getByRole('button', { name: /Discard draft and reload/i }));
+  await waitFor(() => expect(onConflictReload).toHaveBeenCalledTimes(1));
+  await waitFor(() => expect(props.handleClose).toHaveBeenCalledTimes(1));
+});
+
+test('keeps the tile draft when loading the latest data fails', async () => {
+  const change = vi.fn().mockRejectedValue(new SaveConflictError('Tile changed elsewhere.'));
+  const onConflictReload = vi.fn().mockResolvedValue(false);
+  const props = renderTileModal({ change, onConflictReload });
+  const currentPoints = screen.getByLabelText(/Current Points/i);
+
+  fireEvent.change(currentPoints, { target: { value: '20' } });
+  fireEvent.click(screen.getByRole('button', { name: /Save/i }));
+  await waitFor(() => expect(screen.getByRole('alert')).toHaveTextContent(/Tile changed/i));
+
+  fireEvent.click(screen.getByRole('button', { name: /Discard draft and reload/i }));
+  await waitFor(() => expect(onConflictReload).toHaveBeenCalledTimes(1));
+
+  expect(props.handleClose).not.toHaveBeenCalled();
+  expect(screen.getByLabelText(/Current Points/i)).toHaveValue('20');
+  expect(screen.getByRole('button', { name: /Discard draft and reload/i })).toBeEnabled();
+});
+
+test('retains draft revisions and team identity across refreshed props from SSE', async () => {
+  const props = renderTileModal({
+    boardSettingsRevision: 4,
+    info: { ...baseInfo, revision: 7 },
+    teamId: 0,
+    teamInfo: { ...baseTeamInfo, revision: 3 },
+  });
+  const currentPoints = screen.getByLabelText(/Current Points/i);
+  fireEvent.change(currentPoints, { target: { value: '20' } });
+
+  props.rerender({
+    boardSettingsRevision: 9,
+    info: { ...baseInfo, revision: 8 },
+    teamId: 1,
+    teamInfo: { ...baseTeamInfo, currPoints: 30, revision: 4 },
+  });
+
+  fireEvent.click(screen.getByRole('button', { name: /Save/i }));
+  await waitFor(() => expect(props.change).toHaveBeenCalled());
+  expect(props.change).toHaveBeenCalledWith(
+    1,
+    2,
+    expect.anything(),
+    expect.objectContaining({
+      expectedBoardTileRevision: 7,
+      expectedRevision: 3,
+      expectedSettingsRevision: 4,
+      teamId: 0,
+    })
+  );
+});
+
+test('disables duplicate tile saves while the parent request is pending', async () => {
+  let resolveSave!: (saved: boolean) => void;
+  const change = vi.fn(
+    () =>
+      new Promise<boolean>((resolve) => {
+        resolveSave = resolve;
+      })
+  );
+  const props = renderTileModal({ change });
+  const saveButton = screen.getByRole('button', { name: /Save/i });
+
+  fireEvent.click(saveButton);
+  fireEvent.click(saveButton);
+
+  expect(change).toHaveBeenCalledTimes(1);
+  expect(screen.getByRole('button', { name: /Saving/i })).toBeDisabled();
+  expect(props.handleClose).not.toHaveBeenCalled();
+
+  resolveSave(true);
+  await waitFor(() => expect(props.handleClose).toHaveBeenCalledTimes(1));
+});
+
+test('does not include edits made while a tile save is pending', async () => {
+  let resolveSave!: (saved: boolean) => void;
+  const change = vi.fn(
+    () =>
+      new Promise<boolean>((resolve) => {
+        resolveSave = resolve;
+      })
+  );
+  const props = renderTileModal({ change });
+  const currentPoints = screen.getByLabelText(/Current Points/i);
+
+  fireEvent.click(screen.getByRole('button', { name: /Save/i }));
+  fireEvent.change(currentPoints, { target: { value: '20' } });
+
+  expect(currentPoints).toBeDisabled();
+  expect(currentPoints).toHaveValue('10');
+
+  resolveSave(true);
+  await waitFor(() => expect(props.handleClose).toHaveBeenCalledTimes(1));
+});
+
+test('waits for delayed proof uploads before saving the draft', async () => {
+  const readers: Array<{
+    onload: ((event: ProgressEvent<FileReader>) => void) | null;
+    onerror: ((event: ProgressEvent<FileReader>) => void) | null;
+    onabort: ((event: ProgressEvent<FileReader>) => void) | null;
+  }> = [];
+  vi.stubGlobal(
+    'FileReader',
+    class {
+      onload: ((event: ProgressEvent<FileReader>) => void) | null = null;
+      onerror: ((event: ProgressEvent<FileReader>) => void) | null = null;
+      onabort: ((event: ProgressEvent<FileReader>) => void) | null = null;
+
+      readAsDataURL() {
+        readers.push(this);
+      }
+    }
+  );
+
+  const change = vi.fn().mockResolvedValue(false);
+  const props = renderTileModal({ change });
+  const fileInput = document.querySelector<HTMLInputElement>('.proof-upload-input');
+  const saveButton = screen.getByRole('button', { name: /^Save$/i });
+  const file = new File(['proof'], 'proof.png', { type: 'image/png' });
+
+  expect(fileInput).not.toBeNull();
+  fireEvent.change(fileInput!, { target: { files: [file] } });
+  expect(screen.getByRole('button', { name: /Reading/i })).toBeDisabled();
+
+  fireEvent.click(saveButton);
+  expect(change).not.toHaveBeenCalled();
+
+  await act(async () => {
+    readers[0]?.onload?.({
+      target: { result: 'data:image/png;base64,proof' },
+    } as ProgressEvent<FileReader>);
+  });
+  await waitFor(() => expect(screen.getByRole('button', { name: /^Save$/i })).toBeEnabled());
+
+  fireEvent.click(screen.getByRole('button', { name: /^Save$/i }));
+  await waitFor(() => expect(change).toHaveBeenCalled());
+  expect(change).toHaveBeenCalledWith(
+    1,
+    2,
+    expect.objectContaining({
+      proofImages: ['data:image/png;base64,proof'],
+    }),
+    expect.objectContaining({
+      expectedBoardTileRevision: 0,
+      expectedRevision: 0,
+      expectedSettingsRevision: 0,
+      teamId: undefined,
+    })
+  );
+  expect(props.handleClose).not.toHaveBeenCalled();
+
+  vi.unstubAllGlobals();
 });
 
 test('completes a tile without configured points as a zero-point tile', async () => {
@@ -82,6 +312,12 @@ test('completes a tile without configured points as a zero-point tile', async ()
     expect.objectContaining({
       checked: true,
       currPoints: 0,
+    }),
+    expect.objectContaining({
+      expectedBoardTileRevision: 0,
+      expectedRevision: 0,
+      expectedSettingsRevision: 0,
+      teamId: undefined,
     })
   );
 });

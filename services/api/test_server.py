@@ -1,8 +1,9 @@
 """
 Unit tests for server/server.py
 
-Uses unittest.mock to patch MongoDB and external calls (Discord, requests),
-so no live database or network connection is needed to run these.
+Uses unittest.mock and a small locked in-memory collection to isolate MongoDB
+and external calls (Discord, requests), so no live database or network
+connection is needed to run these.
 
 Run with:
     python -m pytest test_server.py -v
@@ -11,12 +12,19 @@ or:
 """
 
 import base64
+import copy
 import io
 import json
+import os
 import tempfile
+import threading
+import time
 import unittest
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from unittest.mock import MagicMock, patch
+
+os.environ.setdefault("PYTHON_DOTENV_DISABLED", "1")
 
 
 # ---------------------------------------------------------------------------
@@ -42,6 +50,7 @@ flask_limiter.Limiter.__init__ = _mock_init
 import server  # noqa: E402  (must come after patch)
 import redis_events  # noqa: E402
 import showcase  # noqa: E402
+import upload_gc  # noqa: E402
 
 # Point server's module-level `mycol` at our controllable mock
 server.mycol = _mock_col
@@ -57,6 +66,7 @@ def _make_board(rows=2, cols=2, teams=2,
     """Return a minimal board document as MongoDB would return it."""
     board_data = [[server.defaultBoardObj.copy() for _ in range(rows)] for _ in range(cols)]
     doc = {
+        "_id": "board-id",
         "boardName": board_name,
         "adminPassword": admin_pw,
         "generalPassword": general_pw,
@@ -65,6 +75,8 @@ def _make_board(rows=2, cols=2, teams=2,
         "rows": rows,
         "columns": cols,
         "visibleRows": visible_rows if visible_rows is not None else rows,
+        "boardMutationRevision": 0,
+        "boardSettingsRevision": 0,
     }
     for i in range(teams):
         key = f"team-{i}"
@@ -78,6 +90,147 @@ def _make_board(rows=2, cols=2, teams=2,
 def _client(app):
     app.config["TESTING"] = True
     return app.test_client()
+
+
+_MISSING = object()
+
+
+def _path_value(document, path):
+    current = document
+    for part in path.split("."):
+        if isinstance(current, dict):
+            if part not in current:
+                return _MISSING
+            current = current[part]
+        elif isinstance(current, list):
+            try:
+                index = int(part)
+            except (TypeError, ValueError):
+                return _MISSING
+            if index < 0 or index >= len(current):
+                return _MISSING
+            current = current[index]
+        else:
+            return _MISSING
+    return current
+
+
+def _set_path(document, path, value):
+    parts = path.split(".")
+    current = document
+    for part in parts[:-1]:
+        if isinstance(current, dict):
+            current = current[part]
+        else:
+            current = current[int(part)]
+    leaf = parts[-1]
+    if isinstance(current, dict):
+        current[leaf] = copy.deepcopy(value)
+    else:
+        current[int(leaf)] = copy.deepcopy(value)
+
+
+def _unset_path(document, path):
+    parts = path.split(".")
+    current = document
+    for part in parts[:-1]:
+        current = current[int(part)] if isinstance(current, list) else current.get(part, _MISSING)
+        if current is _MISSING:
+            return
+    leaf = parts[-1]
+    if isinstance(current, dict):
+        current.pop(leaf, None)
+    elif isinstance(current, list):
+        index = int(leaf)
+        if 0 <= index < len(current):
+            current[index] = None
+
+
+def _matches_query(document, query):
+    for key, expected in query.items():
+        if key == "$and":
+            if not all(_matches_query(document, clause) for clause in expected):
+                return False
+            continue
+        if key == "$or":
+            if not any(_matches_query(document, clause) for clause in expected):
+                return False
+            continue
+        actual = _path_value(document, key)
+        if isinstance(expected, dict) and "$exists" in expected:
+            if (actual is not _MISSING) != bool(expected["$exists"]):
+                return False
+        elif actual is _MISSING or actual != expected:
+            return False
+    return True
+
+
+class _UpdateResult:
+    def __init__(self, matched_count):
+        self.matched_count = matched_count
+
+
+class StatefulCollection:
+    """Small, locked Mongo update_one model for CAS interleaving tests."""
+
+    def __init__(self, board, synchronize_auth_reads=False):
+        self.board = copy.deepcopy(board)
+        self.lock = threading.Lock()
+        self.read_barrier = threading.Barrier(2) if synchronize_auth_reads else None
+
+    def find_one(self, query):
+        with self.lock:
+            result = copy.deepcopy(self.board) if _matches_query(self.board, query) else None
+        if self.read_barrier is not None:
+            self.read_barrier.wait(timeout=5)
+        return result
+
+    def update_one(self, query, update):
+        with self.lock:
+            if not _matches_query(self.board, query):
+                return _UpdateResult(0)
+            for path, value in update.get("$set", {}).items():
+                _set_path(self.board, path, value)
+            for path, amount in update.get("$inc", {}).items():
+                current = _path_value(self.board, path)
+                _set_path(self.board, path, (0 if current is _MISSING else current) + amount)
+            for path in update.get("$unset", {}):
+                _unset_path(self.board, path)
+            return _UpdateResult(1)
+
+
+def _query_has_field(query, field):
+    if field in query:
+        return True
+    return any(
+        _query_has_field(value, field) if isinstance(value, dict)
+        else any(_query_has_field(item, field) for item in value) if isinstance(value, list)
+        else False
+        for value in query.values()
+    )
+
+
+class OrderedStructuralCollection(StatefulCollection):
+    """Force either progress or structural update to commit first."""
+
+    def __init__(self, board, first):
+        super().__init__(board, synchronize_auth_reads=True)
+        self.first = first
+        self.progress_done = threading.Event()
+        self.structural_done = threading.Event()
+
+    def update_one(self, query, update):
+        structural = _query_has_field(query, "boardMutationRevision")
+        if self.first == "progress" and structural:
+            self.progress_done.wait(timeout=5)
+        elif self.first == "structural" and not structural:
+            self.structural_done.wait(timeout=5)
+        result = super().update_one(query, update)
+        if structural:
+            self.structural_done.set()
+        else:
+            self.progress_done.set()
+        return result
 
 
 class TestRedisEventBroker(unittest.TestCase):
@@ -326,6 +479,57 @@ class TestImageStore(unittest.TestCase):
 
             with self.assertRaisesRegex(ValueError, "Animated images are only supported"):
                 store.save(_animated_image_data_uri("WEBP", "image/webp"))
+
+
+class TestUploadGarbageCollection(unittest.TestCase):
+    def test_collects_relative_and_public_upload_urls_from_nested_documents(self):
+        references = upload_gc.collect_upload_references({
+            "boardData": [[{"image": {"url": "/static/uploads/board-images/board.webp"}}]],
+            "team-0": {
+                "teamData": [[{
+                    "proofImages": [
+                        "https://praynr.com/static/uploads/proofs/proof.webp",
+                        "https://example.com/external.webp",
+                    ],
+                }]],
+            },
+        })
+        self.assertEqual(
+            references["/static/uploads/board-images"],
+            {"/static/uploads/board-images/board.webp"},
+        )
+        self.assertEqual(
+            references["/static/uploads/proofs"],
+            {"/static/uploads/proofs/proof.webp"},
+        )
+
+    def test_prunes_only_old_unreferenced_direct_image_files(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            directory = Path(tmp)
+            referenced = directory / "referenced.webp"
+            orphan = directory / "orphan.png"
+            fresh = directory / "fresh.jpg"
+            ignored = directory / "notes.txt"
+            for path in (referenced, orphan, fresh, ignored):
+                path.write_bytes(b"test")
+
+            old_timestamp = time.time() - (8 * 24 * 60 * 60)
+            os.utime(referenced, (old_timestamp, old_timestamp))
+            os.utime(orphan, (old_timestamp, old_timestamp))
+            os.utime(ignored, (old_timestamp, old_timestamp))
+
+            removed = upload_gc.prune_upload_directory(
+                directory,
+                "/static/uploads/proofs",
+                {"/static/uploads/proofs/referenced.webp"},
+                time.time() - (7 * 24 * 60 * 60),
+            )
+
+            self.assertEqual(removed, 1)
+            self.assertTrue(referenced.exists())
+            self.assertFalse(orphan.exists())
+            self.assertTrue(fresh.exists())
+            self.assertTrue(ignored.exists())
 
 
 class TestShowcase(unittest.TestCase):
@@ -629,6 +833,32 @@ class TestGetBoard(unittest.TestCase):
         self.assertIn("teamData", data)
         self.assertEqual(data["boardType"], "osrs")
 
+    def test_get_board_exposes_board_and_tile_revisions(self):
+        self.board["boardMutationRevision"] = 7
+        self.board["boardSettingsRevision"] = 3
+        self.board["boardData"][0][1]["revision"] = 4
+        self.board["team-0"]["teamData"][0][1]["revision"] = 9
+        resp = self.client.get("/getBoard/TestBoard/gen123/general")
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual(data["boardMutationRevision"], 7)
+        self.assertEqual(data["boardSettingsRevision"], 3)
+        self.assertEqual(data["boardData"][0][1]["revision"], 4)
+        self.assertEqual(data["teamData"][0]["data"]["teamData"][0][1]["revision"], 9)
+
+    def test_get_board_maps_legacy_missing_revisions_to_zero(self):
+        self.board.pop("boardMutationRevision")
+        self.board.pop("boardSettingsRevision")
+        self.board["boardData"][0][0].pop("revision")
+        self.board["team-0"]["teamData"][0][0].pop("revision")
+        resp = self.client.get("/getBoard/TestBoard/gen123/general")
+        self.assertEqual(resp.status_code, 200)
+        data = json.loads(resp.data)
+        self.assertEqual(data["boardMutationRevision"], 0)
+        self.assertEqual(data["boardSettingsRevision"], 0)
+        self.assertEqual(data["boardData"][0][0]["revision"], 0)
+        self.assertEqual(data["teamData"][0]["data"]["teamData"][0][0]["revision"], 0)
+
     def test_get_board_returns_generic_board_type(self):
         self.board["boardType"] = "generic"
         resp = self.client.get("/getBoard/TestBoard/admin123/admin")
@@ -732,9 +962,14 @@ class TestUpdateBoard(unittest.TestCase):
         self.board = _make_board()
         _mock_col.find_one.return_value = self.board
         _mock_col.update_one.reset_mock()
-        _mock_col.update_one.return_value = MagicMock()
+        _mock_col.update_one.return_value = MagicMock(matched_count=1)
 
     def _put(self, url, payload):
+        payload = json.loads(json.dumps(payload))
+        payload.setdefault("expectedRevision", 0)
+        payload.setdefault("expectedSettingsRevision", 0)
+        if "/general" in url:
+            payload.setdefault("expectedBoardTileRevision", 0)
         return self.client.put(
             url,
             data=json.dumps(payload),
@@ -750,6 +985,42 @@ class TestUpdateBoard(unittest.TestCase):
         )
         self.assertEqual(resp.status_code, 200)
 
+    def test_legacy_admin_client_uses_authenticated_snapshot_revisions(self):
+        self.board["boardSettingsRevision"] = 4
+        self.board["boardData"][0][0]["revision"] = 2
+        response = self.client.put(
+            "/updateBoard/TestBoard/admin123/admin",
+            data=json.dumps({"row": 0, "col": 0, "info": {"title": "Legacy edit"}}),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        query = _mock_col.update_one.call_args[0][0]
+        self.assertEqual(query["$and"], [
+            {"boardData.0.0.revision": 2},
+            {"boardSettingsRevision": 4},
+        ])
+
+    def test_legacy_general_client_uses_authenticated_snapshot_revisions(self):
+        self.board["boardSettingsRevision"] = 4
+        self.board["boardData"][0][0]["revision"] = 3
+        self.board["team-0"]["teamData"][0][0]["revision"] = 2
+        response = self.client.put(
+            "/updateBoard/TestBoard/gen123/general",
+            data=json.dumps({
+                "row": 0,
+                "col": 0,
+                "info": {"checked": True, "currPoints": 0, "teamId": 0},
+            }),
+            content_type="application/json",
+        )
+        self.assertEqual(response.status_code, 200)
+        query = _mock_col.update_one.call_args[0][0]
+        self.assertEqual(query["$and"], [
+            {"team-0.teamData.0.0.revision": 2},
+            {"boardSettingsRevision": 4},
+            {"boardData.0.0.revision": 3},
+        ])
+
     def test_admin_update_strips_bad_keys(self):
         """Keys not in adminTileKeys should be silently dropped."""
         resp = self._put(
@@ -761,8 +1032,8 @@ class TestUpdateBoard(unittest.TestCase):
         )
         self.assertEqual(resp.status_code, 200)
         # Confirm evilKey didn't make it into boardData
-        board_data = _mock_col.update_one.call_args[0][1]["$set"]["boardData"]
-        self.assertNotIn("evilKey", board_data[0][0])
+        updates = _mock_col.update_one.call_args[0][1]["$set"]
+        self.assertNotIn("boardData.0.0.evilKey", updates)
 
     def test_admin_update_strips_image_opacity(self):
         resp = self._put(
@@ -775,10 +1046,10 @@ class TestUpdateBoard(unittest.TestCase):
                                            "rowBingo": 0, "colBingo": 0}},
         )
         self.assertEqual(resp.status_code, 200)
-        board_data = _mock_col.update_one.call_args[0][1]["$set"]["boardData"]
-        self.assertEqual(board_data[0][0]["image"]["url"], "https://example.com/tile.png")
-        self.assertTrue(board_data[0][0]["image"]["usePixel"])
-        self.assertNotIn("opacity", board_data[0][0]["image"])
+        updates = _mock_col.update_one.call_args[0][1]["$set"]
+        self.assertEqual(updates["boardData.0.0.image"]["url"], "https://example.com/tile.png")
+        self.assertTrue(updates["boardData.0.0.image"]["usePixel"])
+        self.assertNotIn("opacity", updates["boardData.0.0.image"])
 
     def test_general_can_update_tile(self):
         self.board["boardData"][0][0]["points"] = 10
@@ -797,8 +1068,8 @@ class TestUpdateBoard(unittest.TestCase):
                                            "currPoints": "", "teamId": 0}},
         )
         self.assertEqual(resp.status_code, 200)
-        updated_team = _mock_col.update_one.call_args[0][1]["$set"]["team-0"]
-        self.assertEqual(updated_team["teamData"][0][0]["currPoints"], 0)
+        updates = _mock_col.update_one.call_args[0][1]["$set"]
+        self.assertEqual(updates["team-0.teamData.0.0.currPoints"], 0)
 
     def test_general_rejects_points_above_tile_value(self):
         self.board["boardData"][0][0]["points"] = 10
@@ -898,9 +1169,9 @@ class TestUpdateBoard(unittest.TestCase):
                                            "proofImages": [TINY_PNG_DATA_URI]}},
         )
         self.assertEqual(resp.status_code, 200)
-        updated_team = _mock_col.update_one.call_args[0][1]["$set"]["team-0"]
+        updates = _mock_col.update_one.call_args[0][1]["$set"]
         self.assertEqual(
-            updated_team["teamData"][0][0]["proofImages"],
+            updates["team-0.teamData.0.0.proofImages"],
             ["/static/uploads/proofs/test.webp"],
         )
 
@@ -938,6 +1209,100 @@ class TestUpdateBoard(unittest.TestCase):
         self.assertIn("Image file is too large", json.loads(resp.data)["message"])
         _mock_col.update_one.assert_not_called()
 
+    @patch.object(server.board_images, "delete")
+    @patch.object(server.board_images, "save", return_value="/static/uploads/board-images/new.webp")
+    def test_admin_new_image_is_cleaned_when_tile_cas_loses(self, _save, delete):
+        _mock_col.update_one.return_value = MagicMock(matched_count=0)
+        response = self._put(
+            "/updateBoard/TestBoard/admin123/admin",
+            {
+                "row": 0,
+                "col": 0,
+                "info": {"image": {"url": TINY_PNG_DATA_URI}},
+                "expectedRevision": 0,
+                "expectedSettingsRevision": 0,
+            },
+        )
+        self.assertEqual(response.status_code, 409)
+        delete.assert_called_once_with("/static/uploads/board-images/new.webp")
+
+    @patch.object(server.board_images, "delete")
+    @patch.object(server.board_images, "save", return_value="/static/uploads/board-images/unknown.webp")
+    def test_admin_new_image_is_retained_when_mongo_outcome_is_unknown(self, _save, delete):
+        _mock_col.update_one.side_effect = RuntimeError("connection lost")
+        response = self._put(
+            "/updateBoard/TestBoard/admin123/admin",
+            {
+                "row": 0,
+                "col": 0,
+                "info": {"image": {"url": TINY_PNG_DATA_URI}},
+                "expectedRevision": 0,
+                "expectedSettingsRevision": 0,
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        delete.assert_not_called()
+        _mock_col.update_one.side_effect = None
+        _mock_col.update_one.return_value = MagicMock(matched_count=1)
+
+    @patch.object(server.board_images, "delete")
+    def test_admin_replacement_retains_previous_saved_image(self, delete):
+        self.board["boardData"][0][0]["image"] = {
+            "url": "/static/uploads/board-images/shared.webp",
+        }
+        response = self._put(
+            "/updateBoard/TestBoard/admin123/admin",
+            {
+                "row": 0,
+                "col": 0,
+                "info": {"image": {"url": "https://example.com/replacement.webp"}},
+                "expectedRevision": 0,
+                "expectedSettingsRevision": 0,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        delete.assert_not_called()
+
+    @patch.object(server.proof_images, "delete")
+    @patch.object(server.proof_images, "save", return_value="/static/uploads/proofs/new.webp")
+    def test_general_new_proof_is_cleaned_when_tile_cas_loses(self, _save, delete):
+        _mock_col.update_one.return_value = MagicMock(matched_count=0)
+        response = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {
+                "row": 0,
+                "col": 0,
+                "info": {"checked": True, "currPoints": 0, "teamId": 0,
+                         "proofImages": [TINY_PNG_DATA_URI]},
+                "expectedRevision": 0,
+                "expectedSettingsRevision": 0,
+                "expectedBoardTileRevision": 0,
+            },
+        )
+        self.assertEqual(response.status_code, 409)
+        delete.assert_called_once_with("/static/uploads/proofs/new.webp")
+
+    @patch.object(server.proof_images, "delete")
+    @patch.object(server.proof_images, "save", return_value="/static/uploads/proofs/unknown.webp")
+    def test_general_new_proof_is_retained_when_mongo_outcome_is_unknown(self, _save, delete):
+        _mock_col.update_one.side_effect = RuntimeError("connection lost")
+        response = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {
+                "row": 0,
+                "col": 0,
+                "info": {"checked": True, "currPoints": 0, "teamId": 0,
+                         "proofImages": [TINY_PNG_DATA_URI]},
+                "expectedRevision": 0,
+                "expectedSettingsRevision": 0,
+                "expectedBoardTileRevision": 0,
+            },
+        )
+        self.assertEqual(response.status_code, 400)
+        delete.assert_not_called()
+        _mock_col.update_one.side_effect = None
+        _mock_col.update_one.return_value = MagicMock(matched_count=1)
+
     def test_general_update_preserves_existing_absolute_proof_url_as_relative_path(self):
         resp = self._put(
             "/updateBoard/TestBoard/gen123/general",
@@ -946,11 +1311,239 @@ class TestUpdateBoard(unittest.TestCase):
                                            "proofImages": ["https://praynr.com/static/uploads/proofs/test.webp"]}},
         )
         self.assertEqual(resp.status_code, 200)
-        updated_team = _mock_col.update_one.call_args[0][1]["$set"]["team-0"]
+        updates = _mock_col.update_one.call_args[0][1]["$set"]
         self.assertEqual(
-            updated_team["teamData"][0][0]["proofImages"],
+            updates["team-0.teamData.0.0.proofImages"],
             ["/static/uploads/proofs/test.webp"],
         )
+
+
+class TestStatefulRevisionInterleavings(unittest.TestCase):
+    def _run_requests(self, collection, requests):
+        with patch.object(server, "mycol", collection), patch.object(server, "publish_board_update"):
+            def send(item):
+                path, payload = item
+                with server.app.test_client() as client:
+                    response = client.put(
+                        path,
+                        data=json.dumps(payload),
+                        content_type="application/json",
+                    )
+                    return response.status_code
+
+            with ThreadPoolExecutor(max_workers=len(requests)) as executor:
+                return list(executor.map(send, requests))
+
+    def _run_puts(self, collection, payloads, path):
+        return self._run_requests(collection, [(path, payload) for payload in payloads])
+
+    @staticmethod
+    def _admin_payload(col, title):
+        return {
+            "row": 0,
+            "col": col,
+            "info": {"title": title},
+            "expectedRevision": 0,
+            "expectedSettingsRevision": 0,
+        }
+
+    @staticmethod
+    def _progress_payload(col, checked=True):
+        return {
+            "row": 0,
+            "col": col,
+            "info": {"checked": checked, "currPoints": 0, "teamId": 0},
+            "expectedRevision": 0,
+            "expectedSettingsRevision": 0,
+            "expectedBoardTileRevision": 0,
+        }
+
+    def test_concurrent_admin_tiles_both_survive(self):
+        collection = StatefulCollection(_make_board(), synchronize_auth_reads=True)
+        statuses = self._run_puts(
+            collection,
+            [self._admin_payload(0, "left"), self._admin_payload(1, "right")],
+            "/updateBoard/TestBoard/admin123/admin",
+        )
+        self.assertEqual(sorted(statuses), [200, 200])
+        self.assertEqual(collection.board["boardData"][0][0]["title"], "left")
+        self.assertEqual(collection.board["boardData"][0][1]["title"], "right")
+        self.assertEqual(collection.board["boardData"][0][0]["revision"], 1)
+        self.assertEqual(collection.board["boardData"][0][1]["revision"], 1)
+        self.assertEqual(collection.board["boardMutationRevision"], 2)
+
+    def test_concurrent_same_team_progress_tiles_both_survive(self):
+        collection = StatefulCollection(_make_board(), synchronize_auth_reads=True)
+        statuses = self._run_puts(
+            collection,
+            [self._progress_payload(0), self._progress_payload(1)],
+            "/updateBoard/TestBoard/gen123/general",
+        )
+        self.assertEqual(sorted(statuses), [200, 200])
+        self.assertTrue(collection.board["team-0"]["teamData"][0][0]["checked"])
+        self.assertTrue(collection.board["team-0"]["teamData"][0][1]["checked"])
+        self.assertEqual(collection.board["team-0"]["teamData"][0][0]["revision"], 1)
+        self.assertEqual(collection.board["team-0"]["teamData"][0][1]["revision"], 1)
+        self.assertEqual(collection.board["boardMutationRevision"], 2)
+
+    def test_concurrent_same_tile_has_one_winner_and_one_conflict(self):
+        collection = StatefulCollection(_make_board(), synchronize_auth_reads=True)
+        statuses = self._run_puts(
+            collection,
+            [self._admin_payload(0, "first"), self._admin_payload(0, "second")],
+            "/updateBoard/TestBoard/admin123/admin",
+        )
+        self.assertEqual(sorted(statuses), [200, 409])
+        self.assertIn(collection.board["boardData"][0][0]["title"], {"first", "second"})
+        self.assertEqual(collection.board["boardData"][0][0]["revision"], 1)
+        self.assertEqual(collection.board["boardMutationRevision"], 1)
+
+    def test_same_snapshot_progress_wins_and_resize_refuses_stale_snapshot(self):
+        collection = OrderedStructuralCollection(_make_board(), first="progress")
+        resize_payload = {
+            "passwordRequired": False,
+            "rows": 3,
+            "columns": 2,
+            "visibleRows": 2,
+            "expectedSettingsRevision": 0,
+            "teamData": [
+                {"team": 0, "data": {"name": "team-0", "password": ""}},
+                {"team": 1, "data": {"name": "team-1", "password": ""}},
+            ],
+        }
+        statuses = self._run_requests(collection, [
+            ("/updateBoard/TestBoard/gen123/general", self._progress_payload(0)),
+            ("/updateTeams/TestBoard/admin123/admin", {"dataToSend": resize_payload}),
+        ])
+        self.assertEqual(statuses, [200, 409])
+        self.assertTrue(collection.board["team-0"]["teamData"][0][0]["checked"])
+        self.assertEqual(collection.board["rows"], 2)
+        self.assertEqual(collection.board["columns"], 2)
+        self.assertEqual(collection.board["boardSettingsRevision"], 0)
+        self.assertEqual(collection.board["boardMutationRevision"], 1)
+
+    def test_same_snapshot_resize_wins_and_progress_refuses_stale_snapshot(self):
+        collection = OrderedStructuralCollection(_make_board(), first="structural")
+        resize_payload = {
+            "passwordRequired": False,
+            "rows": 3,
+            "columns": 2,
+            "visibleRows": 2,
+            "expectedSettingsRevision": 0,
+            "teamData": [
+                {"team": 0, "data": {"name": "team-0", "password": ""}},
+                {"team": 1, "data": {"name": "team-1", "password": ""}},
+            ],
+        }
+        statuses = self._run_requests(collection, [
+            ("/updateBoard/TestBoard/gen123/general", self._progress_payload(0)),
+            ("/updateTeams/TestBoard/admin123/admin", {"dataToSend": resize_payload}),
+        ])
+        self.assertEqual(statuses, [409, 200])
+        self.assertFalse(collection.board["team-0"]["teamData"][0][0]["checked"])
+        self.assertEqual(collection.board["rows"], 3)
+        self.assertEqual(collection.board["columns"], 2)
+        self.assertEqual(collection.board["boardSettingsRevision"], 1)
+        self.assertEqual(collection.board["boardMutationRevision"], 1)
+
+    def test_progress_then_metadata_and_metadata_then_progress_have_expected_ordering(self):
+        progress_first = StatefulCollection(_make_board())
+        progress_statuses = self._run_puts(
+            progress_first,
+            [self._progress_payload(0)],
+            "/updateBoard/TestBoard/gen123/general",
+        )
+        self.assertEqual(progress_statuses, [200])
+        with patch.object(server, "mycol", progress_first), patch.object(server, "publish_board_update"):
+            with server.app.test_client() as client:
+                metadata_response = client.put(
+                    "/updateTeams/TestBoard/admin123/admin",
+                    data=json.dumps({"dataToSend": {
+                        "passwordRequired": False,
+                        "rows": 2,
+                        "columns": 2,
+                        "visibleRows": 2,
+                        "expectedSettingsRevision": 0,
+                        "teamData": [{"team": 0, "data": {"name": "new", "password": ""}},
+                                     {"team": 1, "data": {"name": "team-1", "password": ""}}],
+                    }}),
+                    content_type="application/json",
+                )
+        self.assertEqual(metadata_response.status_code, 200)
+        self.assertTrue(progress_first.board["team-0"]["teamData"][0][0]["checked"])
+        self.assertEqual(progress_first.board["team-0"]["name"], "new")
+
+        metadata_first = StatefulCollection(_make_board())
+        with patch.object(server, "mycol", metadata_first), patch.object(server, "publish_board_update"):
+            with server.app.test_client() as client:
+                metadata_response = client.put(
+                    "/updateTeams/TestBoard/admin123/admin",
+                    data=json.dumps({"dataToSend": {
+                        "passwordRequired": False,
+                        "rows": 2,
+                        "columns": 2,
+                        "visibleRows": 2,
+                        "expectedSettingsRevision": 0,
+                        "teamData": [{"team": 0, "data": {"name": "new", "password": ""}},
+                                     {"team": 1, "data": {"name": "team-1", "password": ""}}],
+                    }}),
+                    content_type="application/json",
+                )
+        self.assertEqual(metadata_response.status_code, 200)
+        stale_progress = self._run_puts(
+            metadata_first,
+            [self._progress_payload(0)],
+            "/updateBoard/TestBoard/gen123/general",
+        )
+        self.assertEqual(stale_progress, [409])
+        self.assertFalse(metadata_first.board["team-0"]["teamData"][0][0]["checked"])
+
+    def test_progress_then_resize_and_resize_then_progress_have_expected_ordering(self):
+        progress_first = StatefulCollection(_make_board())
+        self.assertEqual(
+            self._run_puts(progress_first, [self._progress_payload(0)], "/updateBoard/TestBoard/gen123/general"),
+            [200],
+        )
+        resize_payload = {"passwordRequired": False, "rows": 3, "columns": 2, "visibleRows": 2,
+                          "expectedSettingsRevision": 0,
+                          "teamData": [{"team": 0, "data": {"name": "team-0", "password": ""}},
+                                       {"team": 1, "data": {"name": "team-1", "password": ""}}]}
+        with patch.object(server, "mycol", progress_first), patch.object(server, "publish_board_update"):
+            with server.app.test_client() as client:
+                resize_response = client.put(
+                    "/updateTeams/TestBoard/admin123/admin",
+                    data=json.dumps({"dataToSend": resize_payload}),
+                    content_type="application/json",
+                )
+        self.assertEqual(resize_response.status_code, 200)
+        self.assertTrue(progress_first.board["team-0"]["teamData"][0][0]["checked"])
+
+        resize_first = StatefulCollection(_make_board())
+        with patch.object(server, "mycol", resize_first), patch.object(server, "publish_board_update"):
+            with server.app.test_client() as client:
+                resize_response = client.put(
+                    "/updateTeams/TestBoard/admin123/admin",
+                    data=json.dumps({"dataToSend": resize_payload}),
+                    content_type="application/json",
+                )
+        self.assertEqual(resize_response.status_code, 200)
+        self.assertEqual(
+            self._run_puts(resize_first, [self._progress_payload(0)], "/updateBoard/TestBoard/gen123/general"),
+            [409],
+        )
+
+    def test_legacy_revisions_are_initialized_by_first_write(self):
+        board = _make_board()
+        board.pop("boardMutationRevision")
+        board.pop("boardSettingsRevision")
+        board["boardData"][0][0].pop("revision")
+        collection = StatefulCollection(board)
+        self.assertEqual(
+            self._run_puts(collection, [self._admin_payload(0, "legacy")], "/updateBoard/TestBoard/admin123/admin"),
+            [200],
+        )
+        self.assertEqual(collection.board["boardData"][0][0]["revision"], 1)
+        self.assertEqual(collection.board["boardMutationRevision"], 1)
 
 
 class TestUpdateTeams(unittest.TestCase):
@@ -961,7 +1554,14 @@ class TestUpdateTeams(unittest.TestCase):
         self.board["team-0"]["password"] = "oldsecret"
         _mock_col.find_one.return_value = self.board
         _mock_col.update_one.reset_mock()
-        _mock_col.update_one.return_value = MagicMock()
+        _mock_col.update_one.return_value = MagicMock(matched_count=1)
+
+    def _put(self, payload):
+        return self.client.put(
+            "/updateTeams/TestBoard/admin123/admin",
+            data=json.dumps({"dataToSend": payload}),
+            content_type="application/json",
+        )
 
     @patch("server.publish_board_update")
     def test_adding_team_persists_password(self, _publish):
@@ -973,6 +1573,7 @@ class TestUpdateTeams(unittest.TestCase):
                     "rows": 2,
                     "columns": 2,
                     "visibleRows": 2,
+                    "expectedSettingsRevision": 0,
                     "teamData": [
                         {"team": 0, "data": {"name": "team-0", "password": "oldsecret"}},
                         {"team": 1, "data": {"name": "Boss", "password": "newsecret"}},
@@ -989,6 +1590,89 @@ class TestUpdateTeams(unittest.TestCase):
         ]
         self.assertEqual(added_team_updates[0]["password"], "newsecret")
 
+    @patch("server.publish_board_update")
+    def test_legacy_client_uses_authenticated_settings_revision(self, _publish):
+        self.board["boardSettingsRevision"] = 4
+        response = self._put({
+            "passwordRequired": True,
+            "rows": 2,
+            "columns": 2,
+            "visibleRows": 2,
+            "teamData": [
+                {"team": 0, "data": {"name": "Renamed", "password": "newsecret"}},
+            ],
+        })
+        self.assertEqual(response.status_code, 200)
+        query = _mock_col.update_one.call_args[0][0]
+        self.assertEqual(query["$and"], [{"boardSettingsRevision": 4}])
+
+    @patch("server.publish_board_update")
+    def test_metadata_update_targets_fields_and_can_overlap_progress(self, _publish):
+        self.board["boardMutationRevision"] = 11
+        response = self._put({
+            "passwordRequired": True,
+            "rows": 2,
+            "columns": 2,
+            "visibleRows": 2,
+            "expectedSettingsRevision": 0,
+            "teamData": [
+                {"team": 0, "data": {"name": "Renamed", "password": "newsecret"}},
+            ],
+        })
+        self.assertEqual(response.status_code, 200)
+        query, update = _mock_col.update_one.call_args[0]
+        self.assertEqual(query["_id"], "board-id")
+        self.assertEqual(query["$and"], [
+            {"$or": [{"boardSettingsRevision": 0}, {"boardSettingsRevision": {"$exists": False}}]},
+        ])
+        self.assertEqual(update["$set"]["team-0.name"], "Renamed")
+        self.assertEqual(update["$set"]["team-0.password"], "newsecret")
+        self.assertNotIn("team-0.teamData", update["$set"])
+        self.assertEqual(update["$inc"], {"boardMutationRevision": 1, "boardSettingsRevision": 1})
+        self.assertNotIn("boardMutationRevision", json.loads(response.data))
+
+    @patch("server.publish_board_update")
+    def test_stale_settings_revision_returns_conflict_without_write(self, _publish):
+        self.board["boardSettingsRevision"] = 4
+        response = self._put({
+            "passwordRequired": True,
+            "rows": 2,
+            "columns": 2,
+            "visibleRows": 2,
+            "expectedSettingsRevision": 3,
+            "teamData": [
+                {"team": 0, "data": {"name": "Renamed", "password": "newsecret"}},
+            ],
+        })
+        self.assertEqual(response.status_code, 409)
+        _mock_col.update_one.assert_not_called()
+
+    @patch("server.publish_board_update")
+    def test_resize_roster_is_one_update_guarded_by_both_revisions(self, _publish):
+        self.board["boardMutationRevision"] = 6
+        self.board["boardSettingsRevision"] = 2
+        response = self._put({
+            "passwordRequired": True,
+            "rows": 3,
+            "columns": 3,
+            "visibleRows": 2,
+            "expectedSettingsRevision": 2,
+            "teamData": [
+                {"team": 0, "data": {"name": "Renamed", "password": "newsecret"}},
+                {"team": 1, "data": {"name": "Added", "password": "addedsecret"}},
+            ],
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(_mock_col.update_one.call_count, 1)
+        query, update = _mock_col.update_one.call_args[0]
+        self.assertEqual(query["_id"], "board-id")
+        self.assertEqual(query["$and"], [
+            {"boardMutationRevision": 6},
+            {"boardSettingsRevision": 2},
+        ])
+        self.assertEqual(update["$inc"], {"boardMutationRevision": 1, "boardSettingsRevision": 1})
+        self.assertEqual(update["$set"]["teams"], 2)
+        self.assertIn("team-1", update["$set"])
 
 class TestFeedbackEndpoint(unittest.TestCase):
     def setUp(self):
@@ -1029,44 +1713,175 @@ class TestFeedbackEndpoint(unittest.TestCase):
 
 
 # ---------------------------------------------------------------------------
-# Tests: changeBoardSize helper
+# Tests: revision helpers and structural update construction
 # ---------------------------------------------------------------------------
 
-class TestChangeBoardSize(unittest.TestCase):
+class TestBoardRevisionHelpers(unittest.TestCase):
+    def test_legacy_revision_zero_matches_missing_field(self):
+        query = server.board_revision_query(
+            "TestBoard", {"boardMutationRevision": 0}, "board-id"
+        )
+        self.assertEqual(query["_id"], "board-id")
+        self.assertEqual(
+            query["$and"],
+            [{"$or": [{"boardMutationRevision": 0}, {"boardMutationRevision": {"$exists": False}}]}],
+        )
+
+    def test_tile_path_uses_validated_numeric_indices(self):
+        self.assertEqual(server.tile_revision_path("boardData", 3, 4), "boardData.3.4.revision")
+
+    def test_resize_grid_preserves_existing_tiles_and_initializes_new_tiles(self):
+        cache = _make_board(rows=3, cols=3)
+        cache["boardData"][1][1]["title"] = "keep"
+        resized = server.resize_grid(cache["boardData"], 4, 2, server.defaultBoardObj)
+        self.assertEqual(len(resized), 4)
+        self.assertTrue(all(len(column) == 2 for column in resized))
+        self.assertEqual(resized[1][1]["title"], "keep")
+        self.assertEqual(resized[3][1]["revision"], 0)
+
+    def test_structure_update_is_one_atomic_revision_guarded_document(self):
+        cache = _make_board(rows=3, cols=3, teams=1)
+        update = server.build_structure_update(
+            cache,
+            rows=2,
+            cols=4,
+            team_metadata_list=[{"name": "Renamed", "password": "pw"}],
+            require_password=True,
+            visible_rows=2,
+        )
+        self.assertEqual(update["$inc"], {"boardMutationRevision": 1, "boardSettingsRevision": 1})
+        self.assertEqual(update["$set"]["teams"], 1)
+        self.assertEqual(len(update["$set"]["boardData"]), 4)
+        self.assertEqual(len(update["$set"]["team-0"]["teamData"]), 4)
+        self.assertEqual(update["$set"]["team-0"]["name"], "Renamed")
+
+
+class TestUpdateBoardRevisionContract(unittest.TestCase):
     def setUp(self):
-        _mock_col.update_one.return_value = MagicMock()
+        self.client = _client(server.app)
+        self.board = _make_board()
+        _mock_col.find_one.return_value = self.board
+        _mock_col.update_one.reset_mock()
+        _mock_col.update_one.return_value = MagicMock(matched_count=1)
 
-    def _cache(self, rows=3, cols=3, teams=1):
-        return _make_board(rows=rows, cols=cols, teams=teams)
+    def _put(self, url, payload):
+        return self.client.put(
+            url,
+            data=json.dumps(payload),
+            content_type="application/json",
+        )
 
-    def test_no_change_returns_false(self):
-        cache = self._cache(rows=3, cols=3)
-        result = server.changeBoardSize([], 3, 3, cache, "TestBoard")
-        self.assertFalse(result)
+    def test_admin_updates_only_target_tile_and_omits_root_mutation_predicate(self):
+        response = self._put(
+            "/updateBoard/TestBoard/admin123/admin",
+            {
+                "row": 0,
+                "col": 1,
+                "info": {"title": "one"},
+                "expectedRevision": 0,
+                "expectedSettingsRevision": 0,
+            },
+        )
+        self.assertEqual(response.status_code, 200)
+        query, update = _mock_col.update_one.call_args[0]
+        self.assertEqual(query["_id"], "board-id")
+        self.assertEqual(query["$and"], [
+            {"$or": [{"boardData.0.1.revision": 0}, {"boardData.0.1.revision": {"$exists": False}}]},
+            {"$or": [{"boardSettingsRevision": 0}, {"boardSettingsRevision": {"$exists": False}}]},
+        ])
+        self.assertEqual(update["$set"], {"boardData.0.1.title": "one"})
+        self.assertEqual(update["$inc"], {"boardData.0.1.revision": 1, "boardMutationRevision": 1})
 
-    def test_shrink_rows_returns_true(self):
-        cache = self._cache(rows=3, cols=3)
-        result = server.changeBoardSize([], 2, 3, cache, "TestBoard")
-        self.assertTrue(result)
+    def test_independent_same_team_progress_tiles_use_separate_cas_paths(self):
+        for col in (0, 1):
+            response = self._put(
+                "/updateBoard/TestBoard/gen123/general",
+                {
+                    "row": 0,
+                    "col": col,
+                    "info": {"checked": True, "currPoints": 0, "teamId": 0},
+                    "expectedRevision": 0,
+                    "expectedSettingsRevision": 0,
+                    "expectedBoardTileRevision": 0,
+                },
+            )
+            self.assertEqual(response.status_code, 200)
+            query, update = _mock_col.update_one.call_args[0]
+            self.assertEqual(query["$and"], [
+                {"$or": [{f"team-0.teamData.0.{col}.revision": 0},
+                         {f"team-0.teamData.0.{col}.revision": {"$exists": False}}]},
+                {"$or": [{"boardSettingsRevision": 0}, {"boardSettingsRevision": {"$exists": False}}]},
+                {"$or": [{f"boardData.0.{col}.revision": 0},
+                         {f"boardData.0.{col}.revision": {"$exists": False}}]},
+            ])
+            self.assertEqual(update["$inc"], {
+                f"team-0.teamData.0.{col}.revision": 1,
+                "boardMutationRevision": 1,
+            })
 
-    def test_grow_cols_returns_true(self):
-        cache = self._cache(rows=3, cols=3)
-        result = server.changeBoardSize([], 3, 4, cache, "TestBoard")
-        self.assertTrue(result)
+    def test_stale_same_tile_revision_returns_conflict_without_write(self):
+        self.board["boardData"][0][0]["revision"] = 2
+        response = self._put(
+            "/updateBoard/TestBoard/admin123/admin",
+            {
+                "row": 0,
+                "col": 0,
+                "info": {"title": "stale"},
+                "expectedRevision": 1,
+                "expectedSettingsRevision": 0,
+            },
+        )
+        self.assertEqual(response.status_code, 409)
+        _mock_col.update_one.assert_not_called()
 
-    def test_shrink_rows_trims_board_data(self):
-        cache = self._cache(rows=3, cols=3)
-        server.changeBoardSize([], 2, 3, cache, "TestBoard")
-        set_call = _mock_col.update_one.call_args[0][1]["$set"]
-        for col in set_call["boardData"]:
-            self.assertEqual(len(col), 2)
+    def test_metadata_first_rejects_progress_with_old_settings_revision(self):
+        self.board["boardSettingsRevision"] = 1
+        response = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {
+                "row": 0,
+                "col": 0,
+                "info": {"checked": True, "currPoints": 0, "teamId": 0},
+                "expectedRevision": 0,
+                "expectedSettingsRevision": 0,
+                "expectedBoardTileRevision": 0,
+            },
+        )
+        self.assertEqual(response.status_code, 409)
+        _mock_col.update_one.assert_not_called()
 
-    def test_grow_rows_expands_board_data(self):
-        cache = self._cache(rows=3, cols=3)
-        server.changeBoardSize([], 5, 3, cache, "TestBoard")
-        set_call = _mock_col.update_one.call_args[0][1]["$set"]
-        for col in set_call["boardData"]:
-            self.assertEqual(len(col), 5)
+    def test_resize_first_rejects_progress_with_old_settings_revision(self):
+        self.board["boardMutationRevision"] = 1
+        self.board["boardSettingsRevision"] = 1
+        response = self._put(
+            "/updateBoard/TestBoard/gen123/general",
+            {
+                "row": 0,
+                "col": 0,
+                "info": {"checked": True, "currPoints": 0, "teamId": 0},
+                "expectedRevision": 0,
+                "expectedSettingsRevision": 0,
+                "expectedBoardTileRevision": 0,
+            },
+        )
+        self.assertEqual(response.status_code, 409)
+        _mock_col.update_one.assert_not_called()
+
+    def test_invalid_indices_are_rejected_before_mongo(self):
+        for row, col in ((-1, 0), (0, -1), (99, 0), (0, 99), (True, 0), (0, 1.5)):
+            with self.subTest(row=row, col=col):
+                response = self._put(
+                    "/updateBoard/TestBoard/admin123/admin",
+                    {
+                        "row": row,
+                        "col": col,
+                        "info": {"title": "invalid"},
+                        "expectedRevision": 0,
+                        "expectedSettingsRevision": 0,
+                    },
+                )
+                self.assertEqual(response.status_code, 400)
+        _mock_col.update_one.assert_not_called()
 
 
 # ---------------------------------------------------------------------------

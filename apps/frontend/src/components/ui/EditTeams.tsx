@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { ChangeEvent } from 'react';
 import Alert from './Alert';
 import EditableInput from './EditableInput';
 import { RangeField, SelectField, SwitchField } from './FormControls';
 import { ModalButton, ModalShell } from './ModalShell';
 import Tabs from './Tabs';
+import { isSaveConflictError } from '../../utils/utils';
+import { normalizeRevision } from './tile-modal/types';
 import './EditTeams.css';
 
 const boardSizeOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -43,12 +45,16 @@ interface EditTeamsProps {
     passwordRequired: boolean,
     rows: number,
     columns: number,
-    visibleRows: number
-  ) => void;
+    visibleRows: number,
+    expectedSettingsRevision: number
+  ) => Promise<boolean>;
+  boardSettingsRevision?: number;
   passwordRequired?: boolean;
   rows: number;
   show?: boolean;
   teams: TeamInfo[];
+  onDraftStateChange?: (dirty: boolean) => void;
+  onConflictReload?: () => Promise<boolean>;
   visibleRows?: number | null;
 }
 
@@ -66,6 +72,9 @@ function EditTeams({
   show,
   handleClose,
   handleSave,
+  boardSettingsRevision,
+  onDraftStateChange,
+  onConflictReload,
   teams,
   passwordRequired,
   rows,
@@ -73,6 +82,13 @@ function EditTeams({
   visibleRows,
 }: EditTeamsProps) {
   const [confirmingReductions, setConfirmingReductions] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isReloading, setIsReloading] = useState(false);
+  const [isConflict, setIsConflict] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const saveInFlightRef = useRef(false);
+  const reloadInFlightRef = useRef(false);
+  const expectedSettingsRevisionRef = useRef(normalizeRevision(boardSettingsRevision));
   const [state, setState] = useState<EditTeamsState>(() => {
     const rowCount = Number(rows);
     const columnCount = Number(columns);
@@ -93,11 +109,25 @@ function EditTeams({
     teams: teams.length,
   });
   const isConfirmingReductions = confirmingReductions && reductionChanges.length > 0;
+  const isBusy = isSaving || isReloading;
+
+  function markDirty() {
+    onDraftStateChange?.(true);
+  }
+
+  function closeEditor() {
+    onDraftStateChange?.(false);
+    handleClose();
+  }
+
+  useEffect(() => () => onDraftStateChange?.(false), [onDraftStateChange]);
 
   function inputState(
     e: ChangeEvent<HTMLInputElement | HTMLSelectElement>,
     target: BoardSizeTarget
   ) {
+    if (saveInFlightRef.current) return;
+    markDirty();
     const value = Number(e.target.value);
     setState((currentState) => {
       const stateChange: Partial<EditTeamsState> = { [target]: value };
@@ -121,6 +151,8 @@ function EditTeams({
   }
 
   function editName(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) {
+    if (saveInFlightRef.current) return;
+    markDirty();
     const name = e.target.value;
     setState((currentState) => ({
       ...currentState,
@@ -131,6 +163,8 @@ function EditTeams({
   }
 
   function editPassword(e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>, index: number) {
+    if (saveInFlightRef.current) return;
+    markDirty();
     const password = e.target.value;
     setState((currentState) => ({
       ...currentState,
@@ -141,20 +175,68 @@ function EditTeams({
   }
 
   function save() {
+    if (saveInFlightRef.current) return;
     if (reductionChanges.length > 0 && !confirmingReductions) {
       setConfirmingReductions(true);
       return;
     }
-    saveConfirmed();
+    void saveConfirmed();
   }
 
-  function saveConfirmed() {
+  async function saveConfirmed() {
+    if (saveInFlightRef.current) return;
+    saveInFlightRef.current = true;
+    setIsSaving(true);
+    setSaveError(null);
+    setIsConflict(false);
     const rowsToShow = state.layeredBoard ? state.visibleRows : state.columns;
-    handleSave(state.teams, state.passwordRequired, state.rows, state.columns, rowsToShow);
-    handleClose();
+    try {
+      const saved = await handleSave(
+        state.teams,
+        state.passwordRequired,
+        state.rows,
+        state.columns,
+        rowsToShow,
+        expectedSettingsRevisionRef.current
+      );
+      if (saved === true) closeEditor();
+    } catch (error) {
+      if (isSaveConflictError(error)) {
+        setIsConflict(true);
+        setSaveError(error.message);
+      } else {
+        setSaveError('Could not save the board. Try again.');
+      }
+    } finally {
+      saveInFlightRef.current = false;
+      setIsSaving(false);
+    }
+  }
+
+  async function handleConflictReload() {
+    if (!onConflictReload || reloadInFlightRef.current) return;
+    reloadInFlightRef.current = true;
+    setIsReloading(true);
+    setSaveError(null);
+    try {
+      const loaded = await onConflictReload();
+      if (loaded === true) closeEditor();
+      else {
+        setIsConflict(true);
+        setSaveError('Could not load the latest board data. Try again.');
+      }
+    } catch {
+      setIsConflict(true);
+      setSaveError('Could not load the latest board data. Try again.');
+    } finally {
+      reloadInFlightRef.current = false;
+      setIsReloading(false);
+    }
   }
 
   function removeTeam() {
+    if (saveInFlightRef.current) return;
+    markDirty();
     setState((currentState) => {
       if (currentState.teams.length <= 1) {
         return currentState;
@@ -167,6 +249,8 @@ function EditTeams({
   }
 
   function addTeam() {
+    if (saveInFlightRef.current) return;
+    markDirty();
     setState((currentState) => {
       const newTeam = JSON.parse(JSON.stringify(currentState.teams[0])) as TeamInfo;
       newTeam.data.name = `team-${currentState.teams.length}`;
@@ -178,6 +262,8 @@ function EditTeams({
   }
 
   function toggleLayeredBoard() {
+    if (saveInFlightRef.current) return;
+    markDirty();
     setState((currentState) => ({
       ...currentState,
       layeredBoard: !currentState.layeredBoard,
@@ -188,6 +274,7 @@ function EditTeams({
   }
 
   function setActiveTab(activeTab: string) {
+    if (saveInFlightRef.current) return;
     setState((currentState) => ({ ...currentState, activeTab: activeTab as ActiveTab }));
   }
 
@@ -196,30 +283,51 @@ function EditTeams({
       show={show}
       titleId="edit-teams-title"
       title="Edit Board"
-      onClose={handleClose}
+      onClose={isBusy ? undefined : closeEditor}
       maxWidth="800px"
       footer={
         isConfirmingReductions ? (
           <>
-            <ModalButton variant="secondary" onClick={() => setConfirmingReductions(false)}>
+            <ModalButton
+              variant="secondary"
+              onClick={() => setConfirmingReductions(false)}
+              disabled={isBusy}
+            >
               Go Back
             </ModalButton>
-            <ModalButton variant="danger" onClick={saveConfirmed}>
-              Confirm Save
+            <ModalButton variant="danger" onClick={() => void saveConfirmed()} disabled={isBusy}>
+              {isSaving ? 'Saving…' : isReloading ? 'Loading latest…' : 'Confirm Save'}
             </ModalButton>
           </>
         ) : (
           <>
-            <ModalButton variant="danger" onClick={handleClose}>
+            <ModalButton variant="danger" onClick={closeEditor} disabled={isBusy}>
               Close
             </ModalButton>
-            <ModalButton variant="success" onClick={save}>
-              Save
+            <ModalButton variant="success" onClick={save} disabled={isBusy}>
+              {isSaving ? 'Saving…' : isReloading ? 'Loading latest…' : 'Save'}
             </ModalButton>
           </>
         )
       }
     >
+      {saveError && (
+        <Alert variant={isConflict ? 'warning' : 'danger'} role="alert">
+          <div>{saveError}</div>
+          {isConflict && onConflictReload && (
+            <>
+              <p>Discard these settings and reopen the editor with the latest board data.</p>
+              <ModalButton
+                variant="warning"
+                onClick={() => void handleConflictReload()}
+                disabled={isBusy}
+              >
+                {isReloading ? 'Loading latest…' : 'Discard draft and reload'}
+              </ModalButton>
+            </>
+          )}
+        </Alert>
+      )}
       {isConfirmingReductions ? (
         <div className="et-reduction-confirmation">
           <Alert variant="danger" role="alert">
@@ -265,6 +373,7 @@ function EditTeams({
                     <SelectField
                       className="et-field"
                       label="Rows"
+                      disabled={isBusy}
                       onChange={(e) => {
                         inputState(e, 'columns');
                       }}
@@ -279,6 +388,7 @@ function EditTeams({
                     <SelectField
                       className="et-field"
                       label="Columns"
+                      disabled={isBusy}
                       onChange={(e) => {
                         inputState(e, 'rows');
                       }}
@@ -295,6 +405,7 @@ function EditTeams({
                     className="et-switch"
                     id="layered-board-switch"
                     label="Layered board"
+                    disabled={isBusy}
                     onChange={toggleLayeredBoard}
                     checked={state.layeredBoard}
                   />
@@ -304,7 +415,7 @@ function EditTeams({
                       min={1}
                       max={state.columns}
                       value={state.layeredBoard ? state.visibleRows : state.columns}
-                      disabled={!state.layeredBoard}
+                      disabled={!state.layeredBoard || isBusy}
                       onChange={(e) => inputState(e, 'visibleRows')}
                       help={
                         <>
@@ -332,11 +443,16 @@ function EditTeams({
               className="et-tab-panel"
             >
               <div className="flex-center edit-team-count">
-                <ModalButton variant="secondary" size="small" onClick={removeTeam}>
+                <ModalButton
+                  variant="secondary"
+                  size="small"
+                  onClick={removeTeam}
+                  disabled={isBusy}
+                >
                   -
                 </ModalButton>
                 <strong># of Teams: {state.teams.length}</strong>
-                <ModalButton variant="secondary" size="small" onClick={addTeam}>
+                <ModalButton variant="secondary" size="small" onClick={addTeam} disabled={isBusy}>
                   +
                 </ModalButton>
               </div>
@@ -346,6 +462,7 @@ function EditTeams({
                   title={`Team ${i + 1}`}
                   change={(e) => editName(e, i)}
                   value={team.data.name}
+                  disabled={isBusy}
                 />
               ))}
             </div>
@@ -363,12 +480,14 @@ function EditTeams({
                   className="et-switch"
                   id="custom-switch"
                   label="Require teams to enter a password to make edits?"
-                  onChange={() =>
+                  disabled={isBusy}
+                  onChange={() => {
+                    markDirty();
                     setState((currentState) => ({
                       ...currentState,
                       passwordRequired: !currentState.passwordRequired,
-                    }))
-                  }
+                    }));
+                  }}
                   checked={state.passwordRequired}
                 />
               </div>
@@ -381,6 +500,7 @@ function EditTeams({
                       title={`${team.data.name}'s password`}
                       change={(e) => editPassword(e, i)}
                       value={password}
+                      disabled={isBusy}
                     />
                   );
                 })

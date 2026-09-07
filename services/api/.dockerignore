@@ -1,0 +1,39 @@
+# Local secrets and environment overrides. Keep the checked-in template.
+.env
+.env.*
+**/.env
+**/.env.*
+!.env.example
+!**/.env.example
+
+# Runtime-generated uploads are stored in a volume in production.
+static/uploads/
+
+# Python caches and local virtual environments.
+**/__pycache__/
+**/*.py[cod]
+.pytest_cache/
+**/.pytest_cache/
+.mypy_cache/
+**/.mypy_cache/
+.ruff_cache/
+**/.ruff_cache/
+.venv/
+venv/
+
+# Test, coverage, and other local build output.
+test_*.py
+**/test_*.py
+.coverage
+coverage.xml
+htmlcov/
+dist/
+build/
+*.log
+
+# Local editor and operating-system files.
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+*.swp

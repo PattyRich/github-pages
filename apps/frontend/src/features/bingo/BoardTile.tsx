@@ -2,7 +2,12 @@ import { useState } from 'react';
 import type { CSSProperties, KeyboardEvent } from 'react';
 import './BoardTile.css';
 import Modal from '../../components/ui/TileModal';
-import type { TeamTileInfo, TileInfo, TileModalState } from '../../components/ui/tile-modal/types';
+import type {
+  TeamTileInfo,
+  TileInfo,
+  TileModalState,
+  TileSaveContext,
+} from '../../components/ui/tile-modal/types';
 import { getStoredBool } from '../../utils/utils';
 import { DEFAULT_BOARD_TYPE, type BoardType } from '../../types';
 
@@ -15,13 +20,22 @@ interface BoardTileProps {
   bare?: boolean;
   bb?: boolean;
   boardType?: BoardType;
+  boardSettingsRevision?: number;
   br?: boolean;
-  change?: (row: number, col: number, info: Partial<TileModalState>) => Promise<void> | void;
+  change?: (
+    row: number,
+    col: number,
+    info: Partial<TileModalState>,
+    saveContext: TileSaveContext
+  ) => Promise<boolean>;
   cord?: TileCoord;
   dem?: number | string;
   info?: TileInfo | null;
+  onDraftStateChange?: (dirty: boolean) => void;
+  onConflictReload?: () => Promise<boolean>;
   onOpen?: (cord?: TileCoord) => void;
   privilege?: string;
+  teamId?: number;
   teamInfo?: TeamTileInfo | null;
 }
 
@@ -29,7 +43,11 @@ export default function BoardTile({
   cord,
   change,
   info,
+  boardSettingsRevision,
+  onDraftStateChange,
+  onConflictReload,
   onOpen,
+  teamId,
   teamInfo,
   dem,
   br,
@@ -146,9 +164,13 @@ export default function BoardTile({
         <Modal
           cord={cord ?? [0, 0]}
           change={change ?? noopChange}
+          boardSettingsRevision={boardSettingsRevision}
           privilege={privilege}
           info={info ?? undefined}
+          onDraftStateChange={onDraftStateChange}
+          onConflictReload={onConflictReload}
           teamInfo={teamInfo}
+          teamId={teamId}
           show
           handleClose={() => setShowModal(false)}
           br={br}
@@ -187,4 +209,4 @@ function isAnimatedTileImage(image?: TileInfo['image']) {
   );
 }
 
-const noopChange: NonNullable<BoardTileProps['change']> = () => undefined;
+const noopChange: NonNullable<BoardTileProps['change']> = async () => false;

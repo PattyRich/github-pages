@@ -1,0 +1,44 @@
+name: Prune Orphaned Uploads
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Remove Unreferenced Uploads
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.LIGHTSAIL_HOST }}
+          username: ${{ secrets.LIGHTSAIL_USER }}
+          key: ${{ secrets.LIGHTSAIL_KEY }}
+          command_timeout: 20m
+          script: |
+            set -e
+            exec 9>/var/www/server/github-pages/.git/praynr-deploy.lock
+            flock -w 1200 9
+            cd /var/www/server/github-pages
+            docker compose -f docker-compose.prod.yml exec -T api \
+              python upload_gc.py --grace-hours 168
+
+      - name: Notify Discord on failure
+        if: failure()
+        env:
+          DISCORD_WEBHOOK: ${{ secrets.DISCORD_DEPLOY_WEBHOOK }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WORKFLOW_NAME: ${{ github.workflow }}
+        run: |
+          if [ -z "$DISCORD_WEBHOOK" ]; then
+            echo "DISCORD_DEPLOY_WEBHOOK is not set; skipping Discord notification."
+            exit 0
+          fi
+
+          curl -fsS -H "Content-Type: application/json" \
+            -d "{\"content\":\"<@197140022569205762> ${WORKFLOW_NAME} failed: ${RUN_URL}\"}" \
+            "$DISCORD_WEBHOOK"

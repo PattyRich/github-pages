@@ -21,6 +21,28 @@ type ApiErrorData = Record<string, unknown> & {
 export type ApiError = ApiErrorPayload | Error;
 export type FetchResult<T> = Promise<[T | null, ApiError | null]>;
 
+export class SaveConflictError extends Error {
+  readonly kind = 'save-conflict';
+
+  constructor(message: string) {
+    super(message);
+    this.name = 'SaveConflictError';
+  }
+}
+
+export function isApiConflictError(error: ApiError | null): boolean {
+  if (!error || typeof error !== 'object') return false;
+  const candidate = error as ApiErrorPayload;
+  return candidate.status === 409 || candidate.error === 'conflict';
+}
+
+export function isSaveConflictError(error: unknown): error is SaveConflictError {
+  return (
+    error instanceof SaveConflictError ||
+    (isRecord(error) && error.kind === 'save-conflict' && typeof error.message === 'string')
+  );
+}
+
 export interface PasswordState {
   adminPassword?: string;
   boardName?: string;
