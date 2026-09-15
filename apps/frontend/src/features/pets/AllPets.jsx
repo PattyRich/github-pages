@@ -66,10 +66,10 @@ const AllPets = (props) => {
             className="osrs-glass-raised"
             style={{ padding: '8px', fontSize: '0.85rem', marginBottom: '10px', textAlign: 'left' }}
           >
-            <strong>Assumed Methods:</strong> Red chins, Amethyst mining, Mind runes, Redwood logs,
-            Penguin Course, Karambwams, Stalls, 30k point COX, 3-man NEX, On-task Jad/Zuk, Teak
-            trees, Phosani's, Singles Wildy, Araxxor, Solo Huberte, Soup Port, Dom Sacrifice, Wave 9
-            Delve.
+            <strong>Assumed Methods:</strong> Black chins, Amethyst mining, Mind runes, Redwood
+            logs, Penguin Course, Karambwams, Stalls, 30k point COX, 3-man NEX, On-task Jad/Zuk,
+            Teak trees, Phosani's, Singles Wildy, Destroy Araxxor, Solo Huberte, Soup Port tasks,
+            Bran Sacrifice, Wave 9 Delve, Egg Maggot
           </div>
           <button
             className="osrs-btn"
