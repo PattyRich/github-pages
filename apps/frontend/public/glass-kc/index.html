@@ -78,7 +78,7 @@
       }
       .boss-choices {
         display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
         gap: 20px;
         margin-top: 24px;
       }
@@ -1077,7 +1077,7 @@
                 <button id="pane-load" type="button">Choose this pane</button>
                 <p id="pane-selected" class="muted"></p>
                 <label for="pane-label">Drop name or memory (optional)</label
-                ><input id="pane-label" maxlength="120" placeholder="An orb, finally…" />
+                ><input id="pane-label" maxlength="120" placeholder="The drop you were waiting for…" />
                 <label for="pane-file">Screenshot (optional)</label
                 ><input id="pane-file" type="file" accept="image/png,image/jpeg,image/webp" />
                 <small
@@ -1294,6 +1294,7 @@
     <script src="bosses/glass-window.js"></script>
     <script src="bosses/pnm-art.js"></script>
     <script src="bosses/cox-art.js"></script>
+    <script src="bosses/toa-art.js"></script>
     <script src="account.js"></script>
     <script>
       'use strict';
@@ -1493,6 +1494,7 @@
           $('tracker-lede').textContent = boss().lede;
           $('setup-help').textContent = boss().setupHelp;
           $('gallery-empty').textContent = boss().galleryEmpty;
+          $('pane-label').placeholder = boss().dropPlaceholder || 'The drop you were waiting for…';
           $('record-kill').textContent = `+ Record a ${boss().countNoun}`;
           $('undo-kill').textContent = `Undo last ${boss().countNoun}`;
           $('session-empty').textContent =

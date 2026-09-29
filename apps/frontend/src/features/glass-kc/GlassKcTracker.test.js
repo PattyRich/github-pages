@@ -647,7 +647,10 @@ describe('required boss selection and catalog-driven hunts', () => {
     ).toContain('Twisted bow');
   });
 
-  it('uses Chambers cloud routes and local backup, and resets only that hunt', async () => {
+  it.each([
+    ['cox', 'Chambers'],
+    ['toa', 'Tombs'],
+  ])('uses %s cloud routes and local backup, and resets only that hunt', async (boss, title) => {
     const fetch = vi.fn(async (url, options) => {
       if (url.endsWith('/me')) return response({ username: 'alice' });
       if (options.method === 'PUT') return response({ revision: 1 });
@@ -659,21 +662,21 @@ describe('required boss selection and catalog-driven hunts', () => {
       account: signedIn,
       fetch,
     });
-    click(window, 'choose-cox');
+    click(window, `choose-${boss}`);
     await settle();
     begin(window, 40);
     click(window, 'record-kill');
     await window.eval('flushCloud()');
-    const localKey = 'praynr-glass-kc-account:https://praynr.com:draft:alice:cox';
+    const localKey = `praynr-glass-kc-account:https://praynr.com:draft:alice:${boss}`;
     expect(JSON.parse(window.localStorage.getItem(localKey))).toMatchObject({
       pending: false,
-      journal: { boss: 'cox', base: 40, active: { kills: 1 } },
+      journal: { boss, base: 40, active: { kills: 1 } },
     });
     const put = fetch.mock.calls.find(([, options]) => options.method === 'PUT');
-    expect(put[0]).toContain('/journals/cox');
-    expect(JSON.parse(put[1].body).journal.boss).toBe('cox');
+    expect(put[0]).toContain(`/journals/${boss}`);
+    expect(JSON.parse(put[1].body).journal.boss).toBe(boss);
     click(window, 'hard-reset');
-    expect(window.document.getElementById('reset-scope').textContent).toContain('Chambers');
+    expect(window.document.getElementById('reset-scope').textContent).toContain(title);
     window.document.getElementById('reset-confirmation').value = 'RESET';
     window.document.getElementById('reset-confirmation').dispatchEvent(new window.Event('input'));
     window.document
@@ -681,29 +684,32 @@ describe('required boss selection and catalog-driven hunts', () => {
       .dispatchEvent(new window.Event('submit', { cancelable: true }));
     await settle();
     expect(fetch.mock.calls.find(([, options]) => options.method === 'DELETE')[0]).toContain(
-      '/journals/cox'
+      `/journals/${boss}`
     );
     expect(window.localStorage.getItem(localKey)).toBeNull();
     expect(JSON.parse(window.localStorage.getItem(key))).toEqual(sample());
   });
 
-  it('keeps pane numbering and drops through all six Chambers windows and the next edition', () => {
+  it.each([
+    ['cox', 'The Great Olm'],
+    ['toa', 'Tumeken’s shadow'],
+  ])('keeps pane numbering through all six %s windows and the next edition', (boss, firstTitle) => {
     const window = open(null, false, { choose: false });
     const saved = {
       ...sample(),
-      boss: 'cox',
+      boss,
       active: { id: 'raids', kills: 600, notes: '', drops: '' },
-      dropTiles: { 501: { label: 'Olmlet', image: '' } },
+      dropTiles: { 501: { label: 'Raid reward', image: '' } },
     };
-    window.localStorage.setItem('praynr-glass-kc-cox-journal-v2', JSON.stringify(saved));
-    click(window, 'choose-cox');
+    window.localStorage.setItem(`praynr-glass-kc-${boss}-journal-v2`, JSON.stringify(saved));
+    click(window, `choose-${boss}`);
     expect(window.document.querySelectorAll('#gallery-items figure')).toHaveLength(6);
     expect(window.document.querySelectorAll('#window-art .pane.filled')).toHaveLength(100);
     expect(
       window.document.querySelector('#window-art [data-pane="501"]').getAttribute('aria-label')
-    ).toContain('Olmlet');
+    ).toContain('Raid reward');
     click(window, 'record-kill');
-    expect(window.document.getElementById('window-title').textContent).toContain('The Great Olm');
+    expect(window.document.getElementById('window-title').textContent).toContain(firstTitle);
     expect(window.document.querySelectorAll('#window-art .pane.filled')).toHaveLength(1);
     expect(window.document.querySelector('#window-art [data-pane="601"]')).not.toBeNull();
   });

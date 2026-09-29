@@ -13,7 +13,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 MAX_KC = 1_000_000_000
 MAX_DOCUMENT = 5 * 1024 * 1024
 SESSION_DAYS = 30
-SUPPORTED_BOSSES = frozenset({'pnm', 'cox'})
+SUPPORTED_BOSSES = frozenset({'pnm', 'cox', 'toa'})
 LEGACY_BOSS = 'pnm'
 
 

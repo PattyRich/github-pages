@@ -156,18 +156,19 @@ def test_reset_marker_survives_and_prevents_old_first_writes(api):
     assert client.put('/glass-kc/api/journals/pnm', json={'revision': 0, 'journal': journal()}, headers=HEADERS).status_code == 409
 
 
-def test_chambers_routes_are_isolated_and_reject_mismatched_backups(api):
+@pytest.mark.parametrize('boss', ['cox', 'toa'])
+def test_raid_routes_are_isolated_and_reject_mismatched_backups(api, boss):
     client, db = api
     payload = {'revision': 0, 'journal': journal()}
-    assert client.put('/glass-kc/api/journals/cox', json=payload, headers=HEADERS).status_code == 400
+    assert client.put(f'/glass-kc/api/journals/{boss}', json=payload, headers=HEADERS).status_code == 400
     db['journals'].insert_one.assert_not_called()
     del payload['journal']['boss']
-    assert client.put('/glass-kc/api/journals/cox', json=payload, headers=HEADERS).status_code == 400
-    payload['journal']['boss'] = 'cox'
-    assert client.put('/glass-kc/api/journals/cox', json=payload, headers=HEADERS).status_code == 200
-    assert db['journals'].insert_one.call_args.args[0]['_id'] == 'alice:cox'
+    assert client.put(f'/glass-kc/api/journals/{boss}', json=payload, headers=HEADERS).status_code == 400
+    payload['journal']['boss'] = boss
+    assert client.put(f'/glass-kc/api/journals/{boss}', json=payload, headers=HEADERS).status_code == 200
+    assert db['journals'].insert_one.call_args.args[0]['_id'] == f'alice:{boss}'
     db['journals'].find_one.return_value = {'journal': payload['journal'], 'revision': 1}
-    assert client.get('/glass-kc/api/journals/cox', headers=HEADERS).json['journal']['boss'] == 'cox'
-    db['journals'].find_one.assert_called_with({'_id': 'alice:cox'})
-    assert client.delete('/glass-kc/api/journals/cox', json={'revision': 1, 'confirmation': 'RESET'}, headers=HEADERS).status_code == 200
-    assert db['journals'].update_one.call_args.args[0] == {'_id': 'alice:cox', 'revision': 1}
+    assert client.get(f'/glass-kc/api/journals/{boss}', headers=HEADERS).json['journal']['boss'] == boss
+    db['journals'].find_one.assert_called_with({'_id': f'alice:{boss}'})
+    assert client.delete(f'/glass-kc/api/journals/{boss}', json={'revision': 1, 'confirmation': 'RESET'}, headers=HEADERS).status_code == 200
+    assert db['journals'].update_one.call_args.args[0] == {'_id': f'alice:{boss}', 'revision': 1}

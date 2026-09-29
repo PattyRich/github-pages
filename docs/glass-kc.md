@@ -1,6 +1,6 @@
 # Glass KC Tracker
 
-Open **Glass KC Tracker** from the home page, or `/#/glass-kc` (GitHub Pages: `/github-pages/#/glass-kc`). The boss picker is always the entry screen, including for returning users. Choose **Phosani’s Nightmare (PNM)** or **Chambers of Xeric (CoX)** to reveal the tracker and enter a starting KC. The selected boss names the journal and postcards automatically. The picker shows a stained-glass preview; there is no generated portrait. **Choose another boss** returns to the picker without erasing progress. Each recorded kill (completed raid for Chambers) lights one pane; every 25 lights a milestone and every 100 completes a window. Both bosses have six scenes, sanctuary, drop memories, and postcards. PNM uses Inquisitor’s armour in the picker; Chambers uses the Great Olm.
+Open **Glass KC Tracker** from the home page, or `/#/glass-kc` (GitHub Pages: `/github-pages/#/glass-kc`). The boss picker is always the entry screen, including for returning users. Choose **Phosani’s Nightmare (PNM)**, **Chambers of Xeric (CoX)**, or **Tombs of Amascut (ToA)** to reveal the tracker and enter a starting KC. The selected boss names the journal and postcards automatically. The picker shows a stained-glass preview; there is no generated portrait. **Choose another boss** returns to the picker without erasing progress. Each recorded kill (completed raid for Chambers or Tombs) lights one pane; every 25 lights a milestone and every 100 completes a window. All three collections have six scenes, sanctuary, drop memories, and postcards. PNM uses the Nightmare herself in the picker; Chambers uses the Great Olm; Tombs uses Tumeken’s shadow.
 
 ## Accounts and returning to a hunt
 
@@ -12,7 +12,7 @@ The account bar distinguishes saved, pending, offline, and conflicting changes. 
 
 ## Existing journals and backups
 
-Guest PNM saves still use `praynr-glass-kc-journal-v2`; Chambers uses `praynr-glass-kc-cox-journal-v2`. It is separate from signed-in hunts. After logging in, **Import browser journal** explicitly imports that local journal into the selected boss’s hunt, replacing an existing account hunt only after confirmation. The original guest copy remains intact. Guest journals on `praynr.com`, GitHub Pages, and localhost are separate; use **Export backup** and **Restore backup** to transfer between those origins.
+Guest PNM saves still use `praynr-glass-kc-journal-v2`; Chambers uses `praynr-glass-kc-cox-journal-v2`; Tombs uses `praynr-glass-kc-toa-journal-v2`. It is separate from signed-in hunts. After logging in, **Import browser journal** explicitly imports that local journal into the selected boss’s hunt, replacing an existing account hunt only after confirmation. The original guest copy remains intact. Guest journals on `praynr.com`, GitHub Pages, and localhost are separate; use **Export backup** and **Restore backup** to transfer between those origins.
 
 Export includes KC, sessions, drop labels and screenshots. Restore replaces the currently open hunt; when signed in, that replacement syncs to Mongo. Version-1 personal watcher backups remain supported and correct the old 1,280 baseline to 1,394. Version-2 backups preserve the chosen baseline. The legacy `name` field is retained for API/backup compatibility, but custom hunt names are no longer entered or displayed. A backup explicitly naming an unsupported boss is rejected.
 
@@ -32,7 +32,7 @@ Selected PNG/JPG/WebP screenshots are resized in the browser to a maximum 1,280-
 | PUT | `/journals/<boss>` | Save `{journal, revision}` with an atomic revision check |
 | DELETE | `/journals/<boss>` | Hard reset with `{revision, confirmation: "RESET"}` |
 
-Supported boss IDs are `pnm` and `cox`.
+Supported boss IDs are `pnm`, `cox`, and `toa`.
 
 All routes except registration/login require `Authorization: Bearer <token>`. Mongo ownership comes from the verified session, never a client-provided username. Registration/login are rate limited. Reads and writes are bounded, validated, and return `Cache-Control: no-store`. Concurrent first writes and stale revisions return HTTP 409. A missing journal returns `{journal: null, revision: 0}`.
 
@@ -78,3 +78,11 @@ Count completed raids, not individual rooms or Olm phases. Normal and Challenge 
 The relic windows use the Wiki’s [Twisted bow detail image](https://oldschool.runescape.wiki/w/File:Twisted_bow_detail.png) and [Ancestral robes equipment image](https://oldschool.runescape.wiki/w/File:Ancestral_robes_equipped_female.png) as visual references: charcoal twisted bow limbs, pale inner struts and an olive-green string; indigo robes, grey-beige mantle and hat, and gold bands/buckles. These identity colors stay fixed across collection editions.
 
 The encounter windows follow the [Tekton model](https://oldschool.runescape.wiki/w/File:Tekton.png) and [Vasa Nistirio model](https://oldschool.runescape.wiki/w/File:Vasa_Nistirio.png): Tekton’s pointed helm, charcoal plates, molten gold seams, heated blade and black hammer; Vasa’s floating skeletal caster, suspended stones and sprawling rock body with violet crystal fractures.
+
+## Tombs collection
+
+Tombs of Amascut has six original inline SVG windows: Tumeken’s shadow, Akkha, Ba-Ba, Kephri, Zebak, and the paired Wardens surrounding a radiant obelisk. The picker uses the Shadow window. Each completed raid adds one pane; Entry, Normal and Expert completions share the journal. Individual guardian kills do not count separately.
+
+Content lives in the `toa` catalog entry and `bosses/toa-art.js`. Local copies, imports, account saves, and resets use the existing shared implementation, scoped to `toa`. Mongo stores `<username>:toa` in the existing journals collection; no extra collection or volume is required. Four guardian seals mark the 25-raid milestones.
+
+The artwork was drawn after inspecting the Wiki’s model images: [Tumeken’s shadow](https://oldschool.runescape.wiki/w/File:Tumeken%27s_shadow_detail.png), [Akkha](https://oldschool.runescape.wiki/w/File:Akkha.png), [Ba-Ba](https://oldschool.runescape.wiki/w/File:Ba-Ba.png), [Kephri](https://oldschool.runescape.wiki/w/File:Kephri.png), [Zebak](https://oldschool.runescape.wiki/w/File:Zebak.png), [Tumeken’s Warden](https://oldschool.runescape.wiki/w/File:Tumeken%27s_Warden.png), and [Elidinis’ Warden](https://oldschool.runescape.wiki/w/File:Elidinis%27_Warden.png). Artwork is self-contained and requires no remote images.
