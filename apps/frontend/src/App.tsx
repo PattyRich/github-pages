@@ -14,6 +14,11 @@ interface ToolRoute {
 
 const ROUTES: ToolRoute[] = [
   {
+    path: '/glass-kc',
+    name: '🪟 Glass KC Tracker',
+    desc: 'Choose a boss, collect stained glass, and save your hunt locally with optional account sync.',
+  },
+  {
     path: '/bingo-draft',
     name: '📝 Bingo Draft',
     desc: 'Draft teams and items for your next big bingo event.',

@@ -34,6 +34,7 @@ services:
     ports:
       - "127.0.0.1:27017:27017"
     volumes:
+      # Persists Bingo plus Glass KC accounts, sessions, journals and screenshots.
       - mongo_data:/data/db
     restart: unless-stopped
 

@@ -86,6 +86,10 @@ RQ was chosen over Celery for its simplicity — the task surface is small and a
 
 ## Data Persistence
 
+### Glass KC — Private accounts and journals
+
+`glass_kc.py` adds `/glass-kc/api` routes for registration, login, logout, session verification, and per-boss journals. Its `glass_kc` Mongo database uses the existing `mongo_data` volume. Password hashes, expiring hashed bearer sessions, and revisioned journals are stored in separate collections. PNM and Chambers of Xeric journals include bounded screenshots, so the existing full Mongo dump backs up the complete hunt. Writes derive ownership from the session and compare revisions to reject stale-device overwrites. See [Glass KC accounts and storage](glass-kc.md) for endpoint contracts, browser draft recovery, limits, and migration from local journals.
+
 ### MongoDB — Bingo Boards
 
 ```
