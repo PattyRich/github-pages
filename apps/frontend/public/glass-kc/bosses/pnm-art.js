@@ -99,35 +99,52 @@ GLASS_RENDERERS.pnm = function createNightmareRenderer(config, { esc, getJournal
     <path d="M10 48 L16 52 M3 58 L6 64 M-8 57 L-3 64 M13 91 L18 97 M-7 98 L-3 107 M7 100 L10 105" fill="none" stroke="#767e68" stroke-width="1.5"/>
   </g>`;
       const petals = Array.from({ length: 12 }, (_, i) => {
-        const a = (i * Math.PI) / 6,
-          x = 180 + 139 * Math.cos(a),
-          y = 322 + 185 * Math.sin(a);
-        return `<path transform="translate(${x} ${y}) rotate(${i * 30 + 25})" d="M0 -12 Q14 0 0 15 Q-9 1 0 -12Z" fill="${i % 2 ? colors[3] : colors[2]}" stroke="#251d33" stroke-width="2"/>`;
+        const side = i < 6 ? -1 : 1,
+          step = i % 6,
+          x = 180 + side * (115 + 18 * Math.sin((step * Math.PI) / 5)),
+          y = 186 + step * 62;
+        return `<path transform="translate(${x} ${y}) rotate(${side * (25 + step * 12)})" d="M0 -9 Q11 0 0 12 Q-7 1 0 -9Z" fill="${i % 2 ? colors[3] : colors[2]}" stroke="#251d33" stroke-width="2"/>`;
       }).join('');
-      // Observed from the current OSRS Wiki model: hunched spine, hanging hair, claws and wrapped shins.
-      const face = `<g stroke="#28323c" stroke-width="2.5" stroke-linejoin="round">
-    <path d="M142 220 L158 195 L187 187 L214 203 L228 232 L214 274 L185 299 L154 280 L138 249Z" fill="#92a2ae"/>
-    <path d="M150 220 L168 206 L183 238 L167 265 L151 251Z" fill="#c2cccf" stroke="none"/>
-    <path d="M188 209 L213 222 L215 245 L190 283 L174 279 L188 247Z" fill="#637e8f" stroke="none"/>
-    <path d="M147 238 L168 247 L166 256 L152 251Z M191 247 L214 234 L208 252 L191 258Z" fill="#e881bc" stroke="#4c3349" stroke-width="1.5"/>
-    <path d="M180 246 L172 273 L183 270 M168 277 L181 281 L194 270" fill="none" stroke="#425264" stroke-width="2"/>
-    <path d="M132 226 L145 197 L171 180 L199 182 L222 196 L239 227 L237 268 L222 308 L220 253 L210 216 L190 198 L164 211 L146 239 L144 287 L127 321 L127 263Z" fill="#b7c3ce"/>
-    <path d="M159 193 L177 202 L157 240 L163 285 L151 323 L146 263 L145 228Z" fill="#d4dcda"/>
-    <path d="M197 194 L209 215 L191 248 L206 306 L193 340 L177 256 L184 222Z" fill="#abb8c5"/>
-    <path d="M138 230 L133 285 M222 223 L231 264 M158 208 L152 231" fill="none" stroke="#71899c" stroke-width="2"/>
+      // Wiki model reference: the head hangs below a spiked, hunched back; hair is sparse and angular.
+      // Shared by the awakening and sleepwalker windows so both keep the same silhouette.
+      const face = `<g stroke="#25313c" stroke-width="2" stroke-linejoin="round">
+    <path d="M163 199 L185 203 L198 223 L189 246 L170 271 L155 278 L151 263 L138 257 L134 238 L144 214Z" fill="#71808c"/>
+    <path d="M144 216 L164 204 L160 234 L148 250 L136 242Z" fill="#98a4ae" stroke="none"/>
+    <path d="M164 229 L183 215 L191 232 L178 251 L157 268 L153 257Z" fill="#495c6b" stroke="none"/>
+    <path d="M144 248 L154 251 L149 258 L141 256Z M162 251 L180 240 L172 254 L160 259Z" fill="#342939" stroke-width="1.2"/>
+    <path d="M144 251 L152 252 L148 255Z M164 251 L176 246 L170 252Z" fill="#d55099" stroke="none"/>
+    <path d="M157 255 L151 267 L160 264 L164 268 L151 274 L148 269" fill="#637783" stroke-width="1.4"/>
+    <path d="M154 278 L164 274 L160 282 L151 285Z" fill="#36434e" stroke-width="1.3"/>
+    <path d="M139 210 L164 187 L185 190 L205 211 L203 230 L190 226 L180 206 L158 208 L142 225 L131 267 L132 302 L121 273 L127 234Z" fill="#aeb7c4"/>
+    <path d="M164 189 L153 211 L139 221 L143 235 L130 285 L132 315 L120 277 L125 235 L138 213Z" fill="#c1c9d1" stroke-width="1.4"/>
+    <path d="M179 198 L193 207 L184 219 L191 244 L177 303 L174 274 L171 237 L161 218Z" fill="#d1d4d8" stroke-width="1.4"/>
+    <path d="M192 211 L203 220 L206 253 L217 322 L202 293 L191 250 L183 223Z" fill="#b5bcc8" stroke-width="1.4"/>
+    <path d="M140 215 L133 238 L127 273 M181 227 L184 248 L179 280 M197 240 L207 291" fill="none" stroke="#8b99ad" stroke-width="1.2"/>
   </g>`;
-      const boss = `<g stroke="#202c35" stroke-width="3" stroke-linejoin="round">
-    <path d="M157 311 L139 361 L151 402 L140 474 L162 489 L177 452 L181 397 L194 365 L217 398 L226 456 L247 470 L254 447 L243 382 L220 311Z" fill="#394b59"/>
-    <path d="M144 430 L168 436 L161 477 L141 478Z M223 421 L246 414 L252 450 L229 461Z" fill="#7f7c60"/>
-    <path d="M144 443 L166 451 M142 458 L163 466 M229 432 L248 426 M232 446 L251 440" stroke="#b1a789" stroke-width="3"/>
-    <path d="M141 476 L162 477 L167 496 L152 503 L127 502 L127 492Z M230 457 L248 450 L262 467 L252 479 L226 480 L223 470Z" fill="#465766"/>
-    <path d="M130 208 L156 166 L198 152 L231 176 L250 217 L226 271 L215 330 L178 358 L150 327 L143 271Z" fill="#3d4859"/>
-    <path d="M164 188 L201 170 L225 194 L215 261 L191 311 L164 270Z" fill="#765364"/>
-    <path d="M162 278 L176 304 L197 314 L211 283 L204 335 L177 348 L152 325Z" fill="#293a46"/>
-    <path d="M135 207 L102 249 L72 296 L45 359 L55 374 L87 312 L121 277 L155 248 M235 207 L270 245 L282 309 L307 361 L294 374 L267 324 L249 270 L215 245" fill="#566a77"/>
-    <path d="M47 352 L35 383 L35 417 L41 399 L46 379 L49 414 L55 427 L57 391 L62 375 L71 397 L77 401 L67 365 M299 351 L315 382 L321 412 L312 399 L304 380 L309 416 L303 429 L297 391 L288 375 L281 408 L276 416 L279 377" fill="#83968f" stroke-width="2"/>
-    <path d="M117 204 L133 180 L128 163 L145 171 L154 139 L166 162 L178 131 L190 157 L204 127 L215 153 L230 145 L232 171 L251 183 L239 203 L215 192 L191 173 L160 184 L139 215Z" fill="#243541"/>
-    <path d="M145 180 L164 172 M186 151 L192 170 M221 163 L226 181" fill="none" stroke="#506677" stroke-width="2"/>
+      const boss = `<g stroke="#202d37" stroke-width="2.6" stroke-linejoin="round">
+    <path d="M196 288 L181 343 L160 374 L170 400 L166 455 L157 486 L169 509 L191 503 L194 476 L186 439 L188 404 L181 374 L214 337 L231 287Z" fill="#475b69"/>
+    <path d="M188 326 L164 373 L176 390 L186 372 L211 337Z M170 402 L186 415 L179 444 L166 458Z" fill="#617581" stroke-width="1.5"/>
+    <path d="M221 290 L214 336 L208 369 L214 393 L230 401 L253 425 L253 450 L273 454 L280 433 L267 406 L244 382 L232 376 L240 330 L244 287Z" fill="#566a76"/>
+    <path d="M232 376 L218 392 L231 400 L255 426 L267 423 L252 400Z" fill="#3b4e5e" stroke-width="1.5"/>
+    <path d="M168 405 L187 403 L188 417 L170 432Z M168 446 L183 438 L189 454 L163 472Z M161 480 L191 468 L194 487 L170 499Z M216 329 L240 326 L237 344 L213 349Z M211 355 L234 349 L233 365 L208 369Z" fill="#7f7959" stroke-width="1.5"/>
+    <path d="M170 407 L185 406 M167 450 L181 443 M165 485 L188 476 M218 333 L237 330" stroke="#a3986b" stroke-width="1.6"/>
+    <path d="M158 487 L177 484 L192 498 L193 516 L180 524 L151 521 L145 513Z M254 443 L271 447 L272 467 L260 478 L235 477 L230 471 L242 465Z" fill="#607481"/>
+    <path d="M148 510 L158 511 L157 520 L148 516Z M161 511 L173 512 L172 522 L159 521Z M177 512 L186 510 L185 520 L175 524Z M234 469 L243 470 L241 476 H231Z M246 469 L256 469 L254 477 H243Z" fill="#302f3c" stroke-width="1"/>
+    <path d="M133 185 L160 155 L196 144 L227 157 L252 186 L247 243 L231 292 L219 333 L203 321 L195 286 L170 248Z" fill="#354855"/>
+    <path d="M228 184 L245 199 L237 240 L216 270 L209 305 L198 289 L200 243Z" fill="#657480" stroke-width="1.5"/>
+    <path d="M170 186 L194 177 L227 188 L235 217 L219 248 L207 276 L217 350 L201 325 L190 275 L178 253 L166 223Z" fill="#885866"/>
+    <path d="M191 185 L224 193 L231 214 L208 232 L178 225Z" fill="#a26b79" stroke-width="1.5"/>
+    <path d="M181 237 L210 242 L201 267 L207 311 L193 287 L186 260Z" fill="#6d4556" stroke-width="1.5"/>
+    <path d="M138 180 L153 195 L120 240 L94 268 L72 308 L60 349 L48 345 L59 301 L81 263 L109 230Z" fill="#526775"/>
+    <path d="M139 188 L116 235 L86 267 L64 307 L59 328 L57 305 L80 260 L108 228Z" fill="#75838e" stroke="none"/>
+    <path d="M233 178 L260 195 L277 224 L281 279 L293 339 L283 355 L272 338 L269 280 L260 236 L231 206Z" fill="#5b6e7b"/>
+    <path d="M248 197 L268 226 L272 280 L286 339 L293 339 L281 278 L277 224 L260 195Z" fill="#7b8992" stroke="none"/>
+    <path d="M60 332 L68 350 L64 379 L59 386 L60 363 L55 358 L51 386 L54 425 L45 407 L43 382 L46 360 L39 384 L40 414 L33 397 L34 374 L42 350 L49 340Z" fill="#465c6b" stroke-width="2"/>
+    <path d="M285 332 L296 345 L302 375 L304 405 L298 422 L298 387 L290 368 L293 402 L285 437 L284 410 L281 384 L272 406 L259 427 L266 401 L270 375 L276 350Z" fill="#435968" stroke-width="2"/>
+    <path d="M49 351 L43 379 M57 347 L62 357 L61 371 M283 349 L278 377 L273 394 M291 354 L297 378" fill="none" stroke="#81919a" stroke-width="1.5"/>
+    <path d="M118 180 L130 170 L116 158 L139 160 L148 129 L153 156 L168 119 L174 149 L193 108 L197 143 L214 122 L218 152 L235 143 L233 165 L255 173 L244 181 L264 200 L238 197 L246 213 L219 202 L199 182 L175 172 L151 170 L134 187Z" fill="#1b303e"/>
+    <path d="M130 166 L148 144 L149 166 L165 158 L169 139 L174 164 L192 132 L193 169 L209 159 L215 146 L219 176 L237 166 L230 186 L244 194 L219 193 L197 177 L174 168 L148 169Z" fill="#293f4f" stroke-width="1.3"/>
+    <path d="M197 143 L210 131 L214 159Z M220 154 L234 147 L230 172Z" fill="#624756" stroke-width="1.3"/>
     ${face}
   </g>`;
       const awakening = `${panes}

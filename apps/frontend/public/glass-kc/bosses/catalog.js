@@ -39,7 +39,7 @@ const GLASS_BOSSES = {
       'The four totems',
     ],
     sceneDescriptions: [
-      'A pale face in the dark. The Nightmare rises above the sanctuary.',
+      'The hunched Nightmare beneath a spiked mantle, with hanging white hair, pink eyes and long grey claws.',
       'A jagged great helm, quilted hauberk and layered steel over oxblood cloth.',
       'The Nightmare staff with the green Eldritch, blue Harmonised and orange Volatile orbs.',
       'Three black portals break the arena paving. A great claw rises between two smaller reaching hands.',
