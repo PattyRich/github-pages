@@ -16,6 +16,37 @@ export default [
     ignores: ['dist/**', 'build/**', 'node_modules/**', 'coverage/**'],
   },
   js.configs.recommended,
+  {
+    files: ['public/glass-kc/**/*.js'],
+    languageOptions: {
+      sourceType: 'script',
+      globals: {
+        ...globals.browser,
+        KEY: 'readonly',
+        validate: 'readonly',
+        render: 'readonly',
+        setFields: 'readonly',
+        art: 'readonly',
+        notify: 'readonly',
+        closePaneEditor: 'readonly',
+        journal: 'writable',
+        configured: 'writable',
+        loadFailed: 'writable',
+      },
+    },
+  },
+  {
+    files: ['public/glass-kc/bosses/*-art.js'],
+    languageOptions: {
+      globals: { GLASS_RENDERERS: 'readonly', createGlassWindow: 'readonly' },
+    },
+  },
+  {
+    files: ['public/glass-kc/account.js'],
+    languageOptions: {
+      globals: { GLASS_BOSSES: 'readonly', LEGACY_BOSS_ID: 'readonly' },
+    },
+  },
   ...tsRecommended,
   {
     files: ['src/**/*.{js,jsx,ts,tsx}', 'vite.config.ts'],

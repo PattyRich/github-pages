@@ -1,0 +1,143 @@
+/* Data-only boss catalog. Add a renderer with the same ID in bosses/<id>-art.js. */
+/* exported GLASS_BOSSES, LEGACY_BOSS_ID */
+const LEGACY_BOSS_ID = 'pnm';
+const GLASS_BOSSES = {
+  pnm: {
+    id: 'pnm',
+    name: 'Phosani’s Nightmare',
+    shortName: 'PNM',
+    countNoun: 'kill',
+    milestoneNoun: 'totem',
+    description:
+      'Return to the sanctuary. Keep a record of every kill, every quiet night, and the drop that finally breaks the spell.',
+    previewScene: 1,
+    storageKey: 'praynr-glass-kc-journal-v2',
+    whispers: {
+      empty: 'Every window begins in the dark.',
+      complete: 'This light is yours to keep.',
+      progress: 'None of these kills were for nothing.',
+    },
+    collectionLabel: 'The Nightmare collection',
+    heading: 'Even quiet nights leave a little light.',
+    lede: 'One kill. One piece of glass. Build something beautiful while you wait for the next drop.',
+    setupHelp:
+      'Starting fresh? Enter 0. Your starting KC is saved when you begin. Collect six scenes from the Nightmare sanctuary.',
+    galleryEmpty:
+      'Six scenes to collect, one piece at a time. Your first completed window will live here at 100 journal kills.',
+    palettes: [
+      ['#264b48', '#43736b', '#912d60', '#d85397', '#b9dad1'],
+      ['#233c52', '#45657b', '#713c83', '#e278b7', '#d7e4e8'],
+      ['#49432f', '#79764c', '#803846', '#d76989', '#ded3b1'],
+      ['#303c49', '#527877', '#763c70', '#ca7eb1', '#c6dce0'],
+    ],
+    titles: [
+      'The Nightmare awakens',
+      'The Inquisitor’s armour',
+      'The staff and three orbs',
+      'Grasping Claws',
+      'The sleepwalkers',
+      'The four totems',
+    ],
+    sceneDescriptions: [
+      'A pale face in the dark. The Nightmare rises above the sanctuary.',
+      'A jagged great helm, quilted hauberk and layered steel over oxblood cloth.',
+      'The Nightmare staff with the green Eldritch, blue Harmonised and orange Volatile orbs.',
+      'Three black portals break the arena paving. A great claw rises between two smaller reaching hands.',
+      'Four entranced sleepwalkers follow winding paths toward the waiting Nightmare.',
+      'Four carved pillars, their light meeting at the heart of the arena.',
+    ],
+    postcardNotes: [
+      'Another little piece of the long hunt.',
+      'A few more footsteps through the sanctuary.',
+      'One small page in a very long story.',
+      'The room was dark. I left a little light.',
+      'More pieces placed. Something beautiful taking shape.',
+      'I was here. The glass remembers.',
+    ],
+    postcardLoot: [
+      'No drops recorded. The glass still grew.',
+      'The loot line is quiet. The window is brighter.',
+      'No treasure noted. Another piece of light kept.',
+      'The loot can stay unwritten. These kills still count.',
+      'No drops in the margins. More color in the glass.',
+      'Nothing noted here. Something built all the same.',
+    ],
+    rewards: [
+      'A carved light joins the frame.',
+      'A steel crest joins the frame.',
+      'Another relic lights the frame.',
+      'A grasping claw emerges on the frame.',
+      'Another dreamer lights a path.',
+      'Another beam reaches the crown crystal.',
+    ],
+  },
+  cox: {
+    id: 'cox',
+    name: 'Chambers of Xeric',
+    shortName: 'CoX',
+    countNoun: 'raid',
+    milestoneNoun: 'crystal',
+    description:
+      'Beneath Mount Quidamortem, another raid becomes a little light. Keep the journey, from the first chamber to the ancient chest.',
+    previewScene: 0,
+    storageKey: 'praynr-glass-kc-cox-journal-v2',
+    whispers: {
+      empty: 'There is light beneath the mountain.',
+      complete: 'Another memory brought back from the deep.',
+      progress: 'Every return leaves something worth keeping.',
+    },
+    collectionLabel: 'The Chambers collection',
+    heading: 'Bring a little light back from the deep.',
+    lede: 'One raid. One piece of glass. Keep the journey, even when the chest is quiet.',
+    setupHelp:
+      'Starting fresh? Enter 0. Use your completed raid count as KC; each raid you record adds one pane. Collect six scenes from the Chambers of Xeric.',
+    galleryEmpty:
+      'Six scenes beneath the mountain. Your first completed window will live here after 100 recorded raids.',
+    palettes: [
+      ['#233d38', '#426653', '#729d54', '#b8d88b', '#dce5ca'],
+      ['#343750', '#535f79', '#897cba', '#c4b5e0', '#e5dfce'],
+      ['#3c3540', '#66505a', '#b66b47', '#e9b268', '#e8d6b4'],
+      ['#283c50', '#46677f', '#668eb2', '#aacedd', '#e1dfc9'],
+    ],
+    titles: [
+      'The Great Olm',
+      'The Twisted bow',
+      'Ancestral robes',
+      'Tekton’s forge',
+      'Vasa Nistirio',
+      'A little Olmlet',
+    ],
+    sceneDescriptions: [
+      'The pale guardian rises from broken stone, flanked by great hands and green crystals.',
+      'Charcoal limbs twist around pale inner struts, with an olive-green string stretched between hooked tips above the ancient chest.',
+      'A tall grey-beige hat, indigo robes, draped stone-grey shoulders and split skirt panels, finished with gold bands and buckles.',
+      'A tall pointed helm and charcoal plates, split by golden molten seams. Tekton holds a heated blade and heavy black hammer beside his anvil.',
+      'A skeletal mage floats among loose stones above a sprawling rock body, its limbs fractured with vivid violet crystal.',
+      'A small, pale Olmlet curls its long tail among green crystals beneath the mountain.',
+    ],
+    postcardNotes: [
+      'Back beneath the mountain. Another memory brought home.',
+      'One more chest. One more piece of the story.',
+      'A little patience, set in blue glass.',
+      'The forge was bright. The journey carried on.',
+      'Another path through the crystal halls.',
+      'The long hunt, remembered in little pieces.',
+    ],
+    postcardLoot: [
+      'No drops recorded. Another raid kept in glass.',
+      'The chest was quiet. The window grew brighter.',
+      'No treasure in the margins. Still something to keep.',
+      'No loot noted. Another journey through the mountain.',
+      'The purple can wait. This light is already yours.',
+      'No little footsteps yet. The hunt continues.',
+    ],
+    rewards: [
+      'A green crystal lights the frame.',
+      'A miniature bow joins the frame.',
+      'An ancestral crest lights the frame.',
+      'A forge ember joins the frame.',
+      'Another crystal wakes in the frame.',
+      'A little footprint joins the frame.',
+    ],
+  },
+};

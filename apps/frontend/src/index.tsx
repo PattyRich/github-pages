@@ -15,6 +15,7 @@ import Status from './features/status/Status';
 import HomeButton from './components/HomeButton';
 import NotFound from './pages/NotFound';
 import Recents from './pages/Recents';
+import GlassKcTracker from './features/glass-kc/GlassKcTracker';
 import { HashRouter, Routes, Route } from 'react-router-dom';
 import { initializeAnalytics } from './analytics';
 
@@ -87,6 +88,8 @@ root.render(
     <HomeButton />
     <Routes>
       <Route path="/" element={<App />} />
+      <Route path="/glass-kc" element={<GlassKcTracker />} />
+      <Route path="/github-pages/glass-kc" element={<GlassKcTracker />} />
       <Route path="/recents" element={<Recents />} />
       <Route path="/github-pages/recents" element={<Recents />} />
       <Route path="/status" element={<Status />} />

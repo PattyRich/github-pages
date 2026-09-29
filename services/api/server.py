@@ -93,6 +93,9 @@ myclient = pymongo.MongoClient(mongo_uri)
 db = myclient["bingo"]
 mycol = db['bingo']
 
+from glass_kc import create_glass_kc_api
+app.register_blueprint(create_glass_kc_api(myclient['glass_kc'], limiter), url_prefix='/glass-kc/api')
+
 allowedAuthTypes = ['admin', 'general']
 allowedBoardTypes = ['osrs', 'generic']
 adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
