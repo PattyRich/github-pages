@@ -75,9 +75,13 @@ Boss content uses a data-only JavaScript catalog rather than a runtime JSON fetc
 
 The selection controls both browser keys and API URLs. Opening a different boss does not reuse the previous boss's journal; pending account changes must sync before switching. Copy and artwork changes belong in the catalog/renderer, not in authentication or save code.
 
+## Nightmare collection
+
+PNM’s six windows are the Nightmare, Inquisitor’s armour with its mace, the staff and three orbs, Grasping Claws, the four totems, and the sleepwalkers. The mace follows the Wiki’s [detail image](https://oldschool.runescape.wiki/w/File:Inquisitor%27s_mace_detail.png), with flared steel flanges, a red central spike and collar, and a brown grip. The totems are the fifth scene; the sleepwalkers are sixth. Subject colours remain fixed across editions.
+
 ## Chambers collection
 
-The six windows are the Great Olm, Twisted bow, Ancestral robes, Tekton’s forge, Vasa Nistirio, and Olmlet. These are original inline SVG interpretations, with no remote image dependency. Subject references: [Great Olm](https://oldschool.runescape.wiki/w/Great_Olm), [Twisted bow](https://oldschool.runescape.wiki/w/Twisted_bow), [Ancestral robes](https://oldschool.runescape.wiki/w/Ancestral_robes), [Tekton](https://oldschool.runescape.wiki/w/Tekton), [Vasa Nistirio](https://oldschool.runescape.wiki/w/Vasa_Nistirio), and [Olmlet](https://oldschool.runescape.wiki/w/Olmlet).
+The six windows are the Great Olm, Twisted bow, Ancestral robes with a Kodai wand, Tekton’s forge, Vasa Nistirio, and Olmlet. These are original inline SVG interpretations, with no remote image dependency. Subject references: [Great Olm](https://oldschool.runescape.wiki/w/Great_Olm), [Twisted bow](https://oldschool.runescape.wiki/w/Twisted_bow), [Ancestral robes](https://oldschool.runescape.wiki/w/Ancestral_robes), [Kodai wand](https://oldschool.runescape.wiki/w/File:Kodai_wand_detail.png), [Tekton](https://oldschool.runescape.wiki/w/Tekton), [Vasa Nistirio](https://oldschool.runescape.wiki/w/Vasa_Nistirio), and [Olmlet](https://oldschool.runescape.wiki/w/Olmlet).
 
 Count completed raids, not individual rooms or Olm phases. Normal and Challenge Mode completions share this journal; separate mode tracking is not implemented. Artwork and copy live in `bosses/cox-art.js` and the catalog. Local/account journals, backups, imports and resets remain scoped to `cox`; legacy backups without a boss ID remain PNM only.
 
@@ -95,7 +99,7 @@ The artwork was drawn after inspecting the Wiki’s model images: [Tumeken’s s
 
 ## Theatre collection
 
-Theatre of Blood has six original inline SVG windows: the Scythe of Vitur, Verzik’s final form, the three Nylocas together, the Maiden of Sugadinti, Sotetseg, and Justiciar armour. The picker uses the Scythe window. Each completed raid adds one pane; Entry, Normal and Hard Mode completions share the journal. Individual encounter kills do not count separately. Four sigils mark the 25-raid milestones.
+Theatre of Blood has six original inline SVG windows: the Scythe of Vitur, Verzik’s final form, the three Nylocas together, Sotetseg, the Maiden of Sugadinti, and Justiciar armour. The picker uses the Scythe window. Each completed raid adds one pane; Entry, Normal and Hard Mode completions share the journal. Individual encounter kills do not count separately. Four sigils mark the 25-raid milestones.
 
 Content lives in the `tob` catalog entry and `bosses/tob-art.js`. Local copies, screenshots, backups, guest imports, account saves, postcards, sanctuary and resets all use the shared implementation, scoped to `tob`. Mongo stores `<username>:tob` in the existing journals collection; no new endpoint implementation, collection or volume is needed. Older backups without a boss ID remain PNM only.
 

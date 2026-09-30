@@ -1,6 +1,6 @@
 /* Chambers-only illustrations. The shared frame owns pane reveal and drop targets.
  * References: OSRS Wiki /Great_Olm, /Twisted_bow, /Ancestral_robes,
- * /Tekton, /Vasa_Nistirio, /Olmlet and /Arcane_prayer_scroll.
+ * /Tekton, /Vasa_Nistirio, /Olmlet, /Arcane_prayer_scroll and /Kodai_wand.
  * Original SVG interpretations, no remote assets.
  */
 GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal }) {
@@ -9,6 +9,29 @@ GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal 
     config.palettes[
       (sceneNumber(index) + Math.floor(index / config.titles.length)) % config.palettes.length
     ];
+
+  // Wiki File:Kodai_wand_detail.png: tapered grey shaft with violet polygonal fittings.
+  function kodaiWand(x, y, scale = 1, tilt = 0) {
+    return `<g data-relic="kodai-wand" transform="translate(${x} ${y}) rotate(${tilt}) scale(${scale})" stroke="#353343" stroke-width="2" stroke-linejoin="round">
+      <path d="M0 -198 L7 -154 L9 -102 L8 124 H-8 L-7 -102 L-4 -155Z" fill="#85818d"/>
+      <path d="M0 -198 L2 -146 L1 120 H-8 L-7 -102 L-4 -155Z" fill="#a5a0aa" stroke="none"/>
+      <path d="M2 -146 L7 -154 L9 -102 L8 124 H2Z" fill="#5d5869" stroke="none"/>
+      <path d="M-8 -91 L3 -97 L16 -84 L14 -66 L2 -59 L-13 -70 L-16 -82Z" fill="#8273a7"/>
+      <path d="M-8 -91 L3 -97 L3 -75 L-13 -70 L-16 -82Z" fill="#56506f" stroke-width="1.3"/>
+      <path d="M3 -97 L16 -84 L3 -75Z" fill="#a394c1" stroke-width="1.2"/>
+      <path d="M-12 -35 L4 -41 L18 -27 L16 -8 L2 -1 L-16 -12 L-19 -27Z" fill="#8677ab"/>
+      <path d="M-12 -35 L4 -41 L3 -17 L-16 -12 L-19 -27Z" fill="#5b537b" stroke-width="1.3"/>
+      <path d="M4 -41 L18 -27 L3 -17Z" fill="#aa9ac8" stroke-width="1.2"/>
+      <path d="M-15 27 L2 19 L23 40 L20 65 L3 75 L-21 53 L-24 39Z" fill="#8875ac"/>
+      <path d="M-15 27 L2 19 L1 50 L-21 53 L-24 39Z" fill="#564972" stroke-width="1.4"/>
+      <path d="M2 19 L23 40 L1 50Z" fill="#ab9acb" stroke-width="1.3"/>
+      <path d="M-20 115 L1 98 L30 132 L24 157 L-3 172 L-29 143Z" fill="#713ad2"/>
+      <path d="M-20 115 L1 98 L-1 139 L-29 143Z" fill="#4d27a5" stroke-width="1.4"/>
+      <path d="M1 98 L30 132 L-1 139Z" fill="#a065ed" stroke-width="1.4"/>
+      <path d="M-1 139 L24 157 L-3 172 L-29 143Z" fill="#5d2bbb" stroke-width="1.4"/>
+      <path d="M-3 -151 L-2 -106 M-4 -57 V-43 M-4 3 V18 M-4 82 V102 M-20 117 L-23 133" fill="none" stroke="#c3b7d2" stroke-width="1.4"/>
+    </g>`;
+  }
 
   function crystal(x, y, scale = 1, arcane = false) {
     const [dark, mid, light] = arcane
@@ -301,7 +324,8 @@ GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal 
             <path d="M140 197 L173 201 L211 196 L237 216 L171 208 L120 212Z" fill="#c1bdac" stroke="none"/>
             <path d="M110 216 L246 224 L243 229 L109 221Z" fill="#4c5077" stroke-width="1.4"/>
           </g>
-          ${[78, 282].map((x) => `<path d="M${x} 388 V500 M${x - 8} 441 L${x} 426 L${x + 8} 441 L${x} 456Z" fill="#79769b" stroke="#afaa9c" stroke-width="1.8"/>`).join('')}`;
+          ${kodaiWand(285, 360, 0.96, 7)}
+          <path d="M78 388 V500 M70 441 L78 426 L86 441 L78 456Z" fill="#79769b" stroke="#afaa9c" stroke-width="1.8"/>`;
       } else if (scene === 3) {
         // Wiki File:Tekton.png: tall horned helm, charcoal plates, molten
         // orange seams, a heated blade and the heavy black smithing hammer.

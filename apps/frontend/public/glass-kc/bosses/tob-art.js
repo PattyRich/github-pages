@@ -5,9 +5,12 @@
  */
 GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }) {
   const sceneNumber = (index) => index % config.titles.length;
+  // Move Sotetseg before Maiden without changing either scene's edition colours.
+  const paletteScenes = [0, 1, 2, 4, 3, 5];
   const sceneColors = (index) =>
     config.palettes[
-      (sceneNumber(index) + Math.floor(index / config.titles.length)) % config.palettes.length
+      (paletteScenes[sceneNumber(index)] + Math.floor(index / config.titles.length)) %
+        config.palettes.length
     ];
   const path = (d, fill, stroke = '#292329', width = 2.4) =>
     `<path d="${d}" fill="${fill}" stroke="${stroke}" stroke-width="${width}" stroke-linejoin="round"/>`;
@@ -21,8 +24,8 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       'M-12 -6 Q-2 -17 11 -10 L4 -7 M3 -11 L3 13',
       'M-11 2 L-10 -10 L-3 -4 L0 -14 L4 -4 L11 -10 L10 2Z M-10 7 H10',
       'M-12 0 H12 M0 -12 V12 M-9 -9 L9 9 M-9 9 L9 -9 M-6 -6 H6 V6 H-6Z',
-      'M0 -13 Q-14 3 -7 10 Q0 17 7 10 Q14 3 0 -13Z',
       'M-11 -11 H11 V0 H0 V11 H-11 V-2 H-3 V-6 H6',
+      'M0 -13 Q-14 3 -7 10 Q0 17 7 10 Q14 3 0 -13Z',
       'M0 -14 L4 -4 L13 0 L4 4 L0 14 L-4 4 L-13 0 L-4 -4Z',
     ];
     return `<g transform="translate(${x} ${y}) scale(${scale})">${path('M0 -25 L21 -12 V13 L0 26 L-21 13 V-12Z', '#542b38', '#b39a69', 2)}${path('M0 -19 L15 -9 V9 L0 19 L-15 9 V-9Z', '#812f44', '#34252e', 1.5)}${line(marks[kind], '#e3c999', 2)}</g>`;
@@ -354,9 +357,9 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       } else if (scene === 2) {
         illustration = `${nylocasChamber(colours)}${nylocas(180, 218, 0.94, 0)}${nylocas(100, 424, 0.86, 1)}${nylocas(265, 420, 0.86, 2)}${sigil(181, 494, 0.65, 2)}`;
       } else if (scene === 3) {
-        illustration = `${path('M47 492 V252 Q49 174 180 83 Q311 174 313 252 V492Z', '#402a3b', '#9e6370', 2)}${path('M53 475 V269 L89 197 L124 269 V475Z M237 475 V269 L272 197 L307 269 V475Z', '#642c42', '#a15f71', 1.7)}${path('M133 448 V196 L180 107 L227 196 V448Z', '#793044', '#c27479', 1.8)}${path('M180 107 V448 H133 V196Z', '#4c263b', '#8a4155', 1.3)}${line('M54 305 H120 M55 366 H120 M241 305 H305 M241 366 H305 M180 110 V128 M61 243 L89 216 L116 242 M244 243 L272 216 L300 242', '#a26478', 1.3)}${floor}${maiden()}`;
-      } else if (scene === 4) {
         illustration = `${path('M180 77 L215 106 L267 128 L292 190 L314 231 L302 291 L313 345 L273 407 L180 442 L89 407 L49 344 L61 291 L46 231 L68 190 L96 128 L147 106Z', '#542638', '#ac4a5b', 2.5)}${path('M180 101 L214 140 L255 150 L269 201 L291 233 L279 291 L290 340 L258 386 L180 416 L103 386 L70 340 L82 291 L69 233 L93 201 L105 150 L148 140Z', '#292532', '#734057', 1.8)}${path('M96 128 L147 106 L180 77 L156 120 L125 145 L96 177Z M267 128 L292 190 L314 231 L296 219 L283 193 L270 155Z M49 344 L89 407 L122 416 L91 376 L70 343Z M302 291 L313 345 L289 376 L293 333Z', '#983a4e', '#672c41', 1.5)}${line('M82 210 L61 245 L70 283 M278 180 L297 229 M293 379 L271 400 M118 126 L141 116', '#d06970', 1.6)}${shadowMaze()}${sotetseg()}`;
+      } else if (scene === 4) {
+        illustration = `${path('M47 492 V252 Q49 174 180 83 Q311 174 313 252 V492Z', '#402a3b', '#9e6370', 2)}${path('M53 475 V269 L89 197 L124 269 V475Z M237 475 V269 L272 197 L307 269 V475Z', '#642c42', '#a15f71', 1.7)}${path('M133 448 V196 L180 107 L227 196 V448Z', '#793044', '#c27479', 1.8)}${path('M180 107 V448 H133 V196Z', '#4c263b', '#8a4155', 1.3)}${line('M54 305 H120 M55 366 H120 M241 305 H305 M241 366 H305 M180 110 V128 M61 243 L89 216 L116 242 M244 243 L272 216 L300 242', '#a26478', 1.3)}${floor}${maiden()}`;
       } else {
         illustration = `${path('M180 73 L286 248 L180 457 L74 248Z', '#6d6580', '#c1b38e', 2)}${ring(180, 240, 110, '#d6c48c')}${line('M180 80 V436 M74 248 H286 M104 139 L263 351 M96 341 L258 136', '#ada2a8', 1.5)}${floor}${path('M106 528 L125 510 H237 L260 529 V544 H106Z', '#7a6c75', '#c0ad8a', 2)}${justiciar()}`;
       }

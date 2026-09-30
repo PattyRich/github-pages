@@ -2,8 +2,12 @@
 GLASS_RENDERERS.pnm = function createNightmareRenderer(config, { esc, getJournal }) {
   const { palettes, titles } = config;
   const sceneNumber = (index) => index % titles.length;
+  // Keep each scene's glass colours when totems and sleepwalkers change display slots.
+  const paletteScenes = [0, 1, 2, 3, 5, 4];
   const sceneColors = (index) =>
-    palettes[(sceneNumber(index) + Math.floor(index / titles.length)) % palettes.length];
+    palettes[
+      (paletteScenes[sceneNumber(index)] + Math.floor(index / titles.length)) % palettes.length
+    ];
   const ordinals = ['first', 'second', 'third', 'fourth'];
   // One shared carving keeps the shrine and window ornaments visually related.
   function shrineCarving(colors) {
@@ -61,6 +65,33 @@ GLASS_RENDERERS.pnm = function createNightmareRenderer(config, { esc, getJournal
     </g>
   </g>`;
   }
+  // Wiki File:Inquisitor's_mace_detail.png: flared steel flanges, red spike and collar.
+  function inquisitorsMace(x, y, scale = 1, tilt = 0) {
+    return `<g data-relic="inquisitors-mace" transform="translate(${x} ${y}) rotate(${tilt}) scale(${scale})" stroke="#302b33" stroke-width="2.2" stroke-linejoin="round">
+      <path d="M-7 7 H7 L6 132 L-6 136Z" fill="#777276"/>
+      <path d="M-7 7 H-2 L-1 133 L-6 136Z" fill="#a0999b" stroke="none"/>
+      <path d="M-6 134 L6 132 L7 175 L-6 177Z" fill="#766444"/>
+      <path d="M-4 136 L1 135 V174 L-4 175Z" fill="#998264" stroke="none"/>
+      <path d="M-11 174 L10 173 L13 185 L8 194 L-9 194 L-14 183Z" fill="#686168"/>
+      <path d="M-9 192 H9 L15 206 L7 220 L-9 216 L-16 204Z" fill="#89828a"/>
+      <path d="M1 195 L9 193 L15 206 L7 220 L1 210Z" fill="#514c57" stroke="none"/>
+      <path d="M-14 -14 L-20 -40 L-8 -62 L9 -66 L24 -41 L15 -12 L8 1 H-7Z" fill="#78656c"/>
+      <path d="M-6 -12 L-27 -23 L-44 -43 L-55 -57 L-57 -81 L-42 -77 L-35 -56 L-18 -45 L-8 -31Z" fill="#8c747c"/>
+      <path d="M-35 -56 L-42 -77 L-57 -81 L-56 -93 L-39 -88 L-29 -74 L-25 -57Z" fill="#514b52"/>
+      <path d="M-8 -37 L-25 -66 L-26 -87 L-35 -111 L-31 -134 L-11 -139 L-7 -120 L-15 -100 L-9 -83 L4 -64 L6 -35Z" fill="#947d84"/>
+      <path d="M-31 -134 L-11 -139 L-7 -120 L-15 -100 L-22 -100 L-18 -124Z" fill="#58525a"/>
+      <path d="M7 -38 L15 -72 L28 -91 L31 -114 L45 -119 L56 -106 L48 -88 L31 -66 L24 -36Z" fill="#8b737b"/>
+      <path d="M31 -114 L45 -119 L56 -106 L48 -88 L39 -92 L41 -108Z" fill="#554d55"/>
+      <path d="M13 -15 L32 -20 L46 -35 L52 -52 L69 -57 L78 -39 L67 -33 L60 -19 L39 -7 L21 -9Z" fill="#857078"/>
+      <path d="M52 -52 L69 -57 L78 -39 L67 -33 L61 -42 L48 -35Z" fill="#504b54"/>
+      <path d="M-6 -63 L8 -133 L25 -154 L25 -112 L15 -67Z" fill="#84434a"/>
+      <path d="M8 -133 L25 -154 L12 -92 L-6 -63Z" fill="#a96062" stroke-width="1.4"/>
+      <path d="M15 -67 L25 -112 L25 -154 L32 -132 L27 -99 L22 -69Z" fill="#5c353e"/>
+      <path d="M-20 -9 L-11 -18 L10 -14 L23 -2 L16 12 L-8 8Z" fill="#83414a"/>
+      <path d="M-20 -9 L-8 -8 L16 12 L-8 8Z" fill="#ad6967" stroke-width="1.2"/>
+      <path d="M-20 -31 L-40 -46 M-20 -81 L-16 -66 L-4 -47 M24 -51 L34 -73 M36 -18 L51 -28 M-3 20 V122 M-8 203 L-3 213" fill="none" stroke="#b7a2a4" stroke-width="1.5"/>
+    </g>`;
+  }
   function frameOrnaments(count, index, uid, celebrate) {
     const colors = sceneColors(index),
       scene = sceneNumber(index),
@@ -80,13 +111,13 @@ GLASS_RENDERERS.pnm = function createNightmareRenderer(config, { esc, getJournal
         let motif = '';
         if (scene === 0)
           motif = `<g transform="translate(${x} ${y - 9}) scale(.42)">${shrineCarving(colors)}</g>`;
-        if (scene === 5)
+        if (scene === 4)
           motif = `<path d="M${x} ${y} Q${x + side * 8} 82 180 5" fill="none" stroke="${colors[3]}" stroke-width="3"/><path d="M${x} ${y - 11} l8 11 -8 11 -8 -11Z" fill="${colors[3]}" stroke="${colors[4]}"/><path d="M180 -7 l8 12 -8 12 -8 -12Z" fill="${colors[3]}" stroke="${colors[4]}"/>`;
         if (scene === 1)
           motif = `<g transform="translate(${x} ${y})" stroke="#342e38" stroke-width="1.5"><path d="M-11 -8 L-11 -20 L-4 -14 L0 -23 L5 -14 L11 -20 L12 -7 L9 11 L0 19 L-9 11Z" fill="#93939b"/><path d="M-9 -1 L-2 2 M3 2 L10 -1" stroke="#282e37" stroke-width="2.5"/><path d="M0 4 V12" stroke="#c1b7b2"/></g>`;
         if (scene === 3)
           motif = `<ellipse cx="${x}" cy="${y + 16}" rx="16" ry="5" fill="#11141e" stroke="#82708b" stroke-width="1.5"/>${graspingHand(x, y + 15, 0.17, -side)}`;
-        if (scene === 4)
+        if (scene === 5)
           motif = `<path d="M${x} ${y + 29} q${side * 13} 27 0 51" fill="none" stroke="${colors[4]}" stroke-width="2" stroke-dasharray="3 5"/><g transform="translate(${x} ${y - 8})" stroke="#2d3b3e" stroke-width="1.3"><path d="M-5 18 H5 L7 36 H2 L0 26 L-2 36 H-7Z" fill="#585361"/><path d="M-6 0 H6 L11 24 L2 27 L0 13 L-2 27 L-11 24Z" fill="#817179"/><path d="M-1 2 H2 V16 H-1Z" fill="#c4c7b7"/><ellipse cy="-6" rx="6" ry="8" fill="#b9c1a8"/><path d="M-4 -6 H-1 M2 -6 H4" stroke="#55655d"/></g>`;
         if (scene === 2) {
           const glow = ['#73b85b', '#669ee9', '#eb9645', '#c6b4d1'][i];
@@ -305,6 +336,7 @@ GLASS_RENDERERS.pnm = function createNightmareRenderer(config, { esc, getJournal
       <path d="M180 164 L176 187 L185 190" fill="none" stroke="#b5b5b5" stroke-width="2"/>
       <path d="M151 132 L151 119 M165 127 L166 110 M183 133 L187 109 M204 128 L209 113" stroke="#b6b3b1" stroke-width="2"/>
     </g>
+    ${inquisitorsMace(74, 289, 0.93, 7)}
     <path d="M100 540 H259 M122 545 H237" stroke="#bda482" stroke-width="2"/>
     <path d="M180 52 L190 72 L180 88 L170 72Z" fill="#bd8c8d" stroke="#503b42" stroke-width="2"/>`;
       // Fixed identity colours from the OSRS Wiki; editions only recolour the surrounding glass.
@@ -330,7 +362,7 @@ GLASS_RENDERERS.pnm = function createNightmareRenderer(config, { esc, getJournal
     ${orb(88, 379, 'Eldritch', '#68a74e', '#c4e49d')}
     ${orb(272, 379, 'Volatile', '#df863c', '#ffe0a1')}
     <path d="M71 439 L88 449 L105 439 M255 439 L272 449 L289 439 M165 168 L180 179 L195 168" fill="none" stroke="#a99cb6" stroke-width="1.5"/>`;
-      return [awakening, armour, staff, claws, dream, pillars][sceneNumber(index)];
+      return [awakening, armour, staff, claws, pillars, dream][sceneNumber(index)];
     },
   });
 
