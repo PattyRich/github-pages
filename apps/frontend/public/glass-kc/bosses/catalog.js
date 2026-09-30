@@ -282,4 +282,64 @@ const GLASS_BOSSES = {
       'A justiciar’s sigil joins the frame.',
     ],
   },
+  cg: {
+    id: 'cg',
+    name: 'Corrupted Gauntlet',
+    shortName: 'CG',
+    dropPlaceholder: 'An enhanced seed, finally…',
+    countNoun: 'completion',
+    milestoneNoun: 'shard',
+    description:
+      'Step through the crimson doors. Keep every escape from the Gauntlet, from the first crystal shard to the seed worth coming back for.',
+    previewScene: 0,
+    storageKey: 'praynr-glass-kc-cg-journal-v2',
+    whispers: {
+      empty: 'A little light waits beyond the crimson doors.',
+      complete: 'The doors open. This light comes home with you.',
+      progress: 'Every escape leaves a crystal worth keeping.',
+    },
+    collectionLabel: 'The Gauntlet collection',
+    heading: 'Bring a little crystal light home.',
+    lede: 'One completion. One piece of glass. From the crimson labyrinth to the green roofs of Prifddinas.',
+    setupHelp:
+      'Starting fresh? Enter 0. Count successful Corrupted Gauntlet completions, not attempts or normal Gauntlet runs. Collect four scenes, with a window every 100 completions.',
+    galleryEmpty:
+      'Four scenes of crystal and crimson. Your first completed window will live here after 100 recorded completions.',
+    palettes: [
+      ['#233e48', '#426873', '#8c3545', '#d6737a', '#d5e8df'],
+      ['#293d49', '#496777', '#799e9a', '#b9ddd8', '#e0e9dc'],
+      ['#3c2c3a', '#65404c', '#a74a4c', '#d78973', '#e7d5b9'],
+      ['#2f4844', '#52756a', '#87ab75', '#c5d89e', '#e5e9ce'],
+    ],
+    titles: [
+      'Hunllef, crystal and crimson',
+      'The bow and blade',
+      'Prifddinas, the crystal city',
+      'The crimson labyrinth',
+    ],
+    sceneDescriptions: [
+      'Hunllef crouches in an angled stance, with a deep angular mouth, hooked upper muzzle and swept lower jaw, crystal horns, long clawed legs and a curling tail. The crimson, charcoal-plated front meets a cyan rear.',
+      'The crimson crystal Blade of Saeldor crosses behind a red Bow of Faerdhinen. The blade has two teeth and a triangular cutout along its inner edge; the bow has hooked tips, bent limbs and a large hollow crystal grip.',
+      'The ivory arches and sweeping green leaf roofs of the Tower of Voices rise above Prifddinas, with crystal bridges, trees and a winding sunlit path.',
+      'Crimson floor tiles lead through grey stone chambers, past red runic doors, twisted Phren roots and crystal deposits inside the Corrupted Gauntlet.',
+    ],
+    postcardNotes: [
+      'Another escape through the crimson doors.',
+      'A little patience, set in crystal.',
+      'Back beneath the green roofs, with a little more light.',
+      'The room changed. The journey carried on.',
+    ],
+    postcardLoot: [
+      'No seed noted. Another completion kept in glass.',
+      'The chest was quiet. The window grew brighter.',
+      'The seed can wait. This light is already yours.',
+      'No treasure in the margins. The escape still counts.',
+    ],
+    rewards: [
+      'A two-coloured crystal joins the frame.',
+      'A crimson crystal shard lights the frame.',
+      'An elven crystal lights the frame.',
+      'A crimson shard joins the frame.',
+    ],
+  },
 };

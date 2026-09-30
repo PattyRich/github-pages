@@ -721,6 +721,7 @@ describe('required boss selection and catalog-driven hunts', () => {
     ['cox', 'Chambers'],
     ['toa', 'Tombs'],
     ['tob', 'Theatre'],
+    ['cg', 'Corrupted Gauntlet'],
   ])('uses %s cloud routes and local backup, and resets only that hunt', async (boss, title) => {
     const fetch = vi.fn(async (url, options) => {
       if (url.endsWith('/me')) return response({ username: 'alice' });
@@ -762,27 +763,39 @@ describe('required boss selection and catalog-driven hunts', () => {
   });
 
   it.each([
-    ['cox', 'The Great Olm'],
-    ['toa', 'Tumeken’s shadow'],
-    ['tob', 'The Scythe of Vitur'],
-  ])('keeps pane numbering through all six %s windows and the next edition', (boss, firstTitle) => {
-    const window = open(null, false, { choose: false });
-    const saved = {
-      ...sample(),
-      boss,
-      active: { id: 'raids', kills: 600, notes: '', drops: '' },
-      dropTiles: { 501: { label: 'Raid reward', image: '' } },
-    };
-    window.localStorage.setItem(`praynr-glass-kc-${boss}-journal-v2`, JSON.stringify(saved));
-    click(window, `choose-${boss}`);
-    expect(window.document.querySelectorAll('#gallery-items figure')).toHaveLength(6);
-    expect(window.document.querySelectorAll('#window-art .pane.filled')).toHaveLength(100);
-    expect(
-      window.document.querySelector('#window-art [data-pane="501"]').getAttribute('aria-label')
-    ).toContain('Raid reward');
-    click(window, 'record-kill');
-    expect(window.document.getElementById('window-title').textContent).toContain(firstTitle);
-    expect(window.document.querySelectorAll('#window-art .pane.filled')).toHaveLength(1);
-    expect(window.document.querySelector('#window-art [data-pane="601"]')).not.toBeNull();
-  });
+    ['cox', 'The Great Olm', 6, 'CHAMBERS OF XERIC'],
+    ['toa', 'Tumeken’s shadow', 6, 'TOMBS OF AMASCUT'],
+    ['tob', 'The Scythe of Vitur', 6, 'THEATRE OF BLOOD'],
+    ['cg', 'Hunllef, crystal and crimson', 4, 'CORRUPTED GAUNTLET'],
+  ])(
+    'keeps pane numbering through all %s windows and the next edition',
+    (boss, firstTitle, scenes, postcardName) => {
+      const window = open(null, false, { choose: false });
+      const completions = scenes * 100;
+      const firstPane = completions - 99;
+      const saved = {
+        ...sample(),
+        boss,
+        active: { id: 'completions', kills: completions, notes: '', drops: '' },
+        dropTiles: { [firstPane]: { label: 'Reward remembered', image: '' } },
+      };
+      window.localStorage.setItem(`praynr-glass-kc-${boss}-journal-v2`, JSON.stringify(saved));
+      click(window, `choose-${boss}`);
+      expect(window.document.querySelectorAll('#gallery-items figure')).toHaveLength(scenes);
+      expect(window.document.querySelectorAll('#window-art .pane.filled')).toHaveLength(100);
+      expect(
+        window.document
+          .querySelector(`#window-art [data-pane="${firstPane}"]`)
+          .getAttribute('aria-label')
+      ).toContain('Reward remembered');
+      click(window, 'finish-session');
+      expect(window.eval('postcardSVG(0)')).toContain(postcardName);
+      click(window, 'record-kill');
+      expect(window.document.getElementById('window-title').textContent).toContain(firstTitle);
+      expect(window.document.querySelectorAll('#window-art .pane.filled')).toHaveLength(1);
+      expect(
+        window.document.querySelector(`#window-art [data-pane="${completions + 1}"]`)
+      ).not.toBeNull();
+    }
+  );
 });
