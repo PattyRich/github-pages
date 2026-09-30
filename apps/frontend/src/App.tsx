@@ -5,6 +5,7 @@ import BingoCarousel from './components/BingoCarousel';
 import FeedbackModal from './components/ui/FeedbackModal';
 
 interface ToolRoute {
+  badge?: string;
   desc: string;
   external?: boolean;
   name: string;
@@ -17,11 +18,13 @@ const ROUTES: ToolRoute[] = [
     path: '/glass-kc',
     name: '🪟 Glass KC Tracker',
     desc: 'Choose a boss, collect stained glass, and save your hunt locally with optional account sync.',
+    badge: 'New',
   },
   {
-    path: '/bingo-draft',
-    name: '📝 Bingo Draft',
-    desc: 'Draft teams and items for your next big bingo event.',
+    path: '/osrs',
+    name: '💰 OSRS Loot Simulator',
+    desc: 'Simulate drops from Old School RuneScape bosses.',
+    premium: true,
   },
   {
     path: '/bingo',
@@ -30,10 +33,9 @@ const ROUTES: ToolRoute[] = [
     premium: true,
   },
   {
-    path: '/osrs',
-    name: '💰 OSRS Loot Simulator',
-    desc: 'Simulate drops from Old School RuneScape bosses.',
-    premium: true,
+    path: '/bingo-draft',
+    name: '📝 Bingo Draft',
+    desc: 'Draft teams and items for your next big bingo event.',
   },
   {
     path: '/all-pets',
@@ -96,6 +98,7 @@ export default function App() {
                 const cls = `route-card${route.premium ? ' premium-card' : ''}`;
                 const inner = (
                   <>
+                    {route.badge && <span className="route-card-badge">{route.badge}</span>}
                     <h4>{route.name}</h4>
                     <p>{route.desc}</p>
                   </>
