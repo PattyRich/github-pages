@@ -111,7 +111,7 @@ const GLASS_BOSSES = {
     ],
     sceneDescriptions: [
       'Olm rises from a faceted emerald cavern, with a pale angular face, tall dark horns, lime-green eyes and great clawed hands gripping the broken stone.',
-      'Charcoal limbs twist around pale inner struts, with an olive-green string stretched between hooked tips above the ancient chest.',
+      'Charcoal limbs twist around pale inner struts, with an olive-green string stretched between hooked tips. A tall violet loot beam descends to the ancient chest, with four treasure chests decorating the frame.',
       'A tall grey-beige hat and indigo Ancestral robes with gold bands and buckles, beside a tapered grey Kodai wand with faceted purple fittings.',
       'A tall pointed helm and charcoal plates, split by golden molten seams. Tekton holds a heated blade and heavy black hammer beside his anvil.',
       'A skeletal mage floats among loose stones above a sprawling rock body, its limbs fractured with vivid violet crystal.',
@@ -135,7 +135,7 @@ const GLASS_BOSSES = {
     ],
     rewards: [
       'A green crystal lights the frame.',
-      'A miniature bow joins the frame.',
+      'Another treasure chest joins the frame.',
       'An ancestral crest lights the frame.',
       'A forge ember joins the frame.',
       'Another crystal wakes in the frame.',

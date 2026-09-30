@@ -237,9 +237,28 @@ GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal 
     </g>`;
   }
 
+  // The Chambers rare-loot light is a descending column, with uneven
+  // violet ribbons reaching the chest rather than a flame rising from it.
+  function purpleLootBeam() {
+    return `<g data-relic="chambers-loot-beam" transform="translate(180 0) scale(1.5 1) translate(-180 0)" stroke-linejoin="round">
+      <path d="M149 23 L210 23 L205 172 L211 294 L203 389 L210 464 H150 L155 380 L149 253 L154 128Z" fill="#a96fba" opacity=".16"/>
+      <path d="M158 24 H172 L169 138 L174 254 L169 354 L171 461 H156 L163 352 L158 232 L163 120Z" fill="#a877c2" opacity=".4"/>
+      <path d="M177 18 H185 L184 114 L188 213 L182 330 L187 465 H175 L180 325 L175 213 L179 112Z" fill="#d7a2e0" opacity=".7"/>
+      <path d="M193 27 H201 L200 162 L204 267 L197 374 L201 463 H191 L195 369 L190 268 L196 160Z" fill="#bb7ecb" opacity=".5"/>
+      <path d="M150 53 L154 171 L149 290 L154 405 V450 M207 57 L204 185 L208 319 L204 444" fill="none" stroke="#ad79c0" stroke-width="1.2" opacity=".7"/>
+      <path d="M165 31 L163 141 L167 253 L164 357 L166 449 M197 38 L198 162 L196 263 L200 376 V454" fill="none" stroke="#d5a4df" stroke-width="1.7" opacity=".8"/>
+      <path d="M181 20 L182 114 L180 213 L184 329 L181 461" fill="none" stroke="#eed0ef" stroke-width="2" opacity=".8"/>
+      <path d="M150 464 L163 454 L181 458 L198 453 L211 464 L192 474 H167Z" fill="#c294d5" opacity=".5"/>
+    </g>`;
+  }
+
+  function bowFrameChest(x, y) {
+    return `<g data-frame-relic="treasure-chest" transform="translate(${x} ${y})" stroke-linejoin="round"><path d="M0 -24 L17 -10 V11 L0 25 L-17 11 V-10Z" fill="#3e353d" stroke="#9e835f" stroke-width="1.6"/><path d="M0 -18 L12 -8 V8 L0 18 L-12 8 V-8Z" fill="#28282f" stroke="#655b59" stroke-width="1"/><path d="M-12 -1 L-8 -8 H8 L12 -1 V12 H-12Z" fill="#645064" stroke="#b29a73" stroke-width="1.5"/><path d="M-12 -1 H12 M-7 -7 V11 M7 -7 V11" fill="none" stroke="#b29a73" stroke-width="1.6"/><path d="M-2 -2 H2 V6 H-2Z" fill="#d9be80" stroke="#42313a" stroke-width="1"/><path d="M-4 -20 H4 L3 -8 H-3Z" fill="#b885cb" opacity=".6"/><path d="M0 -21 V-8 M-5 -18 V-9 M5 -16 V-9" fill="none" stroke="#d7a2e0" stroke-width="1.1"/></g>`;
+  }
+
   function motif(scene, x, y) {
     if (scene === 0 || scene === 4) return crystal(x, y + 8, 0.4, scene === 4);
-    if (scene === 1) return twistedBow(x, y, 0.075);
+    if (scene === 1) return bowFrameChest(x, y);
     if (scene === 2)
       return `<g transform="translate(${x} ${y})" stroke="#49464b" stroke-width="1.5"><path d="M-9 5 L-1 -22 L5 -10 L6 5Z" fill="#aaa796"/><path d="M-17 11 L-8 3 L7 3 L17 13Z" fill="#c0bcaa"/><path d="M-8 3 H7 L9 7 H-10Z" fill="#48444a"/><path d="M-3 2 H1 V7 H-3Z" fill="#d8ad38"/><path d="M-17 11 L17 13" stroke="#65618b" stroke-width="2"/></g>`;
     if (scene === 3)
@@ -288,9 +307,10 @@ GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal 
       } else if (scene === 1) {
         illustration = `<path d="M180 50 L319 296 L180 528 L41 296Z" fill="#40384f" stroke="#a795b5" stroke-width="2"/>${halo(180, 297, 124, '#9a89ad')}
           <path d="M180 95 V480 M60 296 H301 M96 193 L272 403 M96 403 L272 193" stroke="#a595b1" stroke-width="1" opacity=".5"/>
+          ${purpleLootBeam()}
           ${twistedBow(180, 270, 0.52)}
           <path d="M95 493 L118 464 H240 L266 493 V536 H95Z" fill="#645064" stroke="#292c35" stroke-width="4"/><path d="M95 493 H266 M118 464 V492 M241 465 V493 M117 499 V532 M244 499 V532" stroke="#b29a73" stroke-width="5"/><path d="M174 488 H188 V511 H174Z" fill="#c4ad7c" stroke="#352e37" stroke-width="2"/>
-          <path d="M139 464 L153 435 L174 456 L194 428 L214 464Z" fill="#c6a0d7" opacity=".8"/>`;
+          <path d="M159 465 H202 M169 467 H192" fill="none" stroke="#e0b7e9" stroke-width="2" opacity=".8"/>`;
       } else if (scene === 2) {
         // Wiki File:Ancestral_robes_equipped_female.png: stone-grey mantle,
         // indigo split tunic, gold bands/buckles and a tall beige witch hat.

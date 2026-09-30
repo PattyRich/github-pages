@@ -87,6 +87,8 @@ Count completed raids, not individual rooms or Olm phases. Normal and Challenge 
 
 The relic windows use the Wiki’s [Twisted bow detail image](https://oldschool.runescape.wiki/w/File:Twisted_bow_detail.png) and [Ancestral robes equipment image](https://oldschool.runescape.wiki/w/File:Ancestral_robes_equipped_female.png) as visual references: charcoal twisted bow limbs, pale inner struts and an olive-green string; indigo robes, grey-beige mantle and hat, and gold bands/buckles. These identity colors stay fixed across collection editions.
 
+The Twisted bow window earns a treasure-chest frame emblem at 25, 50, 75 and 100 journal raids. The main scene has a tall purple loot beam descending from the arch to the ancient chest, interpreted from the supplied Chambers loot-light reference. These details appear in the picker preview, gallery and exported postcards.
+
 The encounter windows follow the [Tekton model](https://oldschool.runescape.wiki/w/File:Tekton.png) and [Vasa Nistirio model](https://oldschool.runescape.wiki/w/File:Vasa_Nistirio.png): Tekton’s pointed helm, charcoal plates, molten gold seams, heated blade and black hammer; Vasa’s floating skeletal caster, suspended stones and sprawling rock body with violet crystal fractures.
 
 ## Tombs collection
