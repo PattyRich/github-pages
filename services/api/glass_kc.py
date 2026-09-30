@@ -13,7 +13,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 MAX_KC = 1_000_000_000
 MAX_DOCUMENT = 5 * 1024 * 1024
 SESSION_DAYS = 30
-SUPPORTED_BOSSES = frozenset({'pnm', 'cox', 'toa'})
+SUPPORTED_BOSSES = frozenset({'pnm', 'cox', 'toa', 'tob'})
 LEGACY_BOSS = 'pnm'
 
 
@@ -84,7 +84,7 @@ def validate_journal(data, boss=None):
         if not isinstance(label, str) or len(label) > 120:
             raise ValueError('Invalid drop label.')
         if not isinstance(image, str) or len(image) > 180000 or (
-            image and not re.fullmatch(r'data:image/jpeg;base64,[A-Za-z0-9+/]+={0,2}', image)
+            image and not re.fullmatch(r'data:image/(?:jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}', image)
         ):
             raise ValueError('Invalid screenshot.')
         image_size += len(image)

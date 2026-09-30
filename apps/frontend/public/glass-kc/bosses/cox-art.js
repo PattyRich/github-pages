@@ -1,6 +1,7 @@
 /* Chambers-only illustrations. The shared frame owns pane reveal and drop targets.
  * References: OSRS Wiki /Great_Olm, /Twisted_bow, /Ancestral_robes,
- * /Tekton, /Vasa_Nistirio and /Olmlet. Original SVG interpretations, no remote assets.
+ * /Tekton, /Vasa_Nistirio, /Olmlet and /Arcane_prayer_scroll.
+ * Original SVG interpretations, no remote assets.
  */
 GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal }) {
   const sceneNumber = (index) => index % config.titles.length;
@@ -16,20 +17,176 @@ GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal 
     return `<g transform="translate(${x} ${y}) scale(${scale})" stroke="#253532" stroke-width="2" stroke-linejoin="round"><path d="M0 -55 L15 -28 L11 13 L-9 20 L-18 -20Z" fill="${mid}"/><path d="M0 -55 L-3 -16 L-9 20 L-18 -20Z" fill="${dark}"/><path d="M0 -55 L15 -28 L-3 -16Z" fill="${light}"/><path d="M-3 -16 L11 13 M-3 -16 L15 -28" fill="none"/><path d="M14 -2 L26 -26 L32 -8 L20 22 L11 13Z" fill="${dark}"/><path d="M26 -26 L24 1 L20 22 M24 1 L32 -8" fill="none" stroke="${mid}"/></g>`;
   }
 
-  // A long, flat snout and green crown distinguish Olm from a generic dragon.
-  function olmHead(x, y, scale = 1) {
-    return `<g transform="translate(${x} ${y}) scale(${scale})" stroke="#334647" stroke-width="3" stroke-linejoin="round">
-      <path d="M69 66 Q119 15 104 -58 L75 -91 L40 -77 L33 -34 L47 14 L15 70Z" fill="#a8c1b9"/>
-      <path d="M57 59 Q91 8 78 -59 L53 -64 L51 -29 L64 11 L35 64Z" fill="#e2e8d6" stroke="none"/>
-      <path d="M53 -73 L50 -113 L70 -89 L81 -128 L87 -84 L109 -107 L101 -62" fill="#6a9256"/>
-      <path d="M52 -97 L61 -80 M82 -111 L83 -84 M102 -94 L97 -72" stroke="#bbd88b" stroke-width="3"/>
-      <path d="M94 -77 L73 -100 L39 -98 L13 -78 L-8 -73 L-25 -53 L-76 -46 L-96 -23 L-86 -7 L-36 -1 L-6 -12 L17 -5 L39 -18 L59 -18 L82 -40Z" fill="#dae3d5"/>
-      <path d="M-88 -22 L-41 -29 L-5 -41 L23 -67 L44 -68 L39 -90 L14 -72 L-10 -64 L-29 -47 L-78 -40Z" fill="#f1eddb" stroke="none"/>
-      <path d="M-89 -10 L-39 -6 L-9 -20 L15 -14 L47 -32 L46 -17 L19 8 L-18 17 L-73 15 L-91 3Z" fill="#253a39"/>
-      <path d="M-89 1 L-70 10 L-25 9 L12 -2 L37 -20 L29 1 L1 21 L-45 26 L-77 18Z" fill="#bbcdbf"/>
-      <path d="M-72 -6 L-66 5 L-61 -5 M-45 -8 L-37 2 L-31 -12 M-10 -20 L-4 -7 L3 -18 M21 -19 L25 -6 L31 -26" fill="#efeed8" stroke-width="1.3"/>
-      <path d="M14 -56 L39 -62 L31 -45 L17 -44Z" fill="#82bc57" stroke="#344738"/><path d="M27 -58 L25 -47" stroke="#1b302c" stroke-width="4"/>
-      <path d="M-80 -31 L-73 -32 M-8 -51 L11 -58 M51 -80 L66 -62 L61 -39 M46 -9 L61 -2 L57 18 M53 29 L70 36" fill="none" stroke="#74958a" stroke-width="2"/>
+  function cavernCrystal(x, y, size = 1, turn = 0) {
+    return `<g transform="translate(${x} ${y}) rotate(${turn}) scale(${size})" stroke="#374c2c" stroke-width="2" stroke-linejoin="round">
+        <path d="M0 -67 L14 -52 L17 -4 L5 20 L-13 12 L-17 -43Z" fill="#a7ca30"/>
+        <path d="M0 -67 L2 -45 L5 20 L-13 12 L-17 -43Z" fill="#779526"/>
+        <path d="M0 -67 L14 -52 L2 -45 L-17 -43Z" fill="#d7e97b"/>
+        <path d="M2 -45 L14 -52 L17 -4 L5 20Z" fill="#bcd94b"/>
+        <path d="M-8 -37 L-4 -8 L1 7" fill="none" stroke="#b8d654" stroke-width="2"/>
+      </g>`;
+  }
+
+  // Wiki File:Great_Olm.png: a pale angular head, paired dark horns,
+  // lime eyes and crystals, and broad clawed hands emerging from the rock.
+  // Keep the encounter portrait separate from the small Olmlet illustration.
+  function greatOlm() {
+    const hand = (x, y, size, turn, facing = 1) =>
+      `<g transform="translate(${x} ${y}) rotate(${turn}) scale(${size * facing} ${size})" stroke="#344a47" stroke-width="2.4" stroke-linejoin="round">
+        <path d="M-35 1 L-7 -12 L22 -5 L42 14 L43 32 L31 43 L37 68 L31 81 L19 82 L8 70 L3 48 L-4 45 L-9 79 L-20 88 L-32 81 L-29 61 L-24 39 L-35 33 L-44 57 L-56 63 L-66 55 L-57 40 L-43 21Z" fill="#dce7df"/>
+        <path d="M-35 1 L-7 -12 L22 -5 L27 12 L9 22 L-22 15 L-43 21Z" fill="#f0f0e2" stroke-width="1.4"/>
+        <path d="M9 22 L27 12 L43 32 L31 43 L37 68 L31 81 L19 82 L23 63 L15 38Z M-4 45 L-9 79 L-20 88 L-32 81 L-19 67 L-15 34Z M-35 33 L-44 57 L-56 63 L-66 55 L-50 50 L-39 24Z" fill="#a0b8b2" stroke="none"/>
+        <path d="M-22 15 L-27 29 M9 22 L3 34 M-14 39 L-17 57 M20 44 L25 61" fill="none" stroke="#7c9991" stroke-width="1.8"/>
+        <path d="M-66 55 L-56 63 L-76 76 L-73 65Z M-32 81 L-20 88 L-39 104 L-38 91Z M19 82 L31 81 L38 101 L24 95Z" fill="#555054"/>
+        <path d="M-66 55 L-73 65 L-76 76 M-32 81 L-38 91 L-39 104 M31 81 L30 91 L38 101" fill="none" stroke="#817777" stroke-width="1.3"/>
+      </g>`;
+    return `<g stroke-linejoin="round">
+      <path d="M180 52 L300 238 L279 411 H82 L57 238Z" fill="#253d39" stroke="#698b67" stroke-width="1.4"/>
+      <path d="M180 52 L158 138 L90 195 M180 52 L205 140 L278 199 M158 138 L180 194 L205 140" fill="none" stroke="#8fa66b" stroke-width="1.5"/>
+      <path d="M20 397 V279 L47 253 L70 277 L103 245 L128 272 L150 238 L187 282 L217 224 L250 253 L275 212 L309 255 L340 274 V550 H20Z" fill="#2c4641" stroke="#21342f" stroke-width="2.6"/>
+      <path d="M20 279 L47 253 L70 277 L61 330 L20 344Z M70 277 L103 245 L128 272 L106 322 L61 330Z M217 224 L250 253 L275 212 L309 255 L278 306 L239 290Z" fill="#416054" stroke="#2a433b" stroke-width="1.8"/>
+      <path d="M239 290 L278 306 L309 255 L340 274 L330 358 L282 377 L246 346Z M61 330 L106 322 L128 272 L143 333 L120 371 L74 367Z" fill="#233c37" stroke="#1e332e" stroke-width="1.8"/>
+      ${cavernCrystal(88, 275, 0.74, -30)}${cavernCrystal(57, 280, 0.47, -53)}
+      ${cavernCrystal(266, 218, 1.02, 17)}${cavernCrystal(297, 252, 0.66, 40)}
+      ${cavernCrystal(180, 97, 0.54)}
+      <path d="M177 103 L180 69 L184 94" fill="none" stroke="#e4e9a1" stroke-width="1.4"/>
+      <g stroke="#344b47" stroke-width="2.7">
+        <path d="M171 284 L212 251 L235 276 L246 346 L252 412 L236 447 L195 459 L159 440 L145 399 L158 345Z" fill="#cfdfd6"/>
+        <path d="M171 293 L197 297 L207 359 L218 423 L195 445 L166 430 L156 394 L167 340Z" fill="#edf0df" stroke="none"/>
+        <path d="M212 251 L235 276 L246 346 L252 412 L236 447 L218 423 L207 359 L197 297Z" fill="#a6bcbb" stroke-width="1.6"/>
+        <path d="M174 326 L185 365 L176 403 L191 437 L166 430 L156 394 L167 340Z" fill="#c6d6ca" stroke="none"/>
+        <path d="M222 321 L226 359 L235 383 M207 411 L213 436" fill="none" stroke="#87a69b" stroke-width="1.5"/>
+      </g>
+      <g stroke="#333a3b" stroke-width="2.7">
+        <path d="M201 225 L200 178 L219 131 L257 107 L239 147 L226 184 L225 224Z" fill="#514e52"/>
+        <path d="M201 225 L200 178 L219 131 L239 122 L215 177 L215 221Z" fill="#70676b" stroke="none"/>
+        <path d="M239 147 L257 107 L238 127 L219 164 L215 221 L225 224 L226 184Z" fill="#383b3f" stroke="none"/>
+        <path d="M171 224 L149 186 L151 153 L167 120 L192 100 L177 142 L178 164 L184 191 L198 220Z" fill="#585357"/>
+        <path d="M151 153 L167 120 L179 111 L162 151 L162 182 L182 220 L171 224 L149 186Z" fill="#7a7072" stroke="none"/>
+        <path d="M192 100 L177 142 L178 164 L184 191 L198 220 L182 220 L169 182 L170 145Z" fill="#3e3e42" stroke="none"/>
+      </g>
+      <g stroke="#354b47" stroke-width="2.5">
+        <path d="M82 298 L117 291 L161 264 L195 270 L181 301 L162 320 L129 335 L92 324Z" fill="#1e392b"/>
+        <path d="M94 307 L128 301 L178 275 L188 276 L160 305 L129 319 L102 320Z" fill="#577e2d" stroke="none"/>
+        <path d="M92 319 L126 323 L160 308 L182 286 L185 301 L166 329 L137 347 L112 340 L97 331Z" fill="#d4e2d2"/>
+        <path d="M97 331 L137 337 L166 319 L166 329 L137 347 L112 340Z" fill="#a2bcb0" stroke="none"/>
+        <path d="M119 335 L138 340 L152 330 L149 346 L138 370 L126 351 L111 347Z" fill="#e7eddb"/>
+        <path d="M138 340 L149 346 L138 370 L135 352Z" fill="#b9d0bf" stroke="none"/>
+        <path d="M69 285 L87 264 L115 258 L136 239 L154 235 L158 214 L178 196 L196 206 L211 190 L229 208 L245 239 L235 264 L208 283 L189 282 L166 280 L134 300 L98 309 L77 303Z" fill="#dce8dc"/>
+        <path d="M154 235 L158 214 L178 196 L196 206 L183 230 L177 242Z" fill="#f0f0e2" stroke-width="1.3"/>
+        <path d="M183 230 L196 206 L211 190 L218 225 L206 243 L189 246Z" fill="#baccc9" stroke-width="1.3"/>
+        <path d="M206 243 L229 225 L245 239 L235 264 L208 283 L189 282 L193 264Z" fill="#a3bab7" stroke-width="1.3"/>
+        <path d="M87 264 L115 258 L136 239 L154 235 L146 258 L122 276 L93 283 L77 289Z" fill="#f2f1e1" stroke="none"/>
+        <path d="M77 289 L93 283 L122 276 L146 258 L165 263 L134 286 L99 301 L77 303Z" fill="#c5d9cb" stroke="none"/>
+        <path d="M147 238 L158 214 L178 206 L169 229 L160 241 L143 253Z" fill="#dce7d5" stroke-width="1.5"/>
+        <path d="M164 247 L186 233 L203 233 L194 250 L176 261 L165 257Z" fill="#b7d934" stroke="#45613a" stroke-width="2"/>
+        <path d="M184 240 L178 254" stroke="#324136" stroke-width="3.2"/>
+        <path d="M156 243 L180 228 L206 226 L203 233 L185 235 L165 249Z" fill="#edf0df" stroke-width="1.4"/>
+        <path d="M87 275 L100 272 L95 280 L87 281Z" fill="#58786a" stroke-width="1.2"/>
+        <path d="M95 306 L101 317 L107 302 M117 301 L126 312 L131 296 M141 289 L148 300 L155 282 M168 280 L172 289 L179 277" fill="#e8eeda" stroke-width="1.2"/>
+        <path d="M113 325 L122 316 L128 324 M139 316 L145 306 L151 310" fill="#e0e8cf" stroke-width="1.1"/>
+        <path d="M205 259 L215 250 L229 252 M152 219 L160 221 M203 212 L208 220" fill="none" stroke="#77948b" stroke-width="1.5"/>
+      </g>
+      <g stroke="#333c3b" stroke-width="2.5">
+        <path d="M221 266 L240 258 L260 242 L278 220 L273 247 L255 269 L230 285 L210 285Z" fill="#514f52"/>
+        <path d="M221 266 L240 258 L260 242 L278 220 L264 248 L243 271 L230 279 L210 285Z" fill="#756c6d" stroke="none"/>
+        <path d="M230 279 L255 263 L273 237 L273 247 L255 269 L230 285 L210 285Z" fill="#383c3f" stroke="none"/>
+      </g>
+      <g stroke="#20372f" stroke-width="2.8">
+        <path d="M20 410 L54 365 L89 372 L125 403 L144 391 L162 424 L196 445 L243 424 L264 384 L302 370 L340 414 V550 H20Z" fill="#355348"/>
+        <path d="M20 410 L54 365 L89 372 L74 411 L29 437Z M89 372 L125 403 L114 441 L74 411Z M264 384 L302 370 L340 414 L304 436 L271 426Z" fill="#547365" stroke-width="1.8"/>
+        <path d="M29 437 L74 411 L114 441 L144 391 L162 424 L134 474 L81 481Z M271 426 L304 436 L340 414 V479 L283 483 L243 459Z" fill="#29463c" stroke-width="1.8"/>
+        <path d="M37 400 L77 386 L117 404 L129 440 L71 455 L29 429Z M240 422 L264 392 L304 387 L337 419 L330 457 L276 466Z" fill="#142b26"/>
+        <path d="M20 498 L74 472 L119 490 L162 464 L205 478 L247 468 L304 489 L340 478 V550 H20Z" fill="#375548"/>
+        <path d="M20 498 L74 472 L81 509 L47 550 H20Z M119 490 L162 464 L205 478 L182 511 L129 532 L81 509Z M247 468 L304 489 L292 521 L227 534 L205 478Z" fill="#486657" stroke-width="1.7"/>
+        <path d="M47 550 L81 509 L129 532 L151 550 M182 511 L192 550 M227 534 L257 550 M292 521 L340 530" fill="none" stroke="#203a30" stroke-width="2"/>
+      </g>
+      ${hand(86, 406, 0.86, 9)}${hand(273, 411, 0.98, -9, -1)}
+      ${cavernCrystal(42, 504, 0.53, -20)}${cavernCrystal(320, 503, 0.56, 27)}
+      ${cavernCrystal(180, 516, 0.48)}${cavernCrystal(150, 526, 0.32, -27)}
+      <path d="M108 490 L121 503 L114 513 L99 502Z M217 510 L235 503 L242 515 L226 522Z M275 343 L282 335 L291 348 L283 357Z" fill="#a8cc43" stroke="#3e5935" stroke-width="1.5"/>
+    </g>`;
+  }
+
+  // Wiki File:Olmlet_(follower).png: an upright pale pet, short legs,
+  // small dark horns and a long raised tail. The scroll uses the ragged
+  // parchment and dark red glyphs of File:Arcane_prayer_scroll_detail.png.
+  function olmlet(colors) {
+    const scroll = `<g transform="translate(119 302) rotate(-12)" stroke="#766047" stroke-width="1.8" stroke-linejoin="round">
+      <path d="M-25 -9 L-6 -6 L2 -12 L13 -7 L31 -9 L34 2 L27 8 L34 13 L31 28 L36 36 L29 40 L34 52 L30 70 L14 68 L7 74 L-7 68 L-24 71 L-22 58 L-29 55 L-24 41 L-29 35 L-25 20 L-30 14 L-24 8Z" fill="#c8b597"/>
+      <path d="M-25 -9 L-6 -6 L2 -12 L13 -7 L31 -9 L34 2 L17 1 L6 4 L-24 8Z M-24 41 L-16 40 L-18 59 L-7 68 L-24 71 L-22 58 L-29 55Z" fill="#eadabd" stroke="none"/>
+      <path d="M27 8 L34 13 L31 28 L36 36 L29 40 L34 52 L30 70 L14 68 L20 49 L18 31Z" fill="#ad9474" stroke="none"/>
+      <path d="M-18 3 L12 0 M-18 60 L16 63" fill="none" stroke="#ad9474" stroke-width="1"/>
+      <g fill="#582e32" stroke="#582e32" stroke-width="1.1">
+        <path d="M-12 14 L-4 11 L2 16 L-7 19Z M7 11 H18 L12 16 L17 21 L8 20Z"/>
+        <path d="M-12 27 L-4 23 L2 28 L-4 32Z M8 26 L17 24 L14 28 L19 32 L8 34Z"/>
+        <path d="M-12 39 L-3 37 L-5 42 L2 45 L-10 47Z M9 39 L17 37 L14 45 L7 47Z"/>
+        <path d="M-9 53 L-1 51 L4 55 L-6 57Z M9 53 L17 50 L18 57 L10 59Z"/>
+      </g>
+    </g>`;
+    return `<g stroke-linejoin="round">
+      <path d="M52 550 V245 Q52 157 180 95 Q308 157 308 245 V550Z" fill="${colors[0]}" stroke="${colors[2]}" stroke-width="1.8"/>
+      ${halo(180, 292, 119, colors[3])}
+      <path d="M180 95 V150 M68 255 L89 265 M270 265 L292 255 M81 200 L101 215 M251 199 L269 185" fill="none" stroke="${colors[4]}" stroke-width="1.5" opacity=".65"/>
+      <path d="M180 69 L193 91 L180 116 L167 91Z" fill="#d7e6ae" stroke="#58754d" stroke-width="2"/>
+      <path d="M180 75 V108 M171 91 H189" stroke="#edf0c5" stroke-width="1.2"/>
+      <path d="M20 478 L67 456 L112 475 L166 453 L221 478 L268 459 L340 480 V550 H20Z" fill="#334e44" stroke="#263c35" stroke-width="2.5"/>
+      <path d="M20 518 L83 486 L138 507 L196 479 L263 507 L340 494 M83 486 L64 550 M138 507 L172 550 M263 507 L248 550" fill="none" stroke="#5b7c65" stroke-width="1.8"/>
+      <ellipse cx="182" cy="499" rx="81" ry="17" fill="#1c3430" opacity=".65"/>
+      ${cavernCrystal(56, 470, 0.6, -19)}${cavernCrystal(299, 482, 0.64, 23)}
+      <g stroke="#3c5150" stroke-width="2.5">
+        <path d="M206 429 Q270 413 270 351 Q270 277 257 215 Q244 168 267 135 L287 104 L284 133 Q267 164 274 203 Q298 306 286 379 Q279 438 248 458 L214 455Z" fill="#bdced0"/>
+        <path d="M222 442 Q271 428 278 367 Q282 295 265 215 Q253 170 277 135 L287 104 L284 133 Q267 164 274 203 Q298 306 286 379 Q279 438 248 458Z" fill="#93acad" stroke="none"/>
+        <path d="M251 421 Q276 378 273 313 Q271 257 260 213 Q250 170 271 139" fill="none" stroke="#e2e8de" stroke-width="4"/>
+        <path d="M156 418 L180 433 L175 459 L157 485 L133 495 L120 486 L136 459 L137 435Z" fill="#c0d3c9"/>
+        <path d="M196 425 L221 422 L222 452 L238 477 L229 495 L207 485 L196 460 L185 446Z" fill="#a9c1b7"/>
+        <path d="M133 477 L150 487 L154 497 L141 503 L114 511 L103 504 L111 496 L109 487 L124 488Z M210 477 L229 481 L241 493 L256 498 L252 508 L230 508 L217 501 L205 505 L196 496Z" fill="#d9e5d5"/>
+        <path d="M104 502 L114 511 L100 517 L99 509Z M120 501 L125 509 L113 516Z M136 497 L141 503 L131 512Z M217 501 L222 508 L211 514Z M233 502 L239 508 L238 517Z M248 502 L256 498 L263 509 L252 508Z" fill="#565154" stroke-width="1.5"/>
+        <path d="M159 335 Q143 348 148 376 L155 407 L165 431 Q183 449 205 432 L218 414 L223 373 L207 341Z" fill="#dce8dc"/>
+        <path d="M159 335 L180 349 L174 383 L180 423 L194 439 L165 431 L155 407 L148 376 Q143 348 159 335Z" fill="#b7cdc3" stroke="none"/>
+        <path d="M180 349 L207 341 L215 365 L200 385 L201 421 L184 429 L174 383Z" fill="#edf0e0" stroke="none"/>
+        <path d="M200 385 L223 373 L218 414 L205 432 L194 439 L201 421Z" fill="#9fbbb1" stroke="none"/>
+        <path d="M174 288 L196 280 L198 307 L211 337 L195 352 L167 349 L152 336 L160 312Z" fill="#d7e4da"/>
+        <path d="M174 288 L184 302 L182 324 L195 352 L167 349 L159 334 L169 311Z" fill="#edf0e1" stroke="none"/>
+        <path d="M196 280 L198 307 L211 337 L195 352 L182 324 L184 302Z" fill="#a4bdb5" stroke-width="1.4"/>
+        <path d="M149 343 L161 349 L155 372 L135 387 L125 381 L134 365Z" fill="#cdded3"/>
+        <path d="M207 344 Q233 359 228 377 L212 393 L200 389 L198 378 L216 368 L204 358Z" fill="#dce7dd"/>
+        <path d="M216 368 L228 377 L212 393 L200 389 L205 379Z" fill="#aac3b6" stroke="none"/>
+        <path d="M174 373 L184 384 L178 402 L166 409 L155 400 L161 386Z" fill="#c5d9cb"/>
+      </g>
+      <g stroke="#3b3e41" stroke-width="2.4">
+        <path d="M164 242 L148 216 L149 197 L161 172 L169 163 L164 196 L170 217 L180 235Z" fill="#5a5358"/>
+        <path d="M149 197 L161 172 L156 198 L158 215 L174 237 L164 242 L148 216Z" fill="#817476" stroke="none"/>
+        <path d="M186 239 L186 210 L201 180 L213 168 L207 197 L206 226 L198 245Z" fill="#555157"/>
+        <path d="M186 210 L201 180 L196 212 L198 241 L186 239Z" fill="#766b73" stroke="none"/>
+      </g>
+      <g stroke="#39514b" stroke-width="2.3">
+        <path d="M111 282 L127 268 L143 262 L147 246 L160 229 L177 235 L189 229 L209 245 L216 265 L202 286 L178 296 L157 291 L139 302 L120 299 L108 290Z" fill="#dce8dc"/>
+        <path d="M147 246 L160 229 L177 235 L166 255 L143 270Z" fill="#f0f0e2" stroke-width="1.3"/>
+        <path d="M177 235 L189 229 L209 245 L202 263 L177 270 L166 255Z" fill="#c0d3ca" stroke-width="1.3"/>
+        <path d="M202 263 L216 265 L202 286 L178 296 L169 282 L177 270Z" fill="#a4bdb2" stroke-width="1.3"/>
+        <path d="M111 282 L127 268 L143 262 L154 265 L137 283 L115 290Z" fill="#edf0de" stroke="none"/>
+        <path d="M161 270 L177 258 L194 258 L190 272 L173 280 L163 278Z" fill="#b7d934" stroke="#4d693e" stroke-width="1.7"/>
+        <path d="M176 263 L172 275" fill="none" stroke="#324336" stroke-width="2.5"/>
+        <path d="M156 265 L176 252 L198 252 L194 258 L177 258 L161 270Z" fill="#eef0e0" stroke-width="1.2"/>
+        <path d="M117 280 L123 279 L119 284Z" fill="#739284" stroke-width="1"/>
+        <path d="M111 292 L133 293 L154 282 L174 285 L157 303 L137 310 L117 306Z" fill="#344f39"/>
+        <path d="M200 279 L216 274 L231 262 L225 280 L210 291 L192 295Z" fill="#655b62" stroke="#3e4241" stroke-width="2"/>
+      </g>
+      ${scroll}
+      <g stroke="#39514b" stroke-width="1.8">
+        <path d="M125 302 L139 304 L159 292 L169 286 L166 300 L145 316 L129 315 L119 310Z" fill="#dce8d6"/>
+        <path d="M139 304 L159 292 L166 293 L145 310 L129 310 L119 310 L129 315 L145 316 L166 300 L169 286Z" fill="#a6c0ae" stroke="none"/>
+        <path d="M122 292 L126 301 L131 292 M142 289 L146 298 L151 285" fill="#edf0df" stroke-width="1.1"/>
+        <path d="M132 312 L141 312 L149 319 L140 328 L131 319Z" fill="#e2e9d8"/>
+      </g>
+      <g stroke="#39514b" stroke-width="1.8">
+        <path d="M129 363 L140 364 L149 377 L145 385 L134 380 L128 372 L118 373 L114 366 L119 360Z" fill="#e0e9d9"/>
+        <path d="M138 365 L140 373 M126 363 L127 370" fill="none" stroke="#7f9d8b" stroke-width="1.3"/>
+        <path d="M174 394 L178 402 L166 409 L155 400 L158 394 L165 400 L169 389Z" fill="#e1ead8"/>
+      </g>
+      ${cavernCrystal(60, 531, 0.45, -12)}${cavernCrystal(276, 527, 0.37, 24)}
+      <g fill="#d7e4b3" stroke="#608151" stroke-width="1.1"><path d="M81 340 l3 -9 3 9 9 3 -9 3 -3 9 -3 -9 -9 -3Z M235 150 l3 -7 3 7 7 3 -7 3 -3 7 -3 -7 -7 -3Z M246 472 l3 -6 3 6 6 3 -6 3 -3 6 -3 -6 -6 -3Z"/></g>
     </g>`;
   }
 
@@ -102,17 +259,9 @@ GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal 
     renderScene(colors, panes, index) {
       const scene = sceneNumber(index);
       const tracery = `<path d="M39 546 V221 Q39 106 180 41 Q321 106 321 221 V546 M50 214 Q180 132 310 214 M40 494 Q180 441 320 494" fill="none" stroke="${colors[4]}" stroke-width="1.4" opacity=".65"/>`;
-      const ground = `<path d="M20 474 L77 452 L122 477 L181 447 L244 469 L294 450 L340 476 V550 H20Z" fill="#334b44" stroke="#243933" stroke-width="3"/><path d="M21 513 L93 487 L158 519 L235 481 L339 522 M93 487 L79 550 M158 519 L181 550 M235 481 L268 550" fill="none" stroke="#60816a" stroke-width="2"/>`;
       let illustration;
       if (scene === 0) {
-        const hand = (x, facing) =>
-          `<g transform="translate(${x} 407) scale(${facing} 1)" stroke="#344a45" stroke-width="2.5"><path d="M-38 50 L-32 20 L-18 -10 L-13 -41 L-1 -52 L9 -43 L7 -10 L21 -34 L32 -38 L39 -26 L24 5 L34 -5 L47 -3 L51 10 L32 42 L20 60Z" fill="#d3dfcc"/><path d="M-18 50 L-9 17 L5 1 M4 47 L12 25 L26 9 M-9 -28 L1 -32 M21 -18 L28 -22" fill="none" stroke="#87a795"/><path d="M-13 -41 L-11 -57 L-1 -52 M32 -38 L42 -40 L39 -26 M47 -3 L57 0 L51 10" fill="#f3eed6"/></g>`;
-        illustration = `${halo(180, 260, 126, '#8cac70')}
-          <path d="M20 550 V394 L68 346 L91 370 L126 340 L169 377 L221 343 L269 374 L305 350 L340 399 V550Z" fill="#2c403d" stroke="#557060" stroke-width="3"/>
-          ${olmHead(185, 315, 1.25)}${ground}${hand(73, 1)}${hand(286, -1)}
-          <path d="M107 472 L137 426 L161 452 L185 433 L212 465 L247 451 L268 492 L229 515 H131Z" fill="#3a514a" stroke="#243833" stroke-width="3"/>
-          ${crystal(49, 525, 0.75)}${crystal(308, 511, 0.8)}${crystal(158, 502, 0.5)}${crystal(246, 470, 0.45)}
-          <path d="M180 70 L194 96 L180 123 L166 96Z" fill="#bbd58b" stroke="#42604d" stroke-width="3"/>`;
+        illustration = greatOlm();
       } else if (scene === 1) {
         illustration = `<path d="M180 50 L319 296 L180 528 L41 296Z" fill="#40384f" stroke="#a795b5" stroke-width="2"/>${halo(180, 297, 124, '#9a89ad')}
           <path d="M180 95 V480 M60 296 H301 M96 193 L272 403 M96 403 L272 193" stroke="#a595b1" stroke-width="1" opacity=".5"/>
@@ -245,17 +394,7 @@ GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal 
           </g>
           ${boulder(115, 164, 0.6, -18)}${boulder(250, 137, 0.75, 10)}${boulder(235, 97, 0.43, -14)}${boulder(185, 73, 0.3)}${boulder(79, 223, 0.56, 14)}${boulder(278, 225, 0.74, -8)}${boulder(211, 281, 0.55, 13)}${boulder(153, 304, 0.38, -11)}`;
       } else {
-        illustration = `${halo(180, 282, 120, '#9eb487')}<path d="M180 73 L191 91 L180 111 L169 91Z" fill="#cddfa5" stroke="#547056" stroke-width="2"/>${ground}
-          <g stroke="#3d554d" stroke-width="3" stroke-linejoin="round">
-            <path d="M192 390 Q276 451 307 410 Q332 361 290 328 Q316 336 325 376 Q347 473 260 476 Q209 470 169 427Z" fill="#c0d3bd"/>
-            <path d="M210 426 Q280 471 313 420" fill="none" stroke="#eef0d8" stroke-width="9"/>
-            <path d="M110 352 Q159 317 207 355 Q242 387 219 426 Q189 454 134 427 Q99 403 110 352Z" fill="#dce5cb"/>
-            <path d="M184 367 Q232 394 208 422 L182 429 L173 410 L190 402Z M127 387 L121 414 L95 431 L98 443 L131 444 L151 422 L153 397Z" fill="#a6c4ae"/>
-            <path d="M191 416 L174 435 L178 446 L205 446 L221 430 M102 434 L102 443 M113 432 V443 M184 435 V445 M195 434 V446" fill="#dce5cb"/>
-          </g>
-          ${olmHead(133, 340, 0.74)}
-          ${crystal(61, 492, 0.75)}${crystal(281, 526, 0.54)}${crystal(250, 478, 0.35)}
-          <g fill="#d3dfb1" stroke="#526d54" stroke-width="1.3"><path d="M101 504 l5 -8 5 8 -5 6Z M137 523 l5 -8 5 8 -5 6Z M174 508 l5 -8 5 8 -5 6Z"/></g>`;
+        illustration = olmlet(colors);
       }
       return `${panes}${tracery}${illustration}`;
     },

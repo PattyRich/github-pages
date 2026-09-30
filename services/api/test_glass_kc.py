@@ -120,6 +120,13 @@ def test_screenshots_and_unknown_fields():
         validate_journal(data)
 
 
+def test_webp_screenshots_and_legacy_jpeg_backups_are_accepted():
+    for media_type in ['webp', 'jpeg']:
+        data = journal()
+        data['dropTiles']['1']['image'] = f'data:image/{media_type};base64,YWJj'
+        assert validate_journal(data)['dropTiles']['1']['image'] == data['dropTiles']['1']['image']
+
+
 def test_invalid_write_and_database_outage(api):
     client, db = api
     assert client.put('/glass-kc/api/journals/pnm', json={'revision': False, 'journal': journal()}, headers=HEADERS).status_code == 400
@@ -156,7 +163,7 @@ def test_reset_marker_survives_and_prevents_old_first_writes(api):
     assert client.put('/glass-kc/api/journals/pnm', json={'revision': 0, 'journal': journal()}, headers=HEADERS).status_code == 409
 
 
-@pytest.mark.parametrize('boss', ['cox', 'toa'])
+@pytest.mark.parametrize('boss', ['cox', 'toa', 'tob'])
 def test_raid_routes_are_isolated_and_reject_mismatched_backups(api, boss):
     client, db = api
     payload = {'revision': 0, 'journal': journal()}

@@ -26,12 +26,39 @@ GLASS_RENDERERS.pnm = function createNightmareRenderer(config, { esc, getJournal
   }
   // The same long, jointed claw appears in the arena and at each earned frame milestone.
   function graspingHand(x, y, scale = 1, facing = 1, tilt = 0) {
-    return `<g transform="translate(${x} ${y}) rotate(${tilt}) scale(${scale * facing} ${scale})" stroke="#18212f" stroke-width="2.4" stroke-linejoin="round">
-    <path d="M-20 2 L-26 -39 L-44 -72 L-61 -99 L-77 -114 L-86 -112 L-78 -99 L-62 -87 L-53 -65 L-69 -78 L-93 -92 L-106 -113 L-104 -133 L-88 -136 L-64 -120 L-45 -99 L-48 -132 L-62 -156 L-59 -181 L-44 -195 L-31 -192 L-43 -173 L-36 -156 L-22 -133 L-13 -106 L-9 -149 L-18 -178 L-11 -205 L4 -216 L16 -210 L3 -191 L8 -169 L13 -147 L14 -111 L31 -145 L34 -174 L48 -195 L65 -199 L73 -188 L57 -178 L52 -153 L48 -128 L37 -98 L46 -114 L65 -133 L84 -139 L99 -132 L104 -115 L91 -122 L77 -119 L65 -97 L59 -73 L40 -46 L24 2Z" fill="#566674"/>
-    <path d="M-19 0 L-17 -43 L-31 -77 L-38 -105 L-15 -90 L9 -99 L34 -92 L26 -60 L10 -36 L9 0Z" fill="#74838a" stroke="none"/>
-    <path d="M-102 -129 L-89 -130 L-68 -115 L-49 -91 M-50 -183 L-50 -172 L-31 -132 L-24 -107 M0 -202 L-5 -188 L2 -147 L1 -115 M60 -190 L46 -173 L41 -142 L28 -109 M93 -130 L76 -129 L58 -107" fill="none" stroke="#9b929f" stroke-width="2"/>
-    <path d="M-28 -79 L-10 -64 L-6 -27 M1 -90 L11 -69 L9 -41 M27 -83 L22 -61 M-25 -43 L-17 -42 M-17 -25 L9 -24" fill="none" stroke="#3b4b5b" stroke-width="2"/>
-    <path d="M-45 -99 L-36 -92 M-14 -105 L-4 -101 M14 -111 L25 -103 M37 -98 L44 -92" stroke="#adb0a6" stroke-width="2"/>
+    return `<g data-grasping-hand="true" transform="translate(${x} ${y}) rotate(${tilt}) scale(${scale * facing} ${scale})" stroke="#18212f" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round">
+    <path d="M-44 -113 L-71 -131 L-91 -157 L-103 -183 L-103 -205 L-94 -221 L-82 -224 L-74 -213 L-88 -199 L-86 -182 L-71 -162 L-51 -147 L-33 -130Z" fill="#6b7e89"/>
+    <path d="M-26 -140 L-46 -170 L-55 -205 L-54 -241 L-42 -261 L-27 -269 L-12 -260 L-10 -247 L-25 -244 L-34 -228 L-31 -205 L-18 -176 L-5 -151Z" fill="#788b96"/>
+    <path d="M2 -151 L-5 -188 L-2 -226 L7 -264 L22 -281 L39 -277 L51 -261 L47 -241 L36 -236 L32 -258 L25 -260 L19 -229 L22 -201 L31 -158Z" fill="#899ca4"/>
+    <path d="M30 -143 L51 -171 L68 -204 L84 -223 L103 -226 L119 -214 L126 -194 L115 -181 L105 -188 L105 -204 L98 -208 L87 -194 L76 -165 L59 -130Z" fill="#657d89"/>
+    <path d="M-36 -88 L-62 -104 L-86 -119 L-111 -118 L-126 -107 L-126 -92 L-116 -83 L-105 -96 L-94 -99 L-77 -82 L-53 -64 L-31 -65Z" fill="#81939b"/>
+    <g fill="#182330" stroke="#121c29" stroke-width="2">
+      <path d="M-94 -221 L-82 -229 L-68 -220 L-64 -203 L-72 -187 L-78 -202 L-84 -209 L-91 -205Z"/>
+      <path d="M-27 -269 L-13 -268 L-3 -254 L-5 -236 L-16 -223 L-14 -245 L-23 -253 L-32 -253Z"/>
+      <path d="M39 -277 L51 -263 L54 -245 L44 -225 L34 -221 L39 -242 L33 -258 L25 -262Z"/>
+      <path d="M119 -214 L128 -197 L125 -179 L113 -167 L103 -164 L113 -188 L108 -204Z"/>
+      <path d="M-126 -107 L-137 -92 L-136 -76 L-123 -61 L-123 -82 L-116 -95 L-111 -102Z"/>
+    </g>
+    <g fill="#b0bdba" stroke="none">
+      <path d="M-93 -205 L-95 -184 L-84 -162 L-73 -147 L-79 -166 L-91 -187Z"/>
+      <path d="M-43 -244 L-43 -213 L-36 -188 L-22 -164 L-27 -185 L-37 -214 L-35 -239Z"/>
+      <path d="M12 -261 L7 -228 L7 -194 L17 -167 L14 -197 L13 -227 L21 -265Z"/>
+      <path d="M82 -205 L67 -171 L49 -145 L59 -149 L77 -175 L91 -205Z"/>
+      <path d="M-112 -111 L-91 -111 L-69 -97 L-85 -103 L-104 -104Z"/>
+    </g>
+    <path d="M-27 6 L-32 -40 L-48 -72 L-57 -109 L-40 -141 L-19 -156 L6 -160 L30 -154 L53 -135 L58 -105 L45 -72 L29 -43 L24 6Z" fill="#637c89"/>
+    <path d="M-40 -141 L-19 -156 L6 -160 L30 -154 L16 -128 L-7 -119 L-28 -127Z" fill="#9babaf"/>
+    <path d="M-28 -127 L-7 -119 L-10 -80 L-17 -47 L-13 4 L-27 6 L-32 -40 L-48 -72 L-57 -109Z" fill="#7d929c" stroke="none"/>
+    <path d="M16 -128 L30 -154 L53 -135 L58 -105 L45 -72 L29 -43 L24 6 L9 5 L14 -54 L32 -84 L36 -109Z" fill="#3e596c" stroke="none"/>
+    <path d="M-7 -119 L16 -128 L36 -109 L32 -84 L14 -54 L9 5 L-3 5 L-9 -56 L-10 -80Z" fill="#879da4" stroke="none"/>
+    <path d="M-27 5 L-32 -37 L-44 -65 L-37 -65 L-24 -42 L-18 5Z M16 5 L22 -44 L34 -66 L32 -41 L24 6Z" fill="#a57ca3" stroke="none"/>
+    <g fill="none">
+      <path d="M-91 -178 L-82 -178 M-44 -215 L-34 -216 M5 -230 L18 -228 M72 -184 L83 -179 M-83 -109 L-89 -98" stroke="#455c6d" stroke-width="3"/>
+      <path d="M-41 -132 L-25 -135 M-15 -146 L-3 -143 M14 -148 L25 -143 M38 -134 L48 -126" stroke="#d0ccc1" stroke-width="2.2"/>
+      <path d="M-37 -115 L-22 -98 L-15 -72 M-20 -108 L-3 -99 L10 -108 L28 -102 M28 -120 L20 -91 L7 -65 L5 -27 M-31 -47 L-11 -39 M9 -38 L24 -44" stroke="#344b5c" stroke-width="2.3"/>
+      <path d="M-6 -78 L-4 -52 L1 -14 M-44 -89 L-34 -69 L-29 -63" stroke="#bdc5c0" stroke-width="1.8"/>
+      <path d="M-76 -217 L-71 -207 M-13 -259 L-8 -250 M44 -267 L48 -254 M120 -205 L122 -193 M-131 -91 L-131 -80" stroke="#66818e" stroke-width="1.5"/>
+    </g>
   </g>`;
   }
   function frameOrnaments(count, index, uid, celebrate) {
@@ -174,33 +201,51 @@ GLASS_RENDERERS.pnm = function createNightmareRenderer(config, { esc, getJournal
     <path d="M180 266 L203 325 L180 374 L157 325Z" fill="${colors[3]}" stroke="${colors[4]}" stroke-width="2"/>
     <path d="M180 74 L180 130 M166 102 H194 M136 524 H224" stroke="${colors[4]}" stroke-width="3"/>
     <circle cx="180" cy="102" r="25" fill="none" stroke="${colors[3]}" stroke-width="3"/>`;
-      // Grasping Claws: black portals in the arena, with long slate-coloured fingers.
+      // Layer the broken paving, portal depth and rim in front of each reaching wrist.
       const portal = (x, y, scale, handScale, facing, tilt) => `<g data-claw-portal="true">
-    <ellipse cx="${x}" cy="${y}" rx="${68 * scale}" ry="${23 * scale}" fill="#343044" stroke="#6f5c7c" stroke-width="1.5"/>
-    <ellipse cx="${x}" cy="${y}" rx="${61 * scale}" ry="${18 * scale}" fill="#0d111b" stroke="#1c1a2b" stroke-width="3"/>
+    <g transform="translate(${x} ${y}) scale(${scale})">
+      <ellipse rx="94" ry="37" fill="#b46aab" opacity=".12"/>
+      <path d="M-88 1 L-73 -15 L-57 -15 L-43 -27 L-22 -22 L-4 -29 L17 -24 L34 -29 L51 -18 L71 -17 L87 -4 L78 12 L60 15 L46 29 L23 25 L5 32 L-19 26 L-39 31 L-53 20 L-75 20Z" fill="#222534" stroke="#786781" stroke-width="1.5"/>
+      <ellipse rx="72" ry="24" fill="#775271"/>
+      <ellipse cy="-1" rx="66" ry="20" fill="#070c18" stroke="#252139" stroke-width="3"/>
+      <path d="M-60 -9 Q-29 -25 12 -17 M35 -15 Q54 -12 63 -5" fill="none" stroke="#bb8aba" stroke-width="1.8"/>
+      <path d="M-82 -7 L-103 -17 L-109 -31 L-126 -36 M-101 -17 L-117 -14 M76 -10 L96 -24 L103 -41 M93 -23 L116 -26 M-55 24 L-67 40 L-61 50 L-79 62 M-67 40 L-88 42 M42 26 L56 44 L49 59 L65 73 M56 44 L76 47" fill="none" stroke="#151f2d" stroke-width="2.4"/>
+      <path d="M-80 1 L-93 -8 M74 4 L88 -4 M-45 25 L-55 34 M34 27 L43 37" fill="none" stroke="#a77a9f" stroke-width="1.4"/>
+    </g>
     ${graspingHand(x, y, handScale, facing, tilt)}
-    <path transform="translate(${x} ${y}) scale(${scale})" d="M-58 7 Q0 30 58 7 Q45 23 0 24 Q-45 23 -58 7Z" fill="#232333"/>
-    <path transform="translate(${x} ${y}) scale(${scale})" d="M-44 17 Q-12 27 21 22" fill="none" stroke="#8d748e" stroke-width="1.6"/>
+    <g transform="translate(${x} ${y}) scale(${scale})" stroke-linejoin="round">
+      <path d="M-67 3 Q-31 29 6 21 Q42 23 67 3 L62 16 L47 22 L37 28 L15 25 L-3 30 L-24 24 L-42 26 L-52 18 L-64 14Z" fill="#382c46" stroke="#1d2233" stroke-width="1.8"/>
+      <path d="M-55 13 Q-22 28 13 23 M27 21 L48 16" fill="none" stroke="#c08ab4" stroke-width="2"/>
+      <path d="M-85 14 L-73 5 L-64 13 L-71 24Z M62 -18 L72 -27 L81 -22 L77 -11Z M40 33 L53 30 L59 39 L45 42Z" fill="#88828d" stroke="#293244" stroke-width="1.5"/>
+      <path d="M-85 14 L-73 5 L-70 14 M62 -18 L72 -27 L75 -20 M40 33 L53 30" fill="none" stroke="#b4a7b2" stroke-width="1.3"/>
+    </g>
   </g>`;
       const claws = `${panes}
-    <path d="M20 550 V220 Q20 92 180 18 Q340 92 340 220 V550Z" fill="#262c43" opacity=".88"/>
-    <path d="M52 305 V224 Q52 134 180 63 Q308 134 308 224 V305" fill="none" stroke="${colors[1]}" stroke-width="1.5" opacity=".4"/>
-    <path d="M20 315 L180 278 L340 315 V550 H20Z" fill="#343b4b" stroke="#1b2635" stroke-width="2"/>
-    <g stroke="#1e2838" stroke-width="2" stroke-linejoin="round">
-      <path d="M20 315 L116 293 L95 349 L20 366Z M116 293 L180 278 L244 293 L268 349 H95Z M244 293 L340 315 V366 L268 349Z" fill="#414455"/>
-      <path d="M20 366 L95 349 L69 422 H20Z M95 349 H181 V422 H69Z M181 349 H268 L297 422 H181Z M268 349 L340 366 V422 H297Z" fill="#3c4153"/>
-      <path d="M20 422 H117 L103 489 H20Z M117 422 H242 L259 489 H103Z M242 422 H340 V489 H259Z" fill="#454957"/>
-      <path d="M20 489 H69 L49 550 H20Z M69 489 H181 V550 H49Z M181 489 H297 L317 550 H181Z M297 489 H340 V550 H317Z" fill="#3c4353"/>
+    <path d="M20 550 V220 Q20 92 180 18 Q340 92 340 220 V550Z" fill="#182738" opacity=".9"/>
+    <path d="M41 335 V232 Q41 132 180 52 Q319 132 319 232 V335 L288 315 V235 Q288 160 180 93 Q72 160 72 235 V315Z" fill="#294453" stroke="#172536" stroke-width="2"/>
+    <path d="M54 325 V228 Q54 141 180 68 Q306 141 306 228 V325" fill="none" stroke="#6a7589" stroke-width="1.6"/>
+    <path d="M64 260 L121 169 L180 125 L239 169 L296 260 L247 330 H112Z" fill="#493452" opacity=".65"/>
+    <path d="M20 328 L94 288 L180 275 L266 288 L340 328 V550 H20Z" fill="#353d4d" stroke="#172737" stroke-width="2"/>
+    <g stroke="#202b3b" stroke-width="2" stroke-linejoin="round">
+      <path d="M20 328 L94 288 L83 343 L20 377Z M94 288 L180 275 L177 335 L83 343Z M180 275 L266 288 L277 343 L177 335Z M266 288 L340 328 V377 L277 343Z" fill="#515367"/>
+      <path d="M20 377 L83 343 L62 411 L20 449Z M83 343 L177 335 V408 L62 411Z M177 335 L277 343 L301 411 L177 408Z M277 343 L340 377 V449 L301 411Z" fill="#41495b"/>
+      <path d="M20 449 L62 411 L118 419 L108 485 L20 506Z M118 419 L242 419 L254 485 H108Z M242 419 L301 411 L340 449 V506 L254 485Z" fill="#565064"/>
+      <path d="M20 506 L108 485 L91 550 H20Z M108 485 H254 L272 550 H91Z M254 485 L340 506 V550 H272Z" fill="#43475a"/>
     </g>
-    <g fill="none" stroke="#171e2d" stroke-width="2" stroke-linecap="round">
-      <path d="M136 370 L116 389 L124 403 L109 416 L115 432 M123 402 L101 398 L90 406 M215 366 L235 381 L226 398 L247 408 M235 381 L255 378 L269 391"/>
-      <path d="M68 485 L49 503 L57 519 L41 534 M49 503 L27 497 M106 487 L123 511 L117 529 L136 545 M123 511 L143 506 M263 460 L246 480 L255 500 L241 519 M255 500 L281 511 L288 533 M303 470 L321 484 L315 501 L331 511"/>
+    <path d="M20 336 L89 302 L113 298 L87 363 L20 401 M340 336 L271 302 L247 298 L276 363 L340 401" fill="none" stroke="#587a7c" stroke-width="5"/>
+    <g fill="none" stroke="#1c2839" stroke-width="2.2" stroke-linecap="round">
+      <path d="M69 323 L57 343 L64 359 L46 376 M57 343 L39 347 M286 320 L298 337 L289 352 L304 367 M298 337 L322 343 M183 445 L166 464 L172 479 L155 499 M166 464 L146 461 M197 483 L211 503 L205 523 L224 543 M211 503 L237 510"/>
     </g>
-    <path d="M38 366 L85 356 M126 427 H162 M210 495 H240 M147 545 H174" fill="none" stroke="#827184" stroke-width="1.3" opacity=".6"/>
-    ${portal(180, 369, 1.12, 1.05, 1, -5)}
-    ${portal(279, 474, 0.65, 0.53, -1, 17)}
-    ${portal(83, 489, 0.68, 0.56, 1, -18)}
-    <path d="M133 386 L142 379 L153 391 L143 397Z M219 380 L227 387 L220 394 L211 389Z M61 507 L68 499 L76 511Z M299 489 L310 484 L316 492 L304 498Z" fill="#666174" stroke="#252939" stroke-width="1.5"/>`;
+    <g fill="#928393" stroke="#2d3044" stroke-width="1.6">
+      <path d="M85 385 L99 371 L107 382 L101 397Z M264 400 L277 385 L284 401 L273 412Z M109 444 L119 435 L123 447 L115 452Z"/>
+      <path d="M82 350 L87 339 L95 345 L91 357Z M259 352 L269 341 L274 352 L268 361Z"/>
+    </g>
+    <path d="M89 385 L99 376 M269 398 L277 389 M113 444 L119 439" fill="none" stroke="#c6a9ba" stroke-width="1.5"/>
+    ${portal(179, 405, 1.13, 1.01, 1, -8)}
+    ${portal(283, 493, 0.63, 0.48, -1, 19)}
+    ${portal(77, 505, 0.65, 0.5, 1, -21)}
+    <path d="M140 514 L151 502 L160 511 L156 525Z M232 537 L242 525 L256 532 L251 544Z" fill="#777083" stroke="#273043" stroke-width="1.8"/>
+    <path d="M145 514 L151 506 M239 537 L245 529" fill="none" stroke="#b39aaa" stroke-width="1.4"/>`;
       const walker = (
         x,
         y,

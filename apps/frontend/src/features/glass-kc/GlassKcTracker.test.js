@@ -250,6 +250,7 @@ describe('account-backed glass journal', () => {
     expect(window.document.getElementById('cloud-status').textContent).toBe(
       'Saved on this device and to your account'
     );
+    expect(window.document.getElementById('cloud-recovery').hidden).toBe(true);
   });
 
   it('keeps unsynced changes when offline and retries without claiming cloud success', async () => {
@@ -266,7 +267,11 @@ describe('account-backed glass journal', () => {
     await settle();
     click(window, 'record-kill');
     await window.eval('flushCloud()');
-    expect(window.document.getElementById('cloud-status').textContent).toContain('Not synced');
+    expect(window.document.getElementById('cloud-status').textContent).toContain(
+      'Saved on this device · account save failed'
+    );
+    expect(window.document.getElementById('retry-cloud').hidden).toBe(false);
+    expect(window.document.getElementById('load-cloud').hidden).toBe(true);
     const draft = JSON.parse(
       window.localStorage.getItem('praynr-glass-kc-account:https://praynr.com:draft:alice:pnm')
     );
@@ -276,6 +281,7 @@ describe('account-backed glass journal', () => {
     expect(window.document.getElementById('cloud-status').textContent).toBe(
       'Saved on this device and to your account'
     );
+    expect(window.document.getElementById('cloud-recovery').hidden).toBe(true);
   });
 
   it('blocks conflicting saves but leaves the local draft exportable', async () => {
@@ -291,6 +297,9 @@ describe('account-backed glass journal', () => {
     expect(window.document.getElementById('record-kill').disabled).toBe(true);
     expect(window.document.getElementById('export-journal').disabled).toBe(false);
     expect(window.document.getElementById('cloud-status').textContent).toContain('Another device');
+    expect(window.document.getElementById('retry-cloud').hidden).toBe(true);
+    expect(window.document.getElementById('load-cloud').hidden).toBe(false);
+    expect(window.document.getElementById('save-device-backup').hidden).toBe(false);
     expect(window.eval('journal.active.kills')).toBe(1);
   });
 
@@ -346,6 +355,63 @@ describe('account-backed glass journal', () => {
     expect(window.document.getElementById('total-kc').textContent).toBe('100');
     expect(window.document.getElementById('record-kill').disabled).toBe(false);
   });
+
+  it('keeps device changes when account replacement is cancelled or the request fails', async () => {
+    let unavailable = false;
+    const fetch = vi.fn(async (url) => {
+      if (unavailable) throw new Error('Offline');
+      return url.endsWith('/me')
+        ? response({ username: 'alice' })
+        : response({ journal: sample(), revision: 8 });
+    });
+    const window = open(null, false, {
+      account: signedIn,
+      fetch,
+      draft: { revision: 4, pending: true, journal: { ...sample(), base: 500 } },
+    });
+    await settle();
+    const localKey = 'praynr-glass-kc-account:https://praynr.com:draft:alice:pnm';
+    const saved = window.localStorage.getItem(localKey);
+    window.confirm = vi.fn(() => false);
+    const calls = fetch.mock.calls.length;
+    click(window, 'load-cloud');
+    await settle();
+    expect(fetch).toHaveBeenCalledTimes(calls);
+    expect(window.confirm.mock.calls[0][0]).toContain('does not combine');
+    expect(window.localStorage.getItem(localKey)).toBe(saved);
+    unavailable = true;
+    window.confirm = () => true;
+    click(window, 'load-cloud');
+    await settle();
+    expect(window.document.getElementById('total-kc').textContent).toBe('500');
+    expect(window.localStorage.getItem(localKey)).toBe(saved);
+    expect(window.eval('cloudPending.base')).toBe(500);
+    expect(fetch.mock.calls.every(([, options]) => options.method === 'GET')).toBe(true);
+  });
+
+  it('automatically reconnects an offline device copy when connectivity returns', async () => {
+    let unavailable = true;
+    const fetch = vi.fn(async (url) => {
+      if (unavailable) throw new Error('Offline');
+      return url.endsWith('/me')
+        ? response({ username: 'alice' })
+        : response({ journal: { ...sample(), base: 200 }, revision: 9 });
+    });
+    const window = open(null, false, {
+      account: signedIn,
+      fetch,
+      draft: { revision: 8, pending: false, journal: sample() },
+    });
+    await settle();
+    expect(window.document.getElementById('retry-cloud').textContent).toBe('Reconnect to account');
+    expect(window.document.getElementById('load-cloud').hidden).toBe(true);
+    unavailable = false;
+    window.dispatchEvent(new window.Event('online'));
+    await settle();
+    expect(window.document.getElementById('total-kc').textContent).toBe('200');
+    expect(window.document.getElementById('cloud-recovery').hidden).toBe(true);
+    expect(fetch.mock.calls.every(([, options]) => options.method === 'GET')).toBe(true);
+  });
 });
 
 describe('permanent local copies and storage limits', () => {
@@ -391,7 +457,11 @@ describe('permanent local copies and storage limits', () => {
       pending: true,
       journal: { active: { kills: 1 } },
     });
-    expect(window.document.getElementById('cloud-status').textContent).toContain('Not synced');
+    expect(window.document.getElementById('cloud-status').textContent).toContain(
+      'Saved on this device · account save failed'
+    );
+    expect(window.document.getElementById('retry-cloud').hidden).toBe(false);
+    expect(window.document.getElementById('load-cloud').hidden).toBe(true);
   });
 
   it('rejects guest changes atomically when storage is full and prompts login', () => {
@@ -650,6 +720,7 @@ describe('required boss selection and catalog-driven hunts', () => {
   it.each([
     ['cox', 'Chambers'],
     ['toa', 'Tombs'],
+    ['tob', 'Theatre'],
   ])('uses %s cloud routes and local backup, and resets only that hunt', async (boss, title) => {
     const fetch = vi.fn(async (url, options) => {
       if (url.endsWith('/me')) return response({ username: 'alice' });
@@ -693,6 +764,7 @@ describe('required boss selection and catalog-driven hunts', () => {
   it.each([
     ['cox', 'The Great Olm'],
     ['toa', 'Tumeken’s shadow'],
+    ['tob', 'The Scythe of Vitur'],
   ])('keeps pane numbering through all six %s windows and the next edition', (boss, firstTitle) => {
     const window = open(null, false, { choose: false });
     const saved = {

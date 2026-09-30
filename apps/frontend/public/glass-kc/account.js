@@ -27,6 +27,8 @@ let cloudTimer,
   accountBusy = false,
   cloudLoading = false;
 let localCopyCurrent = true;
+let accountSaveState = 'idle';
+let accountExpanded = false;
 let resetOpen = false,
   resetBusy = false;
 const draftKey = () => `${authKey}:draft:${account.username}:${bossId}`;
@@ -64,8 +66,57 @@ async function cloudRequest(path, method = 'GET', body) {
   }
 }
 
-function cloudStatus(message) {
-  document.getElementById('cloud-status').textContent = message;
+function cloudStatus(message, state = 'idle') {
+  accountSaveState = state;
+  const status = document.getElementById('cloud-status');
+  status.textContent = message;
+  status.dataset.state = state;
+  saveRecoveryUI();
+}
+
+function saveRecoveryUI() {
+  const conflict = accountSaveState === 'conflict';
+  const retry = accountSaveState === 'offline' || accountSaveState === 'error';
+  const visible = !!account && bossChosen && (conflict || retry);
+  document.getElementById('cloud-recovery').hidden = !visible;
+  document.getElementById('retry-cloud').hidden = !visible || !retry;
+  document.getElementById('retry-cloud').textContent =
+    cloudReady && cloudPending ? 'Try saving again' : 'Reconnect to account';
+  document.getElementById('load-cloud').hidden =
+    !visible || !(conflict || accountSaveState === 'error');
+  document.getElementById('save-device-backup').hidden = !visible || !configured;
+  document.getElementById('cloud-recovery-help').textContent = conflict
+    ? 'This device has changes that are not in your account copy. Download a backup to keep them. Use account copy replaces this device’s journal; it does not combine the two.'
+    : accountSaveState === 'error'
+      ? 'This device’s account copy could not be read. Reconnecting checks it again. Use account copy replaces it with the journal saved in your account.'
+      : 'Your account copy could not be reached or updated. Retry keeps this device’s changes. Download a backup for an extra copy.';
+  for (const id of ['retry-cloud', 'load-cloud', 'save-device-backup'])
+    document.getElementById(id).disabled =
+      !bossChosen || cloudBusy || cloudLoading || accountBusy || resetOpen;
+  document.getElementById('import-local').disabled =
+    !bossChosen || !cloudReady || cloudBusy || cloudLoading || accountBusy || resetOpen;
+  accountPanelUI();
+}
+
+function accountPanelUI() {
+  const needsLogin = !document.getElementById('auth-form').hidden;
+  const expanded = !account || needsLogin || accountExpanded;
+  document.getElementById('account-details').hidden = !expanded;
+  document.getElementById('account-panel').dataset.collapsed = String(!expanded);
+  document.getElementById('account-heading').hidden = !!account && !expanded;
+  const toggle = document.getElementById('account-toggle');
+  toggle.hidden = !account || needsLogin;
+  toggle.setAttribute('aria-expanded', String(expanded));
+  toggle.textContent = expanded ? 'Close account ▴' : 'Account ▾';
+}
+
+function accountLoadError(error) {
+  cloudStatus(
+    error.message || 'Could not reach your account. Your device copy has been kept.',
+    error.status === 401 ? 'expired' : error.localSaveInvalid ? 'error' : 'offline'
+  );
+  if (error.status === 401) document.getElementById('auth-form').hidden = false;
+  accountPanelUI();
 }
 
 function storeAccountCopy(data, revision, pending) {
@@ -84,7 +135,8 @@ function savedStatus() {
   cloudStatus(
     localCopyCurrent
       ? 'Saved on this device and to your account'
-      : 'Saved to your account · browser storage is full or unavailable. Your local copy could not be updated. Export a backup.'
+      : 'Saved to your account · browser storage is full or unavailable. Your local copy could not be updated. Export a backup.',
+    'saved'
   );
 }
 
@@ -103,14 +155,18 @@ function persistJournal(candidate) {
     cloudStatus('Saved on this device · log in for an account backup');
     return;
   }
-  if (!cloudReady) throw new Error('Open your cloud save before making changes.');
+  if (!cloudReady)
+    throw new Error(
+      'Reconnect to your account or resolve the save conflict before making changes.'
+    );
   const clean = JSON.parse(JSON.stringify(validate(candidate)));
   storeAccountCopy(clean, cloudRevision, true);
   cloudPending = clean;
   cloudStatus(
     localCopyCurrent
-      ? 'Changes saved on this device · syncing…'
-      : 'Browser storage is full or unavailable · syncing to your account. Keep this tab open until saved, or export a backup.'
+      ? 'Saved on this device · saving to your account…'
+      : 'Browser storage is full or unavailable · saving to your account. Keep this tab open until saved, or export a backup.',
+    'saving'
   );
   clearTimeout(cloudTimer);
   cloudTimer = setTimeout(flushCloud, 400);
@@ -119,6 +175,7 @@ function persistJournal(candidate) {
 async function flushCloud() {
   if (!account || !cloudReady || !cloudPending || cloudBusy || resetOpen) return;
   cloudBusy = true;
+  saveRecoveryUI();
   const sent = cloudPending;
   let succeeded = false;
   try {
@@ -143,18 +200,21 @@ async function flushCloud() {
       document.getElementById('auth-form').hidden = error.status !== 401;
       cloudStatus(
         error.status === 409
-          ? 'Another device saved this hunt. Export your changes, then load the cloud save.'
-          : 'Session expired. Log in again to sync, or export your changes.'
+          ? 'Another device changed your account copy. Your changes are still on this device. Choose which copy to use.'
+          : 'Session expired. Your changes are still here. Log in again to save them to your account.',
+        error.status === 409 ? 'conflict' : 'expired'
       );
     } else {
       cloudStatus(
         localCopyCurrent
-          ? 'Not synced · changes kept on this device. Retry or export a backup.'
-          : 'Not saved locally or to your account. Keep this tab open and export a backup, then retry.'
+          ? 'Saved on this device · account save failed. We’ll try again when you reconnect.'
+          : 'Not saved locally or to your account. Keep this tab open and export a backup, then retry.',
+        'offline'
       );
     }
   } finally {
     cloudBusy = false;
+    saveRecoveryUI();
     if (succeeded && cloudPending) void flushCloud();
   }
 }
@@ -162,15 +222,26 @@ async function flushCloud() {
 function accountUI() {
   document.getElementById('auth-form').hidden = !!account;
   document.getElementById('account-actions').hidden = !account;
-  for (const id of ['import-local', 'retry-cloud', 'load-cloud'])
-    document.getElementById(id).disabled = !bossChosen;
+  document.getElementById('account-save-help').hidden = !account;
   document.getElementById('account-name').textContent = account
     ? `Signed in as ${account.username}`
     : 'Keep a light here. Find it again anywhere.';
-  document.getElementById('import-local').hidden = !account;
+  document.getElementById('account-heading').textContent = account
+    ? 'Your account'
+    : 'Your hunt, waiting for you.';
+  let guestPresent = false;
+  try {
+    guestPresent = !!localStorage.getItem(KEY);
+  } catch {
+    /* Account access remains available. */
+  }
+  document.getElementById('import-local').hidden = !account || !bossChosen || !guestPresent;
   document.getElementById('storage-description').textContent = account
-    ? 'Your KC, postcards and screenshots save on this device and to your account. Check both saves in the status before leaving. Export a backup for an extra copy.'
-    : 'Guest progress stays in this browser. Create an account to keep your hunt across devices, then import this browser’s journal.';
+    ? 'Your KC, postcards and compressed screenshots save automatically on this device and to your account. Export a backup for an extra copy.'
+    : 'Guest progress stays in this browser. Create an account to keep your hunt across devices, then choose Copy guest journal to account.';
+  if (account && !bossChosen && !cloudPending)
+    cloudStatus('Choose a boss to open your account journal.');
+  else saveRecoveryUI();
 }
 
 async function openCloud(discardDraft = false) {
@@ -186,13 +257,21 @@ async function openCloud(discardDraft = false) {
     }
     if ((stored || cloudPending) && !discardDraft) {
       const fromMemory = !!cloudPending;
-      const candidate = fromMemory
-        ? { journal: cloudPending, revision: cloudRevision, pending: true }
-        : JSON.parse(stored);
-      candidate.journal = validate(candidate.journal);
+      let candidate;
+      try {
+        candidate = fromMemory
+          ? { journal: cloudPending, revision: cloudRevision, pending: true }
+          : JSON.parse(stored);
+        candidate.journal = validate(candidate.journal);
+      } catch (error) {
+        throw Object.assign(error, { localSaveInvalid: true });
+      }
       if (!Number.isSafeInteger(candidate.revision) || candidate.revision < 0)
-        throw new Error(
-          'Invalid local save revision. Export a backup before loading the cloud save.'
+        throw Object.assign(
+          new Error(
+            'This device’s account copy could not be read. Use account copy to recover the saved journal.'
+          ),
+          { localSaveInvalid: true }
         );
       local = candidate;
       journal = local.journal;
@@ -206,19 +285,21 @@ async function openCloud(discardDraft = false) {
     cloudReady = false;
     loadFailed = true;
     render();
-    cloudStatus('Opening your saved hunt…');
+    cloudStatus('Opening your account journal…', 'loading');
     const user = await cloudRequest('/me');
     if (user.username !== account.username)
       throw Object.assign(new Error('Account mismatch. Log out and log in again.'), {
         status: 403,
       });
     const remote = await cloudRequest(journalPath());
+    // Validate the replacement before changing pending data or either stored copy.
+    const remoteJournal = remote.journal ? validate(remote.journal) : null;
     // A reset on another device invalidates even an unsynced pre-reset browser copy.
     if (local && remote.resetRevision > local.revision) {
       local = null;
       cloudPending = null;
       localStorage.removeItem(draftKey());
-      notify('This hunt was reset on another device. Opened the current cloud save.', true);
+      notify('This hunt was reset on another device. Opened the current account copy.', true);
     }
     let pending =
       local && (local.pending !== false || local.revision > remote.revision || !remote.journal)
@@ -232,12 +313,11 @@ async function openCloud(discardDraft = false) {
             ? Object.fromEntries(Object.entries(item).sort(([a], [b]) => a.localeCompare(b)))
             : item
         );
-      if (remote.journal && canonical(validate(remote.journal)) === canonical(pending.journal))
-        pending = null;
+      if (remoteJournal && canonical(remoteJournal) === canonical(pending.journal)) pending = null;
     }
     cloudRevision = pending ? pending.revision : remote.revision;
     cloudPending = pending?.journal || null;
-    journal = cloudPending || (remote.journal ? validate(remote.journal) : emptyJournal());
+    journal = cloudPending || remoteJournal || emptyJournal();
     configured = !!(cloudPending || remote.journal);
     loadFailed = !!pending && pending.revision !== remote.revision;
     cloudReady = !loadFailed;
@@ -248,8 +328,12 @@ async function openCloud(discardDraft = false) {
     render();
     accountUI();
     if (loadFailed) {
-      cloudStatus('Another device saved this hunt. Export your changes, then load the cloud save.');
-    } else if (cloudPending) cloudStatus('Local changes recovered · syncing…');
+      cloudStatus(
+        'Another device changed your account copy. Your changes are still on this device. Choose which copy to use.',
+        'conflict'
+      );
+    } else if (cloudPending)
+      cloudStatus('Device changes recovered · saving to your account…', 'saving');
     else if (configured) savedStatus();
     else cloudStatus('Choose your boss and starting KC to begin.');
     if (cloudPending && cloudReady) await flushCloud();
@@ -268,21 +352,27 @@ async function openCloud(discardDraft = false) {
     document.getElementById('auth-form').hidden = error.status !== 401;
     cloudStatus(
       error.status === 401
-        ? 'Showing your local save · log in again to sync.'
+        ? 'Showing this device’s save · log in again to save changes to your account.'
         : error.status === 403
           ? error.message
           : localCopyCurrent
-            ? 'Showing your local save · cloud unavailable. Changes will stay on this device until sync succeeds.'
-            : 'Cloud unavailable and browser storage is full. Keep this tab open and export your changes.'
+            ? 'Showing this device’s save · account unavailable. Changes stay here and save to your account when you reconnect.'
+            : 'Account unavailable and browser storage is full. Keep this tab open and export your changes.',
+      error.status === 401 ? 'expired' : 'offline'
     );
   } finally {
     cloudLoading = false;
+    saveRecoveryUI();
   }
 }
 
 async function initAccount() {
   initReset();
   accountUI();
+  document.getElementById('account-toggle').addEventListener('click', () => {
+    accountExpanded = !accountExpanded;
+    accountPanelUI();
+  });
   document.getElementById('auth-form').addEventListener('submit', async (event) => {
     event.preventDefault();
     if (accountBusy || cloudBusy || cloudLoading) return;
@@ -319,6 +409,7 @@ async function initAccount() {
       }
       if (account?.username !== result.username) cloudPending = null;
       account = result;
+      accountExpanded = false;
       cloudReady = false;
       document.getElementById('account-password').value = '';
       journal = emptyJournal();
@@ -329,39 +420,43 @@ async function initAccount() {
     } catch (error) {
       errorBox.textContent = error.message || 'Could not connect. Please try again.';
       errorBox.hidden = false;
-      cloudStatus('Could not open your account. Try logging in again or load the cloud save.');
+      accountLoadError(error);
       document.getElementById('auth-form').hidden = false;
     } finally {
       buttons.forEach((button) => {
         button.disabled = false;
       });
       accountBusy = false;
+      saveRecoveryUI();
     }
   });
   document.getElementById('retry-cloud').addEventListener('click', async () => {
-    if (cloudBusy || accountBusy || cloudLoading) return;
+    if (!account || !bossChosen || cloudBusy || accountBusy || cloudLoading || resetOpen) return;
     if (cloudReady && cloudPending) await flushCloud();
     else {
       try {
         await openCloud();
       } catch (error) {
-        cloudStatus(error.message);
+        accountLoadError(error);
       }
     }
   });
   document.getElementById('load-cloud').addEventListener('click', async () => {
-    if (cloudBusy || accountBusy || cloudLoading) return;
+    if (!account || !bossChosen || cloudBusy || accountBusy || cloudLoading || resetOpen) return;
     if (
       !confirm(
-        'Load the cloud save and discard any unsynced changes on this device? Export a backup first to keep them.'
+        `Replace this device’s ${boss().name} journal with the copy saved in your account? Changes that have not reached your account will be discarded. Download this device’s backup first to keep them. This does not combine the two copies.`
       )
     )
       return;
     try {
       await openCloud(true);
     } catch (error) {
-      cloudStatus(error.message);
+      accountLoadError(error);
     }
+  });
+  document.getElementById('save-device-backup').addEventListener('click', () => {
+    document.getElementById('export-journal').click();
   });
   document.getElementById('logout').addEventListener('click', async () => {
     if (cloudBusy || accountBusy || cloudLoading) return;
@@ -369,8 +464,8 @@ async function initAccount() {
       cloudPending &&
       !confirm(
         localCopyCurrent
-          ? 'Your changes have not synced. They will stay on this device for this account. Log out anyway?'
-          : 'Your changes could not be saved locally or synced. Cancel and export a backup before logging out. Log out and discard these changes?'
+          ? 'Your changes have not reached your account yet. They will stay on this device for this account. Log out anyway?'
+          : 'Your changes could not be saved on this device or to your account. Cancel and export a backup before logging out. Log out and discard these changes?'
       )
     )
       return;
@@ -425,7 +520,7 @@ async function initAccount() {
       const candidate = validate(JSON.parse(guest));
       if (
         !confirm(
-          `Import this browser’s guest journal as your ${boss().name} hunt? This replaces the current account hunt. Export it first if you want to keep both.`
+          `Copy this browser’s guest journal to your ${boss().name} account journal? This replaces the account journal, including its KC, drops and screenshots. Export a backup first to keep both. The guest copy stays in this browser.`
         )
       )
         return;
@@ -440,7 +535,14 @@ async function initAccount() {
     }
   });
   addEventListener('online', () => {
-    void flushCloud();
+    if (!account || !bossChosen || cloudBusy || cloudLoading || accountBusy || resetOpen) return;
+    if (accountSaveState === 'conflict' || accountSaveState === 'expired') return;
+    if (cloudReady && cloudPending) void flushCloud();
+    else if (
+      document.getElementById('pane-editor').hidden &&
+      ['offline', 'error'].includes(accountSaveState)
+    )
+      void openCloud().catch(accountLoadError);
   });
   addEventListener('beforeunload', (event) => {
     if (cloudPending) {
@@ -452,8 +554,7 @@ async function initAccount() {
     try {
       await openCloud();
     } catch (error) {
-      cloudStatus(error.message || 'Could not connect. Retry when online.');
-      document.getElementById('auth-form').hidden = false;
+      accountLoadError(error);
     }
   }
 }
@@ -498,6 +599,7 @@ function initReset() {
   dialog.addEventListener('close', () => {
     resetOpen = false;
     accountBusy = false;
+    saveRecoveryUI();
     document.getElementById('hard-reset').focus();
     void flushCloud();
   });
@@ -554,9 +656,14 @@ function initReset() {
       errorBox.textContent = cloudReset
         ? 'Your account hunt was reset, but the browser copy could not be cleared. Allow browser storage and retry. Editing is paused.'
         : account
-          ? `Reset could not be confirmed. Your local copy is kept. ${error.message} Cancel and load the cloud save before trying again.`
+          ? `Reset could not be confirmed. Your local copy is kept. ${error.message} Cancel and reconnect to your account before trying again.`
           : 'Browser storage could not be cleared. Your hunt has not been reset. Allow browser storage and try again.';
       errorBox.hidden = false;
+      if (account)
+        cloudStatus(
+          'Reset could not be completed. Your device copy is kept. Reconnect before continuing.',
+          error.status === 409 ? 'conflict' : error.status === 401 ? 'expired' : 'offline'
+        );
     } finally {
       resetBusy = false;
       submit.disabled = confirmation.value !== 'RESET';

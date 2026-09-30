@@ -42,6 +42,37 @@
         font-size: 1.4rem;
         color: var(--gold);
       }
+      .account-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 16px;
+      }
+      .account-overview {
+        min-width: 0;
+      }
+      #account-toggle {
+        flex-shrink: 0;
+        padding: 4px 12px;
+        font-size: 0.85rem;
+        white-space: nowrap;
+      }
+      #account-details {
+        margin-top: 16px;
+      }
+      .account-panel[data-collapsed='true'] {
+        padding: 12px var(--osrs-padding-panel, 20px);
+      }
+      .account-panel[data-collapsed='true'] #account-name {
+        margin: 0;
+        font:
+          0.9rem/1.5 system-ui,
+          sans-serif;
+        color: var(--bright);
+      }
+      .account-panel[data-collapsed='true'] #cloud-status {
+        margin: 4px 0 0;
+      }
       .account-fields {
         display: flex;
         flex-wrap: wrap;
@@ -65,6 +96,22 @@
       #cloud-status {
         margin-top: 12px;
         color: var(--bright);
+      }
+      #cloud-status[data-state='conflict'],
+      #cloud-status[data-state='error'],
+      #cloud-status[data-state='expired'] {
+        color: var(--osrs-text-danger, #d99890);
+      }
+      #account-save-help,
+      #cloud-recovery-help,
+      #pane-image-info {
+        display: block;
+        max-width: 70ch;
+        font:
+          0.85rem/1.5 system-ui,
+          sans-serif;
+        color: var(--ink);
+        margin-top: 8px;
       }
       #auth-error {
         color: var(--osrs-text-danger, #d99890);
@@ -1002,54 +1049,81 @@
           <div id="boss-choices" class="boss-choices"></div>
           <p class="muted"><small>More bosses will join the collection.</small></p>
         </section>
-        <section class="account-panel" aria-labelledby="account-heading">
-          <h2 id="account-heading">Your hunt, waiting for you.</h2>
-          <p id="account-name">Keep a light here. Find it again anywhere.</p>
-          <form id="auth-form">
-            <div class="account-fields">
-              <label for="account-username"
-                >Username
-                <input
-                  id="account-username"
-                  autocomplete="username"
-                  required
-                  minlength="3"
-                  maxlength="24"
-                  pattern="[A-Za-z0-9_]{3,24}"
-                />
-              </label>
-              <label for="account-password"
-                >Password
-                <input
-                  id="account-password"
-                  type="password"
-                  autocomplete="current-password"
-                  required
-                  minlength="12"
-                  maxlength="128"
-                  aria-describedby="account-help"
-                />
-              </label>
-              <div class="controls">
-                <button type="submit" value="login">Log in</button>
-                <button type="submit" value="register">Create account</button>
-              </div>
+        <section id="account-panel" class="account-panel" aria-labelledby="account-heading">
+          <div class="account-header">
+            <div class="account-overview">
+              <h2 id="account-heading">Your hunt, waiting for you.</h2>
+              <p id="account-name">Keep a light here. Find it again anywhere.</p>
+              <p id="cloud-status" role="status" aria-live="polite">
+                Guest journal · saved only in this browser
+              </p>
             </div>
-            <small id="account-help"
-              >Use a unique password of at least 12 characters. No email required; password recovery
-              is not available yet. You can also keep a guest journal below.</small
+            <button
+              id="account-toggle"
+              type="button"
+              aria-expanded="false"
+              aria-controls="account-details"
+              hidden
             >
-            <p id="auth-error" role="alert" hidden></p>
-          </form>
-          <div id="account-actions" class="controls" hidden>
-            <button id="import-local" type="button">Import browser journal</button>
-            <button id="retry-cloud" type="button">Retry sync</button>
-            <button id="load-cloud" type="button">Load cloud save</button>
-            <button id="logout" type="button">Log out</button>
+              Account ▾
+            </button>
           </div>
-          <p id="cloud-status" role="status" aria-live="polite">
-            Guest journal · saved only in this browser
-          </p>
+          <div id="account-details">
+            <form id="auth-form">
+              <div class="account-fields">
+                <label for="account-username"
+                  >Username
+                  <input
+                    id="account-username"
+                    autocomplete="username"
+                    required
+                    minlength="3"
+                    maxlength="24"
+                    pattern="[A-Za-z0-9_]{3,24}"
+                  />
+                </label>
+                <label for="account-password"
+                  >Password
+                  <input
+                    id="account-password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                    minlength="12"
+                    maxlength="128"
+                    aria-describedby="account-help"
+                  />
+                </label>
+                <div class="controls">
+                  <button type="submit" value="login">Log in</button>
+                  <button type="submit" value="register">Create account</button>
+                </div>
+              </div>
+              <small id="account-help"
+                >Use a unique password of at least 12 characters. No email required; password
+                recovery is not available yet. You can also keep a guest journal below.</small
+              >
+              <p id="auth-error" role="alert" hidden></p>
+            </form>
+            <div id="account-actions" class="controls" hidden>
+              <button id="import-local" type="button">Copy guest journal to account</button>
+              <button id="logout" type="button">Log out</button>
+            </div>
+            <small id="account-save-help" hidden>
+              Changes save automatically on this device and to your account. Open this journal on
+              another device to pick up from your account save.
+            </small>
+          </div>
+          <div id="cloud-recovery" hidden>
+            <p id="cloud-recovery-help"></p>
+            <div class="controls">
+              <button id="retry-cloud" type="button" hidden>Try saving again</button>
+              <button id="save-device-backup" type="button" hidden>
+                Download this device’s backup
+              </button>
+              <button id="load-cloud" type="button" hidden>Use account copy</button>
+            </div>
+          </div>
         </section>
         <div id="tracker-content" hidden>
           <div class="hunt-toolbar">
@@ -1077,14 +1151,19 @@
                 <button id="pane-load" type="button">Choose this pane</button>
                 <p id="pane-selected" class="muted"></p>
                 <label for="pane-label">Drop name or memory (optional)</label
-                ><input id="pane-label" maxlength="120" placeholder="The drop you were waiting for…" />
+                ><input
+                  id="pane-label"
+                  maxlength="120"
+                  placeholder="The drop you were waiting for…"
+                />
                 <label for="pane-file">Screenshot (optional)</label
                 ><input id="pane-file" type="file" accept="image/png,image/jpeg,image/webp" />
                 <small
-                  >PNG, JPG or WebP, up to 20 MB. Resized and saved locally in this browser;
-                  included in your JSON backup.</small
+                  >PNG, JPG or WebP, up to 20 MB. Compressed to 50 KB or less before saving.
+                  Signed-in screenshots also save to your account. Backups include them.</small
                 >
                 <img id="pane-image" alt="Screenshot attached to this drop" hidden />
+                <small id="pane-image-info" hidden></small>
                 <button id="pane-remove-image" type="button" hidden>Remove screenshot</button>
                 <p id="pane-error" role="status" hidden></p>
                 <div class="controls">
@@ -1225,8 +1304,8 @@
                 >Guest progress stays in this browser. Log in to save across devices.</span
               ><br /><small
                 ><span id="base-description"></span> KC is recorded manually; screenshots do not add
-                KC.<br />Screenshots are compressed, with room for about 8 at maximum size (more for
-                smaller images). Backups include them.</small
+                KC.<br />New screenshots are compressed to 50 KB or less before saving. Backups
+                include them.</small
               >
             </div>
             <div class="controls">
@@ -1292,9 +1371,10 @@
     </dialog>
     <script src="bosses/catalog.js"></script>
     <script src="bosses/glass-window.js"></script>
-    <script src="bosses/pnm-art.js"></script>
-    <script src="bosses/cox-art.js"></script>
+    <script src="bosses/pnm-art.js?v=claws-2"></script>
+    <script src="bosses/cox-art.js?v=portraits-2"></script>
     <script src="bosses/toa-art.js"></script>
+    <script src="bosses/tob-art.js"></script>
     <script src="account.js"></script>
     <script>
       'use strict';
@@ -1382,7 +1462,8 @@
             drop.label.length > 120 ||
             typeof drop.image !== 'string' ||
             drop.image.length > 180000 ||
-            (drop.image && !/^data:image\/jpeg;base64,[A-Za-z0-9+/]+={0,2}$/.test(drop.image))
+            (drop.image &&
+              !/^data:image\/(?:jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(drop.image))
           )
             throw new Error('Invalid drop pane or screenshot in this backup.');
           imageSize += drop.image.length;
@@ -1480,7 +1561,10 @@
           if (loadedBossId !== next && cloudPending) {
             await flushCloud();
             if (cloudPending) {
-              notify('Sync or export your current hunt before switching bosses.', true);
+              notify(
+                'Your account save has not finished. Reconnect or download a backup before switching bosses.',
+                true
+              );
               return;
             }
           }
@@ -1522,8 +1606,7 @@
             try {
               await openCloud();
             } catch (error) {
-              cloudStatus(error.message || 'Could not connect. Retry when online.');
-              $('auth-form').hidden = false;
+              accountLoadError(error);
             }
           } else loadGuestJournal();
           $('tracker-heading').focus();
@@ -1864,6 +1947,12 @@
         previewTimer,
         previewPane = null;
       const dropAt = (tile) => journal.dropTiles?.[tile];
+      function screenshotBytes(image) {
+        const encoded = image.split(',')[1];
+        return (
+          (encoded.length * 3) / 4 - (encoded.endsWith('==') ? 2 : encoded.endsWith('=') ? 1 : 0)
+        );
+      }
       function paneError(message = '') {
         $('pane-error').textContent = message;
         $('pane-error').hidden = !message;
@@ -1873,6 +1962,11 @@
         if (pendingImage) $('pane-image').src = pendingImage;
         else $('pane-image').removeAttribute('src');
         $('pane-remove-image').hidden = !pendingImage;
+        $('pane-image-info').hidden = !pendingImage;
+        if (pendingImage) {
+          $('pane-image-info').textContent =
+            `Screenshot ready · ${(screenshotBytes(pendingImage) / 1024).toFixed(1)} KB`;
+        }
       }
       function closePaneEditor() {
         imageRequest++;
@@ -2002,18 +2096,33 @@
           throw new Error('Please choose a screenshot smaller than 20 MB.');
         const bitmap = await createImageBitmap(file);
         try {
+          if (bitmap.width * bitmap.height > 16000000)
+            throw new Error(
+              'Please crop this screenshot or choose one smaller than 16 megapixels.'
+            );
           const canvas = document.createElement('canvas'),
             context = canvas.getContext('2d');
-          for (const edge of [1280, 960, 640]) {
+          if (!context)
+            throw new Error('Could not prepare this screenshot. Please try another browser.');
+          // Match Bingo's 50 KiB static-image target before either local or account persistence.
+          const maxBytes = 50 * 1024;
+          for (const edge of [1280, 1024, 800, 640, 480]) {
             const scale = Math.min(1, edge / Math.max(bitmap.width, bitmap.height));
             canvas.width = Math.max(1, Math.round(bitmap.width * scale));
             canvas.height = Math.max(1, Math.round(bitmap.height * scale));
             context.fillStyle = '#201b16';
             context.fillRect(0, 0, canvas.width, canvas.height);
             context.drawImage(bitmap, 0, 0, canvas.width, canvas.height);
-            for (const quality of [0.82, 0.65, 0.45]) {
-              const image = canvas.toDataURL('image/jpeg', quality);
-              if (image.length <= 180000) return image;
+            for (const quality of [0.85, 0.72, 0.6, 0.45]) {
+              let image = canvas.toDataURL('image/webp', quality);
+              // Browsers without WebP encoding fall back to PNG; use JPEG instead.
+              if (!image.startsWith('data:image/webp;base64,'))
+                image = canvas.toDataURL('image/jpeg', quality);
+              if (!/^data:image\/(?:webp|jpeg);base64,/.test(image))
+                throw new Error(
+                  'This browser cannot compress screenshots. Please try another browser.'
+                );
+              if (screenshotBytes(image) <= maxBytes) return image;
             }
           }
           throw new Error(
