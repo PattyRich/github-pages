@@ -82,6 +82,8 @@ function getWikiImageBaseName(image: string) {
   image = image.split('/').pop() || image;
   image = image.replace(/\.png$/i, '');
   image = decodeURI(image).replaceAll(' ', '_');
+  // The uncharged Scythe shares the Wiki's detail artwork with the charged item.
+  if (/^Scythe_of_vitur_\(uncharged\)$/i.test(image)) return 'Scythe_of_vitur';
   return image.charAt(0).toUpperCase() + image.slice(1);
 }
 
