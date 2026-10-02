@@ -174,7 +174,7 @@ function getPixelUrl(url?: string) {
   if (!url) return url;
   const match = url.match(/\/thumb\/([^/]+)_detail\.png\//);
   if (match) {
-    const name = match[1].charAt(0).toUpperCase() + match[1].slice(1).toLowerCase();
+    const name = match[1].charAt(0).toUpperCase() + match[1].slice(1);
     return `https://oldschool.runescape.wiki/images/${name}.png`;
   }
   return url;
