@@ -47,6 +47,23 @@ export default [
       globals: { GLASS_BOSSES: 'readonly', LEGACY_BOSS_ID: 'readonly' },
     },
   },
+  {
+    files: ['public/glass-kc/window-workshop.js'],
+    languageOptions: {
+      globals: { GLASS_WINDOW_SHAPES: 'readonly', GLASS_WINDOW_FRAMES: 'readonly' },
+    },
+  },
+  {
+    files: ['public/glass-kc/gallery.js'],
+    languageOptions: {
+      globals: {
+        GLASS_BOSSES: 'readonly',
+        GLASS_RENDERERS: 'readonly',
+        GLASS_APPEARANCE: 'readonly',
+        createGlassWorkshop: 'readonly',
+      },
+    },
+  },
   ...tsRecommended,
   {
     files: ['src/**/*.{js,jsx,ts,tsx}', 'vite.config.ts'],

@@ -194,13 +194,8 @@ GLASS_RENDERERS.cg = function createGauntletRenderer(config, { esc, getJournal }
       ${line('M28 529 L52 519 L72 534 M281 542 L311 525 L333 536', '#a9cd9b', 1.4)}`;
   }
 
-  function frameOrnaments(count, index, uid, celebrate) {
-    return [
-      [-1, 300],
-      [361, 300],
-      [-1, 460],
-      [361, 460],
-    ]
+  function frameOrnaments(count, index, uid, celebrate, { anchors }) {
+    return anchors
       .map(([x, y], i) =>
         count >= (i + 1) * 25
           ? `<g data-ornament="${i + 1}" class="${celebrate && (count === 100 || count === (i + 1) * 25) ? 'ornament-new' : ''}">${shard(x, y, 0.57, sceneNumber(index))}</g>`

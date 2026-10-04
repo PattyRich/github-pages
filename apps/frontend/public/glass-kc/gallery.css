@@ -126,6 +126,11 @@ nav a:hover {
   font-size: 0.85rem;
 }
 
+.gallery-shell .workshop-body {
+  grid-template-columns: minmax(100px, 180px) minmax(0, 560px);
+  gap: 24px;
+}
+
 select,
 button {
   color: var(--bright);
@@ -314,6 +319,10 @@ dialog.zoomed #viewer-art svg {
 }
 
 @media (max-width: 500px) {
+  .gallery-shell .workshop-body {
+    grid-template-columns: 1fr;
+  }
+
   .gallery-shell {
     padding: 24px 16px 48px;
   }

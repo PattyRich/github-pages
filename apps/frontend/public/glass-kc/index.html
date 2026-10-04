@@ -4,6 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Glass KC Tracker</title>
+    <link rel="stylesheet" href="window-workshop.css" />
     <style>
       [hidden] {
         display: none !important;
@@ -1137,6 +1138,7 @@
                 <span id="window-title"></span><span id="window-fill" class="mono"></span>
               </div>
               <p class="scene-caption" id="scene-description"></p>
+              <div id="window-workshop"></div>
               <p class="pane-help">
                 Click a lit pane to keep a drop memory. Pink panes hold your drops; hover or tap to
                 revisit them.
@@ -1371,6 +1373,7 @@
     </dialog>
     <script src="bosses/catalog.js?v=chambers-purple-1"></script>
     <script src="bosses/glass-window.js"></script>
+    <script src="window-workshop.js"></script>
     <script src="bosses/pnm-art.js?v=relics-order-2"></script>
     <script src="bosses/cox-art.js?v=chambers-purple-2"></script>
     <script src="bosses/toa-art.js"></script>
@@ -1511,7 +1514,12 @@
         );
       const ordinals = ['first', 'second', 'third', 'fourth'];
       let renderer = null;
+      let windowWorkshop;
+      let workshopIndex = 0;
+      let workshopBoss = null;
+      let workshopActiveIndex = -1;
       function art(...args) {
+        args[4] = GLASS_APPEARANCE.get(bossId, args[1]);
         return renderer.art(...args);
       }
       function shrineMarkup(...args) {
@@ -1551,7 +1559,7 @@
               esc,
               getJournal: () => ({ base: 0, dropTiles: {} }),
             });
-            return `<article class="boss-choice"><div class="boss-choice-preview" aria-hidden="true">${preview.art(100, config.previewScene, 'preview-' + config.id)}</div><div class="boss-choice-copy"><p class="eyebrow">${esc(config.shortName)} · ${esc(config.collectionLabel)}</p><h2>${esc(config.name)}</h2><p>${esc(config.description)}</p><button id="choose-${esc(config.id)}" type="button" data-choose-boss="${esc(config.id)}">Track ${esc(config.name)} →</button></div></article>`;
+            return `<article class="boss-choice"><div class="boss-choice-preview" aria-hidden="true">${preview.art(100, config.previewScene, 'preview-' + config.id, false, GLASS_APPEARANCE.get(config.id, config.previewScene))}</div><div class="boss-choice-copy"><p class="eyebrow">${esc(config.shortName)} · ${esc(config.collectionLabel)}</p><h2>${esc(config.name)}</h2><p>${esc(config.description)}</p><button id="choose-${esc(config.id)}" type="button" data-choose-boss="${esc(config.id)}">Track ${esc(config.name)} →</button></div></article>`;
           })
           .join('');
         $('boss-choices').addEventListener('click', async (event) => {
@@ -1659,6 +1667,11 @@
         // Let a just-completed window shine until the next kill starts another.
         const index = kills > 0 && progress === 0 ? finished - 1 : finished,
           pieces = kills > 0 && progress === 0 ? 100 : progress;
+        if (workshopBoss !== bossId || workshopActiveIndex !== index) {
+          workshopIndex = index;
+          workshopBoss = bossId;
+          workshopActiveIndex = index;
+        }
         $('window-art').innerHTML = art(pieces, index, 'main', celebrate);
         $('window-title').textContent =
           `Window ${String(index + 1).padStart(2, '0')} · ${titles[index % titles.length]}`;
@@ -1713,6 +1726,7 @@
         updateSessionInfo();
         renderGallery();
         renderPostcards();
+        windowWorkshop?.refresh();
         if ($('sanctuary').open) renderSanctuary();
       }
       function renderGallery() {
@@ -1730,7 +1744,7 @@
         $('gallery-items').innerHTML = Array.from(
           { length: count },
           (_, i) =>
-            `<figure>${art(100, i, 'gallery-' + i)}<figcaption>${String(i + 1).padStart(2, '0')} / ${esc(titles[i % titles.length])}<br>${journal.base + i * 100 + 1}–${journal.base + (i + 1) * 100} KC</figcaption></figure>`
+            `<figure>${art(100, i, 'gallery-' + i)}<figcaption>${String(i + 1).padStart(2, '0')} / ${esc(titles[i % titles.length])}<br>${journal.base + i * 100 + 1}–${journal.base + (i + 1) * 100} KC</figcaption><button type="button" class="window-style-button" data-style-window="${i}" aria-label="Style window ${i + 1}: ${esc(titles[i % titles.length])}">Style window</button></figure>`
         ).join('');
       }
       function renderPostcards() {
@@ -2315,6 +2329,50 @@
           sanctuaryIndex += event.key === 'ArrowLeft' ? -1 : 1;
           renderSanctuary();
         }
+      });
+      windowWorkshop = createGlassWorkshop($('window-workshop'), {
+        getTarget: () => ({ boss: bossId, index: workshopIndex, value: workshopIndex }),
+        getWindows: () =>
+          Array.from({ length: lastEarnedWindow() + 1 }, (_, index) => ({
+            value: index,
+            label: `Window ${String(index + 1).padStart(2, '0')} · ${boss().titles[index % boss().titles.length]}${index === lastEarnedWindow() ? ' (current)' : ''}`,
+          })),
+        onSelect: (value) => {
+          workshopIndex = Number(value);
+        },
+        preview: () => {
+          if (!renderer) return '';
+          const pieces = Math.max(0, Math.min(100, total() - workshopIndex * 100));
+          return art(pieces, workshopIndex, 'workshop-preview');
+        },
+        onChange: () => {
+          render();
+          document.querySelectorAll('.boss-choice').forEach((slide, index) => {
+            const config =
+              GLASS_BOSSES[slide.querySelector('[data-choose-boss]').dataset.chooseBoss];
+            const preview = GLASS_RENDERERS[config.id](config, {
+              esc,
+              getJournal: () => ({ base: 0, dropTiles: {} }),
+            });
+            slide.querySelector('.boss-choice-preview').innerHTML = preview.art(
+              100,
+              config.previewScene,
+              `workshop-boss-${index}`,
+              false,
+              GLASS_APPEARANCE.get(config.id, config.previewScene)
+            );
+          });
+        },
+      });
+      $('gallery-items').addEventListener('click', (event) => {
+        const button = event.target.closest('[data-style-window]');
+        if (!button) return;
+        workshopIndex = Number(button.dataset.styleWindow);
+        const details = $('window-workshop').querySelector('details');
+        details.open = true;
+        windowWorkshop.refresh();
+        details.querySelector('summary').focus({ preventScroll: true });
+        details.scrollIntoView({ block: 'center' });
       });
       initBossPicker();
       void initAccount();

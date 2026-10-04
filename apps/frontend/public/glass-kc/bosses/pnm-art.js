@@ -92,16 +92,10 @@ GLASS_RENDERERS.pnm = function createNightmareRenderer(config, { esc, getJournal
       <path d="M-20 -31 L-40 -46 M-20 -81 L-16 -66 L-4 -47 M24 -51 L34 -73 M36 -18 L51 -28 M-3 20 V122 M-8 203 L-3 213" fill="none" stroke="#b7a2a4" stroke-width="1.5"/>
     </g>`;
   }
-  function frameOrnaments(count, index, uid, celebrate) {
+  function frameOrnaments(count, index, uid, celebrate, { anchors, crownY }) {
     const colors = sceneColors(index),
       scene = sceneNumber(index),
       completed = Math.floor(count / 25);
-    const anchors = [
-      [-1, 300],
-      [361, 300],
-      [-1, 460],
-      [361, 460],
-    ];
     return anchors
       .map(([x, y], i) => {
         const lit = i < completed,
@@ -112,7 +106,7 @@ GLASS_RENDERERS.pnm = function createNightmareRenderer(config, { esc, getJournal
         if (scene === 0)
           motif = `<g transform="translate(${x} ${y - 9}) scale(.42)">${shrineCarving(colors)}</g>`;
         if (scene === 4)
-          motif = `<path d="M${x} ${y} Q${x + side * 8} 82 180 5" fill="none" stroke="${colors[3]}" stroke-width="3"/><path d="M${x} ${y - 11} l8 11 -8 11 -8 -11Z" fill="${colors[3]}" stroke="${colors[4]}"/><path d="M180 -7 l8 12 -8 12 -8 -12Z" fill="${colors[3]}" stroke="${colors[4]}"/>`;
+          motif = `<path d="M${x} ${y} Q${x + side * 8} ${crownY + 77} 180 ${crownY}" fill="none" stroke="${colors[3]}" stroke-width="3"/><path d="M${x} ${y - 11} l8 11 -8 11 -8 -11Z" fill="${colors[3]}" stroke="${colors[4]}"/><path d="M180 ${crownY - 12} l8 12 -8 12 -8 -12Z" fill="${colors[3]}" stroke="${colors[4]}"/>`;
         if (scene === 1)
           motif = `<g transform="translate(${x} ${y})" stroke="#342e38" stroke-width="1.5"><path d="M-11 -8 L-11 -20 L-4 -14 L0 -23 L5 -14 L11 -20 L12 -7 L9 11 L0 19 L-9 11Z" fill="#93939b"/><path d="M-9 -1 L-2 2 M3 2 L10 -1" stroke="#282e37" stroke-width="2.5"/><path d="M0 4 V12" stroke="#c1b7b2"/></g>`;
         if (scene === 3)

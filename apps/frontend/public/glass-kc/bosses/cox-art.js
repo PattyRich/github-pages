@@ -266,13 +266,8 @@ GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal 
     return `<g transform="translate(${x} ${y})" fill="#d9e2cd" stroke="#455b50" stroke-width="1.5"><path d="M-7 4 Q0 -7 7 4 L8 12 Q0 18 -8 12Z"/><ellipse cx="-9" cy="-6" rx="3" ry="5"/><ellipse cy="-11" rx="3" ry="5"/><ellipse cx="9" cy="-6" rx="3" ry="5"/></g>`;
   }
 
-  function frameOrnaments(count, index, uid, celebrate) {
-    return [
-      [-1, 300],
-      [361, 300],
-      [-1, 460],
-      [361, 460],
-    ]
+  function frameOrnaments(count, index, uid, celebrate, { anchors }) {
+    return anchors
       .map(([x, y], i) => {
         const earned = count >= (i + 1) * 25;
         return earned

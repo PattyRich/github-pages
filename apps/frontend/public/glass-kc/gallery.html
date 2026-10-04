@@ -6,8 +6,10 @@
     <meta name="robots" content="noindex, nofollow" />
     <title>Glass KC · Window gallery</title>
     <link rel="stylesheet" href="gallery.css" />
+    <link rel="stylesheet" href="window-workshop.css" />
     <script src="bosses/catalog.js?v=chambers-purple-1" defer></script>
     <script src="bosses/glass-window.js" defer></script>
+    <script src="window-workshop.js" defer></script>
     <script src="bosses/pnm-art.js?v=relics-order-2" defer></script>
     <script src="bosses/cox-art.js?v=chambers-purple-2" defer></script>
     <script src="bosses/toa-art.js" defer></script>
@@ -23,7 +25,7 @@
           <h1>All the windows.</h1>
           <p id="gallery-count" class="muted"></p>
         </div>
-        <p>Every scene, fully lit. Pick a window to look closer.</p>
+        <p>Every scene, fully lit. Choose a shape and frame for each window.</p>
       </header>
       <div class="gallery-toolbar">
         <nav id="collection-links" aria-label="Jump to a boss collection"></nav>
@@ -32,6 +34,7 @@
           <select id="glass-edition"></select>
         </div>
       </div>
+      <div id="window-workshop"></div>
       <div id="collections"></div>
       <noscript><p>Enable JavaScript to see the stained-glass windows.</p></noscript>
     </main>
@@ -50,6 +53,7 @@
       </header>
       <div id="viewer-art"></div>
       <p id="viewer-description"></p>
+      <div id="viewer-workshop"></div>
       <footer class="viewer-controls">
         <button id="viewer-previous" type="button">← Previous</button>
         <span id="viewer-position" class="muted" aria-live="polite"></span>

@@ -314,13 +314,8 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
     </g>`;
   }
 
-  function frameOrnaments(count, index, uid, celebrate) {
-    return [
-      [-1, 300],
-      [361, 300],
-      [-1, 460],
-      [361, 460],
-    ]
+  function frameOrnaments(count, index, uid, celebrate, { anchors }) {
+    return anchors
       .map(([x, y], i) =>
         count >= (i + 1) * 25
           ? `<g data-ornament="${i + 1}" class="${celebrate && (count === 100 || count === (i + 1) * 25) ? 'ornament-new' : ''}">${sigil(x, y, 0.55, sceneNumber(index))}</g>`

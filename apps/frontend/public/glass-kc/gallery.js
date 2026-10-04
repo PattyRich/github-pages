@@ -22,11 +22,27 @@
   const editionSelect = byId('glass-edition');
   let edition = 0;
   let currentWindow = 0;
+  function styleTarget() {
+    const window = windows[currentWindow];
+    const index = edition * window.config.titles.length + window.scene;
+    return {
+      boss: window.config.id,
+      index,
+      value: currentWindow,
+      label: `${window.config.name} · Window ${String(index + 1).padStart(2, '0')} · ${window.title}`,
+    };
+  }
 
   // The journal reserves main/gallery-* IDs for drop buttons. Exhibit IDs keep every pane read-only.
   function artwork(window, uid) {
     const index = edition * window.config.titles.length + window.scene;
-    return window.renderer.art(100, index, uid);
+    return window.renderer.art(
+      100,
+      index,
+      uid,
+      false,
+      GLASS_APPEARANCE.get(window.config.id, index)
+    );
   }
 
   function renderCollections() {
@@ -37,7 +53,7 @@
           .map((title) => {
             const index = position++;
             const window = windows[index];
-            return `<figure><button type="button" class="window-art" data-window="${index}" aria-label="View ${esc(title)} larger">${artwork(window, `exhibit-${config.id}-${window.scene}`)}</button><figcaption>${esc(title)}</figcaption></figure>`;
+            return `<figure><button type="button" class="window-art" data-window="${index}" aria-label="View ${esc(title)} larger">${artwork(window, `exhibit-${config.id}-${window.scene}`)}</button><figcaption>${esc(title)}</figcaption><button type="button" class="window-style-button" data-style-window="${index}" aria-label="Style ${esc(title)}">Style window</button></figure>`;
           })
           .join('');
         return `<section class="collection" id="${esc(config.id)}" aria-labelledby="collection-${esc(config.id)}"><header class="collection-heading"><h2 id="collection-${esc(config.id)}">${esc(config.name)}</h2><p class="muted">${config.titles.length} windows · ${esc(config.shortName)}</p></header><div class="windows">${figures}</div></section>`;
@@ -54,6 +70,8 @@
     byId('viewer-description').textContent = window.config.sceneDescriptions[window.scene];
     byId('viewer-position').textContent = `${currentWindow + 1} / ${windows.length}`;
     byId('viewer-art').scrollTo(0, 0);
+    workshop.refresh();
+    viewerWorkshop.refresh();
   }
 
   function setZoom(zoomed) {
@@ -72,13 +90,49 @@
     { length: Math.max(...collections.map(({ config }) => config.palettes.length)) },
     (_, index) => `<option value="${index}">Edition ${index + 1}</option>`
   ).join('');
+  const workshop = createGlassWorkshop(byId('window-workshop'), {
+    getTarget: styleTarget,
+    getWindows: () =>
+      windows.map((window, value) => ({
+        value,
+        label: `${window.config.name} · ${window.title}`,
+      })),
+    onSelect: (value) => {
+      currentWindow = Number(value);
+    },
+    preview: () => artwork(windows[currentWindow], 'workshop-preview'),
+    onChange: () => {
+      renderCollections();
+      if (viewer.open) renderViewer(currentWindow);
+    },
+  });
+  const viewerWorkshop = createGlassWorkshop(byId('viewer-workshop'), {
+    title: 'Style this window',
+    getTarget: styleTarget,
+    onChange: () => {
+      renderCollections();
+      renderViewer(currentWindow);
+    },
+  });
+  byId('window-workshop').querySelector('details').open = true;
   renderCollections();
 
   editionSelect.addEventListener('change', () => {
     edition = Number(editionSelect.value);
     renderCollections();
+    workshop.refresh();
   });
   byId('collections').addEventListener('click', (event) => {
+    const styleButton = event.target.closest('button[data-style-window]');
+    if (styleButton) {
+      currentWindow = Number(styleButton.dataset.styleWindow);
+      const details = byId('window-workshop').querySelector('details');
+      details.open = true;
+      workshop.refresh();
+      details.querySelector('summary').focus({ preventScroll: true });
+      details.scrollIntoView({ block: 'center' });
+      return;
+    }
     const button = event.target.closest('button[data-window]');
     if (!button) return;
     setZoom(false);

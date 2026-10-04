@@ -4,7 +4,15 @@ Open **Glass KC Tracker** from the home page, or `/#/glass-kc` (GitHub Pages: `/
 
 ## Unlisted artwork gallery
 
+The gallery includes the window workshop described below, open for immediate experimentation.
+
 `/glass-kc/gallery.html` (GitHub Pages: `/github-pages/glass-kc/gallery.html`) displays all 28 completed windows across five collections, grouped by boss, with colour-edition selection. Clicking a window opens a viewer; **Zoom in** enlarges the glass for closer inspection, while **Fit window** restores the full view. **Previous**, **Next**, arrow keys and Escape browse or close it. The page is deliberately absent from app navigation and declares `noindex, nofollow`. It loads the catalog and renderers without journal/account code, so it never reads or writes saved hunts or calls the API.
+
+## Window workshop
+
+**Window workshop** beneath the active window offers five silhouettes (Gothic, round arch, rectangle, octagon and circular rose) and four frames (sandstone, gilded, dark iron and carved oak). **Window to style** selects the current or an earlier completed window. Each window also has a **Style window** button in the collection. Mix any shape and frame, use the preview to compare styles at the selected window's current progress, or **Reset style** to restore Gothic sandstone for that window. Unfinished windows show only earned panes and ornaments; completed windows show the full scene. Every silhouette still contains 100 panes with the same KC order and drop memories; earned ornaments follow the chosen outline. Tall subjects are scaled proportionally to fit shorter shapes.
+
+Appearance is saved separately for each boss and numbered window, including later colour editions. The same window keeps its appearance in boss previews, the completed collection, the sanctuary and SVG postcards. The unlisted gallery has its own window picker and **Style this window** controls inside the viewer; its edition selector addresses the matching numbered windows. Choices remain device preferences under `praynr-glass-kc-appearance-v1`, shared on the same origin. Existing device-wide styles become the default for windows without an individual choice. Changing or resetting one window leaves all other windows alone and does not alter or sync a journal; account saves, journal backups and hunt resets remain independent. When browser storage is unavailable, choices last for the current visit.
 
 ## Accounts and returning to a hunt
 
