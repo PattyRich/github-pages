@@ -18,7 +18,7 @@ const ROUTES: ToolRoute[] = [
   {
     path: '/glass-kc',
     name: '🪟 Glass KC Tracker',
-    desc: 'Give your boss grind something to show for every kill. Reveal animated stained-glass windows, save your rare-drop memories, and build a collection worth keeping.',
+    desc: 'Turn boss kills into stained-glass windows.',
     badge: 'New',
   },
   {
