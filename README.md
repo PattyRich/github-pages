@@ -10,7 +10,7 @@ A full-stack, production-deployed web application for the Old School RuneScape c
 
 ## What It Does
 
-**Glass KC Tracker** (`/#/glass-kc`) lets visitors pick Phosani’s Nightmare or Chambers of Xeric, choose a starting KC, earn stained-glass panes, mark drops with screenshots, and save session postcards. Username/password accounts save hunts to MongoDB across devices; guest journals can be imported without losing their browser copy. [Tracker accounts, storage and backups](docs/glass-kc.md).
+**Glass KC Tracker** (`/#/glass-kc`) lets visitors pick Phosani’s Nightmare, Chambers of Xeric, Tombs of Amascut, Theatre of Blood, Corrupted Gauntlet or Yama, choose a starting KC, earn stained-glass panes, mark drops with screenshots, and save session postcards. Username/password accounts save hunts to MongoDB across devices; guest journals can be imported without losing their browser copy. [Tracker accounts, storage and backups](docs/glass-kc.md).
 
 **Bingo Boards** — Create, share, and collaboratively track customizable OSRS bingo boards. Teams authenticate independently, mark tiles with proof text, proof images, and points, and see each other's progress in real time. Board state is stored in MongoDB with a 3-year TTL, while uploaded proof images are compressed to WebP files and saved outside MongoDB so board payloads stay lean.
 

@@ -1408,7 +1408,7 @@
         <button id="room-next" type="button" aria-label="Next earned window">→</button>
       </div>
     </dialog>
-    <script src="bosses/catalog.js?v=motion-refinements-1"></script>
+    <script src="bosses/catalog.js?v=yama-1"></script>
     <script src="bosses/glass-window.js?v=approved-motion-1"></script>
     <script src="window-workshop.js?v=style-backups-1"></script>
     <script src="bosses/pnm-art.js?v=approved-motion-1"></script>
@@ -1416,6 +1416,7 @@
     <script src="bosses/toa-art.js?v=approved-motion-1"></script>
     <script src="bosses/tob-art.js?v=motion-refinements-1"></script>
     <script src="bosses/cg-art.js?v=motion-refinements-1"></script>
+    <script src="bosses/yama-art.js?v=yama-1"></script>
     <script src="collection-journals.js?v=collections-1"></script>
     <script src="sanctuary-wings.js?v=collections-1"></script>
     <script src="loot-wall.js?v=collections-1"></script>
@@ -1554,6 +1555,8 @@
           (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;' })[c]
         );
       const ordinals = ['first', 'second', 'third', 'fourth'];
+      const countLabel = (count) =>
+        count === 1 ? boss().countNoun : boss().countPlural || `${boss().countNoun}s`;
       let renderer = null;
       let windowWorkshop;
       let collectionReader, sanctuaryWings, lootWall, windowCompletion, completedWindow;
@@ -1643,10 +1646,10 @@
             `Record your first ${boss().countNoun} to start a page. Dry nights count too.`;
           $('section-track').setAttribute(
             'aria-label',
-            `Four ${boss().milestoneNoun}s, 25 ${boss().countNoun}s to awaken each`
+            `Four ${boss().milestoneNoun}s, 25 ${countLabel(25)} to awaken each`
           );
           $('milestone-help').textContent =
-            `25 ${boss().countNoun}s per ${boss().milestoneNoun} · 100 per window · no streaks, no deadlines`;
+            `25 ${countLabel(25)} per ${boss().milestoneNoun} · 100 per window · no streaks, no deadlines`;
           accountUI();
           if (loadedBossId !== next) {
             loadedBossId = next;
@@ -1693,7 +1696,7 @@
       function updateSessionInfo() {
         const s = journal.active;
         $('session-info').textContent = s
-          ? `${s.kills} ${boss().countNoun.toUpperCase()}${s.kills === 1 ? '' : 'S'}`
+          ? `${s.kills} ${countLabel(s.kills).toUpperCase()}`
           : 'NOT STARTED';
       }
       function render(celebrate = false, { preserveCompletion = false } = {}) {
@@ -1760,7 +1763,7 @@
               : `Window complete. Next ${boss().countNoun} begins “${titles[sceneNumber(index + 1)]}”.`
             : charge === 0 && pieces > 0
               ? `${rewards[sceneNumber(index)]} ${4 - completed} light${4 - completed === 1 ? '' : 's'} remain.`
-              : `${25 - charge} ${boss().countNoun}${25 - charge === 1 ? '' : 's'} to its awakening. Each ${boss().countNoun} adds a little light.`;
+              : `${25 - charge} ${countLabel(25 - charge)} to its awakening. Each ${boss().countNoun} adds a little light.`;
         $('record-kill').disabled = loadFailed || !configured || journal.base + kills >= MAX_KC;
         $('mark-drop').disabled = loadFailed || kills === 0;
         $('undo-kill').disabled = loadFailed || !journal.active?.kills;
@@ -1790,7 +1793,7 @@
         $('collection-track').innerHTML = titles
           .map(
             (title, i) =>
-              `<div class="collection-step ${i < count ? 'finished' : i === count ? 'current' : ''}">${esc(title)}<small>${i < count ? 'COLLECTED' : i === count ? 'IN PROGRESS' : `BEGINS AT ${i * 100 + 1} JOURNAL ${boss().countNoun.toUpperCase()}S`}</small></div>`
+              `<div class="collection-step ${i < count ? 'finished' : i === count ? 'current' : ''}">${esc(title)}<small>${i < count ? 'COLLECTED' : i === count ? 'IN PROGRESS' : `BEGINS AT ${i * 100 + 1} JOURNAL ${countLabel(i * 100 + 1).toUpperCase()}`}</small></div>`
           )
           .join('');
         $('gallery-items').innerHTML = Array.from(

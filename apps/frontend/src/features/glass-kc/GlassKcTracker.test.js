@@ -21,6 +21,7 @@ function open(saved, blocked = false, cloud = {}) {
   const dom = new JSDOM(html, {
     url: 'https://example.com/github-pages/glass-kc/index.html',
     runScripts: 'dangerously',
+    pretendToBeVisual: true,
     virtualConsole,
     beforeParse(window) {
       if (saved) window.localStorage.setItem(key, saved);
@@ -36,6 +37,12 @@ function open(saved, blocked = false, cloud = {}) {
         );
       if (cloud.fetch) window.fetch = cloud.fetch;
       window.AbortController = AbortController;
+      window.matchMedia = (media) => ({
+        media,
+        matches: false,
+        addEventListener() {},
+        removeEventListener() {},
+      });
       window.confirm = () => true;
       window.HTMLElement.prototype.scrollIntoView = () => {};
       window.HTMLDialogElement.prototype.showModal = function () {
@@ -722,6 +729,7 @@ describe('required boss selection and catalog-driven hunts', () => {
     ['toa', 'Tombs'],
     ['tob', 'Theatre'],
     ['cg', 'Corrupted Gauntlet'],
+    ['yama', 'Yama'],
   ])('uses %s cloud routes and local backup, and resets only that hunt', async (boss, title) => {
     const fetch = vi.fn(async (url, options) => {
       if (url.endsWith('/me')) return response({ username: 'alice' });
@@ -767,6 +775,7 @@ describe('required boss selection and catalog-driven hunts', () => {
     ['toa', 'Tumeken’s shadow', 6, 'TOMBS OF AMASCUT'],
     ['tob', 'The Scythe of Vitur', 6, 'THEATRE OF BLOOD'],
     ['cg', 'Hunllef, crystal and crimson', 4, 'CORRUPTED GAUNTLET'],
+    ['yama', 'The Master of Pacts', 6, 'YAMA'],
   ])(
     'keeps pane numbering through all %s windows and the next edition',
     (boss, firstTitle, scenes, postcardName) => {
@@ -796,6 +805,43 @@ describe('required boss selection and catalog-driven hunts', () => {
       expect(
         window.document.querySelector(`#window-art [data-pane="${completions + 1}"]`)
       ).not.toBeNull();
+    }
+  );
+
+  it.each([
+    [0, 0, 0, 'The Master of Pacts'],
+    [25, 25, 0, 'The Master of Pacts'],
+    [99, 99, 0, 'The Master of Pacts'],
+    [100, 100, 1, 'The Master of Pacts'],
+    [600, 100, 6, 'The Judge’s crossing'],
+    [601, 1, 6, 'The Master of Pacts'],
+  ])(
+    'keeps Yama progress and backups isolated at %i successes',
+    (successes, panes, windows, title) => {
+      const window = open(JSON.stringify(sample()), false, { choose: false });
+      const yamaKey = 'praynr-glass-kc-yama-journal-v2';
+      const saved = {
+        ...sample(),
+        boss: 'yama',
+        name: 'Yama',
+        base: 900,
+        active: { id: 'yama-successes', kills: successes, notes: '', drops: '' },
+      };
+      window.localStorage.setItem(yamaKey, JSON.stringify(saved));
+      click(window, 'choose-yama');
+      expect(window.document.getElementById('window-title').textContent).toContain(title);
+      expect(window.document.querySelectorAll('#window-art .pane.filled')).toHaveLength(panes);
+      expect(window.document.getElementById('window-count').textContent).toBe(String(windows));
+      expect(window.document.getElementById('milestone-help').textContent).toContain(
+        '25 successes per seal'
+      );
+      expect(window.document.getElementById('session-info').textContent).toBe(
+        `${successes} ${successes === 1 ? 'SUCCESS' : 'SUCCESSES'}`
+      );
+      expect(() => window.eval(`validate(${JSON.stringify(sample())})`)).toThrow();
+      expect(() => window.eval(`validate(${JSON.stringify(saved)}, 'pnm')`)).toThrow();
+      expect(JSON.parse(window.localStorage.getItem(key))).toEqual(sample());
+      expect(JSON.parse(window.localStorage.getItem(yamaKey))).toEqual(saved);
     }
   );
 });
