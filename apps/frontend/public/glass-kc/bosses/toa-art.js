@@ -1,4 +1,62 @@
-/* Tombs-only SVG illustrations, studied from the OSRS Wiki model/detail images:
+function akkhaShadowCycle(svg) {
+  const palette = new Map([
+    // Olive skin and legs.
+    ['#8f795a', '#69715b'],
+    ['#bba398', '#92977b'],
+    ['#b3a399', '#828970'],
+    ['#d5c4b7', '#a3aa8c'],
+    ['#ab998d', '#6d7764'],
+    ['#65565a', '#484749'],
+    ['#ddd0bc', '#90977a'],
+    // Silver armour, dark grey boots, and the muted belt.
+    ['#d0c5a9', '#adb3b6'],
+    ['#86766b', '#565963'],
+    ['#c7b899', '#b0b3ac'],
+    ['#d6cbb1', '#bfc3c1'],
+    ['#eee4cf', '#d7d9d5'],
+    ['#b7a588', '#939b9a'],
+    ['#bca581', '#979e8b'],
+    ['#c39851', '#aaa6a3'],
+    ['#bca59a', '#9a8f91'],
+    ['#bca575', '#969a9c'],
+    ['#594a3d', '#666b70'],
+    ['#e6e3d7', '#d6d8d3'],
+    ['#b7bdbe', '#bbc0c2'],
+    // Teal cloth and crest; pale embroidered marks on the blue panels.
+    ['#a26338', '#286779'],
+    ['#654631', '#264b5b'],
+    ['#e3dcd0', '#437e90'],
+    ['#aa6b3d', '#d2d8d5'],
+    ['#a86a3d', '#37778b'],
+    ['#e8e3d7', '#d7dfdf'],
+    ['#a46736', '#3b7d92'],
+    // Grey helmet markings and blue/silver shield details.
+    ['#e1dfd3', '#babfb8'],
+    ['#f0e9d9', '#d5dad6'],
+    ['#aa7444', '#727775'],
+    ['#d9b774', '#919698'],
+    ['#ad7540', '#3d8295'],
+    ['#c09940', '#585761'],
+    ['#b28b38', '#606469'],
+    ['#79628b', '#4e8a9c'],
+    ['#d7d2c7', '#d7d6d9'],
+    ['#d5c9a4', '#bec4c5'],
+  ]);
+  // The existing spear hits the floor at .51 of each eight-second movement.
+  // Two movements per palette cycle: switch at 4.08s, then back at 12.08s.
+  return svg.replace(/<path([^>]*?)\/>/g, (whole, attributes) => {
+    let animations = '';
+    for (const property of ['fill', 'stroke']) {
+      const match = attributes.match(new RegExp('\\b' + property + '="([^"]+)"'));
+      const shadow = match && palette.get(match[1]);
+      if (!shadow) continue;
+      const normal = match[1];
+      animations += `<animate attributeName="${property}" values="${normal};${normal};${shadow};${shadow};${normal};${normal}" keyTimes="0;.255;.2675;.755;.7675;1" dur="16s" repeatCount="indefinite"/>`;
+    }
+    return animations ? `<path${attributes}>${animations}</path>` : whole;
+  });
+}
+/* Tombs-only SVG illustrations and approved scene motion, studied from the OSRS Wiki model/detail images:
  * Tumeken's_shadow, Akkha, Ba-Ba, Kephri, Zebak, both awakened Wardens and the phase-1 obelisk.
  * Original vector artwork; no remote assets. Identity colours stay fixed across editions.
  */
@@ -13,6 +71,88 @@ GLASS_RENDERERS.toa = function createTombsRenderer(config, { esc, getJournal }) 
   const line = (d, color = '#d1b876', width = 2) => path(d, 'none', color, width);
   const ring = (x, y, r, color) =>
     `<circle cx="${x}" cy="${y}" r="${r}" fill="none" stroke="${color}" stroke-width="2"/>`;
+
+  function solarEclipseSky() {
+    return `<g data-motion-effect="tumeken-solar-eclipse">
+      <style>
+        .tumeken-solar-moon { animation: tumeken-solar-crossing 26s linear infinite; }
+        .tumeken-solar-fill { animation: tumeken-solar-fill 26s linear infinite; }
+        .tumeken-solar-stroke { animation: tumeken-solar-stroke 26s linear infinite; }
+        .tumeken-solar-fill.tumeken-solar-stroke { animation-name: tumeken-solar-fill, tumeken-solar-stroke; }
+        .tumeken-solar-rim { animation: tumeken-solar-rim 26s linear infinite; }
+        .tumeken-solar-corona { animation: tumeken-solar-corona 26s linear infinite; }
+        @keyframes tumeken-solar-crossing {
+          0%, 14% { transform: translateX(0); }
+          44%, 56% { transform: translateX(140px); }
+          86%, 100% { transform: translateX(280px); }
+        }
+        @keyframes tumeken-solar-fill {
+          0%, 14%, 86%, 100% { fill: var(--solar-fill-light); }
+          44%, 56% { fill: var(--solar-fill-dark); }
+        }
+        @keyframes tumeken-solar-stroke {
+          0%, 14%, 86%, 100% { stroke: var(--solar-stroke-light); }
+          44%, 56% { stroke: var(--solar-stroke-dark); }
+        }
+        @keyframes tumeken-solar-rim {
+          0%, 14%, 86%, 100% { stroke: #e7c886; }
+          44%, 56% { stroke: #dce7f6; }
+        }
+        @keyframes tumeken-solar-corona {
+          0%, 14%, 86%, 100% { opacity: 0; }
+          44%, 56% { opacity: .18; }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .tumeken-solar-moon, .tumeken-solar-fill, .tumeken-solar-stroke, .tumeken-solar-fill.tumeken-solar-stroke,
+          .tumeken-solar-rim, .tumeken-solar-corona { animation: none; }
+        }
+      </style>
+      <defs><clipPath id="__tumeken-solar-clip__"><circle cx="180" cy="190" r="65"/></clipPath></defs>
+      <circle cx="180" cy="190" r="65" fill="#e2ae48" stroke="#edcc86" stroke-width="2.2"/>
+      <g clip-path="url(#__tumeken-solar-clip__)"><circle class="tumeken-solar-moon" cx="40" cy="190" r="62" fill="#101522"/></g>
+      <circle class="tumeken-solar-rim" cx="180" cy="190" r="65.5" fill="none" stroke="#e7c886" stroke-width="3.3"/>
+      <circle class="tumeken-solar-corona" cx="180" cy="190" r="70" fill="none" stroke="#dce7f6" stroke-width="6" opacity="0"/>
+    </g>`;
+  }
+
+  function solarEclipseGlass(svg, colors, uid) {
+    // Include panes outside the scene's fitted group; leave the staff and frame untouched.
+    const start = svg.indexOf(`<g id="scene-${uid}">`);
+    const end = svg.indexOf('<g data-tumeken-subject="true">', start);
+    const shifts = new Map([
+      [colors[0], ['#634832', '#24304c']],
+      [colors[1], ['#927348', '#526687']],
+      [colors[2], ['#bf7a3f', '#8b99b7']],
+      [colors[4], ['#e6c58a', '#c3d2ec']],
+      ['#615443', ['#76603f', '#3d465d']],
+      ['#b29a70', ['#c9aa6e', '#a5b4d0']],
+    ]);
+    const background = svg
+      .slice(start, end)
+      .replace(/<(path|polygon|circle|ellipse)([^>]*?)\/>/g, (whole, tag, attributes) => {
+        const classes = [];
+        const properties = [];
+        for (const property of ['fill', 'stroke']) {
+          const attribute = attributes.match(new RegExp(`\\b${property}="([^"]+)"`));
+          const shift = attribute && shifts.get(attribute[1]);
+          if (!shift) continue;
+          attributes = attributes.replace(
+            `${property}="${attribute[1]}"`,
+            `${property}="${shift[0]}"`
+          );
+          classes.push(`tumeken-solar-${property}`);
+          properties.push(
+            `--solar-${property}-light:${shift[0]};--solar-${property}-dark:${shift[1]}`
+          );
+        }
+        if (!classes.length) return whole;
+        return `<${tag}${attributes} class="${classes.join(' ')}" style="${properties.join(';')}"/>`;
+      });
+    return (svg.slice(0, start) + background + svg.slice(end)).replaceAll(
+      '__tumeken-solar-clip__',
+      `tumeken-solar-${uid}`
+    );
+  }
 
   function seal(x, y, scale = 1, kind = 0) {
     const marks = [
@@ -49,7 +189,7 @@ GLASS_RENDERERS.toa = function createTombsRenderer(config, { esc, getJournal }) 
   }
 
   function akkha() {
-    return `<g>
+    return akkhaShadowCycle(`<g data-motion-effect="toa-akkha-shadow-cycle">
       ${path('M145 333 L174 336 L171 403 L158 469 L133 474 L133 452 L140 392Z M192 336 L214 340 L227 407 L223 468 L200 473 L193 408 L178 382Z', '#8f795a')}
       ${path('M136 415 L160 418 L155 455 L132 461Z M201 415 L225 410 L225 450 L204 456Z', '#d0c5a9')}
       ${path('M132 458 L156 456 L155 483 L128 495 L111 490 L116 478Z M204 451 L225 450 L230 478 L247 484 L244 494 L213 491 L201 480Z', '#86766b')}
@@ -58,8 +198,8 @@ GLASS_RENDERERS.toa = function createTombsRenderer(config, { esc, getJournal }) 
       ${path('M128 304 L153 311 L147 381 L127 371Z M192 311 L210 312 L217 373 L201 385Z', '#e3dcd0')}
       ${path('M128 321 L140 329 L131 338Z M137 347 L145 357 L134 365Z M197 329 L209 334 L201 344Z M201 359 L214 363 L207 371Z', '#aa6b3d', '#aa6b3d', 1)}
       ${path('M131 212 L111 207 L91 229 L91 274 L109 287 L126 269 L133 240 M208 215 L227 207 L250 234 L239 281 L219 275 L211 248', '#c7b899')}
-      ${path('M95 264 L112 273 L105 308 L83 331 L69 322 L82 300Z', '#ddd0bc')}
-      ${path('M72 313 L88 311 L96 326 L89 341 L77 339 L71 330Z', '#bba398')}
+
+
       ${path('M132 204 L159 196 L193 198 L214 215 L209 272 L195 300 L144 302 L126 269Z', '#d6cbb1')}
       ${path('M132 225 L170 243 L207 227 L201 258 L174 274 L135 257Z', '#eee4cf', '#b7a588', 1.5)}
       ${path('M137 269 L171 283 L203 265 L196 295 L150 298Z', '#bca581')}
@@ -75,15 +215,20 @@ GLASS_RENDERERS.toa = function createTombsRenderer(config, { esc, getJournal }) 
       ${path('M150 123 L155 105 L173 91 L189 91 L198 101 L189 116 L181 125Z', '#f0e9d9')}
       ${path('M165 147 L202 151 L221 137 L211 155 L181 163Z', '#d9b774')}
       ${path('M146 145 L154 150 L145 156Z M142 162 L151 165 L143 176Z M182 130 L190 134 L186 143Z M157 130 L163 136 L154 141Z', '#aa7444', '#aa7444', 1)}
-      ${line('M75 123 L83 492', '#d7d2c7', 5)}
-      ${path('M75 71 L64 116 L75 137 L83 112Z M82 469 L75 490 L84 521 L91 490Z', '#d5c9a4')}
+      <g data-motion-effect="toa-akkha-spear-plant">
+        <animateTransform attributeName="transform" type="translate" values="0 0;0 -20;0 -20;0 8;0 0;0 0" keyTimes="0;.3;.43;.51;.63;1" calcMode="spline" keySplines=".42 0 .58 1;0 0 1 1;.42 0 .58 1;.42 0 .58 1;0 0 1 1" dur="8s" repeatCount="indefinite"/>
+        ${path('M95 264 L112 273 L105 308 L83 331 L69 322 L82 300Z', '#ddd0bc')}${path('M72 313 L88 311 L96 326 L89 341 L77 339 L71 330Z', '#bba398')}${line('M75 123 L83 492', '#d7d2c7', 5)}
+      ${path('M75 71 L64 116 L75 137 L83 112Z M82 469 L75 490 L84 521 L91 490Z', '#d5c9a4')}</g>
+      <path d="M58 532 L70 528 L79 534 L88 529 L103 534 M65 540 L79 535 L92 542 M83 535 L86 546" fill="none" stroke="#d9b774" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round" opacity="0">
+        <animate attributeName="opacity" values="0;0;.8;0;0" keyTimes="0;.5;.55;.72;1" dur="8s" repeatCount="indefinite"/>
+      </path>
       ${path('M220 209 Q247 184 278 213 L288 232 Q260 288 289 349 L275 380 Q239 406 211 378 L204 352 Q224 283 206 238Z', '#bca575', '#594a3d', 3)}
       ${path('M227 218 Q248 200 271 220 L277 234 Q251 291 278 349 L267 371 Q242 392 223 371 L214 350 Q233 282 219 239Z', '#e6e3d7')}
       ${path('M222 351 L239 362 L275 349 L269 365 L238 376 L221 363Z', '#b7bdbe')}
       ${path('M238 237 L246 223 L251 242 L242 248Z M260 247 L267 234 L270 256Z M227 266 L235 261 L231 278Z', '#ad7540', '#ad7540', 1)}
       ${path('M246 264 L252 252 L257 266 L253 280 L262 296 L253 291 L253 320 L244 320 L244 291 L235 298 L242 280Z', '#c09940', '#b28b38', 1)}
       ${path('M245 258 L253 257 L253 266 L247 268Z M246 283 H253 V313 H246Z', '#79628b', '#79628b', 1)}
-    </g>`;
+    </g>`);
   }
 
   function baba() {
@@ -118,13 +263,16 @@ GLASS_RENDERERS.toa = function createTombsRenderer(config, { esc, getJournal }) 
   }
 
   function kephri() {
-    const wing = (facing) => `<g transform="translate(180 285) scale(${facing} 1)">
+    const wing = (
+      facing
+    ) => `<g transform="translate(180 285) scale(${facing} 1)"><g data-motion-effect="toa-kephri-wingcase">
+      <animateTransform attributeName="transform" type="rotate" values="0 0 0;7 0 0;0 0 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".42 0 .58 1;.42 0 .58 1" dur="7s" repeatCount="indefinite"/>
       ${path('M-8 15 L-62 -20 L-106 -103 L-112 -187 L-75 -143 L-27 -95 L13 -39Z', '#58785f')}
       ${path('M-8 15 L-62 -20 L-106 -103 L-112 -162 L-95 -133 L-83 -86 L-40 -22 L7 -12Z', '#936155')}
       ${path('M-8 1 L-43 -28 L-86 -103 L-91 -146 L-75 -143 L-62 -100 L-20 -41 L14 -28Z', '#b07660', '#855544', 1.5)}
       ${path('M-112 -187 L-75 -143 L-62 -100 L-89 -112 L-106 -141Z', '#e3d4b5')}
       ${path('M-112 -187 L-107 -161 L-93 -149 L-96 -166Z M-102 -143 L-87 -130 L-80 -113 L-92 -119Z', '#3b2029', '#3b2029', 1)}
-      ${path('M-96 -166 L-75 -143 L-69 -123 L-86 -137Z', '#c6ae51', '#c6ae51', 1)}
+      ${path('M-96 -166 L-75 -143 L-69 -123 L-86 -137Z', '#c6ae51', '#c6ae51', 1)}</g>
     </g>`;
     return `${path('M102 361 L139 329 L204 329 L251 361 L267 423 L254 481 L221 516 L166 531 L120 508 L93 466 L86 414Z', '#766039')}
       ${path('M102 361 L155 347 L226 358 L250 404 L238 449 L183 481 L105 460 L88 416Z', '#8b7140', '#766039', 1)}
@@ -142,12 +290,15 @@ GLASS_RENDERERS.toa = function createTombsRenderer(config, { esc, getJournal }) 
       ${line('M178 347 L171 383 L177 405 M185 350 L181 391 L185 417 M190 347 L193 379 L186 402', '#a4b849', 3)}
       ${[1, -1]
         .map(
-          (s) => `<g transform="translate(180 330) scale(${s} 1)">
+          (
+            s
+          ) => `<g transform="translate(180 330) scale(${s} 1)"><g data-motion-effect="toa-kephri-foreleg">
+        <animateTransform attributeName="transform" type="rotate" values="0 0 0;8 0 0;0 0 0" keyTimes="0;.5;1" calcMode="spline" keySplines=".42 0 .58 1;.42 0 .58 1" dur="7s" begin="-1.2s" repeatCount="indefinite"/>
         ${path('M24 0 L48 11 L63 45 L53 81 L39 114 L31 117 L44 78 L45 45 L28 24Z', '#cfb45e')}
         ${path('M33 -5 L65 4 L82 32 L88 68 L79 76 L73 40 L55 22 L28 13Z', '#a78e47')}
         ${path('M41 -9 L65 -30 L82 -48 L72 -19 L58 4Z', '#83906a')}
         ${line('M38 95 L47 98 M34 105 L42 109 M78 54 L85 51 M80 64 L88 61', '#e4cf82', 3)}
-        ${line('M23 2 L35 -13 L42 -8 M29 8 L49 -3 L57 2', '#dcba54', 3)}
+        ${line('M23 2 L35 -13 L42 -8 M29 8 L49 -3 L57 2', '#dcba54', 3)}</g>
       </g>`
         )
         .join('')}
@@ -327,7 +478,7 @@ GLASS_RENDERERS.toa = function createTombsRenderer(config, { esc, getJournal }) 
     }).join('');
   }
 
-  const art = createGlassWindow({
+  const renderArt = createGlassWindow({
     config,
     esc,
     getJournal,
@@ -344,15 +495,37 @@ GLASS_RENDERERS.toa = function createTombsRenderer(config, { esc, getJournal }) 
       const floor = `${path('M20 484 L180 445 L340 484 V550 H20Z', '#615443')}${line('M20 509 H340 M20 534 H340 M111 466 L85 550 M248 464 L276 550 M180 447 V550', '#b29a70', 1.5)}`;
       let illustration;
       if (scene === 0) {
-        illustration = `${rays}<circle cx="180" cy="190" r="65" fill="#d2a649" stroke="#ead398" stroke-width="3"/><circle cx="171" cy="182" r="57" fill="#28232f"/>${ring(180, 190, 117, '#b29a68')}${floor}${shadow()}${seal(78, 478, 0.8)}${seal(280, 478, 0.8)}`;
+        illustration = `${rays}${solarEclipseSky()}${ring(180, 190, 117, '#b29a68')}${floor}<g data-tumeken-subject="true">${shadow()}</g>${seal(78, 478, 0.8)}${seal(280, 478, 0.8)}`;
       } else if (scene === 1) {
         illustration = `${path('M180 64 L289 231 L180 456 L70 231Z', '#797b7c', '#c7c8b1', 2)}${ring(180, 233, 113, '#d0c6a0')}${line('M180 82 V435 M71 233 H289 M102 151 L259 314 M103 314 L258 151', '#b1b6ad', 1.5)}${floor}${akkha()}`;
       } else if (scene === 2) {
-        illustration = `${path('M39 279 L69 162 L112 140 L168 180 L218 122 L281 166 L322 287Z', '#645347')}${path('M65 251 L100 186 L134 228 L176 198 L210 256 L269 202 L307 273 L322 500 H40Z', '#3e3539')}${ring(180, 257, 115, '#ac8863')}${floor}${baba()}${path('M29 491 L54 461 L81 477 L96 512 L68 534 L32 522Z M252 510 L277 475 L309 489 L333 519 L305 542 L270 537Z', '#8a7554')}${line('M54 461 L63 499 L96 512 M63 499 L32 522 M277 475 L293 514 L333 519 M293 514 L270 537', '#534538', 2)}`;
+        illustration = `${path('M39 279 L69 162 L112 140 L168 180 L218 122 L281 166 L322 287Z', '#645347')}${path('M65 251 L100 186 L134 228 L176 198 L210 256 L269 202 L307 273 L322 500 H40Z', '#3e3539')}${ring(180, 257, 115, '#ac8863')}${floor}${baba()}
+        <path d="M252 510 L277 475 L309 489 L333 519 L305 542 L270 537Z" fill="#8a7554" stroke="#302b30" stroke-width="2.4" stroke-linejoin="round"/>
+        <path d="M277 475 L293 514 L333 519 M293 514 L270 537" fill="none" stroke="#534538" stroke-width="2" stroke-linejoin="round"/>
+        <g data-motion-effect="toa-baba-bottom-roll">
+          <animateMotion path="M-115 474 L475 474" dur="11s" repeatCount="indefinite"/>
+          <ellipse cx="0" cy="70" rx="72" ry="6" fill="#302b30" opacity=".5"/>
+          <path d="M-63 63 Q-88 71 -114 61 M-72 48 Q-97 56 -130 45 M-75 70 L-137 69" fill="none" stroke="#b29a70" stroke-width="2.3" stroke-linecap="round" opacity=".4"/>
+          <g>
+            <animateTransform attributeName="transform" type="rotate" values="0;540" dur="11s" repeatCount="indefinite"/>
+            <g transform="scale(1.85)"><g transform="translate(-63 -500)">
+              <path d="M29 491 L54 461 L81 477 L96 512 L68 534 L32 522Z" fill="#8a7554" stroke="#302b30" stroke-width="2.4" stroke-linejoin="round"/>
+              <path d="M54 461 L63 499 L96 512 M63 499 L32 522" fill="none" stroke="#534538" stroke-width="2" stroke-linejoin="round"/>
+            </g></g>
+          </g>
+        </g>`;
       } else if (scene === 3) {
         illustration = `${ring(180, 300, 128, '#bba76b')}${line('M58 329 Q180 461 302 329 M52 353 Q180 485 308 353 M83 192 L279 448 M277 192 L82 448', '#788a6c', 1.5)}${floor}${kephri()}`;
       } else if (scene === 4) {
-        illustration = `${path('M20 280 Q98 249 180 277 T340 275 V550 H20Z', '#345b5d')}${ring(180, 232, 106, '#a6b68b')}${Array.from({ length: 5 }, (_, i) => line(`M20 ${370 + i * 37} Q70 ${347 + i * 37} 120 ${370 + i * 37} T220 ${370 + i * 37} T340 ${370 + i * 37}`, i % 2 ? '#799d8a' : '#bdc8a0', 2)).join('')}${zebak()}${path('M30 535 L46 489 L58 506 L65 476 L78 531 M289 533 L306 484 L308 510 L329 491 L323 537', 'none', '#aca879', 3)}`;
+        illustration = `${path('M20 280 Q98 249 180 277 T340 275 V550 H20Z', '#345b5d')}${ring(180, 232, 106, '#a6b68b')}${Array.from({ length: 5 }, (_, i) => line(`M20 ${370 + i * 37} Q70 ${347 + i * 37} 120 ${370 + i * 37} T220 ${370 + i * 37} T340 ${370 + i * 37}`, i % 2 ? '#799d8a' : '#bdc8a0', 2)).join('')}${zebak()}
+        <g data-motion-effect="toa-zebak-river">
+          <path d="M20 481 Q70 458 120 481 T220 481 T340 481" pathLength="100" fill="none" stroke="#dce0ba" stroke-width="5" stroke-linecap="round" stroke-dasharray="14 86" stroke-dashoffset="0" opacity=".85">
+            <animate attributeName="stroke-dashoffset" values="14;-86" dur="10s" repeatCount="indefinite"/>
+          </path>
+          <path d="M20 518 Q70 495 120 518 T220 518 T340 518" pathLength="100" fill="none" stroke="#dce0ba" stroke-width="5" stroke-linecap="round" stroke-dasharray="14 86" stroke-dashoffset="0" opacity=".9">
+            <animate attributeName="stroke-dashoffset" values="14;-86" dur="10s" begin="-4s" repeatCount="indefinite"/>
+          </path>
+        </g>${path('M30 535 L46 489 L58 506 L65 476 L78 531 M289 533 L306 484 L308 510 L329 491 L323 537', 'none', '#aca879', 3)}`;
       } else {
         const diamondRays = Array.from({ length: 12 }, (_, i) => {
           const orange = i % 2 === 1;
@@ -364,7 +537,10 @@ GLASS_RENDERERS.toa = function createTombsRenderer(config, { esc, getJournal }) 
         illustration = `${path('M180 64 L329 197 V477 L180 520 L31 477 V197Z', '#3c303d', '#ac875e', 2)}
           ${path('M180 87 L299 207 V447 L180 481 L61 447 V207Z', '#2d2932', '#665154', 2)}
           ${line('M61 207 L180 174 L299 207 M61 273 L180 246 L299 273 M61 447 L180 409 L299 447 M180 87 V174', '#756053', 1.4)}
-          ${diamondRays}${ring(180, 190, 94, '#edc881')}
+          <g data-motion-effect="toa-warden-diamonds">
+            <animateTransform attributeName="transform" type="rotate" values="0 180 190;360 180 190" dur="24s" repeatCount="indefinite"/>
+            ${diamondRays}
+          </g>${ring(180, 190, 94, '#edc881')}
           ${path('M180 65 L199 107 L180 146 L161 107Z', '#af884a')}
           ${path('M180 65 V146 L161 107Z', '#e2bd70', '#997549', 1.4)}
           ${line('M163 105 L144 89 L129 111 L146 133 M197 105 L216 89 L231 111 L214 133', '#b39159', 2)}
@@ -375,10 +551,25 @@ GLASS_RENDERERS.toa = function createTombsRenderer(config, { esc, getJournal }) 
           ${warden(100, 275, 0.73, false)}${warden(251, 275, 0.73, true)}
           ${line('M159 333 L143 318 L151 301 L134 287 M201 333 L217 315 L207 298 L228 283 M160 365 L144 383 L155 396 L130 424 M201 368 L217 387 L207 401 L233 427', '#bb573d', 5)}
           ${line('M159 333 L143 318 L151 301 L134 287 M201 333 L217 315 L207 298 L228 283 M160 365 L144 383 L155 396 L130 424 M201 368 L217 387 L207 401 L233 427', '#efaa67', 1.7)}
-          ${obelisk()}${seal(180, 530, 0.5, 5)}`;
+          ${obelisk()}
+          <g data-motion-effect="toa-warden-crimson-lightning" fill="none" stroke-linejoin="round" stroke-linecap="round">
+            <path d="M180 329 L173 352 L184 375 L175 402 L185 427 L174 449 L183 479 L177 515 M184 375 L201 390 L196 411 M175 402 L157 420 L161 439" stroke="#a13930" stroke-width="7" opacity="0">
+              <animate attributeName="opacity" values="0;0;.16;.32;.9;0;0" keyTimes="0;.42;.59;.72;.77;.85;1" dur="9s" repeatCount="indefinite"/>
+            </path>
+            <path d="M180 329 L173 352 L184 375 L175 402 L185 427 L174 449 L183 479 L177 515 M184 375 L201 390 L196 411 M175 402 L157 420 L161 439" stroke="#ed6442" stroke-width="3.8" opacity="0">
+              <animate attributeName="opacity" values="0;0;.2;1;0;0" keyTimes="0;.59;.72;.77;.85;1" dur="9s" repeatCount="indefinite"/>
+            </path>
+            <path d="M180 329 L173 352 L184 375 L175 402 L185 427 L174 449 L183 479 L177 515 M184 375 L201 390 L196 411 M175 402 L157 420 L161 439" stroke="#ffd5b5" stroke-width="1.3" opacity="0">
+              <animate attributeName="opacity" values="0;0;1;0;0" keyTimes="0;.72;.77;.85;1" dur="9s" repeatCount="indefinite"/>
+            </path>
+          </g>${seal(180, 530, 0.5, 5)}`;
       }
       return `${panes}${arch}${illustration}${line('M62 540 H298', colors[4], 1.3)}`;
     },
   });
+  const art = (...args) => {
+    const svg = renderArt(...args);
+    return sceneNumber(args[1]) === 0 ? solarEclipseGlass(svg, sceneColors(args[1]), args[2]) : svg;
+  };
   return { art, shrineMarkup, sceneColors };
 };

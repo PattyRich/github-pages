@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Glass KC Tracker</title>
     <link rel="stylesheet" href="window-workshop.css?v=frames-2" />
+    <link rel="stylesheet" href="sanctuary-wings.css?v=collections-1" />
+    <link rel="stylesheet" href="loot-wall.css?v=collections-1" />
+    <link rel="stylesheet" href="window-completion.css?v=collections-1" />
     <style>
       [hidden] {
         display: none !important;
@@ -797,6 +800,13 @@
         object-fit: contain;
         margin: 12px 0;
       }
+      #sanctuary #pane-preview {
+        width: min(520px, calc(100vw - 24px));
+      }
+      #sanctuary #pane-preview img {
+        height: auto;
+        max-height: min(45vh, 400px);
+      }
       .room-invite {
         display: block;
         margin: 16px auto 0;
@@ -845,6 +855,20 @@
       }
       .room-header button {
         background: transparent;
+      }
+      .room-header h2 {
+        margin: 0 0 4px;
+        font-size: 1.3rem;
+      }
+      .room-header .controls {
+        margin: 0;
+        justify-content: flex-end;
+      }
+      #sanctuary-wings {
+        flex: 1;
+        min-height: 0;
+        overflow: auto;
+        margin-top: 16px;
       }
       .room-stage {
         position: relative;
@@ -1036,6 +1060,7 @@
         <div class="brand">Glass KC <span class="muted">/ Your hunt, one pane at a time</span></div>
         <nav>
           <a id="nav-windows" href="#gallery" hidden>Windows</a
+          ><a id="nav-loot" href="#loot" hidden>Loot wall</a
           ><a id="nav-postcards" href="#postcards" hidden>Postcards</a
           ><a href="../../#/" target="_top">All tools</a>
         </nav>
@@ -1134,6 +1159,7 @@
           <section class="hero">
             <div class="window-stage">
               <div id="window-art"></div>
+              <div id="window-completion"></div>
               <div class="window-caption">
                 <span id="window-title"></span><span id="window-fill" class="mono"></span>
               </div>
@@ -1286,6 +1312,10 @@
               at 100 journal kills.
             </p>
           </section>
+          <section id="loot" class="chapter" aria-label="Loot trophy wall">
+            <div id="loot-wall"></div>
+            <p id="loot-collection-status" class="muted"></p>
+          </section>
           <section id="postcards" class="chapter">
             <div class="chapter-head">
               <div>
@@ -1348,20 +1378,27 @@
     <div id="pane-preview" role="tooltip" hidden>
       <strong id="pane-preview-title"></strong
       ><img id="pane-preview-image" alt="Drop screenshot" hidden />
-      <div>Click the pane to view or edit.</div>
+      <div id="pane-preview-help">Click the pane to view or edit.</div>
     </div>
-    <dialog id="sanctuary" aria-labelledby="room-title" aria-describedby="room-progress">
+    <dialog id="sanctuary" aria-labelledby="sanctuary-heading">
       <div class="room-header">
-        <p>A quiet place for the light you’ve earned.</p>
-        <button id="leave-sanctuary" type="button" autofocus>Back to journal · Esc</button>
+        <div>
+          <h2 id="sanctuary-heading">Your sanctuary</h2>
+          <p id="collection-status">A quiet place for the light you’ve earned.</p>
+        </div>
+        <div class="controls">
+          <button id="room-back" type="button" hidden>All sanctuary wings</button>
+          <button id="leave-sanctuary" type="button" autofocus>Back to journal · Esc</button>
+        </div>
       </div>
-      <div class="room-stage">
+      <div id="sanctuary-wings"></div>
+      <div id="room-stage" class="room-stage" hidden>
         <div class="room-halo" aria-hidden="true"></div>
         <div class="room-floor" aria-hidden="true"></div>
         <div id="room-art"></div>
         <div class="room-dust" id="room-dust" aria-hidden="true"></div>
       </div>
-      <div class="room-footer">
+      <div id="room-footer" class="room-footer" hidden>
         <button id="room-previous" type="button" aria-label="Previous earned window">←</button>
         <div class="room-caption" aria-live="polite">
           <h2 id="room-title"></h2>
@@ -1371,14 +1408,18 @@
         <button id="room-next" type="button" aria-label="Next earned window">→</button>
       </div>
     </dialog>
-    <script src="bosses/catalog.js?v=maiden-matomenos-1"></script>
-    <script src="bosses/glass-window.js?v=frames-2"></script>
-    <script src="window-workshop.js?v=frames-2"></script>
-    <script src="bosses/pnm-art.js?v=nightmare-totems-1"></script>
-    <script src="bosses/cox-art.js?v=chambers-purple-2"></script>
-    <script src="bosses/toa-art.js?v=wardens-2"></script>
-    <script src="bosses/tob-art.js?v=maiden-matomenos-1"></script>
-    <script src="bosses/cg-art.js?v=labyrinth-rune-3"></script>
+    <script src="bosses/catalog.js?v=prif-crystals-1"></script>
+    <script src="bosses/glass-window.js?v=approved-motion-1"></script>
+    <script src="window-workshop.js?v=style-backups-1"></script>
+    <script src="bosses/pnm-art.js?v=approved-motion-1"></script>
+    <script src="bosses/cox-art.js?v=approved-motion-1"></script>
+    <script src="bosses/toa-art.js?v=approved-motion-1"></script>
+    <script src="bosses/tob-art.js?v=approved-motion-1"></script>
+    <script src="bosses/cg-art.js?v=approved-motion-1"></script>
+    <script src="collection-journals.js?v=collections-1"></script>
+    <script src="sanctuary-wings.js?v=collections-1"></script>
+    <script src="loot-wall.js?v=collections-1"></script>
+    <script src="window-completion.js?v=collections-1"></script>
     <script src="account.js"></script>
     <script>
       'use strict';
@@ -1429,11 +1470,11 @@
           (!complete || (s.kills > 0 && Number.isFinite(Date.parse(s.ended))))
         );
       }
-      function validate(data) {
+      function validate(data, expectedBossId = bossId) {
         if (
           !data ||
           ![1, 2].includes(data.version) ||
-          (data.boss || LEGACY_BOSS_ID) !== bossId ||
+          (data.boss || LEGACY_BOSS_ID) !== expectedBossId ||
           !Number.isSafeInteger(data.base) ||
           data.base < 0 ||
           data.base > MAX_KC ||
@@ -1480,7 +1521,7 @@
         return {
           ...data,
           version: 2,
-          boss: bossId,
+          boss: expectedBossId,
           base,
           name: data.version === 1 ? GLASS_BOSSES[LEGACY_BOSS_ID].name : data.name.trim(),
           dropTiles: drops,
@@ -1515,6 +1556,7 @@
       const ordinals = ['first', 'second', 'third', 'fourth'];
       let renderer = null;
       let windowWorkshop;
+      let collectionReader, sanctuaryWings, lootWall, windowCompletion, completedWindow;
       let workshopIndex = 0;
       let workshopBoss = null;
       let workshopActiveIndex = -1;
@@ -1527,6 +1569,13 @@
       }
       function sceneColors(index) {
         return renderer.sceneColors(index);
+      }
+      function refreshCollectionViews() {
+        if (!collectionReader) return;
+        lootWall?.refresh();
+        const status = collectionReader.status();
+        $('collection-status').textContent = status;
+        $('loot-collection-status').textContent = status;
       }
       function loadGuestJournal() {
         journal = emptyJournal();
@@ -1647,11 +1696,14 @@
           ? `${s.kills} ${boss().countNoun.toUpperCase()}${s.kills === 1 ? '' : 'S'}`
           : 'NOT STARTED';
       }
-      function render(celebrate = false) {
+      function render(celebrate = false, { preserveCompletion = false } = {}) {
         $('boss-selection').hidden = bossChosen;
         $('tracker-content').hidden = !bossChosen;
         $('nav-windows').hidden = !bossChosen;
+        $('nav-loot').hidden = !bossChosen;
         $('nav-postcards').hidden = !bossChosen;
+        if (!celebrate && !preserveCompletion) windowCompletion?.dismiss();
+        refreshCollectionViews();
         if (!bossChosen) return;
         $('pane-preview').hidden = true;
         $('journal-setup').hidden = configured;
@@ -1804,6 +1856,19 @@
         };
         const saved = save({ ...journal, active: { ...active, kills: active.kills + 1 } });
         render(saved && total() % 25 === 0);
+        if (saved) {
+          windowCompletion?.dismiss();
+          if (total() % 100 === 0) {
+            const index = total() / 100 - 1;
+            completedWindow = { bossId, index };
+            windowCompletion?.play({
+              title: titles[sceneNumber(index)],
+              windowNumber: index + 1,
+              bossName: boss().name,
+              color: sceneColors(index)[3],
+            });
+          }
+        }
       });
       $('undo-kill').addEventListener('click', () => {
         if (!journal.active?.kills || loadFailed) return;
@@ -1852,7 +1917,11 @@
           return;
         }
         download(
-          JSON.stringify(journal, null, 2),
+          JSON.stringify(
+            { ...journal, appearance: GLASS_APPEARANCE.exportBackup(bossId) },
+            null,
+            2
+          ),
           'application/json',
           `glass-kc-journal-${new Date().toISOString().slice(0, 10)}.json`
         );
@@ -1863,20 +1932,34 @@
         if (!file) return;
         try {
           if (file.size > 5 * 1024 * 1024) throw new Error('That backup is too large.');
-          const data = validate(JSON.parse(await file.text()));
+          const raw = JSON.parse(await file.text());
+          const { appearance, ...journalData } = raw || {};
+          const data = validate(journalData);
+          const styles =
+            appearance === undefined ? null : GLASS_APPEARANCE.validateBackup(appearance, bossId);
           if (
             !confirm(
-              'Replace the current hunt with this backup? If signed in, this also replaces your account hunt. Export your current journal first to keep it.'
+              'Replace the current hunt with this backup? If signed in, this also replaces your account hunt. Export your current journal first to keep it.' +
+                (styles ? ' This also restores the window styles for this hunt.' : '')
             )
           )
             return;
           persistJournal(data);
+          const stylesSaved = styles ? GLASS_APPEARANCE.restoreBackup(styles, bossId) : true;
           journal = data;
           configured = true;
           loadFailed = false;
           setFields();
           render();
-          notify('Your journal is restored.');
+          if (styles) refreshBossPreviews();
+          notify(
+            styles
+              ? stylesSaved
+                ? 'Your journal and window styles are restored.'
+                : 'Your journal is restored. Window styles are available for this visit, but could not be saved on this device.'
+              : 'Your journal is restored. This older backup has no window styles; your current styles were kept.',
+            !stylesSaved
+          );
         } catch (error) {
           notify(error.message || 'Could not restore that backup.', true);
         } finally {
@@ -2177,6 +2260,7 @@
       function hidePanePreview() {
         clearTimeout(previewTimer);
         previewTimer = null;
+        previewPane?.removeAttribute('aria-describedby');
         previewPane = null;
         $('pane-preview').hidden = true;
       }
@@ -2196,21 +2280,38 @@
       }
       function showPanePreview(pane) {
         clearTimeout(previewTimer);
+        const room = pane.closest('#room-art');
+        const sourceJournal = room ? getSanctuaryJournal() : journal;
         const tile = Number(pane.dataset.pane),
-          drop = dropAt(tile);
+          drop = sourceJournal?.dropTiles?.[tile];
         if (!drop) {
           hidePanePreview();
           return;
         }
         if (previewPane === pane && !$('pane-preview').hidden) return;
+        previewPane?.removeAttribute('aria-describedby');
         previewPane = pane;
+        pane.setAttribute('aria-describedby', 'pane-preview');
         $('pane-preview-title').textContent =
-          `KC ${(journal.base + tile).toLocaleString()} · ${drop.label || 'Drop recorded'}`;
+          `KC ${(sourceJournal.base + tile).toLocaleString()} · ${drop.label || 'Drop recorded'}`;
+        $('pane-preview-help').textContent = room
+          ? 'Esc or tap outside to close.'
+          : 'Click the pane to view or edit.';
         $('pane-preview-image').hidden = !drop.image;
         if (drop.image) $('pane-preview-image').src = drop.image;
         else $('pane-preview-image').removeAttribute('src');
+        $('pane-preview').hidden = false;
+        positionPanePreview();
+      }
+      function positionPanePreview() {
+        if (!previewPane || $('pane-preview').hidden) return;
+        const pane = previewPane,
+          room = pane.closest('#room-art');
         const preview = $('pane-preview');
-        preview.hidden = false;
+        const bounds = room
+          ? room.parentElement.getBoundingClientRect()
+          : { top: 0, bottom: innerHeight };
+        preview.style.maxHeight = room ? Math.max(0, bounds.height - 24) + 'px' : '';
         const box = pane.getBoundingClientRect(),
           width = preview.offsetWidth,
           height = preview.offsetHeight;
@@ -2227,19 +2328,24 @@
           }
         }
         preview.style.left = Math.max(12, Math.min(left, innerWidth - width - 12)) + 'px';
-        preview.style.top = Math.max(12, Math.min(top, innerHeight - height - 12)) + 'px';
+        preview.style.top =
+          Math.max(bounds.top + 12, Math.min(top, bounds.bottom - height - 12)) + 'px';
       }
-      for (const id of ['window-art', 'gallery-items']) {
+      function activatePane(pane) {
+        if (pane.closest('#room-art')) showPanePreview(pane);
+        else openPaneEditor(Number(pane.dataset.pane), pane);
+      }
+      for (const id of ['window-art', 'gallery-items', 'room-art']) {
         const host = $(id);
         host.addEventListener('click', (event) => {
           const pane = event.target.closest('[data-pane]');
-          if (pane) openPaneEditor(Number(pane.dataset.pane), pane);
+          if (pane) activatePane(pane);
         });
         host.addEventListener('keydown', (event) => {
           const pane = event.target.closest('[data-pane]');
           if (pane && ['Enter', ' '].includes(event.key)) {
             event.preventDefault();
-            openPaneEditor(Number(pane.dataset.pane), pane);
+            activatePane(pane);
           }
         });
         host.addEventListener('pointerover', (event) => {
@@ -2251,6 +2357,7 @@
           if (pane) showPanePreview(pane);
         });
         host.addEventListener('pointerout', (event) => {
+          if (event.pointerType === 'touch') return;
           const next = event.relatedTarget;
           if (next && ($('pane-preview').contains(next) || previewPane?.contains(next))) {
             clearTimeout(previewTimer);
@@ -2262,6 +2369,7 @@
       }
       $('pane-preview').addEventListener('pointerenter', () => clearTimeout(previewTimer));
       $('pane-preview').addEventListener('pointerleave', schedulePanePreviewClose);
+      $('pane-preview-image').addEventListener('load', positionPanePreview);
       addEventListener('keydown', (event) => {
         if (event.key === 'Escape') {
           hidePanePreview();
@@ -2273,46 +2381,196 @@
     </script>
     <script>
       let sanctuaryIndex = 0;
+      let sanctuaryBossId = bossId;
+      let sanctuaryMode = 'wings';
+      let sanctuaryReturnFocus = null;
       const lastEarnedWindow = () => Math.max(0, Math.floor((total() - 1) / 100));
-      function renderSanctuary() {
-        sanctuaryIndex = Math.max(0, Math.min(sanctuaryIndex, lastEarnedWindow()));
-        const pieces = Math.max(0, Math.min(100, total() - sanctuaryIndex * 100));
-        const drops = Object.keys(journal.dropTiles || {}).filter(
+      collectionReader = createGlassCollectionReader({
+        catalog: GLASS_BOSSES,
+        getScope: () => (account ? `${authKey}:${account.username}` : 'guest'),
+        getCurrent: () => (bossChosen ? { id: bossId, journal, configured } : null),
+        readLocal: (id) =>
+          localStorage.getItem(
+            account ? `${authKey}:draft:${account.username}:${id}` : GLASS_BOSSES[id].storageKey
+          ),
+        loadRemote: (id) => cloudRequest(`/journals/${id}`),
+        validate,
+        onChange: () => {
+          refreshCollectionViews();
+          if ($('sanctuary').open) renderSanctuary(true);
+        },
+      });
+      const collectionRenderers = {};
+      const getSanctuaryJournal = () => collectionReader.getJournal(sanctuaryBossId);
+      const journalTotal = (value) =>
+        value
+          ? value.sessions.reduce((sum, session) => sum + session.kills, 0) +
+            (value.active?.kills || 0)
+          : 0;
+      function collectionRenderer(id) {
+        return (collectionRenderers[id] ||= GLASS_RENDERERS[id](GLASS_BOSSES[id], {
+          esc,
+          getJournal: () => collectionReader.getJournal(id) || { base: 0, dropTiles: {} },
+        }));
+      }
+      function collectionArtwork(id, index, count, uid) {
+        return collectionRenderer(id).art(
+          count,
+          index,
+          uid,
+          false,
+          GLASS_APPEARANCE.get(id, index)
+        );
+      }
+      function openSanctuary(id = bossId, index, tile) {
+        hidePanePreview();
+        sanctuaryReturnFocus = document.activeElement;
+        sanctuaryBossId = id;
+        sanctuaryMode = index === undefined ? 'wings' : 'window';
+        sanctuaryIndex =
+          index ?? Math.max(0, Math.ceil(journalTotal(collectionReader.getJournal(id)) / 100) - 1);
+        sanctuaryWings.selectWing(id);
+        renderSanctuary();
+        $('sanctuary').append($('pane-preview'));
+        if (!$('sanctuary').open) $('sanctuary').showModal();
+        void collectionReader.refreshRemote();
+        if (tile) {
+          const pane = $('room-art').querySelector(`[data-pane="${tile}"]`);
+          if (pane) {
+            pane.focus();
+            showPanePreview(pane);
+          }
+        }
+      }
+      sanctuaryWings = createGlassSanctuaryWings($('sanctuary-wings'), {
+        getCollections: () => collectionReader.collections(),
+        renderWindow: collectionArtwork,
+        colorFor: (id, index) => collectionRenderer(id).sceneColors(index)[3],
+        onOpen: (id, index) => {
+          sanctuaryBossId = id;
+          sanctuaryIndex = index;
+          sanctuaryMode = 'window';
+          renderSanctuary();
+          $('room-back').focus();
+        },
+        initialBoss: () => bossId,
+      });
+      lootWall = createGlassLootWall($('loot-wall'), {
+        getScope: () => (account ? `${authKey}:${account.username}` : 'guest'),
+        getDrops: () =>
+          collectionReader.collections().flatMap((collection) =>
+            Object.entries(collection.journal?.dropTiles || {}).map(([tile, drop]) => {
+              const index = Math.floor((Number(tile) - 1) / 100);
+              return {
+                bossId: collection.id,
+                bossName: collection.name,
+                bossShortName: collection.shortName,
+                tile: Number(tile),
+                kc: collection.journal.base + Number(tile),
+                label: drop.label || 'Drop recorded',
+                image: drop.image,
+                windowIndex: index,
+                windowTitle: collection.titles[index % collection.titles.length],
+              };
+            })
+          ),
+        onOpenMemory: (drop) => openSanctuary(drop.bossId, drop.windowIndex, drop.tile),
+      });
+      windowCompletion = createGlassWindowCompletion($('window-completion'), {
+        onVisit: () => {
+          if (completedWindow) {
+            openSanctuary(completedWindow.bossId, completedWindow.index);
+            sanctuaryReturnFocus = $('record-kill');
+          }
+        },
+      });
+      function renderSanctuary(preservePreview = false) {
+        const previewTile =
+          preservePreview && !$('pane-preview').hidden && previewPane?.closest('#room-art')
+            ? Number(previewPane.dataset.pane)
+            : null;
+        const focusedTile =
+          preservePreview && document.activeElement?.closest('#room-art')
+            ? Number(document.activeElement.dataset.pane)
+            : null;
+        hidePanePreview();
+        const sourceJournal = getSanctuaryJournal();
+        const sourceTotal = journalTotal(sourceJournal);
+        const lastIndex = Math.max(0, Math.ceil(sourceTotal / 100) - 1);
+        if (!sourceTotal) sanctuaryMode = 'wings';
+        const detail = sanctuaryMode === 'window';
+        $('sanctuary-wings').hidden = detail;
+        $('room-stage').hidden = !detail;
+        $('room-footer').hidden = !detail;
+        $('room-back').hidden = !detail;
+        $('collection-status').textContent = collectionReader.status();
+        if (!detail) {
+          $('room-art').innerHTML = '';
+          $('room-dust').innerHTML = '';
+          sanctuaryWings.refresh();
+          return;
+        }
+        const config = GLASS_BOSSES[sanctuaryBossId];
+        sanctuaryIndex = Math.max(0, Math.min(sanctuaryIndex, lastIndex));
+        const pieces = Math.max(0, Math.min(100, sourceTotal - sanctuaryIndex * 100));
+        const drops = Object.keys(sourceJournal.dropTiles || {}).filter(
           (key) =>
             Number(key) > sanctuaryIndex * 100 && Number(key) <= sanctuaryIndex * 100 + pieces
         ).length;
-        $('room-art').innerHTML = art(pieces, sanctuaryIndex, 'sanctuary');
+        $('room-art').innerHTML = collectionArtwork(
+          sanctuaryBossId,
+          sanctuaryIndex,
+          pieces,
+          'sanctuary'
+        );
         $('room-title').textContent =
-          `${String(sanctuaryIndex + 1).padStart(2, '0')} · ${titles[sceneNumber(sanctuaryIndex)]}`;
+          `${config.shortName} · ${String(sanctuaryIndex + 1).padStart(2, '0')} · ${config.titles[sanctuaryIndex % config.titles.length]}`;
         $('room-progress').textContent =
           `${pieces} / 100 pieces of light${drops ? ` · ${drops} drop ${drops === 1 ? 'memory' : 'memories'}` : ''}`;
         $('room-whisper').textContent =
           pieces === 0
-            ? boss().whispers.empty
+            ? config.whispers.empty
             : pieces === 100
-              ? boss().whispers.complete
-              : boss().whispers.progress;
-        $('sanctuary').style.setProperty('--room-color', sceneColors(sanctuaryIndex)[3]);
+              ? config.whispers.complete
+              : config.whispers.progress;
+        $('sanctuary').style.setProperty(
+          '--room-color',
+          collectionRenderer(sanctuaryBossId).sceneColors(sanctuaryIndex)[3]
+        );
         $('sanctuary').style.setProperty('--room-light', String(0.08 + (pieces / 100) * 0.42));
         $('room-previous').disabled = sanctuaryIndex === 0;
-        $('room-next').disabled = sanctuaryIndex === lastEarnedWindow();
+        $('room-next').disabled = sanctuaryIndex === lastIndex;
+        if (!$('room-dust').children.length)
+          $('room-dust').innerHTML = Array.from(
+            { length: 18 },
+            (_, i) =>
+              `<i style="--dust-x:${8 + ((i * 37) % 84)}%;--dust-time:${18 + (i % 7) * 3}s;--dust-delay:-${i * 2}s"></i>`
+          ).join('');
+        if (focusedTile)
+          $('room-art')
+            .querySelector(`[data-pane="${focusedTile}"]`)
+            ?.focus({ preventScroll: true });
+        if (previewTile) {
+          const pane = $('room-art').querySelector(`[data-pane="${previewTile}"]`);
+          if (pane) showPanePreview(pane);
+        }
       }
-      $('enter-sanctuary').addEventListener('click', () => {
-        hidePanePreview();
-        sanctuaryIndex = lastEarnedWindow();
+      $('enter-sanctuary').addEventListener('click', () => openSanctuary());
+      $('nav-loot').addEventListener('click', () => void collectionReader.refreshRemote());
+      $('room-back').addEventListener('click', () => {
+        sanctuaryMode = 'wings';
+        sanctuaryWings.selectWing(sanctuaryBossId);
         renderSanctuary();
-        $('room-dust').innerHTML = Array.from(
-          { length: 18 },
-          (_, i) =>
-            `<i style="--dust-x:${8 + ((i * 37) % 84)}%;--dust-time:${18 + (i % 7) * 3}s;--dust-delay:-${i * 2}s"></i>`
-        ).join('');
-        $('sanctuary').showModal();
+        $('sanctuary-wings').querySelector('[aria-pressed="true"]')?.focus();
       });
       $('leave-sanctuary').addEventListener('click', () => $('sanctuary').close());
       $('sanctuary').addEventListener('close', () => {
+        hidePanePreview();
+        document.body.insertBefore($('pane-preview'), $('sanctuary'));
         $('room-dust').innerHTML = '';
         $('room-art').innerHTML = '';
-        $('enter-sanctuary').focus();
+        if (sanctuaryReturnFocus?.isConnected) sanctuaryReturnFocus.focus();
+        else $('enter-sanctuary').focus();
       });
       $('room-previous').addEventListener('click', () => {
         sanctuaryIndex--;
@@ -2322,14 +2580,42 @@
         sanctuaryIndex++;
         renderSanctuary();
       });
+      $('sanctuary').addEventListener('pointerdown', (event) => {
+        if (!event.target.closest('[data-pane], #pane-preview')) hidePanePreview();
+      });
       $('sanctuary').addEventListener('keydown', (event) => {
-        if (event.key === 'Escape') event.stopPropagation();
-        if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        if (event.key === 'Escape') {
+          event.stopPropagation();
+          if (!$('pane-preview').hidden) {
+            event.preventDefault();
+            hidePanePreview();
+          }
+        }
+        if (
+          sanctuaryMode === 'window' &&
+          (event.key === 'ArrowLeft' || event.key === 'ArrowRight')
+        ) {
           event.preventDefault();
           sanctuaryIndex += event.key === 'ArrowLeft' ? -1 : 1;
           renderSanctuary();
         }
       });
+      function refreshBossPreviews() {
+        document.querySelectorAll('.boss-choice').forEach((slide, index) => {
+          const config = GLASS_BOSSES[slide.querySelector('[data-choose-boss]').dataset.chooseBoss];
+          const preview = GLASS_RENDERERS[config.id](config, {
+            esc,
+            getJournal: () => ({ base: 0, dropTiles: {} }),
+          });
+          slide.querySelector('.boss-choice-preview').innerHTML = preview.art(
+            100,
+            config.previewScene,
+            `workshop-boss-${index}`,
+            false,
+            GLASS_APPEARANCE.get(config.id, config.previewScene)
+          );
+        });
+      }
       windowWorkshop = createGlassWorkshop($('window-workshop'), {
         getTarget: () => ({ boss: bossId, index: workshopIndex, value: workshopIndex }),
         getWindows: () =>
@@ -2347,21 +2633,7 @@
         },
         onChange: () => {
           render();
-          document.querySelectorAll('.boss-choice').forEach((slide, index) => {
-            const config =
-              GLASS_BOSSES[slide.querySelector('[data-choose-boss]').dataset.chooseBoss];
-            const preview = GLASS_RENDERERS[config.id](config, {
-              esc,
-              getJournal: () => ({ base: 0, dropTiles: {} }),
-            });
-            slide.querySelector('.boss-choice-preview').innerHTML = preview.art(
-              100,
-              config.previewScene,
-              `workshop-boss-${index}`,
-              false,
-              GLASS_APPEARANCE.get(config.id, config.previewScene)
-            );
-          });
+          refreshBossPreviews();
         },
       });
       $('gallery-items').addEventListener('click', (event) => {
@@ -2373,6 +2645,10 @@
         windowWorkshop.refresh();
         details.querySelector('summary').focus({ preventScroll: true });
         details.scrollIntoView({ block: 'center' });
+      });
+      addEventListener('glass-motionchange', () => {
+        render(false, { preserveCompletion: true });
+        refreshBossPreviews();
       });
       initBossPicker();
       void initAccount();

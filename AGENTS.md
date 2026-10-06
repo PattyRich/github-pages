@@ -7,6 +7,7 @@ Read these before working outside familiar territory instead of re-deriving what
 - `docs/architecture.md` — system design, data models, Mongo/Redis schema, background job flow.
 - `docs/lol-beat.md` — LoL-Beat graph schema, crawl strategy, API.
 - `DESIGN.md` — frontend visual system. Read before touching any UI.
+- `docs/glass-kc.md` — Glass KC windows, artwork and optional particle motion. Read before changing Glass KC.
 
 ## General Rules
 

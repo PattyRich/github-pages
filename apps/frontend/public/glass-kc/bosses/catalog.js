@@ -320,7 +320,7 @@ const GLASS_BOSSES = {
     sceneDescriptions: [
       'A low-slung Hunllef joins crimson crystal and charcoal forequarters to cyan hindquarters, with forked horns, a hooked muzzle, heavy shoulder mantle and broad clawed feet.',
       'The crimson crystal Blade of Saeldor crosses behind a red Bow of Faerdhinen. The blade has two teeth and a triangular cutout along its inner edge; the bow has hooked tips, bent limbs and a large hollow crystal grip.',
-      'The ivory arches and sweeping green leaf roofs of the Tower of Voices rise above Prifddinas, with crystal bridges, trees and a winding sunlit path.',
+      'The ivory arches and sweeping green leaf roofs of the Tower of Voices rise above Prifddinas, with crystal bridges, trees and a winding sunlit path. Pale mint and cyan crystal splinters drift among small ivory glints around the city.',
       'Jagged grey chambers surround tall crimson rune doors, with glowing wall crystals, beveled red floor tiles, Phren roots and crystal deposits beside a preparation bowl.',
     ],
     postcardNotes: [

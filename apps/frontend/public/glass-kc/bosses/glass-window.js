@@ -160,7 +160,8 @@ function createGlassWindow({ config, esc, getJournal, sceneColors, renderScene, 
       revealed = '',
       sleeping = '',
       memories = '';
-    const interactive = uid === 'main' || uid.startsWith('gallery-');
+    const previewOnly = uid === 'sanctuary';
+    const interactive = uid === 'main' || uid.startsWith('gallery-') || previewOnly;
     const leftEdge = shape.edge;
     // Shared vertices avoid gaps. Kill order remains bottom-to-top, left-to-right.
     const vertices = Array.from({ length: 11 }, (_, r) =>
@@ -198,8 +199,8 @@ function createGlassWindow({ config, esc, getJournal, sceneColors, renderScene, 
         const tile = index * 100 + n + 1,
           drop = n < count ? getJournal().dropTiles?.[tile] : null;
         const target =
-          interactive && n < count
-            ? ` data-pane="${tile}" tabindex="0" role="button" aria-label="KC ${getJournal().base + tile}${drop ? ', drop: ' + esc(drop.label || 'Drop recorded') : ': mark a drop'}"`
+          interactive && n < count && (!previewOnly || drop)
+            ? ` data-pane="${tile}" tabindex="0" role="button" aria-label="KC ${getJournal().base + tile}${drop ? ', drop: ' + esc(drop.label || 'Drop recorded') : ': mark a drop'}${previewOnly ? ', view drop memory' : ''}"`
             : '';
         sleeping += `<polygon points="${points}" fill="${['#232b2b', '#293032', '#242a30', '#303236'][(row * 3 + col) % 4]}"/><path d="M${x4} ${y4} L${x2} ${y2} L${x3} ${y3}Z" fill="#b9dad1" opacity=".035"/>`;
         seams += `<polygon class="pane ${n < count ? 'filled' : ''}"${target} points="${points}" fill="${drop ? '#d85397' : 'transparent'}" fill-opacity="${drop ? 0.24 : 0}" stroke="${drop ? '#f29dcd' : '#121b20'}" stroke-width="${drop ? 2.5 : n < count ? 0.8 : 1.3}"/>`;
@@ -214,6 +215,15 @@ function createGlassWindow({ config, esc, getJournal, sceneColors, renderScene, 
     const scene = shape.transform
       ? `${panes}<g transform="${shape.transform}">${renderScene(colors, '', index)}</g>`
       : renderScene(colors, panes, index);
+    const reducedMotion =
+      typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    // Inline scenes preserve SVG path morphs and motion paths without a <use> shadow tree.
+    const sceneMarkup = reducedMotion
+      ? scene.replace(
+          /<(animate|animateMotion|animateTransform)\b[^>]*(?:\/>|>[\s\S]*?<\/\1>)/g,
+          ''
+        )
+      : scene;
     const ornamentRows = [300, 460];
     const anchors = ornamentRows.flatMap((y) => [
       [leftEdge(y) - frame.width - 9, y],
@@ -224,7 +234,13 @@ function createGlassWindow({ config, esc, getJournal, sceneColors, renderScene, 
       anchors,
       crownY: Math.max(-2, shape.top - frame.width - 1),
     });
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" data-window-shape="${shapeId}" role="${interactive ? 'group' : 'img'}" aria-label="${esc(titles[sceneNumber(index)])} — ${esc(sceneDescriptions[sceneNumber(index)])} ${count} of 100 pieces lit, ${Math.floor(count / 25)} of 4 frame ornaments earned. ${shape.label} window, ${frame.label} frame."><defs><clipPath id="clip-${uid}"><path d="${path}"/></clipPath><clipPath id="lit-${uid}">${revealed}</clipPath><linearGradient id="glass-${uid}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e3edcc" stop-opacity=".12"/><stop offset=".45" stop-color="#acbacf" stop-opacity="0"/><stop offset="1" stop-color="#0d1725" stop-opacity=".2"/></linearGradient><g id="scene-${uid}">${scene}${facets}<path d="${path}" fill="url(#glass-${uid})"/></g></defs>${glassFrame(shape, frame, uid)}<g clip-path="url(#clip-${uid})">${sleeping}<g clip-path="url(#lit-${uid})"><use href="#scene-${uid}"/></g>${seams}${memories}</g><path d="${path}" fill="none" stroke="${frame.light}" stroke-width="3" pointer-events="none"/>${ornaments}${celebrate ? `<path class="window-resonance" d="${path}" fill="none" stroke="${colors[3]}" stroke-width="${count === 100 ? 10 : 5}" opacity="0" pointer-events="none"/>` : ''}</svg>`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" data-window-shape="${shapeId}" role="${interactive ? 'group' : 'img'}" aria-label="${esc(titles[sceneNumber(index)])} — ${esc(sceneDescriptions[sceneNumber(index)])} ${count} of 100 pieces lit, ${Math.floor(count / 25)} of 4 frame ornaments earned. ${shape.label} window, ${frame.label} frame."><defs><clipPath id="clip-${uid}"><path d="${path}"/></clipPath><clipPath id="lit-${uid}">${revealed}</clipPath><linearGradient id="glass-${uid}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e3edcc" stop-opacity=".12"/><stop offset=".45" stop-color="#acbacf" stop-opacity="0"/><stop offset="1" stop-color="#0d1725" stop-opacity=".2"/></linearGradient></defs>${glassFrame(shape, frame, uid)}<g clip-path="url(#clip-${uid})">${sleeping}<g clip-path="url(#lit-${uid})"><g id="scene-${uid}">${sceneMarkup}${facets}<path d="${path}" fill="url(#glass-${uid})"/></g></g>${seams}${memories}</g><path d="${path}" fill="none" stroke="${frame.light}" stroke-width="3" pointer-events="none"/>${ornaments}${celebrate ? `<path class="window-resonance" d="${path}" fill="none" stroke="${colors[3]}" stroke-width="${count === 100 ? 10 : 5}" opacity="0" pointer-events="none"/>` : ''}</svg>`;
   }
   return art;
+}
+
+if (typeof matchMedia === 'function' && typeof dispatchEvent === 'function') {
+  matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', () =>
+    dispatchEvent(new Event('glass-motionchange'))
+  );
 }

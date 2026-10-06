@@ -1,3 +1,58 @@
+function gauntletSceneMotion(scene, svg) {
+  const appendGroup = (marker, effect) => {
+    const from = svg.indexOf(marker);
+    if (from < 0) throw new Error(`Gauntlet scene ${scene}: missing group ${marker}`);
+    const groups = /<\/?g\b[^>]*>/g;
+    groups.lastIndex = svg.indexOf('>', from) + 1;
+    let depth = 1,
+      match;
+    while ((match = groups.exec(svg))) {
+      depth += match[0].startsWith('</g') ? -1 : 1;
+      if (depth === 0) {
+        svg = svg.slice(0, match.index) + effect + svg.slice(match.index);
+        return;
+      }
+    }
+    throw new Error('Gauntlet motion: subject group is unclosed');
+  };
+
+  if (scene === 0) {
+    // Hunllef's grounded stomp, using all six original crimson front-leg facets.
+    // The shoulder joint stays in place, with no whole-character bob or zoom.
+    const from = svg.indexOf('<path d="M644 430 L710 491');
+    const finalFacet = svg.indexOf('<path d="M584 862 L613 877', from);
+    if (from < 0 || finalFacet < 0)
+      throw new Error('Gauntlet motion: Hunllef front-leg facets changed');
+    const end = svg.indexOf('/>', finalFacet) + 2;
+    const leg = svg.slice(from, end);
+    svg =
+      svg.slice(0, from) +
+      `<g data-motion="hunllef-paw-stamp"><animateTransform attributeName="transform" type="rotate" values="0 644 430;8 644 430;8 644 430;0 644 430;0 644 430" keyTimes="0;.3;.39;.47;1" dur="9.2s" begin="-1.3s" repeatCount="indefinite"/>${leg}</g>` +
+      svg.slice(end);
+    svg += `<g data-motion="hunllef-ground-contact" transform="translate(123 503)" opacity="0"><animate attributeName="opacity" values="0;0;.76;.3;0;0" keyTimes="0;.45;.48;.57;.69;1" dur="9.2s" begin="-1.3s" repeatCount="indefinite"/><path d="M-29 2 L-19 7 L-13 3 L-5 8 L4 3 L15 8 L28 2 M-9 5 L-15 13 L-25 15 M11 5 L19 13 L31 15" fill="none" stroke="#e9767c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></g>`;
+  } else if (scene === 1) {
+    // A broad reflection sweeps inside the blade's actual crystal silhouette.
+    // This is changing material light, with no independent projectile or orbit.
+    const from = svg.indexOf('<path d="M162 106 L189 121');
+    if (from < 0) throw new Error('Gauntlet motion: Blade of Saeldor silhouette changed');
+    const end = svg.indexOf('/>', from) + 2;
+    const silhouette = svg.slice(from, end);
+    gauntletSceneMotion.nextId = (gauntletSceneMotion.nextId || 0) + 1;
+    const id = 'cg-crystal-refraction-' + gauntletSceneMotion.nextId;
+    const reflection = `<defs><clipPath id="${id}">${silhouette}</clipPath><linearGradient id="${id}-light" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#f5b1a1" stop-opacity="0"/><stop offset=".4" stop-color="#ffe0c2" stop-opacity=".8"/><stop offset=".6" stop-color="#f5b1a1" stop-opacity=".5"/><stop offset="1" stop-color="#f5b1a1" stop-opacity="0"/></linearGradient></defs><g data-motion="saeldor-crystal-refraction" clip-path="url(#${id})"><g><animateTransform attributeName="transform" type="translate" values="0 394;0 66;0 394" keyTimes="0;.78;1" dur="9s" begin="-1.8s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;.85;.85;0;0" keyTimes="0;.06;.71;.78;1" dur="9s" begin="-1.8s" repeatCount="indefinite"/><path d="M135 -22 L239 -53 L239 -11 L135 20Z" fill="url(#${id}-light)" stroke="none"/><path d="M135 -10 L239 -41 L239 -34 L135 -3Z" fill="#ffe0c2" stroke="none" opacity=".34"/></g></g>`;
+    // Insert in the blade group; the foreground bow retains its natural occlusion.
+    appendGroup('<g transform="translate(-24 22) rotate(-32 180 300)"', reflection);
+  } else if (scene === 3) {
+    // Corrupt Deposit is mined with a corrupted pickaxe. A visible crystal-headed
+    // tool strikes the existing deposit, then one irregular ore chip falls away.
+    // The existing central door and its upright glyph are untouched.
+    const tool = `<g data-motion="corrupt-deposit-pickaxe" transform="translate(315 459)"><g><animateTransform attributeName="transform" type="rotate" values="10;30;-8;-8;10;10" keyTimes="0;.25;.38;.46;.63;1" dur="10s" begin="-1.6s" repeatCount="indefinite"/><path d="M-4 7 L-3 -59 L4 -61 L4 4 L0 10Z" fill="#625661" stroke="#30303a" stroke-width="2" stroke-linejoin="round"/><path d="M-2 3 L-1 -52 L1 -54 L1 5Z" fill="#a18688" stroke="none"/><path d="M-28 -51 L-21 -64 L-5 -72 L11 -71 L22 -64 L28 -53 L13 -61 L0 -63 L-12 -57Z" fill="#de5c70" stroke="#7d314a" stroke-width="2" stroke-linejoin="round"/><path d="M-21 -64 L-5 -72 L11 -71 L22 -64 L5 -66 L-7 -64 L-18 -58Z" fill="#f58c8b" stroke="#b44b60" stroke-width="1"/><path d="M5 -66 L22 -64 L28 -53 L13 -61 L0 -63Z" fill="#7b2b43" stroke="none"/></g></g>`;
+    const chip = `<g data-motion="mined-corrupt-ore" opacity="0"><animateMotion path="M309 401 Q328 400 330 428 Q334 467 317 515" keyPoints="0;0;0;1;1" keyTimes="0;.38;.4;.72;1" calcMode="linear" dur="10s" begin="-1.6s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;.95;.95;0;0" keyTimes="0;.385;.405;.68;.75;1" dur="10s" begin="-1.6s" repeatCount="indefinite"/><g><animateTransform attributeName="transform" type="rotate" values="0;0;0;145;145" keyTimes="0;.38;.4;.72;1" dur="10s" begin="-1.6s" repeatCount="indefinite"/><path d="M-5 -2 L-1 -8 L5 -4 L7 4 L0 7 L-6 3Z" fill="#de5c70" stroke="#7d314a" stroke-width="1.3"/><path d="M-5 -2 L-1 -8 L5 -4 L0 1Z" fill="#f58c8b" stroke="#b44b60" stroke-width=".7"/><path d="M0 1 L7 4 L0 7 L-6 3Z" fill="#7b2b43" stroke="none"/></g></g>`;
+    const strike = `<g data-motion="deposit-strike" opacity="0"><animate attributeName="opacity" values="0;0;.7;0;0" keyTimes="0;.375;.395;.46;1" dur="10s" begin="-1.6s" repeatCount="indefinite"/><path d="M302 403 L295 399 M308 404 L312 396 M310 409 L319 407" fill="none" stroke="#f58c8b" stroke-width="2" stroke-linecap="round"/></g>`;
+    svg += tool + chip + strike;
+  }
+  return svg;
+}
 /* Original Gauntlet SVGs, drawn after inspecting the OSRS Wiki's Crystalline
  * and Corrupted Hunllef models, Bow of Faerdhinen and Blade of Saeldor detail
  * images, Corrupted Gauntlet room screenshot and Prifddinas city view.
@@ -287,6 +342,79 @@ GLASS_RENDERERS.cg = function createGauntletRenderer(config, { esc, getJournal }
       ${line('M28 529 L52 519 L72 534 M281 542 L311 525 L333 536', '#a9cd9b', 1.4)}`;
   }
 
+  function prifddinasMotes() {
+    // Keep the original twelve sparse floating positions. Bigger pale faces
+    // make the individual fragments readable at a normal window size.
+    const shards = [
+      [122, 134, 10.2, -11],
+      [240, 128, 9.4, 14],
+      [87, 246, 11.2, -13],
+      [281, 248, 10.2, 19],
+      [122, 284, 8.1, 11],
+      [237, 281, 10.2, -16],
+      [113, 430, 9.4, -9],
+      [244, 441, 8.8, 16],
+      [65, 488, 10.2, -15],
+      [317, 490, 8.8, 12],
+      [128, 487, 8.1, 15],
+      [237, 515, 9.4, -12],
+    ];
+    const fragments = shards
+      .map(([x, y, size, tilt], i) => {
+        const width = size * 0.48;
+        const fragment = `<g transform="rotate(${tilt})">
+      ${i % 3 === 0 ? `<path d="M0 ${size + 2} L-.7 ${size + 10}" fill="none" stroke="#c4e3e0" stroke-width="1.1" opacity=".4"/>` : ''}
+      <path d="M0 ${-size} L${width} 0 L0 ${size} L${-width} 0Z" fill="#99dedb" stroke="#5babae" stroke-width=".8"/>
+      <path d="M0 ${-size} L0 ${size} L${-width} 0Z" fill="#c7efce" stroke="none"/>
+      <path d="M0 ${-size} L${width} 0 L0 ${size * 0.54}Z" fill="#f5f8df" stroke="none"/>
+      <path d="M0 ${-size * 0.66} L0 ${size * 0.28}" fill="none" stroke="#fffce9" stroke-width=".75"/>
+    </g>`;
+        return `<g transform="translate(${x} ${y})"><g class="prif-crystal-shard" style="animation-duration:${8 + (i % 4)}s;animation-delay:-${i * 1.35}s">${fragment}</g></g>`;
+      })
+      .join('');
+
+    // Tower crown and leaf-roof tip, then the two foreground crystal tips.
+    // Four separate twinkles keep the city clear and avoid a glittering cloud.
+    const points = [
+      [180, 112, 12.5],
+      [86, 175, 11],
+      [83, 467, 12],
+      [284, 460, 12.5],
+    ];
+    const glints = points
+      .map(([x, y, size], i) => {
+        const neck = size * 0.25;
+        return `<g transform="translate(${x} ${y})"><g class="prif-crystal-spark" style="animation-delay:-${i * 2.1}s">
+      <circle r="${size * 1.4}" fill="#a7e9d9" opacity=".12"/>
+      <path d="M0 ${-size} L${neck} ${-neck} L${size} 0 L${neck} ${neck} L0 ${size} L${-neck} ${neck} L${-size} 0 L${-neck} ${-neck}Z" fill="#fffce9" stroke="#3e777e" stroke-width="1.1" stroke-linejoin="round"/>
+      <path d="M0 ${-size} V${size} L${-neck} ${neck} L${-size} 0 L${-neck} ${-neck}Z" fill="#c7efce" stroke="none"/>
+      <circle r="1.35" fill="#fffce9"/>
+    </g></g>`;
+      })
+      .join('');
+
+    return `<g data-motion="prif-crystal-sparkle" pointer-events="none" aria-hidden="true">
+    <style>
+      .prif-crystal-shard { opacity:.9; animation:prif-crystal-float 9s ease-in-out infinite; }
+      @keyframes prif-crystal-float {
+        0%,100% { transform:translate(0,2px); opacity:.78; }
+        50% { transform:translate(1.5px,-6px); opacity:1; }
+      }
+      .prif-crystal-spark { opacity:.32; transform:scale(.8); animation:prif-crystal-twinkle 8.4s ease-in-out infinite; }
+      @keyframes prif-crystal-twinkle {
+        0%,12%,100% { opacity:.28; transform:scale(.7); }
+        25% { opacity:1; transform:scale(1.15); }
+        39%,82% { opacity:.32; transform:scale(.8); }
+      }
+      @media(prefers-reduced-motion:reduce) {
+        .prif-crystal-shard { animation:none; opacity:.9; transform:none; }
+        .prif-crystal-spark { animation:none; opacity:.72; transform:scale(.75); }
+      }
+    </style>
+    ${fragments}${glints}
+  </g>`;
+  }
+
   function frameOrnaments(count, index, uid, celebrate, { anchors }) {
     return anchors
       .map(([x, y], i) =>
@@ -324,9 +452,9 @@ GLASS_RENDERERS.cg = function createGauntletRenderer(config, { esc, getJournal }
       } else if (scene === 3) {
         illustration = `${path('M62 197 L86 148 L115 130 L180 81 L245 130 L274 148 L298 197Z', '#4b3948', '#8c6164', 2)}${path('M180 81 V164 L115 130Z', '#754251', '#98626c', 1.4)}${line('M86 148 L119 164 M274 148 L241 164 M147 113 L157 152 M212 111 L202 151', '#bd7b77', 1.4)}${labyrinth()}`;
       } else {
-        illustration = `${path('M180 70 L222 109 L284 139 L316 192 V368 H44 V192 L78 139 L137 109Z', '#aecac0', '#6c958e', 1.7)}${path('M180 70 L174 181 L139 236 L77 139 L137 109Z', '#d2dfcb', '#91b2a3', 1.3)}${ellipse(242, 177, 24, 24, '#e8e6b7', '#bac99c', 1.5)}${line('M63 218 L93 204 L109 210 M253 233 L278 215 L302 223', '#e3ecce', 1.5)}${prifddinas()}`;
+        illustration = `${path('M180 70 L222 109 L284 139 L316 192 V368 H44 V192 L78 139 L137 109Z', '#aecac0', '#6c958e', 1.7)}${path('M180 70 L174 181 L139 236 L77 139 L137 109Z', '#d2dfcb', '#91b2a3', 1.3)}${ellipse(242, 177, 24, 24, '#e8e6b7', '#bac99c', 1.5)}${line('M63 218 L93 204 L109 210 M253 233 L278 215 L302 223', '#e3ecce', 1.5)}${prifddinas()}${prifddinasMotes()}`;
       }
-      return `${panes}${arch}${illustration}${line('M62 540 H298', colours[4], 1.3)}`;
+      return `${panes}${arch}${scene === 2 ? illustration : gauntletSceneMotion(scene, illustration)}${line('M62 540 H298', colours[4], 1.3)}`;
     },
   });
   return { art, shrineMarkup, sceneColors };

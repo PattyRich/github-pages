@@ -1,8 +1,312 @@
+function kodaiTipCast(svg) {
+  // Kodai's original grey pointed tip is (0, -198) in the wand's model plane.
+  // Existing placement: translate(285 360) rotate(7) scale(.96), giving scene
+  // coordinates (308.1649247944504, 171.33682749601752) before shape scaling.
+  const findEnd = (from) => {
+    const groups = /<\/?g\b[^>]*>/g;
+    groups.lastIndex = svg.indexOf('>', from) + 1;
+    let depth = 1,
+      match;
+    while ((match = groups.exec(svg))) {
+      depth += match[0].startsWith('</g') ? -1 : 1;
+      if (depth === 0) return { before: match.index, after: groups.lastIndex };
+    }
+    throw new Error('Kodai tip cast: unclosed Kodai motion group');
+  };
+  const pieces = [];
+  const effects = /<g data-motion="kodai-(?:ice-growth|branching-frost|ice-splinter)"/g;
+  let match;
+  while ((match = effects.exec(svg))) {
+    const from = match.index;
+    const end = findEnd(from);
+    pieces.push(svg.slice(from, end.after));
+    svg = svg.slice(0, from) + svg.slice(end.after);
+    effects.lastIndex = from;
+  }
+  if (pieces.length !== 6)
+    throw new Error('Kodai tip cast: expected three ice forms, branching frost and two splinters');
+  const wand = svg.indexOf('<g data-relic="kodai-wand"');
+  if (wand < 0) throw new Error('Kodai tip cast: missing stationary Kodai wand');
+  const end = findEnd(wand);
+  // Preserve the approved geometry, keyframes and delays while moving the
+  // shared construction origin (0,151) to the real tip. The fan points into
+  // the glass arch rather than sending the tall ice out through its right edge.
+  const cast = `<g data-motion="kodai-tip-cast" data-cast-origin="0 -198" transform="translate(0 -198) rotate(-40) translate(0 -151)">${pieces.join('')}</g>`;
+  return svg.slice(0, end.before) + cast + svg.slice(end.before);
+}
+function chamberRelicDetails(scene, svg) {
+  const replaceOnce = (before, after) => {
+    const at = svg.indexOf(before);
+    if (at < 0 || svg.indexOf(before, at + before.length) !== -1)
+      throw new Error(
+        'Chambers relic details: missing or duplicate anchor: ' + before.slice(0, 90)
+      );
+    svg = svg.slice(0, at) + after + svg.slice(at + before.length);
+  };
+  if (scene === 1) {
+    // Keep the nock, drawing motion and released flight. Enlarge only
+    // the arrow's shaft, head and fletching, so it reads clearly in a window.
+    replaceOnce(
+      '<path d="M0 0 H108" fill="none" stroke="#c8b597" stroke-width="3.6" stroke-linecap="round"/>',
+      '<path d="M0 0 H181" fill="none" stroke="#c8b597" stroke-width="5.6" stroke-linecap="round"/>'
+    );
+    replaceOnce(
+      '<path d="M108 0 L92 -7 L96 0 L92 7Z" fill="#adb4b5" stroke="#353343" stroke-width="1.4"/>',
+      '<path d="M181 0 L149 -14 L157 0 L149 14Z" fill="#adb4b5" stroke="#353343" stroke-width="2"/>'
+    );
+    replaceOnce(
+      '<path d="M4 0 L-7 -6 L-19 -6 L-10 0 L-19 6 L-7 6Z" fill="#a06a5e" stroke="#403841" stroke-width="1.2"/>',
+      '<path d="M8 0 L-14 -12 L-38 -12 L-20 0 L-38 12 L-14 12Z" fill="#a06a5e" stroke="#403841" stroke-width="1.8"/>'
+    );
+  } else if (scene === 2) {
+    // Refine the ice forms in their construction plane before kodaiTipCast
+    // places them at the wand tip. Cyan/white facets, branching frost and two
+    // emitted splinters make the small cast readable.
+    const forms = [
+      ['M-16 0 L-42 4 L-53 -24 L-42 -47 L-20 -34Z', 'M-16 0 L-42 4 L-53 -30 L-42 -59 L-20 -43Z'],
+      ['M-42 4 L-53 -24 L-42 -47 L-35 -22Z', 'M-42 4 L-53 -30 L-42 -59 L-35 -28Z'],
+      ['M-35 -22 L-20 -34 L-16 0 L-42 4Z', 'M-35 -28 L-20 -43 L-16 0 L-42 4Z'],
+      [
+        'M-17 0 L-22 -42 L-8 -62 L13 -66 L27 -46 L23 -3 L12 10Z',
+        'M-17 0 L-22 -53 L-8 -79 L13 -84 L27 -59 L23 -3 L12 10Z',
+      ],
+      ['M-22 -42 L-8 -62 L13 -66 L4 -41Z', 'M-22 -53 L-8 -79 L13 -84 L4 -52Z'],
+      ['M4 -41 L13 -66 L27 -46 L23 -3 L12 10Z', 'M4 -52 L13 -84 L27 -59 L23 -3 L12 10Z'],
+      ['M-12 -39 L-7 -9', 'M-12 -50 L-7 -9'],
+      [
+        'M18 -4 L19 -53 L39 -77 L52 -50 L42 -11 L31 8Z',
+        'M18 -4 L19 -67 L39 -97 L52 -64 L42 -11 L31 8Z',
+      ],
+      ['M19 -53 L39 -77 L35 -45 L31 8 L18 -4Z', 'M19 -67 L39 -97 L35 -57 L31 8 L18 -4Z'],
+      ['M35 -45 L39 -77 L52 -50 L42 -11 L31 8Z', 'M35 -57 L39 -97 L52 -64 L42 -11 L31 8Z'],
+    ];
+    for (const [before, after] of forms) replaceOnce('d="' + before + '"', 'd="' + after + '"');
+    const colors = [
+      ['#a7c6d9', '#a2dced'],
+      ['#d7e6ef', '#f0fbff'],
+      ['#839eb9', '#79bad4'],
+      ['#b3d3e4', '#b7e9f6'],
+      ['#e0edf2', '#f1fbff'],
+      ['#89acc6', '#83c9e4'],
+      ['#edf3f4', '#f6fdff'],
+      ['#a7cbdc', '#a8e3f5'],
+      ['#d6e7ef', '#ecfaff'],
+      ['#85a6c1', '#74bbd8'],
+    ];
+    for (const [before, after] of colors) svg = svg.replaceAll(before, after);
+    const branches = `<g data-motion="kodai-branching-frost" transform="translate(0 148)"><g opacity=".05"><animateTransform attributeName="transform" type="scale" values="1 .03;1 .03;1 1;1 1;1 .03;1 .03" keyTimes="0;.12;.4;.68;.9;1" dur="10s" begin="-1.2s" repeatCount="indefinite"/><animate attributeName="opacity" values=".05;.05;.88;.88;.05;.05" keyTimes="0;.12;.4;.68;.9;1" dur="10s" begin="-1.2s" repeatCount="indefinite"/><path d="M0 0 L-9 -24 L-25 -45 M-9 -24 L-32 -27 M-25 -45 L-26 -60 M-25 -45 L-39 -47 M0 -12 L14 -36 L29 -52 M14 -36 L32 -35 M29 -52 L35 -70 M29 -52 L42 -54" fill="none" stroke="#72bad6" stroke-width="3.7" stroke-linejoin="round" stroke-linecap="round"/><path d="M0 0 L-9 -24 L-25 -45 L-26 -60 M-9 -24 L-32 -27 M0 -12 L14 -36 L29 -52 L35 -70 M14 -36 L32 -35" fill="none" stroke="#effbff" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"/></g></g>`;
+    const splinters = [
+      [-18, 104, -1.2, '-19 -38'],
+      [26, 92, -2, '17 -33'],
+    ]
+      .map(
+        ([x, y, begin, distance]) =>
+          `<g data-motion="kodai-ice-splinter" transform="translate(${x} ${y})"><g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 0;${distance};${distance}" keyTimes="0;.3;.65;1" dur="10s" begin="${begin}s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;.85;0;0" keyTimes="0;.3;.35;.65;1" dur="10s" begin="${begin}s" repeatCount="indefinite"/><path d="M0 -8 L3 -2 L2 6 L-3 7 L-4 -1Z" fill="#b4e5f3" stroke="#67a9c5" stroke-width="1"/><path d="M0 -8 L1 -1 L-3 7 L-4 -1Z" fill="#f3fbfe" stroke="none"/></g></g>`
+      )
+      .join('');
+    const from = svg.indexOf('<g data-relic="kodai-wand"');
+    if (from < 0) throw new Error('Chambers relic details: Kodai wand group changed');
+    const groups = /<\/?g\b[^>]*>/g;
+    groups.lastIndex = svg.indexOf('>', from) + 1;
+    let depth = 1,
+      match,
+      added = false;
+    while ((match = groups.exec(svg))) {
+      depth += match[0].startsWith('</g') ? -1 : 1;
+      if (depth === 0) {
+        svg = svg.slice(0, match.index) + branches + splinters + svg.slice(match.index);
+        added = true;
+        break;
+      }
+    }
+    if (!added) throw new Error('Chambers relic details: Kodai wand group is unclosed');
+  }
+  return svg;
+}
+function chamberSubjectMotion(scene, svg) {
+  const replacePath = (start, replacement) => {
+    const from = svg.indexOf(`<path d="${start}`);
+    if (from < 0)
+      throw new Error(`Chambers subject motion: scene ${scene}: path not found: ${start}`);
+    const end = svg.indexOf('/>', from) + 2;
+    const original = svg.slice(from, end);
+    svg = svg.slice(0, from) + replacement(original) + svg.slice(end);
+  };
+  const appendGroup = (marker, effect, before = false) => {
+    const from = svg.indexOf(marker);
+    if (from < 0)
+      throw new Error(`Chambers subject motion: scene ${scene}: group not found: ${marker}`);
+    const tagEnd = svg.indexOf('>', from) + 1;
+    if (before) {
+      svg = svg.slice(0, tagEnd) + effect + svg.slice(tagEnd);
+      return;
+    }
+    const groups = /<\/?g\b[^>]*>/g;
+    groups.lastIndex = tagEnd;
+    let depth = 1,
+      match;
+    while ((match = groups.exec(svg))) {
+      depth += match[0].startsWith('</g') ? -1 : 1;
+      if (depth === 0) {
+        svg = svg.slice(0, match.index) + effect + svg.slice(match.index);
+        return;
+      }
+    }
+    throw new Error('Chambers subject motion: unclosed subject group');
+  };
+
+  if (scene === 0) {
+    // Wiki: Olm's head fires dark-green dragonfire. Move the original jaw facets.
+    const from = svg.indexOf('<path d="M92 319 L126 323');
+    const finalFacet = svg.indexOf('<path d="M138 340 L149 346', from);
+    if (from < 0 || finalFacet < 0)
+      throw new Error('Chambers subject motion: Olm jaw facets changed');
+    const end = svg.indexOf('/>', finalFacet) + 2;
+    const jaw = svg.slice(from, end);
+    svg =
+      svg.slice(0, from) +
+      `<g data-motion="olm-jaw"><animateTransform attributeName="transform" type="rotate" values="0 185 301;-7 185 301;-7 185 301;0 185 301;0 185 301" keyTimes="0;.25;.48;.7;1" dur="9.6s" begin="-1.2s" repeatCount="indefinite"/>${jaw}</g>` +
+      svg.slice(end);
+    const breath = `<g data-motion="olm-dragonfire" transform="translate(98 318) rotate(142)"><g opacity="0"><animate attributeName="opacity" values="0;0;.82;.86;0;0" keyTimes="0;.18;.27;.47;.69;1" dur="9.6s" begin="-1.2s" repeatCount="indefinite"/><animateTransform attributeName="transform" type="scale" values=".05 .35;.05 .35;1 1;1.18 .84;.12 .35;.05 .35" keyTimes="0;.18;.35;.48;.69;1" dur="9.6s" begin="-1.2s" repeatCount="indefinite"/>
+      <path d="M0 -5 L12 -9 L19 -16 L29 -9 L38 -14 L34 -5 L54 -8 L47 -1 L68 6 L49 9 L53 17 L35 11 L25 18 L17 10 L0 6Z" fill="#315b2b" stroke="#45613a" stroke-width="1.5" stroke-linejoin="round"><animate attributeName="d" values="M0 -5 L12 -9 L19 -16 L29 -9 L38 -14 L34 -5 L54 -8 L47 -1 L68 6 L49 9 L53 17 L35 11 L25 18 L17 10 L0 6Z;M0 -5 L12 -12 L19 -10 L29 -15 L38 -7 L34 -2 L54 -14 L47 0 L68 -4 L49 8 L53 13 L35 16 L25 9 L17 14 L0 6Z;M0 -5 L12 -9 L19 -16 L29 -9 L38 -14 L34 -5 L54 -8 L47 -1 L68 6 L49 9 L53 17 L35 11 L25 18 L17 10 L0 6Z" dur="2.4s" repeatCount="indefinite"/></path>
+      <path d="M0 -2 L15 -6 L21 -3 L32 -7 L29 1 L46 3 L34 7 L27 10 L15 6 L0 3Z" fill="#779526" stroke="none"/><path d="M0 0 L17 -2 L26 1 L18 4 L0 2Z" fill="#b7d934" stroke="none"/>
+    </g></g>`;
+    replacePath('M205 259 L215 250', (original) => original + breath);
+  } else if (scene === 1) {
+    // Wiki: the Twisted bow fires arrows. Animate the existing olive string facets,
+    // not an invented magical beam, then release one shafted arrow from the nock.
+    const rest = 'M47 500 L80 453 L235 277.6 L400 91 L447 70 L414 116 L245 305.7 L96 473Z';
+    const drawn = 'M47 500 L80 453 L193 239.6 L400 91 L447 70 L414 116 L203 267.7 L96 473Z';
+    const lightRest = 'M47 500 L96 473 L251 295 L447 70 L414 116 L230.5 308Z';
+    const lightDrawn = 'M47 500 L96 473 L209 257 L447 70 L414 116 L188.5 270Z';
+    const morph = (base, pulled) =>
+      `<animate attributeName="d" values="${base};${pulled};${pulled};${base};${base}" keyTimes="0;.43;.48;.51;1" dur="9s" begin="-1s" repeatCount="indefinite"/>`;
+    replacePath('M47 500 L80 453', (original) =>
+      original
+        .replace('M47 500 L80 453 L400 91 L447 70 L414 116 L96 473Z', rest)
+        .replace('/>', `>${morph(rest, drawn)}</path>`)
+    );
+    replacePath('M47 500 L96 473', (original) =>
+      original
+        .replace('M47 500 L96 473 L447 70 L414 116Z', lightRest)
+        .replace('/>', `>${morph(lightRest, lightDrawn)}</path>`)
+    );
+    appendGroup(
+      '<g transform="translate(180 270) rotate(-25)',
+      `<g data-motion="twisted-bow-shot" transform="translate(238 293) rotate(43)"><g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;-57 0;-57 0;0 0;320 0;320 0" keyTimes="0;.43;.48;.51;.64;1" dur="9s" begin="-1s" repeatCount="indefinite"/><animate attributeName="opacity" values=".92;.92;.92;.92;0;0" keyTimes="0;.43;.48;.6;.65;1" dur="9s" begin="-1s" repeatCount="indefinite"/><path d="M0 0 H108" fill="none" stroke="#c8b597" stroke-width="3.6" stroke-linecap="round"/><path d="M108 0 L92 -7 L96 0 L92 7Z" fill="#adb4b5" stroke="#353343" stroke-width="1.4"/><path d="M4 0 L-7 -6 L-19 -6 L-10 0 L-19 6 L-7 6Z" fill="#a06a5e" stroke="#403841" stroke-width="1.2"/></g></g>`
+    );
+  } else if (scene === 2) {
+    // Kodai autocasts Ancient Magicks and supplies water runes. An Ice Barrage
+    // interpretation grows ice facets in a common plane, moved to its tip below.
+    const column = (delay, width, shape) =>
+      `<g data-motion="kodai-ice-growth" transform="translate(0 151)"><g opacity=".1"><animateTransform attributeName="transform" type="scale" values="${width} .02;${width} .02;${width} 1;${width} 1;${width} .02;${width} .02" keyTimes="0;.1;.38;.68;.9;1" dur="10s" begin="${delay}s" repeatCount="indefinite"/><animate attributeName="opacity" values=".1;.1;.84;.84;.1;.1" keyTimes="0;.1;.38;.68;.9;1" dur="10s" begin="${delay}s" repeatCount="indefinite"/>${shape}</g></g>`;
+    const left = `<path d="M-16 0 L-42 4 L-53 -24 L-42 -47 L-20 -34Z" fill="#a7c6d9" stroke="#4a6175" stroke-width="2"/><path d="M-42 4 L-53 -24 L-42 -47 L-35 -22Z" fill="#d7e6ef" stroke="#4a6175" stroke-width="1.2"/><path d="M-35 -22 L-20 -34 L-16 0 L-42 4Z" fill="#839eb9" stroke="#4a6175" stroke-width="1.2"/>`;
+    const centre = `<path d="M-17 0 L-22 -42 L-8 -62 L13 -66 L27 -46 L23 -3 L12 10Z" fill="#b3d3e4" stroke="#4a6175" stroke-width="2"/><path d="M-22 -42 L-8 -62 L13 -66 L4 -41Z" fill="#e0edf2" stroke="#4a6175" stroke-width="1.2"/><path d="M4 -41 L13 -66 L27 -46 L23 -3 L12 10Z" fill="#89acc6" stroke="#4a6175" stroke-width="1.2"/><path d="M-12 -39 L-7 -9" fill="none" stroke="#edf3f4" stroke-width="2.5"/>`;
+    const right = `<path d="M18 -4 L19 -53 L39 -77 L52 -50 L42 -11 L31 8Z" fill="#a7cbdc" stroke="#4a6175" stroke-width="2"/><path d="M19 -53 L39 -77 L35 -45 L31 8 L18 -4Z" fill="#d6e7ef" stroke="#4a6175" stroke-width="1.2"/><path d="M35 -45 L39 -77 L52 -50 L42 -11 L31 8Z" fill="#85a6c1" stroke="#4a6175" stroke-width="1.2"/>`;
+    // Draw frost behind the intact wand's shaft and purple fittings.
+    appendGroup(
+      '<g data-relic="kodai-wand"',
+      column(-0.6, 1, left) + column(-1.2, 1, centre) + column(-1.8, 1, right),
+      true
+    );
+  }
+  return svg;
+}
+function chamberAmbientMotion(scene, svg) {
+  const loopOpacity = (duration, begin = '0s') =>
+    `<animate attributeName="opacity" values="0;.95;.95;0" keyTimes="0;.06;.84;1" dur="${duration}s" begin="${begin}" repeatCount="indefinite"/>`;
+  const appendGroup = (marker, effect, atStart = false) => {
+    const from = svg.indexOf(marker);
+    if (from < 0) throw new Error(`Chambers scene ${scene}: missing group ${marker}`);
+    const tagEnd = svg.indexOf('>', from) + 1;
+    if (atStart) {
+      svg = svg.slice(0, tagEnd) + effect + svg.slice(tagEnd);
+      return;
+    }
+    const groups = /<\/?g\b[^>]*>/g;
+    groups.lastIndex = tagEnd;
+    let depth = 1,
+      match;
+    while ((match = groups.exec(svg))) {
+      depth += match[0].startsWith('</g') ? -1 : 1;
+      if (!depth) {
+        svg = svg.slice(0, match.index) + effect + svg.slice(match.index);
+        return;
+      }
+    }
+    throw new Error('Chambers motion: group has no matching end');
+  };
+  if (scene === 3) {
+    // Three readable sparks lift from the anvil, rather than scattered particles.
+    const marker =
+      '<g stroke="#e9b554" stroke-width="1.8"><path d="M68 453 L58 439 M86 454 V437 M107 455 L118 441"/></g>';
+    if (!svg.includes(marker))
+      throw new Error('Chambers motion: Tekton forge spark anchor changed');
+    const sparks = [
+      ['M66 455 Q55 413 72 368', 8.4, '-1s'],
+      ['M87 455 Q88 414 99 378', 9.6, '-4.5s'],
+      ['M109 455 Q132 422 121 386', 8.8, '-6s'],
+    ]
+      .map(
+        ([path, duration, begin]) =>
+          `<g data-motion="forge-ember" opacity="0"><animateMotion path="${path}" dur="${duration}s" begin="${begin}" repeatCount="indefinite"/>${loopOpacity(duration, begin)}<path d="M0 -7 L4 0 L0 6 L-3 0Z" fill="#f8d68c" stroke="#e9b554" stroke-width="1.3"/><path d="M0 5 Q-2 13 1 19" fill="none" stroke="#e9b554" stroke-width="2.2" stroke-linecap="round" opacity=".58"/></g>`
+      )
+      .join('');
+    svg = svg.replace(
+      marker,
+      `<g>${sparks}<path data-motion="forge-heat" d="M50 469 L76 480 H131 L152 453" fill="none" stroke="#f8d68c" stroke-width="3.5" opacity=".18"><animate attributeName="opacity" values=".18;.7;.18" dur="6.2s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".42 0 .58 1;.42 0 .58 1"/></path></g>`
+    );
+  } else if (scene === 4) {
+    // Actual stone facets move around their existing resting positions.
+    // These are slow, visible closed loops; the caster and rock body stay fixed.
+    const stones = [
+      ['translate(115 164) rotate(-18) scale(0.6)', 11.6, '-1.4s', '0 0;24 -12;0 -24;-24 -12;0 0'],
+      ['translate(250 137) rotate(10) scale(0.75)', 13.2, '-5.2s', '0 0;22 -10;0 -20;-22 -10;0 0'],
+      ['translate(79 223) rotate(14) scale(0.56)', 12.4, '-7s', '0 0;24 -12;0 -24;-24 -12;0 0'],
+      ['translate(278 225) rotate(-8) scale(0.74)', 14, '-3.5s', '0 0;-22 -12;0 -24;22 -12;0 0'],
+    ];
+    for (const [transform, duration, begin, values] of stones)
+      appendGroup(
+        `<g transform="${transform}"`,
+        `<animateTransform data-motion="vasa-stone-orbit" attributeName="transform" type="translate" additive="sum" values="${values}" dur="${duration}s" begin="${begin}" repeatCount="indefinite" calcMode="spline" keyTimes="0;.25;.5;.75;1" keySplines=".42 0 .58 1;.42 0 .58 1;.42 0 .58 1;.42 0 .58 1"/>`,
+        true
+      );
+  } else if (scene === 5) {
+    // Three shapes taken from the scroll's own arcane glyphs circle the parchment.
+    // The upright pet, scroll and hand are still; the glyphs remain upright as they orbit.
+    const path = 'M0 -62 A46 62 0 1 1 0 62 A46 62 0 1 1 0 -62';
+    const glyphs = [
+      ['M-7 -2 L1 -5 L7 0 L-2 3Z', '0s'],
+      ['M-6 -5 H5 L-1 0 L4 5 L-5 4Z', '-4.2s'],
+      ['M-6 -2 L2 -4 L0 1 L7 4 L-5 6Z', '-8.4s'],
+    ]
+      .map(
+        ([glyph, begin]) =>
+          `<g><animateMotion path="${path}" dur="12.6s" begin="${begin}" repeatCount="indefinite"/><path d="${glyph}" fill="#582e32" stroke="#eadabd" stroke-width="1.6" stroke-linejoin="round"/></g>`
+      )
+      .join('');
+    appendGroup(
+      '<g transform="translate(119 302) rotate(-12)"',
+      `<g data-motion="scroll-arcane-orbit" transform="translate(4 34)"><ellipse rx="46" ry="62" fill="none" stroke="#c8b597" stroke-width="1.2" opacity=".28"/>${glyphs}</g>`
+    );
+  }
+  return svg;
+}
 /* Chambers-only illustrations. The shared frame owns pane reveal and drop targets.
  * References: OSRS Wiki /Great_Olm, /Twisted_bow, /Ancestral_robes,
  * /Tekton, /Vasa_Nistirio, /Olmlet, /Arcane_prayer_scroll and /Kodai_wand.
  * Original SVG interpretations, no remote assets.
  */
+// Apply the approved subject action before its material details. The Kodai
+// cast is finally placed inside the wand's own transform at its pointed tip.
+function chamberSceneMotion(scene, svg) {
+  if (scene >= 3) return chamberAmbientMotion(scene, svg);
+  const subject = chamberSubjectMotion(scene, svg);
+  if (scene === 0) return subject;
+  const relic = chamberRelicDetails(scene, subject);
+  return scene === 2 ? kodaiTipCast(relic) : relic;
+}
+
 GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal }) {
   const sceneNumber = (index) => index % config.titles.length;
   const sceneColors = (index) =>
@@ -435,7 +739,7 @@ GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal 
       } else {
         illustration = olmlet(colors);
       }
-      return `${panes}${tracery}${illustration}`;
+      return `${panes}${tracery}${chamberSceneMotion(scene, illustration)}`;
     },
   });
   return { art, shrineMarkup, sceneColors };

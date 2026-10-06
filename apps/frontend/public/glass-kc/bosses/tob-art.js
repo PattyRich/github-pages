@@ -32,7 +32,7 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
   }
 
   function scythe() {
-    return `<g>
+    return `<g data-art-effect="scythe-blood-drips">
       ${path('M192 252 L204 250 L261 494 L257 512 L248 503Z', '#a5a1a4')}
       ${path('M201 256 L205 266 L258 493 L253 504 L249 481Z', '#6c666c', '#6c666c', 1)}
       ${path('M246 486 L262 482 L272 501 L268 519 L250 519 L243 505Z', '#514a50')}
@@ -55,7 +55,7 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       ${path('M52 201 L56 184 L67 175 L65 183 L59 190 L55 209Z M82 158 L94 151 L97 146 L105 146 L92 157Z', '#c84a50', '#a33440', 0.8)}
       ${path('M42 236 L44 248 L48 258 Q48 268 43 270 Q36 265 39 257 L41 249Z M65 179 L66 195 L71 206 Q73 214 68 216 Q61 213 63 206 L64 194Z M94 154 L94 166 L97 174 Q99 180 94 182 Q89 180 91 173 L93 166Z', '#a72f40', '#5c2635', 1.3)}
       ${line('M42 260 L43 265 M67 207 L68 212 M94 175 V178', '#e27370', 1.3)}
-      ${path('M46 294 L50 303 L47 310 L42 306Z M67 237 L71 246 L68 252 L64 247Z M43 345 L48 352 L44 359 L39 354Z', '#b43a45', '#702839', 1.2)}
+      <g transform="translate(43 265)"><g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 135;0 135" keyTimes="0;.24;.6;1" dur="9s" begin="0s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;.9;.9;0;0" keyTimes="0;.235;.245;.49;.6;1" dur="9s" begin="0s" repeatCount="indefinite"/><path d="M0 -6 C-1 -2 -4 2 -4 5 C-4 11 4 11 4 5 C4 2 1 -2 0 -6Z" fill="#b43a45" stroke="#702839" stroke-width="1.2"/><path d="M-1 1 Q-3 5 -1 7" fill="none" stroke="#e27370" stroke-width="1"/></g></g><g transform="translate(67 213)"><g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 135;0 135" keyTimes="0;.24;.6;1" dur="9s" begin="0.25s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;.9;.9;0;0" keyTimes="0;.235;.245;.49;.6;1" dur="9s" begin="0.25s" repeatCount="indefinite"/><path d="M0 -6 C-1 -2 -4 2 -4 5 C-4 11 4 11 4 5 C4 2 1 -2 0 -6Z" fill="#b43a45" stroke="#702839" stroke-width="1.2"/><path d="M-1 1 Q-3 5 -1 7" fill="none" stroke="#e27370" stroke-width="1"/></g></g><g transform="translate(94 179)"><g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 135;0 135" keyTimes="0;.24;.6;1" dur="9s" begin="0.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;.9;.9;0;0" keyTimes="0;.235;.245;.49;.6;1" dur="9s" begin="0.5s" repeatCount="indefinite"/><path d="M0 -6 C-1 -2 -4 2 -4 5 C-4 11 4 11 4 5 C4 2 1 -2 0 -6Z" fill="#b43a45" stroke="#702839" stroke-width="1.2"/><path d="M-1 1 Q-3 5 -1 7" fill="none" stroke="#e27370" stroke-width="1"/></g></g>
       ${line('M192 196 L200 206 M185 230 L198 236 M198 262 L208 302', '#c1b6b8', 1.5)}
     </g>`;
   }
@@ -163,7 +163,7 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
     </g>`;
   }
 
-  function nylocas(x, y, scale, type) {
+  function nylocas(x, y, scale, type, animated = false) {
     // Wiki model anatomy: a towering shell above a small head and eight jointed legs.
     const colours = [
       ['#b6afb1', '#d5ced0', '#817b85', '#47434b'],
@@ -217,7 +217,7 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       ${path('M5 -77 L17 -97 L30 -69 L25 -39 L10 -11 L-6 20 L-26 -13 L-18 -47Z', colours[0], colours[0], 0.9)}
       ${path('M-18 -47 L5 -77 L9 -60 L-4 -27 L-16 -8 L-26 -13Z', type === 1 ? '#7c9d2b' : type === 3 ? '#c7412c' : '#26b1bb', colours[0], 0.9)}
       ${line('M-26 0 L-32 -17 L-32 -41 L-25 -62 M31 -60 L29 -36 L18 -14', colours[1], 1)}`;
-    return `<g transform="translate(${x} ${y}) scale(${scale})">
+    const original = `<g transform="translate(${x} ${y}) scale(${scale})">
       ${legs}
       ${path('M-10 -99 L16 -102 L35 -89 L48 -64 L52 -35 L44 -8 L24 18 L-4 29 L-32 17 L-47 -10 L-48 -43 L-38 -75Z', rim, '#292329', 3)}
       ${path('M16 -102 L35 -89 L48 -64 L52 -35 L44 -8 L24 18 L-4 29 L6 17 L30 -9 L39 -38 L34 -73Z', type === 0 ? '#68626d' : rim, rim, 1.2)}
@@ -232,6 +232,88 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       ${path('M-12 40 L-18 49 L-17 55 L-13 52 L-8 44Z M3 41 L2 49 L6 57 L7 51 L8 43Z', type === 0 ? '#a19aa3' : colours[0], rim, 0.8)}
       ${line('M-13 25 L-5 22 L2 23 M-18 37 L-11 36 M5 35 L11 34', type === 0 ? '#b6afb1' : colours[0], 0.9)}
     </g>`;
+    // The red Matomenos in Maiden calls the unmodified branch.
+    if (!animated) return original;
+    const cycle = 7.5 + type * 0.6;
+    const rotation = (values, pivot, delay) =>
+      '<animateTransform attributeName="transform" type="rotate" values="' +
+      values.map((angle) => angle + ' ' + pivot).join(';') +
+      '" keyTimes="0;.22;.46;.72;1" dur="' +
+      cycle +
+      's" begin="-' +
+      delay +
+      's" repeatCount="indefinite"/>';
+    const ink = type === 0 ? '#b6afb1' : colours[2];
+    let side = 0;
+    let moving = original.replace(/<path d="M22 20[\s\S]*?(?=<path d="M8 25)/g, (geometry) => {
+      const delay = type * 2.3 + side++ * 1.3;
+      return (
+        '<g data-nylocas-joint="outer-foreleg">' +
+        rotation([0, -12, 3, -4, 0], '19 25', delay) +
+        geometry +
+        line('M63 35 L67 46', ink, 0.8) +
+        '</g>'
+      );
+    });
+    side = 0;
+    moving = moving.replace(/<path d="M8 25[\s\S]*?(?=<path d="M47 -19)/g, (geometry) => {
+      const delay = type * 2.3 + side++ * 1.3 + 0.8;
+      return (
+        '<g data-nylocas-joint="inner-foreleg">' +
+        rotation([0, 15, -3, 5, 0], '5 32', delay) +
+        geometry +
+        line('M24 43 L24 53', ink, 0.8) +
+        '</g>'
+      );
+    });
+    moving = moving.replaceAll(
+      line('M47 -19 L49 -9 M73 8 L79 19 M63 35 L67 46 M24 43 L24 53', ink, 0.8),
+      line('M47 -19 L49 -9 M73 8 L79 19', ink, 0.8)
+    );
+    const jaw = (left) =>
+      '<g data-nylocas-joint="mandible">' +
+      rotation(
+        left ? [0, 19, 0, 8, 0] : [0, -19, 0, -8, 0],
+        left ? '-12 40' : '3 41',
+        type * 2.3 + 0.4
+      ) +
+      path(
+        left
+          ? 'M-12 40 L-18 49 L-17 55 L-8 60 L-10 53 L-5 44Z'
+          : 'M3 41 L2 49 L6 57 L13 56 L8 51 L11 42Z',
+        colours[2],
+        '#292329',
+        1.4
+      ) +
+      path(
+        left ? 'M-12 40 L-18 49 L-17 55 L-13 52 L-8 44Z' : 'M3 41 L2 49 L6 57 L7 51 L8 43Z',
+        type === 0 ? '#a19aa3' : colours[0],
+        rim,
+        0.8
+      ) +
+      '</g>';
+    moving = moving.replace(
+      path(
+        'M-12 40 L-18 49 L-17 55 L-8 60 L-10 53 L-5 44Z M3 41 L2 49 L6 57 L13 56 L8 51 L11 42Z',
+        colours[2],
+        '#292329',
+        1.4
+      ),
+      jaw(true) + jaw(false)
+    );
+    moving = moving.replace(
+      path(
+        'M-12 40 L-18 49 L-17 55 L-13 52 L-8 44Z M3 41 L2 49 L6 57 L7 51 L8 43Z',
+        type === 0 ? '#a19aa3' : colours[0],
+        rim,
+        0.8
+      ),
+      ''
+    );
+    return moving.replace(
+      '<g transform=',
+      '<g data-art-effect="nylocas-articulated-stance" transform='
+    );
   }
 
   function nylocasChamber(colours) {
@@ -402,23 +484,68 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
 
   function shadowMaze() {
     const rows = [417, 428, 442, 460, 483, 512, 550];
-    const route = new Set(['0:4', '1:4', '2:4', '2:3', '3:3', '4:3', '4:2', '5:2']);
-    const corner = (y, column) => `${180 + ((column - 3) * (y - 374) * 105) / 176} ${y}`;
+    const routeOrder = ['5:2', '4:2', '4:3', '3:3', '2:3', '2:4', '1:4', '0:4'];
+    const route = new Set(routeOrder);
+    const point = (y, column) => [180 + ((column - 3) * (y - 374) * 105) / 176, y];
+    const corner = (y, column) => point(y, column).join(' ');
+    // Reuse the red tiles' perspective coordinates, so the light follows the actual route.
+    const centres = routeOrder.map((key) => {
+      const [row, column] = key.split(':').map(Number);
+      return point((rows[row] + rows[row + 1]) / 2, column + 0.5);
+    });
+    const distances = centres.map(([x, y], i) =>
+      i ? Math.hypot(x - centres[i - 1][0], y - centres[i - 1][1]) : 0
+    );
+    const total = distances.reduce((sum, distance) => sum + distance, 0);
+    let walked = 0;
+    const positions = distances.map((distance) => ((walked += distance) / total) * 100);
+    const travelFrames = centres
+      .map(
+        ([x, y], i) =>
+          `${positions[i].toFixed(3)}% { transform: translate(${x.toFixed(3)}px, ${y.toFixed(3)}px); }`
+      )
+      .join('');
+    const routePath = `M${centres.map((p) => p.join(' ')).join(' L')}`;
     const tiles = rows
       .slice(0, -1)
       .map((y, row) =>
         Array.from({ length: 6 }, (_, column) => {
           const lit = route.has(`${row}:${column}`);
-          return path(
+          const tile = path(
             `M${corner(y, column)} L${corner(y, column + 1)} L${corner(rows[row + 1], column + 1)} L${corner(rows[row + 1], column)}Z`,
             lit ? '#af3746' : (row + column) % 2 ? '#413141' : '#2b2636',
             lit ? '#e17a70' : '#786072',
             lit ? 1.5 : 1
           );
+          return lit
+            ? tile.replace(
+                '<path ',
+                `<path class="sotetseg-maze-tile" style="--maze-phase:-${(8 - (positions[routeOrder.indexOf(`${row}:${column}`)] / 100) * 8).toFixed(3)}s" `
+              )
+            : tile;
         }).join('')
       )
       .join('');
-    return `${path('M20 431 L180 395 L340 431 V550 H20Z', '#302532')}${tiles}`;
+    return `<style>
+      .sotetseg-maze-tile { animation: sotetseg-maze-tile-light 8s linear infinite; animation-delay: var(--maze-phase); }
+      .sotetseg-maze-trail { opacity: 0; animation: sotetseg-maze-fade 8s linear infinite; }
+      .sotetseg-maze-streak { animation: sotetseg-maze-streak-travel 8s linear infinite; }
+      .sotetseg-maze-light { opacity: 0; animation: sotetseg-maze-travel 8s linear infinite, sotetseg-maze-fade 8s linear infinite; }
+      @keyframes sotetseg-maze-travel { ${travelFrames} }
+      @keyframes sotetseg-maze-streak-travel { from { stroke-dashoffset: 12; } to { stroke-dashoffset: -88; } }
+      @keyframes sotetseg-maze-fade { 0%, 100% { opacity: 0; } 4%, 92% { opacity: .9; } }
+      @keyframes sotetseg-maze-tile-light { 0% { fill: #e99680; } 19%, 100% { fill: #af3746; } }
+      @media (prefers-reduced-motion: reduce) {
+        .sotetseg-maze-tile, .sotetseg-maze-trail, .sotetseg-maze-streak, .sotetseg-maze-light { animation: none; }
+      }
+    </style>${path('M20 431 L180 395 L340 431 V550 H20Z', '#302532')}${tiles}
+    <g class="sotetseg-maze-trail" pointer-events="none" aria-hidden="true">
+      <path class="sotetseg-maze-streak" d="${routePath}" pathLength="100" stroke="#ff8d73" stroke-width="7" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="12 200" opacity=".3"/>
+      <path class="sotetseg-maze-streak" d="${routePath}" pathLength="100" stroke="#ffe1bf" stroke-width="1.8" fill="none" stroke-linecap="round" stroke-linejoin="round" stroke-dasharray="12 200"/>
+    </g>
+    <g class="sotetseg-maze-light" pointer-events="none" aria-hidden="true">
+      <circle r="9" fill="#ff9275" opacity=".15"/><circle r="4" fill="#ffb78a" opacity=".6"/><circle r="1.6" fill="#fff1d8"/>
+    </g>`;
   }
 
   function sotetseg() {
@@ -488,7 +615,7 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
   function justiciar() {
     const star = (x, y, scale = 1) =>
       `<g transform="translate(${x} ${y}) scale(${scale})">${path('M0 -25 L6 -6 L21 0 L6 6 L0 24 L-6 6 L-21 0 L-6 -6Z', '#d4b653', '#9f854b', 1.2)}${path('M0 -25 V24 L-6 6 L-21 0 L-6 -6Z', '#f0d57c', '#d4b653', 1)}</g>`;
-    return `<g>
+    const original = `<g>
       ${path('M145 367 L173 366 L174 445 L160 503 L140 503 L133 482 L139 432Z M190 365 L220 365 L229 432 L226 484 L210 504 L188 498 L190 446 L181 418Z', '#8b8498')}
       ${path('M140 430 L172 436 L162 481 L138 479 L132 451Z M192 435 L226 428 L233 449 L227 478 L199 484Z', '#c0b9c9')}
       ${path('M138 479 L162 481 L162 491 L140 489Z M199 484 L227 478 L224 488 L201 493Z', '#d1b465')}
@@ -518,6 +645,34 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       ${star(178, 265, 1.05)}
       ${star(179, 127, 0.5)}
     </g>`;
+    const recoil =
+      '<animateTransform attributeName="transform" type="rotate" values="0 178 230;0 178 230;2.5 178 230;0 178 230;0 178 230" keyTimes="0;.18;.22;.34;1" dur="10s" repeatCount="indefinite"/>';
+    let moving = original.replace(
+      /<path d="M132 196[\s\S]*?(?=<path d="M96 216)/,
+      (geometry) => '<g data-justiciar-part="chestguard">' + recoil + geometry + '</g>'
+    );
+    const cloth = path(
+      'M131 307 L210 307 L234 365 L230 417 L182 430 L122 413 L125 361Z',
+      '#555781'
+    );
+    moving = moving.replace(
+      cloth,
+      '<g data-justiciar-part="indigo-cloth"><animateTransform attributeName="transform" type="rotate" values="0 179 310;0 179 310;-3 179 310;1.5 179 310;0 179 310;0 179 310" keyTimes="0;.19;.27;.36;.48;1" dur="10s" repeatCount="indefinite"/>' +
+        cloth +
+        '</g>'
+    );
+    const impact =
+      '<g data-art-effect="justiciar-absorbed-blow" pointer-events="none" aria-hidden="true">' +
+      '<g opacity="0"><animateTransform attributeName="transform" type="translate" values="60 210;60 210;172 257;172 257;172 257" keyTimes="0;.05;.18;.24;1" dur="10s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;.86;.86;0;0" keyTimes="0;.049;.055;.18;.185;1" dur="10s" repeatCount="indefinite"/>' +
+      '<g transform="rotate(23)"><path d="M-55 -4 L-41 -8 L-10 -4 L0 0 L-10 4 L-44 2Z" fill="#ded5df" stroke="#82798a" stroke-width="1.2"/><path d="M-46 -3 L-10 -1 L0 0" fill="none" stroke="#f4eeeb" stroke-width="1.6"/></g></g>' +
+      '<g opacity="0"><animate attributeName="opacity" values="0;0;.6;0;0" keyTimes="0;.18;.2;.45;1" dur="10s" repeatCount="indefinite"/>' +
+      path('M134 215 L177 232 L214 218 L214 245 L178 260 L133 243Z', '#f4eeeb', '#d7b867', 1.5) +
+      '<g transform="translate(178 265) scale(1.05)">' +
+      path('M0 -25 L6 -6 L21 0 L6 6 L0 24 L-6 6 L-21 0 L-6 -6Z', '#f0d57c', '#d4b653', 1.2) +
+      '</g></g>' +
+      '<g transform="translate(172 257)" opacity="0"><animate attributeName="opacity" values="0;0;.9;0;0" keyTimes="0;.18;.19;.27;1" dur="10s" repeatCount="indefinite"/><path d="M-5 -3 L-25 -17 M-7 2 L-29 7 M-3 7 L-14 24" fill="none" stroke="#f0d57c" stroke-width="2.5" stroke-linecap="round"/></g></g>';
+    const closing = moving.lastIndexOf('</g>');
+    return moving.slice(0, closing) + impact + moving.slice(closing);
   }
 
   function frameOrnaments(count, index, uid, celebrate, { anchors }) {
@@ -556,7 +711,7 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       } else if (scene === 1) {
         illustration = `${path('M62 550 V236 Q60 153 180 88 Q300 153 298 236 V550Z', '#36283f', '#9a7a80', 2)}${line('M83 540 V234 Q82 169 180 117 Q278 169 278 234 V540 M55 498 H305 M55 518 H305 M63 273 H296', '#685260', 1.5)}${ring(180, 210, 111, '#9d895e')}${floor}${verzik()}${verzikMotes()}`;
       } else if (scene === 2) {
-        illustration = `${nylocasChamber(colours)}${nylocas(180, 218, 0.94, 0)}${nylocas(100, 424, 0.86, 1)}${nylocas(265, 420, 0.86, 2)}${sigil(181, 494, 0.65, 2)}`;
+        illustration = `${nylocasChamber(colours)}${nylocas(180, 218, 0.94, 0, true)}${nylocas(100, 424, 0.86, 1, true)}${nylocas(265, 420, 0.86, 2, true)}${sigil(181, 494, 0.65, 2)}`;
       } else if (scene === 3) {
         illustration = `${path('M180 77 L215 106 L267 128 L292 190 L314 231 L302 291 L313 345 L273 407 L180 442 L89 407 L49 344 L61 291 L46 231 L68 190 L96 128 L147 106Z', '#542638', '#ac4a5b', 2.5)}${path('M180 101 L214 140 L255 150 L269 201 L291 233 L279 291 L290 340 L258 386 L180 416 L103 386 L70 340 L82 291 L69 233 L93 201 L105 150 L148 140Z', '#292532', '#734057', 1.8)}${path('M96 128 L147 106 L180 77 L156 120 L125 145 L96 177Z M267 128 L292 190 L314 231 L296 219 L283 193 L270 155Z M49 344 L89 407 L122 416 L91 376 L70 343Z M302 291 L313 345 L289 376 L293 333Z', '#983a4e', '#672c41', 1.5)}${line('M82 210 L61 245 L70 283 M278 180 L297 229 M293 379 L271 400 M118 126 L141 116', '#d06970', 1.6)}${shadowMaze()}${sotetseg()}`;
       } else if (scene === 4) {

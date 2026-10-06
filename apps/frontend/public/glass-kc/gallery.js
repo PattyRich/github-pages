@@ -117,6 +117,12 @@
   byId('window-workshop').querySelector('details').open = true;
   renderCollections();
 
+  addEventListener('glass-motionchange', () => {
+    renderCollections();
+    workshop.refresh();
+    if (viewer.open) renderViewer(currentWindow);
+  });
+
   editionSelect.addEventListener('change', () => {
     edition = Number(editionSelect.value);
     renderCollections();
