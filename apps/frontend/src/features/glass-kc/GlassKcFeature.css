@@ -1,0 +1,130 @@
+.glass-feature-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+  align-items: center;
+  gap: 24px;
+}
+
+.glass-feature-copy h3 {
+  margin: 0 0 12px;
+  color: var(--osrs-text-beige);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 1.65rem;
+  text-shadow: 1px 1px 0 var(--osrs-border-dark);
+}
+
+.glass-feature-intro {
+  margin: 0 0 20px;
+  max-width: 44ch;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.glass-feature-benefits {
+  margin: 0 0 24px;
+  display: grid;
+  gap: 14px;
+}
+
+.glass-feature-benefits dt {
+  color: var(--osrs-text-beige);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 1rem;
+  margin-bottom: 3px;
+}
+
+.glass-feature-benefits dd {
+  margin: 0;
+  max-width: 46ch;
+  color: var(--osrs-text-normal);
+  font-size: 0.85rem;
+  line-height: 1.45;
+}
+
+.glass-feature-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.glass-feature-launch {
+  display: inline-flex;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 16px;
+  color: var(--osrs-text-beige);
+  background: var(--osrs-button-bg);
+  border: 2px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius);
+  box-shadow: inset 0 0 0 1px var(--osrs-border-light);
+  font-family: 'osrsFont', sans-serif;
+  text-decoration: none;
+}
+
+.glass-feature-launch:hover,
+.glass-feature-launch:focus-visible {
+  color: var(--osrs-text-gold);
+  background: var(--osrs-button-hover);
+}
+
+.glass-feature-launch:active {
+  background: var(--osrs-button-active);
+}
+
+.glass-feature-launch:focus-visible,
+.glass-feature-art-link:focus-visible {
+  outline: 2px solid var(--osrs-text-gold);
+  outline-offset: 4px;
+}
+
+.glass-feature-actions p {
+  margin: 0;
+  font-size: 0.78rem;
+}
+
+.glass-feature-preview {
+  min-width: 0;
+  margin: 0;
+}
+
+.glass-feature-art-link {
+  display: block;
+  border-radius: var(--osrs-radius);
+  transition: filter 180ms ease;
+}
+
+.glass-feature-art-link:hover {
+  filter: brightness(1.08);
+}
+
+.glass-feature-preview iframe {
+  display: block;
+  width: 100%;
+  aspect-ratio: 1.2;
+  border: 0;
+  pointer-events: none;
+}
+
+@media (max-width: 700px) {
+  .glass-feature-layout {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+
+  .glass-feature-preview {
+    grid-row: 1;
+    width: min(100%, 460px);
+    justify-self: center;
+  }
+
+  .glass-feature-copy h3 {
+    font-size: 1.4rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .glass-feature-art-link {
+    transition: none;
+  }
+}

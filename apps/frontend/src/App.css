@@ -153,8 +153,8 @@
   opacity: 0.9;
 }
 
-/* ─── Featured bingo section ─────────────────────────────────────────────── */
-.bingo-section {
+/* ─── Featured tools ─────────────────────────────────────────────────────── */
+.home-feature {
   background: var(--osrs-glass-bg-raised);
   backdrop-filter: var(--osrs-glass-blur);
   -webkit-backdrop-filter: var(--osrs-glass-blur);
@@ -379,7 +379,7 @@
     font-size: 1.5rem;
   }
 
-  .bingo-section {
+  .home-feature {
     padding: 1.2rem;
   }
 }

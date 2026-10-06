@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import BingoCarousel from './components/BingoCarousel';
 import FeedbackModal from './components/ui/FeedbackModal';
+import GlassKcFeature from './features/glass-kc/GlassKcFeature';
 
 interface ToolRoute {
   badge?: string;
@@ -17,7 +18,7 @@ const ROUTES: ToolRoute[] = [
   {
     path: '/glass-kc',
     name: '🪟 Glass KC Tracker',
-    desc: 'Choose a boss, collect stained glass, and save your hunt locally with optional account sync.',
+    desc: 'Give your boss grind something to show for every kill. Reveal animated stained-glass windows, save your rare-drop memories, and build a collection worth keeping.',
     badge: 'New',
   },
   {
@@ -86,6 +87,7 @@ const BINGO_ROUTES: ToolRoute[] = [
 
 export default function App() {
   const [showFeedback, setShowFeedback] = useState(false);
+  const featuredOrder = ['glass-kc', 'bingo'];
 
   return (
     <div className="App">
@@ -116,27 +118,34 @@ export default function App() {
             </div>
           </section>
 
-          <section className="bingo-section">
-            <div className="bingo-layout">
-              <div className="bingo-text-area">
-                <div className="section-header">
-                  <h2 className="section-title">Featured: Bingo Tools</h2>
-                  <p>The complete toolkit for Old School RuneScape clan bingo events.</p>
-                </div>
-                <div className="bingo-cards">
-                  {BINGO_ROUTES.map((route, idx) => (
-                    <Link to={route.path} key={idx} className="route-card premium-card">
-                      <h4>{route.name}</h4>
-                      <p>{route.desc}</p>
-                      <div className="card-action">Launch &rarr;</div>
-                    </Link>
-                  ))}
-                </div>
-              </div>
-
-              <BingoCarousel />
-            </div>
-          </section>
+          <div className="featured-sections">
+            {featuredOrder.map((feature) =>
+              feature === 'glass-kc' ? (
+                <GlassKcFeature key={feature} />
+              ) : (
+                <section className="home-feature bingo-section" key={feature}>
+                  <div className="bingo-layout">
+                    <div className="bingo-text-area">
+                      <div className="section-header">
+                        <h2 className="section-title">Featured: Bingo Tools</h2>
+                        <p>The complete toolkit for Old School RuneScape clan bingo events.</p>
+                      </div>
+                      <div className="bingo-cards">
+                        {BINGO_ROUTES.map((route, idx) => (
+                          <Link to={route.path} key={idx} className="route-card premium-card">
+                            <h4>{route.name}</h4>
+                            <p>{route.desc}</p>
+                            <div className="card-action">Launch &rarr;</div>
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                    <BingoCarousel />
+                  </div>
+                </section>
+              )
+            )}
+          </div>
         </main>
       </div>
 

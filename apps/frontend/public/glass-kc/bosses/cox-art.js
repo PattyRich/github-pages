@@ -174,13 +174,14 @@ function chamberSubjectMotion(scene, svg) {
     replacePath('M205 259 L215 250', (original) => original + breath);
   } else if (scene === 1) {
     // Wiki: the Twisted bow fires arrows. Animate the existing olive string facets,
-    // not an invented magical beam, then release one shafted arrow from the nock.
+    // then release one shafted arrow from the nock. Keep the bow's placement
+    // fixed; the string and arrow share the exact (-42, -38) draw vector.
     const rest = 'M47 500 L80 453 L235 277.6 L400 91 L447 70 L414 116 L245 305.7 L96 473Z';
     const drawn = 'M47 500 L80 453 L193 239.6 L400 91 L447 70 L414 116 L203 267.7 L96 473Z';
     const lightRest = 'M47 500 L96 473 L251 295 L447 70 L414 116 L230.5 308Z';
     const lightDrawn = 'M47 500 L96 473 L209 257 L447 70 L414 116 L188.5 270Z';
     const morph = (base, pulled) =>
-      `<animate attributeName="d" values="${base};${pulled};${pulled};${base};${base}" keyTimes="0;.43;.48;.51;1" dur="9s" begin="-1s" repeatCount="indefinite"/>`;
+      `<animate attributeName="d" values="${base};${base};${pulled};${pulled};${base};${base}" keyTimes="0;.2;.43;.48;.53;1" calcMode="spline" keySplines="0 0 1 1;.42 0 .58 1;0 0 1 1;.16 1 .3 1;0 0 1 1" dur="9s" begin="-1s" repeatCount="indefinite"/>`;
     replacePath('M47 500 L80 453', (original) =>
       original
         .replace('M47 500 L80 453 L400 91 L447 70 L414 116 L96 473Z', rest)
@@ -192,8 +193,8 @@ function chamberSubjectMotion(scene, svg) {
         .replace('/>', `>${morph(lightRest, lightDrawn)}</path>`)
     );
     appendGroup(
-      '<g transform="translate(180 270) rotate(-25)',
-      `<g data-motion="twisted-bow-shot" transform="translate(238 293) rotate(43)"><g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;-57 0;-57 0;0 0;320 0;320 0" keyTimes="0;.43;.48;.51;.64;1" dur="9s" begin="-1s" repeatCount="indefinite"/><animate attributeName="opacity" values=".92;.92;.92;.92;0;0" keyTimes="0;.43;.48;.6;.65;1" dur="9s" begin="-1s" repeatCount="indefinite"/><path d="M0 0 H108" fill="none" stroke="#c8b597" stroke-width="3.6" stroke-linecap="round"/><path d="M108 0 L92 -7 L96 0 L92 7Z" fill="#adb4b5" stroke="#353343" stroke-width="1.4"/><path d="M4 0 L-7 -6 L-19 -6 L-10 0 L-19 6 L-7 6Z" fill="#a06a5e" stroke="#403841" stroke-width="1.2"/></g></g>`
+      '<g data-relic="twisted-bow"',
+      `<g data-motion="twisted-bow-shot" transform="translate(238 293)"><g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 0;-42 -38;-42 -38;237 214;237 214" keyTimes="0;.2;.43;.48;.67;1" calcMode="spline" keySplines="0 0 1 1;.42 0 .58 1;0 0 1 1;.25 0 .65 1;0 0 1 1" dur="9s" begin="-1s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;.92;.92;0;0" keyTimes="0;.06;.18;.6;.67;1" dur="9s" begin="-1s" repeatCount="indefinite"/><g transform="rotate(42.1376)"><path d="M0 0 H108" fill="none" stroke="#c8b597" stroke-width="3.6" stroke-linecap="round"/><path d="M108 0 L92 -7 L96 0 L92 7Z" fill="#adb4b5" stroke="#353343" stroke-width="1.4"/><path d="M4 0 L-7 -6 L-19 -6 L-10 0 L-19 6 L-7 6Z" fill="#a06a5e" stroke="#403841" stroke-width="1.2"/></g></g></g>`
     );
   } else if (scene === 2) {
     // Kodai autocasts Ancient Magicks and supplies water runes. An Ice Barrage
@@ -524,7 +525,7 @@ GLASS_RENDERERS.cox = function createChambersRenderer(config, { esc, getJournal 
   // Studied from Wiki File:Twisted_bow_detail.png: dark faceted limbs,
   // two pale inner braces, hooked ends, and a green string (not green limbs).
   function twistedBow(x, y, scale) {
-    return `<g transform="translate(${x} ${y}) rotate(-25) scale(${scale}) translate(-292 -300)" stroke="#232125" stroke-width="3" stroke-linejoin="round">
+    return `<g data-relic="twisted-bow" transform="translate(${x} ${y}) rotate(-25) scale(${scale}) translate(-292 -300)" stroke="#232125" stroke-width="3" stroke-linejoin="round">
       <path d="M47 500 L80 453 L400 91 L447 70 L414 116 L96 473Z" fill="#697715" stroke="#505d12"/>
       <path d="M47 500 L96 473 L447 70 L414 116Z" fill="#8c9c21" stroke="none"/>
       <path d="M130 492 L150 459 L187 433 L224 404 L276 373 L288 385 L251 415 L219 449 L183 477 L146 510Z" fill="#8b9188" stroke="#676d67"/>
