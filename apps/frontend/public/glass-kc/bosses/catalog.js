@@ -42,10 +42,10 @@ const GLASS_BOSSES = {
     sceneDescriptions: [
       'The hunched Nightmare beneath a spiked mantle, with hanging white hair, pink eyes and long grey claws.',
       'A jagged great helm, quilted hauberk and layered steel over oxblood cloth, accompanied by the Inquisitor’s red-spiked mace.',
-      'The Nightmare staff with the green Eldritch, blue Harmonised and orange Volatile orbs.',
+      'An asymmetric charcoal Nightmare staff with an olive grip, plum fittings and an open pendant suspended from a heavy chain, surrounded by green Eldritch, blue Harmonised and orange Volatile orbs.',
       'Long slate-grey fingers curl into hooked black talons above three violet-edged portals in the splintered arena floor.',
-      'Four carved pillars, their light meeting at the heart of the arena.',
-      'Four entranced sleepwalkers follow winding paths toward the waiting Nightmare.',
+      'Four golden serpents coil around teal pillars, with purple crests, hanging rune scrolls and bright green eyes and finials. Their light meets at the heart of the sanctuary.',
+      'Three entranced citizens in a long coat, a plain shirt and an apron dress walk beside an Inquisitor-armoured sleepwalker, following pale winding paths toward the waiting Nightmare.',
     ],
     postcardNotes: [
       'Another little piece of the long hunt.',
@@ -185,7 +185,7 @@ const GLASS_BOSSES = {
       'An undead baboon with a bone-white skull, tawny mane and exposed ribs, knuckles planted among broken boulders.',
       'Kephri spreads green and terracotta wing cases with patterned white tips above a great earthen ball.',
       'A broad slate-blue crocodile with red eyes, green belly, gold face plate and striped rust headdress above river waves.',
-      'Tumeken’s and Elidinis’ dark stone Wardens flank a radiant obelisk, with gold masks, crimson details and lightning over broken floor tiles.',
+      'Orange and blue diamond rays encircle a golden halo beneath a gold crystal. Tumeken’s striped headdress and bow face Elidinis’ fan crest and crescent shield around a crimson obelisk with a suspended core.',
     ],
     postcardNotes: [
       'A little sunlight carried out of the dark.',
@@ -251,10 +251,10 @@ const GLASS_BOSSES = {
     ],
     sceneDescriptions: [
       'A sweeping grey blade streaked with dripping blood, a dark skull-like mount, red fittings and long pale shaft above the Theatre’s blood altar.',
-      'Verzik’s final form: a spiked purple abdomen and gold crest behind her pale, red-eyed face, teal dress and eight dark spider legs.',
-      'Grey-white Ischyros, green Toxobolos and cyan Hagios gather on curved silk webs in a vaulted stone chamber, their upright shells held above sharp, angular legs.',
-      'Sotetseg looms over a red path through the shadow maze, with a towering charcoal mantle, scarlet horns, burning eyes, long tusks and heavy hooked claws.',
-      'The pale, red-haired Maiden reaches out with long clawed hands as sweeping crimson tendrils rise around her and blood surges across the chamber floor.',
+      'Verzik’s final form rises beneath a gold chevron, her vast purple abdomen ringed with olive spikes above a teal gown, folded clawed hands, six red eyes and eight angular spider legs. Green poison motes and pale violet silk sparks drift around her.',
+      'Grey-white Ischyros has layered shell plates, green Toxobolos bears olive spikes, and cyan Hagios has a smooth dark-edged shell. Eight jointed legs and hooked mandibles anchor each creature among the chamber’s silk webs.',
+      'A low, broad Sotetseg crouches above the red shadow-maze path, with a jagged charcoal shoulder mantle, forward horn, narrow burning eye, curved red-tipped tusks and heavy clawed paws.',
+      'The Maiden’s angular white face, pointed ears and long scarlet hair rise above lowered blade-like hands. Twisting crimson spires support her pale figure over a faceted blood pool, with drifting blood droplets and pale glints. A red Nylocas Matomenos stands at her feet.',
       'Silver-grey armour with a crowned faceguard, gold star and trim, broad plated shoulders and indigo cloth.',
     ],
     postcardNotes: [
@@ -318,10 +318,10 @@ const GLASS_BOSSES = {
       'The crimson labyrinth',
     ],
     sceneDescriptions: [
-      'Hunllef crouches in an angled stance, with a deep angular mouth, hooked upper muzzle and swept lower jaw, crystal horns, long clawed legs and a curling tail. The crimson, charcoal-plated front meets a cyan rear.',
+      'A low-slung Hunllef joins crimson crystal and charcoal forequarters to cyan hindquarters, with forked horns, a hooked muzzle, heavy shoulder mantle and broad clawed feet.',
       'The crimson crystal Blade of Saeldor crosses behind a red Bow of Faerdhinen. The blade has two teeth and a triangular cutout along its inner edge; the bow has hooked tips, bent limbs and a large hollow crystal grip.',
       'The ivory arches and sweeping green leaf roofs of the Tower of Voices rise above Prifddinas, with crystal bridges, trees and a winding sunlit path.',
-      'Crimson floor tiles lead through grey stone chambers, past red runic doors, twisted Phren roots and crystal deposits inside the Corrupted Gauntlet.',
+      'Jagged grey chambers surround tall crimson rune doors, with glowing wall crystals, beveled red floor tiles, Phren roots and crystal deposits beside a preparation bowl.',
     ],
     postcardNotes: [
       'Another escape through the crimson doors.',

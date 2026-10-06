@@ -15,14 +15,26 @@ const GLASS_APPEARANCE = (() => {
       if (serialized === lastSaved) return;
       const saved = JSON.parse(serialized);
       lastSaved = serialized;
-      if (Object.hasOwn(GLASS_WINDOW_SHAPES, saved?.shape)) current.shape = saved.shape;
+      const savedShape = saved?.shape === 'rose' ? 'lancet' : saved?.shape;
+      let migratedRose = saved?.shape === 'rose';
+      if (Object.hasOwn(GLASS_WINDOW_SHAPES, savedShape)) current.shape = savedShape;
       if (Object.hasOwn(GLASS_WINDOW_FRAMES, saved?.frame)) current.frame = saved.frame;
       if (saved?.windows && typeof saved.windows === 'object' && !Array.isArray(saved.windows)) {
-        for (const [id, style] of Object.entries(saved.windows)) {
+        for (const [id, previousStyle] of Object.entries(saved.windows)) {
+          const style = {
+            shape: previousStyle?.shape === 'rose' ? 'lancet' : previousStyle?.shape,
+            frame: previousStyle?.frame,
+          };
           if (/^[a-z0-9-]{1,32}:(0|[1-9][0-9]{0,7})$/.test(id) && validStyle(style)) {
             windows[id] = { shape: style.shape, frame: style.frame };
+            migratedRose ||= previousStyle?.shape === 'rose';
           }
         }
+      }
+      if (migratedRose) {
+        const migrated = JSON.stringify({ ...current, windows });
+        localStorage.setItem(key, migrated);
+        lastSaved = migrated;
       }
     } catch {
       // The workshop remains usable when browser storage is unavailable.
