@@ -3,6 +3,7 @@
  * Nylocas_Toxobolos, Nylocas_Hagios, Nylocas_Matomenos, The_Maiden_of_Sugadinti, Sotetseg,
  * and Justiciar_armour_equipped_male. Subject colours stay fixed across editions.
  */
+let justiciarShineInstance = 0;
 GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }) {
   const sceneNumber = (index) => index % config.titles.length;
   // Move Sotetseg before Maiden without changing either scene's edition colours.
@@ -60,11 +61,158 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
     </g>`;
   }
 
+  function verzikLegMotion(svg, side, front) {
+    const clamp = (value) => Math.max(0, Math.min(1, value));
+    const pose = (d, dx, dy, degrees, leading, strength = 1) =>
+      d.replace(/([ML])\s*([-+]?\d*\.?\d+)\s+([-+]?\d*\.?\d+)/g, (_, command, rawX, rawY) => {
+        const x = Number(rawX),
+          y = Number(rawY);
+        const radians = (degrees * Math.PI) / 180;
+        const movedX = side * (side * x * Math.cos(radians) - y * Math.sin(radians) + dx);
+        const movedY = side * x * Math.sin(radians) + y * Math.cos(radians) + dy;
+        // Hip vertices follow the abdomen. Lower rear tips stay planted while knees flex.
+        const hip = clamp((65 - x) / 40);
+        const knee = clamp((x - 30) / 45) * clamp((150 - y) / 95);
+        const foot = front ? clamp((y - 110) / 73) : 0;
+        const active = side === leading;
+        const nx =
+          x +
+          (movedX - x) * hip +
+          knee * (active ? 5 : -3) * strength +
+          foot * (active ? 8 : 0) * strength;
+        const ny =
+          y +
+          (movedY - y) * hip +
+          knee * (active ? -13 : 4) * strength -
+          foot * (active ? 9 : 0) * strength;
+        return command + Number(nx.toFixed(2)) + ' ' + Number(ny.toFixed(2));
+      });
+    return svg.replace(/<path\b[^>]*\bd="([^"]+)"[^>]*\/>/g, (tag, d) => {
+      const right = pose(d, 6, -6, 2.2, 1);
+      const planted = pose(d, 2, -2, 0.7, 1, 0.12);
+      const left = pose(d, -5, -4, -1.8, -1);
+      return (
+        tag.slice(0, -2) +
+        '><animate attributeName="d" values="' +
+        [d, d, right, planted, left, d, d].join(';') +
+        '" keyTimes="0;.12;.3;.44;.61;.78;1" dur="13.2s" repeatCount="indefinite"/></path>'
+      );
+    });
+  }
+
+  function matomenosLegMotion(svg, side, begin = 0) {
+    // A 0.42-second gait is active only during the approach and crossing.
+    const frames = [{ time: 0, angle: 0 }];
+    for (const [start, end] of [
+      [0.75, 3.45],
+      [4.95, 10.05],
+    ]) {
+      frames.push({ time: start, angle: 0 });
+      let step = 0;
+      for (let time = start + 0.105; time < end - 0.06; time += 0.105)
+        frames.push({ time, angle: [1, 0, -1, 0][step++] });
+      frames.push({ time: end, angle: 0 });
+    }
+    frames.push({ time: 15, angle: 0 });
+    const keys = frames.map((frame) => (frame.time / 15).toFixed(5)).join(';');
+    const ink = '#84271f';
+    const crease = line('M47 -19 L49 -9 M73 8 L79 19 M63 35 L67 46 M24 43 L24 53', ink, 0.8);
+    const creases = ['M47 -19 L49 -9', 'M73 8 L79 19', 'M63 35 L67 46', 'M24 43 L24 53'];
+    const starts = ['<path d="M17 2', '<path d="M21 10', '<path d="M22 20', '<path d="M8 25'];
+    const pivots = ['23 5', '25 15', '19 30', '5 34'];
+    const cleaned = svg.replace(crease, '');
+    const offsets = starts.map((start) => cleaned.indexOf(start));
+    offsets.push(cleaned.lastIndexOf('</g>'));
+    if (offsets.some((offset) => offset < 0)) throw new Error('Matomenos leg geometry changed');
+    let result = cleaned.slice(0, offsets[0]);
+    for (let index = 0; index < 4; index++) {
+      const direction = side * (index % 2 ? -1 : 1);
+      const values = frames
+        .map((frame) => frame.angle * direction * (index === 3 ? 16 : 12) + ' ' + pivots[index])
+        .join(';');
+      result +=
+        '<g data-matomenos-leg="' +
+        index +
+        '"><animateTransform attributeName="transform" type="rotate" values="' +
+        values +
+        '" keyTimes="' +
+        keys +
+        '" dur="15s" begin="' +
+        begin +
+        's" repeatCount="indefinite"/>' +
+        cleaned.slice(offsets[index], offsets[index + 1]) +
+        line(creases[index], ink, 0.8) +
+        '</g>';
+    }
+    return result + cleaned.slice(offsets[4]);
+  }
+
+  function scurryingMatomenos() {
+    // Three resting positions survive reduced motion. Staggered cycles keep each gait and
+    // shadow together, with the middle crab on the lower foreground lane.
+    const crabs = [
+      { x: 270, y: 491, scale: 0.42, begin: 0 },
+      { x: 180, y: 511, scale: 0.38, begin: -13.7 },
+      { x: 96, y: 497, scale: 0.4, begin: -12.4 },
+    ];
+    return crabs
+      .map(({ x, y, scale, begin }, index) => {
+        const farY = y + 7;
+        const values =
+          '-70 ' +
+          farY +
+          ';-70 ' +
+          farY +
+          ';' +
+          x +
+          ' ' +
+          y +
+          ';' +
+          x +
+          ' ' +
+          y +
+          ';435 ' +
+          farY +
+          ';435 ' +
+          farY +
+          ';435 ' +
+          farY;
+        return (
+          '<g data-matomenos-travel="true" data-matomenos-index="' +
+          index +
+          '" transform="translate(' +
+          x +
+          ' ' +
+          y +
+          ')">' +
+          '<animateTransform attributeName="transform" type="translate" values="' +
+          values +
+          '" keyTimes="0;.05;.23;.33;.67;.76;1" dur="15s" begin="' +
+          begin +
+          's" repeatCount="indefinite"/>' +
+          '<g opacity=".48">' +
+          ellipse(
+            0,
+            27 * (scale / 0.42),
+            37 * (scale / 0.42),
+            6 * (scale / 0.42),
+            '#672a2d',
+            '#672a2d',
+            1
+          ) +
+          '</g>' +
+          nylocas(0, 0, scale, 3, false, true, begin) +
+          '</g>'
+        );
+      })
+      .join('');
+  }
   function verzik() {
     // The final form's raised knees and spear tips make four legs on each side.
     const rearLegs = [-1, 1]
-      .map(
-        (side) => `<g transform="translate(180 357) scale(${side} 1)">
+      .map((side) =>
+        verzikLegMotion(
+          `<g transform="translate(180 357) scale(${side} 1)">
         ${path('M39 -20 L75 -39 L112 -63 L131 -106 L135 -64 L115 -29 L79 -9 L37 6Z', '#39353c', '#292329', 3)}
         ${path('M74 -39 L112 -63 L131 -106 L122 -57 L103 -39 L78 -22Z', '#514950', '#39343c', 1.3)}
         ${path('M45 1 L84 -3 L117 -21 L151 -68 L148 -4 L138 50 L120 102 L125 48 L129 11 L112 2 L83 19 L44 20Z', '#40393f', '#292329', 3)}
@@ -73,20 +221,27 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
         ${path('M98 30 L123 -10 L117 49 L112 96 L100 157 L96 108 L91 81 L82 73Z', '#51464e', '#332c34', 1.4)}
         ${path('M63 43 L81 56 L96 48 L100 70 L82 73 L59 70Z M81 -3 L97 -12 L112 -8 L108 6 L85 19Z', '#665960', '#332c34', 1.3)}
         ${line('M47 -14 L78 -27 L104 -44 M49 10 L80 8 L109 -6 M36 28 L64 57 L82 61', '#85747f', 1.2)}
-      </g>`
+      </g>`,
+          side,
+          false
+        )
       )
       .join('');
     const frontLegs = [-1, 1]
-      .map(
-        (side) => `<g transform="translate(180 357) scale(${side} 1)">
+      .map((side) =>
+        verzikLegMotion(
+          `<g transform="translate(180 357) scale(${side} 1)">
         ${path('M35 22 L53 40 L57 -12 L72 -59 L77 5 L73 77 L63 132 L51 183 L47 127 L48 82 L34 54 L22 39Z', '#40373f', '#292329', 3)}
         ${path('M57 -12 L72 -59 L67 21 L62 80 L51 183 L47 127 L48 82 L50 46Z', '#5a4c55', '#393039', 1.4)}
         ${path('M35 22 L50 46 L48 67 L35 55 L22 39Z', '#66565f', '#332b33', 1.3)}
         ${line('M59 44 L55 91 L53 120', '#8b7682', 1.1)}
-      </g>`
+      </g>`,
+          side,
+          true
+        )
       )
       .join('');
-    return `${rearLegs}
+    return `${rearLegs}<g data-verzik-weight-shift="true"><animateTransform attributeName="transform" type="translate" values="0 0;0 0;6 -6;2 -2;-5 -4;0 0;0 0" keyTimes="0;.12;.3;.44;.61;.78;1" dur="13.2s" repeatCount="indefinite"/><g><animateTransform attributeName="transform" type="rotate" values="0 180 357;0 180 357;2.2 180 357;.7 180 357;-1.8 180 357;0 180 357;0 180 357" keyTimes="0;.12;.3;.44;.61;.78;1" dur="13.2s" repeatCount="indefinite"/>
       ${path('M177 96 L199 102 L238 132 L263 177 L280 232 L277 287 L262 332 L234 373 L198 394 L141 381 L106 352 L85 308 L79 259 L84 206 L108 156 L139 122Z', '#3a333d', '#292329', 4)}
       ${path('M177 96 L164 120 L131 153 L110 208 L103 261 L117 315 L148 349 L195 371 L233 355 L259 315 L266 257 L252 197 L227 154 L199 123Z', '#543a66', '#382c43', 2)}
       ${path('M164 120 L139 142 L111 182 L94 232 L91 279 L113 328 L148 349 L126 298 L126 239 L143 185Z', '#755783', '#543a66', 1.5)}
@@ -114,7 +269,7 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       ${line('M159 264 L165 267 M181 269 L188 265 M160 282 L166 285 M181 286 L187 282 M164 301 L168 303 M180 305 L185 302', '#e97480', 1.5)}
       ${path('M168 311 L174 313 L184 308 L181 317 L173 321 L167 318Z', '#783547', '#513247', 1.1)}
       ${line('M170 314 L174 316 L180 313', '#e2c8d5', 1.2)}
-      ${frontLegs}`;
+      </g></g>${frontLegs}`;
   }
 
   function verzikMotes() {
@@ -163,7 +318,7 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
     </g>`;
   }
 
-  function nylocas(x, y, scale, type, animated = false) {
+  function nylocas(x, y, scale, type, animated = false, scurry = false, scurryBegin = 0) {
     // Wiki model anatomy: a towering shell above a small head and eight jointed legs.
     const colours = [
       ['#b6afb1', '#d5ced0', '#817b85', '#47434b'],
@@ -174,8 +329,8 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
     const rim = colours[3];
     const legLight = type === 0 ? '#817b85' : type === 3 ? '#4a3032' : colours[0];
     const legs = [-1, 1]
-      .map(
-        (side) => `<g transform="scale(${side} 1)">
+      .map((side) => {
+        const geometry = `<g transform="scale(${side} 1)">
       ${path('M17 2 L34 -11 L41 -35 L50 -42 L56 -17 L54 12 L46 31 L44 2 L42 -18 L36 1 L23 15Z', rim, '#292329', 2)}
       ${path('M41 -35 L50 -42 L56 -17 L50 -5 L47 -21 L44 2 L46 31 L39 4Z', legLight, rim, 1.1)}
       ${path('M21 10 L45 -2 L68 -7 L80 8 L88 39 L81 29 L70 10 L46 7 L25 20Z', rim, '#292329', 2)}
@@ -188,8 +343,9 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       ${path(type === 1 ? 'M19 24 L29 36 L30 55 L23 81 L18 56 L18 41 L14 34Z' : 'M19 24 L29 36 L30 55 L23 81 L24 54 L23 40 L14 34Z', legLight, rim, 1.2)}
       ${path('M19 24 L26 30 L23 40 L14 34 L8 25Z', type === 0 ? '#a19aa3' : colours[2], rim, 1)}
       ${line('M47 -19 L49 -9 M73 8 L79 19 M63 35 L67 46 M24 43 L24 53', type === 0 ? '#b6afb1' : colours[2], 0.8)}
-    </g>`
-      )
+    </g>`;
+        return scurry ? matomenosLegMotion(geometry, side, scurryBegin) : geometry;
+      })
       .join('');
     const spines =
       type >= 2
@@ -612,6 +768,56 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
     </g>`;
   }
 
+  function justiciarArmourShine(original) {
+    const id = 'justiciar-metal-' + ++justiciarShineInstance;
+    // These are the existing plate silhouettes, not a light wash over the scene.
+    const surfaces = [
+      'M145 367',
+      'M140 430',
+      'M192 318',
+      'M130 205',
+      'M88 259',
+      'M83 342',
+      'M132 196',
+      'M96 216',
+      'M148 137',
+      'M146 139',
+    ];
+    const metal = Array.from(original.matchAll(/<path d="([^"]+)"[^>]*\/>/g))
+      .filter((match) => surfaces.some((start) => match[1].startsWith(start)))
+      .map((match) => '<path d="' + match[1] + '"/>')
+      .join('');
+    const occlusion =
+      '<path d="M149 146 L158 143 L171 149 L158 154Z M184 148 L198 145 L204 150 L189 156Z M150 189 L169 178 L191 182 L203 193 L190 204 L174 207 L156 198Z" fill="black"/>';
+    return (
+      '<g data-art-effect="justiciar-armour-shine" pointer-events="none" aria-hidden="true">' +
+      '<defs><clipPath id="' +
+      id +
+      '-plates">' +
+      metal +
+      '</clipPath>' +
+      '<mask id="' +
+      id +
+      '-occlusion" x="50" y="70" width="245" height="470" maskUnits="userSpaceOnUse"><rect x="50" y="70" width="245" height="470" fill="white"/>' +
+      occlusion +
+      '</mask>' +
+      '<linearGradient id="' +
+      id +
+      '-light" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#fff4d5" stop-opacity="0"/><stop offset=".37" stop-color="#fff4d5" stop-opacity=".2"/><stop offset=".48" stop-color="#fffaf0" stop-opacity=".85"/><stop offset=".54" stop-color="#fffaf0" stop-opacity=".85"/><stop offset=".67" stop-color="#e4d5b6" stop-opacity=".22"/><stop offset="1" stop-color="#e4d5b6" stop-opacity="0"/></linearGradient></defs>' +
+      '<g clip-path="url(#' +
+      id +
+      '-plates)" mask="url(#' +
+      id +
+      '-occlusion)"><g opacity="0">' +
+      '<animate attributeName="opacity" values="0;0;.88;.88;0;0" keyTimes="0;.48;.50;.78;.82;1" dur="10s" repeatCount="indefinite"/>' +
+      '<animateTransform attributeName="transform" type="translate" values="0 -100;0 -100;0 540;0 540" keyTimes="0;.48;.82;1" dur="10s" repeatCount="indefinite"/>' +
+      '<g transform="rotate(-20 178 265)"><rect x="-100" y="-25" width="560" height="70" fill="url(#' +
+      id +
+      '-light)"/></g>' +
+      '</g></g></g>'
+    );
+  }
+
   function justiciar() {
     const star = (x, y, scale = 1) =>
       `<g transform="translate(${x} ${y}) scale(${scale})">${path('M0 -25 L6 -6 L21 0 L6 6 L0 24 L-6 6 L-21 0 L-6 -6Z', '#d4b653', '#9f854b', 1.2)}${path('M0 -25 V24 L-6 6 L-21 0 L-6 -6Z', '#f0d57c', '#d4b653', 1)}</g>`;
@@ -672,7 +878,9 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       '</g></g>' +
       '<g transform="translate(172 257)" opacity="0"><animate attributeName="opacity" values="0;0;.9;0;0" keyTimes="0;.18;.19;.27;1" dur="10s" repeatCount="indefinite"/><path d="M-5 -3 L-25 -17 M-7 2 L-29 7 M-3 7 L-14 24" fill="none" stroke="#f0d57c" stroke-width="2.5" stroke-linecap="round"/></g></g>';
     const closing = moving.lastIndexOf('</g>');
-    return moving.slice(0, closing) + impact + moving.slice(closing);
+    return (
+      moving.slice(0, closing) + impact + justiciarArmourShine(original) + moving.slice(closing)
+    );
   }
 
   function frameOrnaments(count, index, uid, celebrate, { anchors }) {
@@ -715,7 +923,7 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       } else if (scene === 3) {
         illustration = `${path('M180 77 L215 106 L267 128 L292 190 L314 231 L302 291 L313 345 L273 407 L180 442 L89 407 L49 344 L61 291 L46 231 L68 190 L96 128 L147 106Z', '#542638', '#ac4a5b', 2.5)}${path('M180 101 L214 140 L255 150 L269 201 L291 233 L279 291 L290 340 L258 386 L180 416 L103 386 L70 340 L82 291 L69 233 L93 201 L105 150 L148 140Z', '#292532', '#734057', 1.8)}${path('M96 128 L147 106 L180 77 L156 120 L125 145 L96 177Z M267 128 L292 190 L314 231 L296 219 L283 193 L270 155Z M49 344 L89 407 L122 416 L91 376 L70 343Z M302 291 L313 345 L289 376 L293 333Z', '#983a4e', '#672c41', 1.5)}${line('M82 210 L61 245 L70 283 M278 180 L297 229 M293 379 L271 400 M118 126 L141 116', '#d06970', 1.6)}${shadowMaze()}${sotetseg()}`;
       } else if (scene === 4) {
-        illustration = `${path('M47 492 V252 Q49 174 180 83 Q311 174 313 252 V492Z', '#402a3b', '#9e6370', 2)}${path('M53 475 V269 L89 197 L124 269 V475Z M237 475 V269 L272 197 L307 269 V475Z', '#642c42', '#a15f71', 1.7)}${path('M133 448 V196 L180 107 L227 196 V448Z', '#793044', '#c27479', 1.8)}${path('M180 107 V448 H133 V196Z', '#4c263b', '#8a4155', 1.3)}${line('M54 305 H120 M55 366 H120 M241 305 H305 M241 366 H305 M180 110 V128 M61 243 L89 216 L116 242 M244 243 L272 216 L300 242', '#a26478', 1.3)}${floor}${maiden()}<g opacity=".48">${ellipse(96, 518, 37, 6, '#672a2d', '#672a2d', 1)}</g>${nylocas(96, 491, 0.42, 3)}${maidenMotes()}`;
+        illustration = `${path('M47 492 V252 Q49 174 180 83 Q311 174 313 252 V492Z', '#402a3b', '#9e6370', 2)}${path('M53 475 V269 L89 197 L124 269 V475Z M237 475 V269 L272 197 L307 269 V475Z', '#642c42', '#a15f71', 1.7)}${path('M133 448 V196 L180 107 L227 196 V448Z', '#793044', '#c27479', 1.8)}${path('M180 107 V448 H133 V196Z', '#4c263b', '#8a4155', 1.3)}${line('M54 305 H120 M55 366 H120 M241 305 H305 M241 366 H305 M180 110 V128 M61 243 L89 216 L116 242 M244 243 L272 216 L300 242', '#a26478', 1.3)}${floor}${maiden()}${scurryingMatomenos()}${maidenMotes()}`;
       } else {
         illustration = `${path('M180 73 L286 248 L180 457 L74 248Z', '#6d6580', '#c1b38e', 2)}${ring(180, 240, 110, '#d6c48c')}${line('M180 80 V436 M74 248 H286 M104 139 L263 351 M96 341 L258 136', '#ada2a8', 1.5)}${floor}${path('M106 528 L125 510 H237 L260 529 V544 H106Z', '#7a6c75', '#c0ad8a', 2)}${justiciar()}`;
       }

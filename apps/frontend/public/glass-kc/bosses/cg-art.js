@@ -1,3 +1,107 @@
+function uprightHunllefMotion(svg) {
+  const marker = '<g transform="translate(25 174) scale(.2 .34)">';
+  const from = svg.indexOf(marker);
+  if (from < 0) throw new Error('Hunllef refinement: missing model plane');
+  const end = svg.indexOf('</g>', from);
+  if (end < 0) throw new Error('Hunllef refinement: model plane is unclosed');
+  let facetIndex = 0;
+  const model = svg
+    .slice(from + marker.length, end)
+    .replace(/<path d="([^"]+)"([^>]*)\/>/g, (path, rest, attrs) => {
+      const index = facetIndex++;
+      // The two front legs fold at their shoulders while rearing. The cyan rear
+      // support and its foot vertices stay planted. Shared vertex coordinates
+      // use the same continuous bend so the torso's original facets stay joined.
+      const frontLeg = (index >= 7 && index <= 10) || (index >= 38 && index <= 43);
+      const pose = (slam = false) =>
+        rest.replace(/([ML])(-?[\d.]+)\s+(-?[\d.]+)/g, (_match, command, rawX, rawY) => {
+          let x = Number(rawX),
+            y = Number(rawY);
+          const weight = Math.max(0, Math.min(1, (1100 - x) / 480));
+          const planted = x >= 740 && y >= 580;
+          if (planted || weight === 0) return `${command}${rawX} ${rawY}`;
+          if (slam) return `${command}${x} ${(y + 15 * weight).toFixed(2)}`;
+          if (frontLeg && y > 560) {
+            y = 560 + (y - 560) * 0.44;
+            x += 35;
+          }
+          const angle = ((52 * Math.PI) / 180) * weight;
+          const dx = x - 900,
+            dy = y - 620;
+          const bentX = 900 + dx * Math.cos(angle) - dy * Math.sin(angle);
+          let bentY = 620 + dx * Math.sin(angle) + dy * Math.cos(angle) + 80 * weight;
+          // The tallest forward horn folds toward the forehead in the raised pose.
+          // Compress only its upper reach, keeping the muzzle and chest visibly
+          // higher without sending the horn through the arch's stone crown.
+          if (bentY < -170) bentY = -170 + (bentY + 170) * 0.4;
+          return `${command}${bentX.toFixed(2)} ${bentY.toFixed(2)}`;
+        });
+      const rear = pose(),
+        slam = pose(true);
+      if (rear === rest && slam === rest) return path;
+      return `<path d="${rest}"${attrs}><animate data-motion="hunllef-upright-facet" attributeName="d" values="${rest};${rest};${rear};${rear};${slam};${rest};${rest};${rest}" keyTimes="0;.15;.36;.44;.48;.54;.6;1" dur="12s" repeatCount="indefinite" calcMode="spline" keySplines=".42 0 .58 1;.42 0 .58 1;0 0 1 1;.55 0 1 .4;.2 .7 .4 1;.42 0 .58 1;0 0 1 1"/></path>`;
+    });
+  if (facetIndex !== 64)
+    throw new Error('Hunllef refinement: expected 64 original facets, got ' + facetIndex);
+  const revised =
+    svg.slice(0, from) +
+    marker.replace('>', ' data-motion="hunllef-upright-stomp">') +
+    model +
+    svg.slice(end);
+  return (
+    revised +
+    `<g data-motion="hunllef-two-paw-impact" opacity="0"><animate attributeName="opacity" values="0;0;.82;.3;0;0" keyTimes="0;.47;.485;.53;.61;1" dur="12s" repeatCount="indefinite"/><path d="M91 457 L102 462 L115 457 L126 464 L139 458 M104 462 L98 470 L85 472 M128 463 L136 471 L151 474 M94 501 L107 507 L122 501 L137 509 L152 502 M108 507 L102 516 L87 519 M140 508 L148 517 L165 519" fill="none" stroke="#e9767c" stroke-width="2.4" stroke-linejoin="round" stroke-linecap="round"/></g>`
+  );
+}
+function labyrinthHunllefMotion(model) {
+  labyrinthHunllefMotion.nextId = (labyrinthHunllefMotion.nextId || 0) + 1;
+  const id = 'labyrinth-hunllef-opening-' + labyrinthHunllefMotion.nextId;
+  // The central room contains a fully corrupted beast. Keep the existing split
+  // model's silhouette, replacing the cyan rear facets with dark crimson here.
+  const colors = [
+    ['#285868', '#5b273d'],
+    ['#4c94a3', '#984157'],
+    ['#80ced8', '#d15b70'],
+    ['#b6e4e2', '#f5a195'],
+    ['#559bab', '#bb5267'],
+    ['#93d8dc', '#e08287'],
+    ['#529aa9', '#bb5267'],
+    ['#a6dddd', '#f5a195'],
+    ['#294f62', '#482835'],
+    ['#386e81', '#763245'],
+    ['#5c9cae', '#a74759'],
+  ];
+  model = model
+    .replace(/<ellipse\b[^>]*\/>/, '')
+    .replace(/stroke-width="[^"]+"/g, 'stroke-width=".55"');
+  for (const [before, after] of colors) model = model.replaceAll(before, after);
+  const gait = (start, finalStart, pivot, delay) => {
+    const from = model.indexOf('<path d="' + start);
+    const last = model.indexOf('<path d="' + finalStart, from);
+    if (from < 0 || last < 0) throw new Error('Labyrinth Hunllef: missing leg facets');
+    const end = model.indexOf('/>', last) + 2;
+    const leg = model.slice(from, end);
+    model =
+      model.slice(0, from) +
+      `<g><animateTransform attributeName="transform" type="rotate" values="-3 ${pivot};3 ${pivot};-3 ${pivot}" dur="1.6s" begin="${delay}s" repeatCount="indefinite" calcMode="spline" keyTimes="0;.5;1" keySplines=".42 0 .58 1;.42 0 .58 1"/>${leg}</g>` +
+      model.slice(end);
+  };
+  gait('M951 431 L1029 465', 'M1018 655 L981 695', '990 475', 0);
+  gait('M464 537 L533 573', 'M478 750 L589 727', '470 537', -0.8);
+  gait('M925 520 L957 572', 'M932 753 L899 785', '960 560', -0.8);
+  gait('M644 430 L710 491', 'M584 862 L613 877', '644 430', 0);
+  return `<defs><clipPath id="${id}"><path d="M-26 57 L-29 14 L-26 -22 L-13 -45 L2 -55 L21 -36 L29 -9 L27 31 L19 58Z"/></clipPath></defs>
+    <g data-motion="labyrinth-hunllef-behind-rune" clip-path="url(#${id})" pointer-events="none" aria-hidden="true">
+      <path d="M-26 45 L0 30 L27 44 V58 H-26Z" fill="#342332" stroke="#733044" stroke-width=".7"/>
+      <path d="M-24 49 H24 M-24 55 H22 M-13 40 L-10 58 M5 34 L8 58" fill="none" stroke="#6e3042" stroke-width=".7"/>
+      <g transform="translate(0 14)"><g>
+        <animateTransform attributeName="transform" type="translate" values="8 0;-8 0;-8 0;8 0;8 0" keyTimes="0;.42;.5;.92;1" dur="16s" repeatCount="indefinite" calcMode="spline" keySplines=".3 0 .7 1;0 0 1 1;.3 0 .7 1;0 0 1 1"/>
+        <g><animateTransform attributeName="transform" type="scale" values="1 1;1 1;-1 1;-1 1;1 1" keyTimes="0;.46;.48;.96;1" dur="16s" repeatCount="indefinite" calcMode="discrete"/>
+          <g transform="scale(.24) translate(-180 -350)">${model}</g>
+        </g>
+      </g></g>
+    </g>`;
+}
 function gauntletSceneMotion(scene, svg) {
   const appendGroup = (marker, effect) => {
     const from = svg.indexOf(marker);
@@ -17,19 +121,7 @@ function gauntletSceneMotion(scene, svg) {
   };
 
   if (scene === 0) {
-    // Hunllef's grounded stomp, using all six original crimson front-leg facets.
-    // The shoulder joint stays in place, with no whole-character bob or zoom.
-    const from = svg.indexOf('<path d="M644 430 L710 491');
-    const finalFacet = svg.indexOf('<path d="M584 862 L613 877', from);
-    if (from < 0 || finalFacet < 0)
-      throw new Error('Gauntlet motion: Hunllef front-leg facets changed');
-    const end = svg.indexOf('/>', finalFacet) + 2;
-    const leg = svg.slice(from, end);
-    svg =
-      svg.slice(0, from) +
-      `<g data-motion="hunllef-paw-stamp"><animateTransform attributeName="transform" type="rotate" values="0 644 430;8 644 430;8 644 430;0 644 430;0 644 430" keyTimes="0;.3;.39;.47;1" dur="9.2s" begin="-1.3s" repeatCount="indefinite"/>${leg}</g>` +
-      svg.slice(end);
-    svg += `<g data-motion="hunllef-ground-contact" transform="translate(123 503)" opacity="0"><animate attributeName="opacity" values="0;0;.76;.3;0;0" keyTimes="0;.45;.48;.57;.69;1" dur="9.2s" begin="-1.3s" repeatCount="indefinite"/><path d="M-29 2 L-19 7 L-13 3 L-5 8 L4 3 L15 8 L28 2 M-9 5 L-15 13 L-25 15 M11 5 L19 13 L31 15" fill="none" stroke="#e9767c" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/></g>`;
+    svg = uprightHunllefMotion(svg);
   } else if (scene === 1) {
     // A broad reflection sweeps inside the blade's actual crystal silhouette.
     // This is changing material light, with no independent projectile or orbit.
@@ -211,9 +303,9 @@ GLASS_RENDERERS.cg = function createGauntletRenderer(config, { esc, getJournal }
       ${path('M-39 66 L-42 28 L-39 -26 L-25 -53 L-5 -72 L13 -68 L33 -46 L42 -14 L40 33 L34 66Z', '#393138', '#27272f', 2.7)}
       ${path('M-39 -26 L-25 -53 L-5 -72 L13 -68 L-7 -51 L-29 -16 L-32 36 L-39 66 L-42 28Z', '#82757b', '#514751', 1.5)}
       ${path('M13 -68 L33 -46 L42 -14 L40 33 L34 66 L25 46 L29 7 L23 -30 L8 -51Z', '#60545e', '#423b44', 1.5)}
-      ${path('M-26 57 L-29 14 L-26 -22 L-13 -45 L2 -55 L21 -36 L29 -9 L27 31 L19 58Z', '#391d2b', '#9b3c53', 1.5)}
+      ${path('M-26 57 L-29 14 L-26 -22 L-13 -45 L2 -55 L21 -36 L29 -9 L27 31 L19 58Z', upright ? '#19141f' : '#391d2b', '#9b3c53', 1.5)}
       ${path('M-26 35 L-11 46 L1 31 L17 47 L26 35 L19 58 H-26Z', '#581d30', '#752538', 1)}
-      ${gauntletRune(upright)}
+      ${upright ? labyrinthHunllefMotion(hunllef()) : ''}${gauntletRune(upright)}
     </g>`;
   }
 

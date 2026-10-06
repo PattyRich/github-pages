@@ -254,7 +254,7 @@ const GLASS_BOSSES = {
       'Verzik’s final form rises beneath a gold chevron, her vast purple abdomen ringed with olive spikes above a teal gown, folded clawed hands, six red eyes and eight angular spider legs. Green poison motes and pale violet silk sparks drift around her.',
       'Grey-white Ischyros has layered shell plates, green Toxobolos bears olive spikes, and cyan Hagios has a smooth dark-edged shell. Eight jointed legs and hooked mandibles anchor each creature among the chamber’s silk webs.',
       'A low, broad Sotetseg crouches above the red shadow-maze path, with a jagged charcoal shoulder mantle, forward horn, narrow burning eye, curved red-tipped tusks and heavy clawed paws.',
-      'The Maiden’s angular white face, pointed ears and long scarlet hair rise above lowered blade-like hands. Twisting crimson spires support her pale figure over a faceted blood pool, with drifting blood droplets and pale glints. A red Nylocas Matomenos stands at her feet.',
+      'The Maiden’s angular white face, pointed ears and long scarlet hair rise above lowered blade-like hands. Twisting crimson spires support her pale figure over a faceted blood pool, with drifting blood droplets and pale glints. Three red Nylocas Matomenos scurry across the floor at her feet.',
       'Silver-grey armour with a crowned faceguard, gold star and trim, broad plated shoulders and indigo cloth.',
     ],
     postcardNotes: [
