@@ -18,6 +18,12 @@ function createGlassLootWall(container, { getDrops, onOpenMemory, getScope = () 
     /^data:image\/(jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(image);
   const numberFormat = new Intl.NumberFormat();
   const number = (value) => numberFormat.format(value);
+  const dateFormat = new Intl.DateTimeFormat(undefined, {
+    dateStyle: 'medium',
+    timeStyle: 'short',
+  });
+  const savedDate = (drop) =>
+    drop.savedAt === null ? 'Saved date unavailable' : `Saved ${dateFormat.format(drop.savedAt)}`;
   let drops = [];
   let visible = [];
   let page = 0;
@@ -36,9 +42,10 @@ function createGlassLootWall(container, { getDrops, onOpenMemory, getScope = () 
     <div class="glass-loot-controls">
       <label class="glass-loot-search" for="${prefix}-search">Search memories<input id="${prefix}-search" type="search" maxlength="240" placeholder="Drop, boss or window…" autocomplete="off" /></label>
       <label for="${prefix}-boss">Hunt<select id="${prefix}-boss"><option value="">All hunts</option></select></label>
-      <label for="${prefix}-order">Order within each hunt<select id="${prefix}-order"><option value="latest">Latest KC first</option><option value="earliest">Earliest KC first</option></select></label>
+      <label for="${prefix}-order">Order<select id="${prefix}-order"><option value="recent">Newest saved first</option><option value="oldest">Oldest saved first</option><option value="latest">Highest KC by hunt</option><option value="earliest">Lowest KC by hunt</option></select></label>
     </div>
     <p class="glass-loot-status" role="status" aria-live="polite" aria-atomic="true"></p>
+    <p class="glass-loot-date-help" hidden>Older drops without a saved date appear last.</p>
     <ul class="glass-loot-grid" aria-label="Saved loot memories"></ul>
     <div class="glass-loot-empty" hidden></div>
     <div class="glass-loot-pages" hidden><button type="button" data-loot-page="previous">Previous</button><p></p><button type="button" data-loot-page="next">Next</button></div>
@@ -55,6 +62,7 @@ function createGlassLootWall(container, { getDrops, onOpenMemory, getScope = () 
   const sort = container.querySelector(`#${prefix}-order`);
   const total = container.querySelector('.glass-loot-total');
   const status = container.querySelector('.glass-loot-status');
+  const dateHelp = container.querySelector('.glass-loot-date-help');
   const grid = container.querySelector('.glass-loot-grid');
   const empty = container.querySelector('.glass-loot-empty');
   const pages = container.querySelector('.glass-loot-pages');
@@ -81,7 +89,8 @@ function createGlassLootWall(container, { getDrops, onOpenMemory, getScope = () 
     returnTarget = target;
     dialog.querySelector('.glass-loot-dialog-boss').textContent = drop.bossName;
     dialog.querySelector('h2').textContent = drop.label || 'Drop memory';
-    dialog.querySelector('.glass-loot-dialog-meta').textContent = `KC ${number(drop.kc)}`;
+    dialog.querySelector('.glass-loot-dialog-meta').textContent =
+      `KC ${number(drop.kc)} · ${savedDate(drop)}`;
     dialog.querySelector('.glass-loot-dialog-window').textContent =
       `Window ${number(drop.windowIndex + 1)} · ${drop.windowTitle}`;
     const image = dialog.querySelector('.glass-loot-dialog-image');
@@ -94,19 +103,29 @@ function createGlassLootWall(container, { getDrops, onOpenMemory, getScope = () 
 
   function render() {
     const query = search.value.trim().toLocaleLowerCase();
-    const direction = sort.value === 'earliest' ? 1 : -1;
+    const byDate = sort.value === 'recent' || sort.value === 'oldest';
+    const direction = sort.value === 'earliest' || sort.value === 'oldest' ? 1 : -1;
     visible = drops
       .filter(
         (drop) =>
           (!bossFilter.value || drop.bossId === bossFilter.value) &&
           (!query || drop.searchText.includes(query))
       )
-      .sort(
-        (a, b) =>
+      .sort((a, b) => {
+        if (byDate) {
+          // Missing dates are unknown, not newly uploaded when a backup is restored.
+          if ((a.savedAt === null) !== (b.savedAt === null)) return a.savedAt === null ? 1 : -1;
+          const difference = direction * ((a.savedAt || 0) - (b.savedAt || 0));
+          if (difference) return difference;
+        }
+        const kcDirection = byDate ? -1 : direction;
+        return (
           a.bossName.localeCompare(b.bossName) ||
-          direction * (a.kc - b.kc) ||
-          direction * (a.tile - b.tile)
-      );
+          kcDirection * (a.kc - b.kc) ||
+          kcDirection * (a.tile - b.tile)
+        );
+      });
+    dateHelp.hidden = !byDate || !visible.some((drop) => drop.savedAt === null);
     const pageCount = Math.ceil(visible.length / pageSize);
     page = Math.max(0, Math.min(page, pageCount - 1));
     const offset = page * pageSize;
@@ -125,7 +144,7 @@ function createGlassLootWall(container, { getDrops, onOpenMemory, getScope = () 
         const preview = drop.image
           ? `<img src="${esc(drop.image)}" alt="" loading="lazy" decoding="async" />`
           : '<span class="glass-loot-inscription" aria-hidden="true"><span>✧</span><span>Saved note</span></span>';
-        return `<li class="glass-loot-card${drop.image ? '' : ' glass-loot-card-written'}"><button type="button" class="glass-loot-preview" data-loot-preview="${offset + index}" aria-label="View ${esc(title)} at KC ${number(drop.kc)}, ${esc(drop.bossName)}"><span class="glass-loot-picture">${preview}<span class="glass-loot-kind">${drop.image ? 'Screenshot' : 'Written memory'}</span></span><span class="glass-loot-name">${esc(title)}</span><span class="glass-loot-meta"><span>${esc(drop.bossShortName || drop.bossName)}</span><span>KC ${number(drop.kc)}</span></span></button><button type="button" class="glass-loot-window-link" data-loot-window="${offset + index}" aria-label="View ${esc(title)} in its ${esc(drop.bossName)} window">View in window <span aria-hidden="true">↗</span></button></li>`;
+        return `<li class="glass-loot-card${drop.image ? '' : ' glass-loot-card-written'}"><button type="button" class="glass-loot-preview" data-loot-preview="${offset + index}" aria-label="View ${esc(title)} at KC ${number(drop.kc)}, ${esc(drop.bossName)}"><span class="glass-loot-picture">${preview}<span class="glass-loot-kind">${drop.image ? 'Screenshot' : 'Written memory'}</span></span><span class="glass-loot-name">${esc(title)}</span><span class="glass-loot-meta"><span>${esc(drop.bossShortName || drop.bossName)}</span><span>KC ${number(drop.kc)}</span></span><span class="glass-loot-meta">${esc(savedDate(drop))}</span></button><button type="button" class="glass-loot-window-link" data-loot-window="${offset + index}" aria-label="View ${esc(title)} in its ${esc(drop.bossName)} window">View in window <span aria-hidden="true">↗</span></button></li>`;
       })
       .join('');
     grid.hidden = !count;
@@ -177,6 +196,12 @@ function createGlassLootWall(container, { getDrops, onOpenMemory, getScope = () 
           label: text(drop.label, 240),
           windowTitle: text(drop.windowTitle, 160),
           image: imageAllowed(drop.image) ? drop.image : '',
+          savedAt:
+            Number.isSafeInteger(drop.savedAt) &&
+            drop.savedAt > 0 &&
+            drop.savedAt <= 8640000000000000
+              ? drop.savedAt
+              : null,
         };
         value.searchText =
           `${value.label} ${value.bossName} ${value.bossShortName} ${value.windowTitle} ${value.kc}`.toLocaleLowerCase();

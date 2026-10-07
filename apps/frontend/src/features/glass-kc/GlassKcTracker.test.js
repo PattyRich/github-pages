@@ -43,6 +43,7 @@ function open(saved, blocked = false, cloud = {}) {
         addEventListener() {},
         removeEventListener() {},
       });
+      window.CSS = { supports: () => true };
       window.confirm = () => true;
       window.HTMLElement.prototype.scrollIntoView = () => {};
       window.HTMLDialogElement.prototype.showModal = function () {
@@ -82,6 +83,53 @@ afterEach(() => {
 });
 
 describe('browser-local glass journal', () => {
+  it('dates new drops and screenshot replacements without reordering label edits or removals', () => {
+    const window = open();
+    begin(window, 100);
+    click(window, 'record-kill');
+    const clock = vi.spyOn(window.Date, 'now').mockReturnValue(1780000000000);
+    window.eval("savePaneMemory(1,{label:'Orb',image:''})");
+    clock.mockReturnValue(1780000001000);
+    window.eval("savePaneMemory(1,{label:'Renamed orb',image:''})");
+    let saved = JSON.parse(window.localStorage.getItem(key));
+    expect(saved.dropTiles['1'].savedAt).toBe(1780000000000);
+    window.eval("savePaneMemory(1,{label:'Orb',image:'data:image/jpeg;base64,YWJj'})");
+    saved = JSON.parse(window.localStorage.getItem(key));
+    expect(saved.dropTiles['1'].savedAt).toBe(1780000001000);
+    clock.mockReturnValue(1780000002000);
+    window.eval("savePaneMemory(1,{label:'Orb',image:''})");
+    saved = JSON.parse(window.localStorage.getItem(key));
+    expect(saved.dropTiles['1'].savedAt).toBe(1780000001000);
+    clock.mockRestore();
+    const restored = open(JSON.stringify(saved));
+    expect(restored.eval('journal.dropTiles[1].savedAt')).toBe(1780000001000);
+  });
+
+  it('keeps undated legacy drops undated and rejects invalid dates in backups', () => {
+    const data = {
+      version: 2,
+      boss: 'pnm',
+      base: 100,
+      name: 'Nightmare',
+      sessions: [],
+      active: { id: 'old', kills: 1, notes: '', drops: '' },
+      dropTiles: { 1: { label: 'Old orb', image: '' } },
+    };
+    const window = open(JSON.stringify(data));
+    window.eval("savePaneMemory(1,{label:'Renamed old orb',image:''})");
+    expect(JSON.parse(window.localStorage.getItem(key)).dropTiles['1']).not.toHaveProperty(
+      'savedAt'
+    );
+    for (const savedAt of [0, -1, 1.5, true, '1780000000000', null, 8640000000000001]) {
+      const backup = { ...data, dropTiles: { 1: { label: 'Orb', image: '', savedAt } } };
+      expect(() => window.eval(`validate(${JSON.stringify(backup)})`)).toThrow();
+    }
+    data.dropTiles['1'].savedAt = 1780000000000;
+    expect(window.eval(`validate(${JSON.stringify(data)}).dropTiles[1].savedAt`)).toBe(
+      1780000000000
+    );
+  });
+
   it('requires setup and keeps a custom baseline, screenshot and postcard across reloads', () => {
     const window = open();
     expect(window.document.getElementById('record-kill').disabled).toBe(true);

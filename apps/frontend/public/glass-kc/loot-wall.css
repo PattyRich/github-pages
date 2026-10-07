@@ -36,6 +36,11 @@
   font-variant-numeric: tabular-nums;
 }
 
+.glass-loot-date-help {
+  color: var(--muted);
+  margin: 0 0 12px;
+}
+
 .glass-loot-controls {
   display: grid;
   grid-template-columns: minmax(180px, 1.5fr) minmax(160px, 1fr) minmax(160px, 1fr);

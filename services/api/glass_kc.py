@@ -89,6 +89,10 @@ def validate_journal(data, boss=None):
             raise ValueError('Invalid screenshot.')
         image_size += len(image)
         clean_drops[key] = {'label': label, 'image': image}
+        if 'savedAt' in drop:
+            if not integer(drop['savedAt'], 8_640_000_000_000_000) or drop['savedAt'] == 0:
+                raise ValueError('Invalid drop saved date.')
+            clean_drops[key]['savedAt'] = drop['savedAt']
     if image_size > 1500000:
         raise ValueError('Screenshot storage is full. Remove an older screenshot.')
     result = dict(version=2, boss=saved_boss, base=data['base'], name=name.strip(),

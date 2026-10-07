@@ -6,7 +6,7 @@
     <title>Glass KC Tracker</title>
     <link rel="stylesheet" href="window-workshop.css?v=frames-2" />
     <link rel="stylesheet" href="sanctuary-wings.css?v=collections-1" />
-    <link rel="stylesheet" href="loot-wall.css?v=collections-1" />
+    <link rel="stylesheet" href="loot-wall.css?v=loot-recency-1" />
     <link rel="stylesheet" href="window-completion.css?v=collections-1" />
     <style>
       [hidden] {
@@ -1418,7 +1418,7 @@
     <script src="bosses/yama-art.js?v=yama-1"></script>
     <script src="collection-journals.js?v=collections-1"></script>
     <script src="sanctuary-wings.js?v=player-copy-2"></script>
-    <script src="loot-wall.js?v=player-copy-2"></script>
+    <script src="loot-wall.js?v=loot-recency-1"></script>
     <script src="window-completion.js?v=collections-1"></script>
     <script src="account.js?v=player-copy-2"></script>
     <script>
@@ -1508,7 +1508,11 @@
             typeof drop.image !== 'string' ||
             drop.image.length > 180000 ||
             (drop.image &&
-              !/^data:image\/(?:jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(drop.image))
+              !/^data:image\/(?:jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/.test(drop.image)) ||
+            (drop.savedAt !== undefined &&
+              (!Number.isSafeInteger(drop.savedAt) ||
+                drop.savedAt <= 0 ||
+                drop.savedAt > 8640000000000000))
           )
             throw new Error('Invalid drop pane or screenshot in this backup.');
           imageSize += drop.image.length;
@@ -2107,8 +2111,13 @@
         if (loadFailed || tile < 1 || tile > total())
           throw new Error('That KC is no longer in this journal. Choose a recorded KC.');
         const next = { ...(journal.dropTiles || {}) };
-        if (entry) next[tile] = entry;
-        else delete next[tile];
+        if (entry) {
+          const previous = next[tile];
+          next[tile] = { label: entry.label, image: entry.image };
+          if (!previous || (entry.image && entry.image !== previous.image))
+            next[tile].savedAt = Date.now();
+          else if (previous.savedAt !== undefined) next[tile].savedAt = previous.savedAt;
+        } else delete next[tile];
         if (Object.values(next).reduce((size, drop) => size + drop.image.length, 0) > 1500000)
           throw new Error(
             'Screenshot storage is full. Remove an older screenshot, or save this drop without a screenshot.'
@@ -2471,6 +2480,7 @@
                 kc: collection.journal.base + Number(tile),
                 label: drop.label || 'Drop recorded',
                 image: drop.image,
+                savedAt: drop.savedAt,
                 windowIndex: index,
                 windowTitle: collection.titles[index % collection.titles.length],
               };

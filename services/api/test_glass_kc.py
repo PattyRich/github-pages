@@ -127,6 +127,26 @@ def test_webp_screenshots_and_legacy_jpeg_backups_are_accepted():
         assert validate_journal(data)['dropTiles']['1']['image'] == data['dropTiles']['1']['image']
 
 
+def test_drop_saved_date_survives_account_save_and_reload(api):
+    client, db = api
+    data = journal()
+    data['dropTiles']['1']['savedAt'] = 1_780_000_000_123
+    assert client.put('/glass-kc/api/journals/pnm', json={'revision': 0, 'journal': data}, headers=HEADERS).status_code == 200
+    stored = db['journals'].insert_one.call_args.args[0]
+    assert stored['journal']['dropTiles']['1']['savedAt'] == 1_780_000_000_123
+    db['journals'].find_one.return_value = stored
+    assert client.get('/glass-kc/api/journals/pnm', headers=HEADERS).json['journal'] == data
+    assert 'savedAt' not in validate_journal(journal())['dropTiles']['1']
+
+
+@pytest.mark.parametrize('value', [True, 0, -1, 1.5, '1780000000123', None, 8_640_000_000_000_001])
+def test_invalid_drop_saved_date_is_rejected(value):
+    data = journal()
+    data['dropTiles']['1']['savedAt'] = value
+    with pytest.raises(ValueError, match='Invalid drop saved date'):
+        validate_journal(data)
+
+
 def test_invalid_write_and_database_outage(api):
     client, db = api
     assert client.put('/glass-kc/api/journals/pnm', json={'revision': False, 'journal': journal()}, headers=HEADERS).status_code == 400
