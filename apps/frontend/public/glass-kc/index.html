@@ -656,6 +656,31 @@
         justify-content: space-between;
         gap: 12px;
         font-size: 0.78rem;
+        flex-wrap: wrap;
+      }
+      .postcard-actions,
+      .postcard-edit-actions {
+        display: flex;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 8px;
+      }
+      .postcard-editor {
+        clear: both;
+      }
+      .postcard-editor label {
+        color: inherit;
+      }
+      .postcard-edit-actions {
+        margin-top: 12px;
+      }
+      .postcard .postcard-edit-error {
+        margin: 12px 0 0;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      .postcard :focus-visible {
+        outline-color: var(--osrs-border-light, #5d503f);
       }
       .postcard button {
         color: #33271d;
@@ -664,6 +689,15 @@
         background: transparent;
         padding: 4px 8px;
         font-size: 0.75rem;
+      }
+      .postcard [data-edit-session] {
+        padding: 2px 5px;
+        font-size: 0.65rem;
+        line-height: 1.25;
+      }
+      .postcard-editor button[type='submit'] {
+        background: var(--osrs-button-bg, #5a4c37);
+        color: var(--bright);
       }
       .storage {
         font-size: 0.82rem;
@@ -1407,9 +1441,9 @@
         <button id="room-next" type="button" aria-label="Next earned window">→</button>
       </div>
     </dialog>
-    <script src="bosses/catalog.js?v=player-copy-2"></script>
-    <script src="bosses/glass-window.js?v=approved-motion-1"></script>
-    <script src="window-workshop.js?v=style-backups-1"></script>
+    <script src="bosses/catalog.js?v=player-copy-3"></script>
+    <script src="bosses/glass-window.js?v=continuous-motion-1"></script>
+    <script src="window-workshop.js?v=continuous-motion-1"></script>
     <script src="bosses/pnm-art.js?v=approved-motion-1"></script>
     <script src="bosses/cox-art.js?v=bow-motion-2"></script>
     <script src="bosses/toa-art.js?v=approved-motion-1"></script>
@@ -1710,7 +1744,10 @@
         $('nav-postcards').hidden = !bossChosen;
         if (!celebrate && !preserveCompletion) windowCompletion?.dismiss();
         refreshCollectionViews();
-        if (!bossChosen) return;
+        if (!bossChosen) {
+          sessionEdit = null;
+          return;
+        }
         $('pane-preview').hidden = true;
         $('journal-setup').hidden = configured;
         $('begin-journal').disabled = loadFailed;
@@ -1730,7 +1767,7 @@
           workshopBoss = bossId;
           workshopActiveIndex = index;
         }
-        $('window-art').innerHTML = art(pieces, index, 'main', celebrate);
+        updateGlassWindow($('window-art'), art(pieces, index, 'main', celebrate));
         $('window-title').textContent =
           `Window ${String(index + 1).padStart(2, '0')} · ${titles[index % titles.length]}`;
         $('scene-description').textContent = sceneDescriptions[sceneNumber(index)];
@@ -1799,22 +1836,113 @@
               `<div class="collection-step ${i < count ? 'finished' : i === count ? 'current' : ''}">${esc(title)}<small>${i < count ? 'COLLECTED' : i === count ? 'IN PROGRESS' : `BEGINS AT ${i * 100 + 1} JOURNAL ${countLabel(i * 100 + 1).toUpperCase()}`}</small></div>`
           )
           .join('');
-        $('gallery-items').innerHTML = Array.from(
-          { length: count },
-          (_, i) =>
-            `<figure>${art(100, i, 'gallery-' + i)}<figcaption>${String(i + 1).padStart(2, '0')} / ${esc(titles[i % titles.length])}<br>${journal.base + i * 100 + 1}–${journal.base + (i + 1) * 100} KC</figcaption><button type="button" class="window-style-button" data-style-window="${i}" aria-label="Style window ${i + 1}: ${esc(titles[i % titles.length])}">Style window</button></figure>`
-        ).join('');
+        const gallery = $('gallery-items');
+        while (gallery.children.length > count) gallery.lastElementChild.remove();
+        for (let i = 0; i < count; i++) {
+          let figure = gallery.children[i];
+          if (!figure) {
+            figure = document.createElement('figure');
+            figure.innerHTML = `<figcaption></figcaption><button type="button" class="window-style-button" data-style-window="${i}">Style window</button>`;
+            gallery.append(figure);
+          }
+          updateGlassWindow(figure, art(100, i, 'gallery-' + i));
+          figure.querySelector('figcaption').innerHTML =
+            `${String(i + 1).padStart(2, '0')} / ${esc(titles[i % titles.length])}<br>${journal.base + i * 100 + 1}–${journal.base + (i + 1) * 100} KC`;
+          figure
+            .querySelector('button')
+            .setAttribute('aria-label', `Style window ${i + 1}: ${titles[i % titles.length]}`);
+        }
       }
+      let sessionEdit = null;
+      let postcardScope;
+      const sessionScope = () =>
+        `${bossId}:${account ? `${authKey}:${account.username}` : 'guest'}`;
       function renderPostcards() {
         $('postcard-empty').hidden = journal.sessions.length > 0;
         $('postcard-count').textContent = `${journal.sessions.length} SESSIONS SAVED`;
+        const scope = sessionScope();
+        if (
+          sessionEdit &&
+          (sessionEdit.scope !== scope || !journal.sessions.some((s) => s.id === sessionEdit.id))
+        )
+          sessionEdit = null;
+        const container = $('postcard-items');
+        if (postcardScope !== scope) {
+          container.replaceChildren();
+          postcardScope = scope;
+        }
+        const existing = new Map(
+          Array.from(container.children, (card) => [card.dataset.sessionId, card])
+        );
         let previous = 0;
         const cards = journal.sessions.map((s, i) => {
           const from = journal.base + previous;
           previous += s.kills;
-          return `<article class="postcard"><div class="stamp">${art(previous % 100 || 100, Math.floor((previous - 1) / 100), 'card-' + i)}</div><p class="eyebrow">${esc(boss().name)} / ${esc(dateLabel(s.ended))}</p><h3>${s.kills} ${countLabel(s.kills)} recorded.</h3><p>${from.toLocaleString()} → ${(journal.base + previous).toLocaleString()} KC</p><p>${esc(s.notes || boss().postcardNotes[0])}</p><p><strong>Loot:</strong> ${esc(s.drops || boss().postcardLoot[0])}</p><footer><span>Session ${String(i + 1).padStart(2, '0')}</span><button data-card="${i}" type="button">Save postcard ↓</button></footer></article>`;
+          let card = existing.get(s.id);
+          if (!card) {
+            card = document.createElement('article');
+            card.className = 'postcard';
+            card.dataset.sessionId = s.id;
+            card.innerHTML =
+              '<div class="stamp"></div><p class="eyebrow"></p><h3></h3><p class="postcard-range"></p><div class="postcard-copy"><p class="postcard-note"></p><p><strong>Loot:</strong> <span class="postcard-loot"></span></p></div><footer><span></span><div class="postcard-actions"><button type="button" data-edit-session>Edit</button><button type="button" data-card>Save postcard ↓</button></div></footer>';
+          }
+          updateGlassWindow(
+            card.querySelector('.stamp'),
+            art(previous % 100 || 100, Math.floor((previous - 1) / 100), 'card-' + i)
+          );
+          card.querySelector('.eyebrow').textContent = `${boss().name} / ${dateLabel(s.ended)}`;
+          card.querySelector('h3').textContent = `${s.kills} ${countLabel(s.kills)} recorded.`;
+          card.querySelector('.postcard-range').textContent =
+            `${from.toLocaleString()} → ${(journal.base + previous).toLocaleString()} KC`;
+          card.querySelector('.postcard-note').textContent = s.notes || boss().postcardNotes[0];
+          card.querySelector('.postcard-loot').textContent = s.drops || boss().postcardLoot[0];
+          card.querySelector('footer > span').textContent =
+            `Session ${String(i + 1).padStart(2, '0')}`;
+          card.querySelector('[data-card]').dataset.card = i;
+          const editing = sessionEdit?.id === s.id;
+          const edit = card.querySelector('[data-edit-session]');
+          edit.dataset.editSession = s.id;
+          edit.setAttribute('aria-label', `Edit session ${i + 1}`);
+          edit.setAttribute('aria-expanded', String(editing));
+          edit.disabled = loadFailed || !!sessionEdit;
+          card.querySelector('.postcard-copy').hidden = editing;
+          let form = card.querySelector('.postcard-editor');
+          if (editing) {
+            if (!form) {
+              form = document.createElement('form');
+              form.className = 'postcard-editor';
+              form.setAttribute('aria-label', `Edit session ${i + 1}`);
+              form.innerHTML = `<label for="postcard-loot-${i}">Loot</label><input id="postcard-loot-${i}" name="drops" maxlength="240"/><label for="postcard-notes-${i}">Notes</label><textarea id="postcard-notes-${i}" name="notes" maxlength="600"></textarea><p class="postcard-edit-error" role="alert" hidden></p><div class="postcard-edit-actions"><button type="submit">Save changes</button><button type="button" data-cancel-session>Cancel</button></div>`;
+              card.insertBefore(form, card.querySelector('footer'));
+            }
+            for (const field of ['drops', 'notes']) {
+              const input = form.elements.namedItem(field);
+              if (input.value !== sessionEdit[field]) input.value = sessionEdit[field];
+              input.disabled = loadFailed;
+            }
+            form.querySelector('[type="submit"]').disabled = loadFailed;
+            const error = form.querySelector('.postcard-edit-error');
+            error.textContent = sessionEdit.error || '';
+            error.hidden = !sessionEdit.error;
+          } else form?.remove();
+          return card;
         });
-        $('postcard-items').innerHTML = cards.reverse().join('');
+        const retained = new Set(cards);
+        for (const card of Array.from(container.children)) {
+          if (!retained.has(card)) card.remove();
+        }
+        cards.reverse().forEach((card, i) => {
+          if (container.children[i] !== card)
+            container.insertBefore(card, container.children[i] || null);
+        });
+      }
+      function closeSessionEditor() {
+        const id = sessionEdit?.id;
+        sessionEdit = null;
+        renderPostcards();
+        Array.from($('postcard-items').querySelectorAll('[data-edit-session]'))
+          .find((button) => button.dataset.editSession === id)
+          ?.focus();
       }
       $('journal-setup').addEventListener('submit', (event) => {
         event.preventDefault();
@@ -2005,6 +2133,25 @@
         return `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="${height}" viewBox="0 0 960 ${height}"><rect width="960" height="${height}" fill="#201b16"/><rect x="18" y="18" width="924" height="${height - 36}" fill="#d9c6a1" stroke="#bb9e73" stroke-width="8"/><g transform="translate(650 90) scale(.72)">${art((before + s.kills) % 100 || 100, Math.floor((before + s.kills - 1) / 100), 'export').replace('<svg ', '<svg width="360" height="580" ')}</g><g fill="#33271d" font-family="Georgia, serif"><text x="60" y="75" font-size="16">${esc(boss().name.toUpperCase())} / SESSION ${i + 1}</text><text x="60" y="145" font-size="43">${s.kills} ${countLabel(s.kills)} recorded.</text><text x="60" y="185" font-size="19">${journal.base + before} → ${journal.base + before + s.kills} KC</text>${lines.map((line, n) => `<text x="60" y="${245 + n * 25}" font-size="19">${esc(line)}</text>`).join('')}<text x="60" y="${height - 52}" font-size="16">${esc(dateLabel(s.ended))} · Glass KC journal</text></g></svg>`;
       }
       $('postcard-items').addEventListener('click', (event) => {
+        const edit = event.target.closest('[data-edit-session]');
+        if (edit && !loadFailed && !sessionEdit) {
+          const session = journal.sessions.find((s) => s.id === edit.dataset.editSession);
+          if (!session) return;
+          sessionEdit = {
+            id: session.id,
+            scope: sessionScope(),
+            original: { notes: session.notes, drops: session.drops },
+            notes: session.notes,
+            drops: session.drops,
+          };
+          renderPostcards();
+          $('postcard-items').querySelector('.postcard-editor input').focus();
+          return;
+        }
+        if (event.target.closest('[data-cancel-session]')) {
+          closeSessionEditor();
+          return;
+        }
         const button = event.target.closest('[data-card]');
         if (button)
           download(
@@ -2012,6 +2159,60 @@
             'image/svg+xml',
             `glass-kc-postcard-${Number(button.dataset.card) + 1}.svg`
           );
+      });
+      $('postcard-items').addEventListener('input', (event) => {
+        if (!sessionEdit || !event.target.closest('.postcard-editor')) return;
+        if (!['notes', 'drops'].includes(event.target.name)) return;
+        sessionEdit[event.target.name] = event.target.value;
+        sessionEdit.error = '';
+        event.target.closest('form').querySelector('.postcard-edit-error').hidden = true;
+      });
+      $('postcard-items').addEventListener('keydown', (event) => {
+        if (event.key === 'Escape' && event.target.closest('.postcard-editor')) {
+          event.preventDefault();
+          closeSessionEditor();
+        }
+      });
+      $('postcard-items').addEventListener('submit', (event) => {
+        const form = event.target.closest('.postcard-editor');
+        if (!form) return;
+        event.preventDefault();
+        if (!sessionEdit) return;
+        sessionEdit.notes = form.elements.namedItem('notes').value;
+        sessionEdit.drops = form.elements.namedItem('drops').value;
+        try {
+          if (loadFailed || sessionEdit.scope !== sessionScope())
+            throw new Error('Reconnect or restore your journal before saving this session.');
+          const session = journal.sessions.find((s) => s.id === sessionEdit.id);
+          if (
+            !session ||
+            session.notes !== sessionEdit.original.notes ||
+            session.drops !== sessionEdit.original.drops
+          )
+            throw new Error(
+              'This session changed while you were editing. Cancel and open Edit again before saving.'
+            );
+          if (sessionEdit.notes.length > 600 || sessionEdit.drops.length > 240)
+            throw new Error('Keep loot within 240 characters and notes within 600 characters.');
+          const candidate = {
+            ...journal,
+            sessions: journal.sessions.map((s) =>
+              s.id === sessionEdit.id
+                ? { ...s, notes: sessionEdit.notes.trim(), drops: sessionEdit.drops.trim() }
+                : s
+            ),
+          };
+          validate(candidate);
+          persistJournal(candidate);
+          journal = candidate;
+          closeSessionEditor();
+          render();
+          notify('Session updated.');
+        } catch (error) {
+          sessionEdit.error =
+            error.message || 'Could not save this session. Your edits are still here.';
+          renderPostcards();
+        }
       });
       addEventListener('storage', (event) => {
         if (!account && event.key === KEY && event.newValue === null) {
@@ -2529,11 +2730,9 @@
           (key) =>
             Number(key) > sanctuaryIndex * 100 && Number(key) <= sanctuaryIndex * 100 + pieces
         ).length;
-        $('room-art').innerHTML = collectionArtwork(
-          sanctuaryBossId,
-          sanctuaryIndex,
-          pieces,
-          'sanctuary'
+        updateGlassWindow(
+          $('room-art'),
+          collectionArtwork(sanctuaryBossId, sanctuaryIndex, pieces, 'sanctuary')
         );
         $('room-title').textContent =
           `${config.shortName} · ${String(sanctuaryIndex + 1).padStart(2, '0')} · ${config.titles[sanctuaryIndex % config.titles.length]}`;

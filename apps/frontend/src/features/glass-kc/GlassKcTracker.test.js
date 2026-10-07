@@ -83,6 +83,268 @@ afterEach(() => {
 });
 
 describe('browser-local glass journal', () => {
+  it('edits the selected saved session while preserving KC, other sessions and drop memories', () => {
+    const data = {
+      version: 2,
+      boss: 'pnm',
+      base: 1700,
+      name: 'Nightmare',
+      sessions: [
+        {
+          id: 'earlier',
+          kills: 10,
+          notes: 'Earlier session',
+          drops: 'Nothing',
+          ended: '2026-10-06',
+        },
+        {
+          id: 'orb-session',
+          kills: 5,
+          notes: 'Finally!',
+          drops: 'Forgot to write it down',
+          ended: '2026-10-07',
+        },
+      ],
+      active: { id: 'current', kills: 1, notes: 'Current note', drops: 'Current loot' },
+      dropTiles: {
+        15: {
+          label: 'Harmonised orb',
+          image: 'data:image/jpeg;base64,YWJj',
+          savedAt: 1780000000000,
+        },
+      },
+    };
+    const window = open(JSON.stringify(data));
+    const main = window.document.querySelector('#window-art svg');
+    const postcard = window.document.querySelector('#postcard-items svg');
+    window.document.querySelector('[data-edit-session="orb-session"]').click();
+    let form = window.document.querySelector('.postcard-editor');
+    expect(form.elements.namedItem('drops').value).toBe('Forgot to write it down');
+    form.elements.namedItem('drops').value = 'Harmonised orb at 1715 KC';
+    form.elements.namedItem('drops').dispatchEvent(new window.Event('input', { bubbles: true }));
+    form.elements.namedItem('notes').value = 'Another pane. Finally, less pain.';
+    form.elements.namedItem('notes').dispatchEvent(new window.Event('input', { bubbles: true }));
+    click(window, 'record-kill');
+    form = window.document.querySelector('.postcard-editor');
+    expect(form.elements.namedItem('drops').value).toBe('Harmonised orb at 1715 KC');
+    expect(window.document.querySelector('#postcard-items svg')).toBe(postcard);
+    form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    const saved = JSON.parse(window.localStorage.getItem(key));
+    expect(saved.sessions[0]).toEqual(data.sessions[0]);
+    expect(saved.sessions[1]).toEqual({
+      ...data.sessions[1],
+      notes: 'Another pane. Finally, less pain.',
+      drops: 'Harmonised orb at 1715 KC',
+    });
+    expect(saved.active).toEqual({ ...data.active, kills: 2 });
+    expect(saved.dropTiles).toEqual(data.dropTiles);
+    expect(window.document.getElementById('total-kc').textContent).toBe('1,717');
+    expect(window.document.querySelector('#window-art svg')).toBe(main);
+    expect(window.document.querySelector('#postcard-items svg')).toBe(postcard);
+    expect(window.document.querySelector('.postcard-editor')).toBeNull();
+    expect(window.document.activeElement.dataset.editSession).toBe('orb-session');
+    expect(window.eval('postcardSVG(1)')).toContain('Harmonised orb at 1715 KC');
+    const restored = open(JSON.stringify(saved));
+    expect(
+      restored.document.querySelector('[data-session-id="orb-session"] .postcard-loot').textContent
+    ).toBe('Harmonised orb at 1715 KC');
+  });
+
+  it('cancels session edits with Cancel or Escape without changing the saved journal', () => {
+    const window = open();
+    begin(window, 0);
+    click(window, 'record-kill');
+    click(window, 'finish-session');
+    const saved = window.localStorage.getItem(key);
+    for (const escape of [false, true]) {
+      window.document.querySelector('[data-edit-session]').click();
+      const form = window.document.querySelector('.postcard-editor');
+      const loot = form.elements.namedItem('drops');
+      loot.value = 'Unsaved loot';
+      loot.dispatchEvent(new window.Event('input', { bubbles: true }));
+      if (escape)
+        loot.dispatchEvent(new window.KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+      else form.querySelector('[data-cancel-session]').click();
+      expect(window.document.querySelector('.postcard-editor')).toBeNull();
+      expect(window.localStorage.getItem(key)).toBe(saved);
+      expect(window.document.activeElement.hasAttribute('data-edit-session')).toBe(true);
+    }
+  });
+
+  it('retains a session edit draft when storage fails and rejects stale text from another tab', () => {
+    const data = {
+      version: 2,
+      boss: 'pnm',
+      base: 0,
+      name: 'Nightmare',
+      sessions: [
+        { id: 'saved', kills: 1, notes: 'Original', drops: 'Original loot', ended: '2026-10-07' },
+      ],
+      active: null,
+      dropTiles: {},
+    };
+    const window = open(JSON.stringify(data), true);
+    window.document.querySelector('[data-edit-session]').click();
+    let form = window.document.querySelector('.postcard-editor');
+    form.elements.namedItem('drops').value = 'Missed orb';
+    form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    expect(form.querySelector('.postcard-edit-error').textContent).toContain('storage is full');
+    expect(form.elements.namedItem('drops').value).toBe('Missed orb');
+    expect(JSON.parse(window.localStorage.getItem(key)).sessions[0]).toEqual(data.sessions[0]);
+    const remote = { ...data, sessions: [{ ...data.sessions[0], drops: 'Other tab loot' }] };
+    window.dispatchEvent(
+      new window.StorageEvent('storage', { key, newValue: JSON.stringify(remote) })
+    );
+    form = window.document.querySelector('.postcard-editor');
+    expect(form.elements.namedItem('drops').value).toBe('Missed orb');
+    form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    expect(form.querySelector('.postcard-edit-error').textContent).toContain('session changed');
+    expect(window.eval('journal.sessions[0].drops')).toBe('Other tab loot');
+  });
+
+  it('validates session edit lengths, escapes text, and clears drafts when changing hunts', () => {
+    const window = open();
+    begin(window, 0);
+    click(window, 'record-kill');
+    click(window, 'finish-session');
+    window.document.querySelector('[data-edit-session]').click();
+    const form = window.document.querySelector('.postcard-editor');
+    form.elements.namedItem('drops').value = 'x'.repeat(241);
+    form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    expect(form.querySelector('.postcard-edit-error').textContent).toContain('240 characters');
+    form.elements.namedItem('drops').value = '<b>Harmonised orb</b>';
+    form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    expect(window.document.querySelector('.postcard-loot').textContent).toBe(
+      '<b>Harmonised orb</b>'
+    );
+    expect(window.document.querySelector('.postcard-loot b')).toBeNull();
+    window.document.querySelector('[data-edit-session]').click();
+    click(window, 'change-boss');
+    click(window, 'choose-cox');
+    expect(window.eval('sessionEdit')).toBeNull();
+    expect(window.document.querySelector('.postcard-editor')).toBeNull();
+  });
+
+  it.each(['pnm', 'cox', 'toa', 'tob', 'cg', 'yama'])(
+    'keeps every %s scene running while lighting, undoing and marking panes',
+    (bossId) => {
+      const window = open(undefined, false, { choose: false });
+      click(window, `choose-${bossId}`);
+      begin(window, 100);
+      const scenes = window.eval('boss().titles.length');
+      for (let index = 0; index < scenes; index++) {
+        window.eval(
+          `journal.active = { id: 'motion', kills: ${index * 100 + 24}, notes: '', drops: '' }; render();`
+        );
+        const host = window.document.getElementById('window-art');
+        const svg = host.querySelector('svg');
+        const scene = svg.querySelector('#scene-main');
+        const animations = Array.from(
+          scene.querySelectorAll('animate, animateMotion, animateTransform, style')
+        );
+        const pane = svg.querySelector('.pane');
+        click(window, 'record-kill');
+        expect(host.querySelector('svg')).toBe(svg);
+        expect(svg.querySelector('#scene-main')).toBe(scene);
+        expect(
+          Array.from(scene.querySelectorAll('animate, animateMotion, animateTransform, style'))
+        ).toEqual(animations);
+        expect(svg.querySelector('.pane')).toBe(pane);
+        expect(svg.querySelectorAll('.pane.filled')).toHaveLength(25);
+        expect(svg.querySelector('[data-window-reveal]').children).toHaveLength(25);
+        expect(svg.querySelectorAll('[data-ornament]')).toHaveLength(1);
+        expect(svg.getAttribute('aria-label')).toContain('25 of 100 pieces lit, 1 of 4');
+        click(window, 'undo-kill');
+        expect(host.querySelector('svg')).toBe(svg);
+        expect(svg.querySelectorAll('.pane.filled')).toHaveLength(24);
+        expect(svg.querySelector('[data-window-reveal]').children).toHaveLength(24);
+        expect(svg.querySelectorAll('[data-ornament]')).toHaveLength(0);
+        window.eval(
+          `savePaneMemory(${index * 100 + 24}, { label: 'Motion test drop', image: '' }); render();`
+        );
+        const drop = svg.querySelector(`[data-pane="${index * 100 + 24}"]`);
+        expect(host.querySelector('svg')).toBe(svg);
+        expect(drop.getAttribute('fill')).toBe('#d85397');
+        expect(drop.getAttribute('aria-label')).toContain('Motion test drop');
+        expect(svg.querySelectorAll('.drop-spark')).toHaveLength(1);
+        expect(scene.isConnected).toBe(true);
+        window.eval(`savePaneMemory(${index * 100 + 24}, null); render();`);
+        expect(svg.querySelectorAll('.drop-spark')).toHaveLength(0);
+        expect(drop.getAttribute('fill')).toBe('transparent');
+      }
+    }
+  );
+
+  it('keeps completion, collection and postcard scenes running until a new window begins', () => {
+    const window = open(
+      JSON.stringify({
+        version: 2,
+        boss: 'pnm',
+        base: 100,
+        name: 'Nightmare',
+        sessions: [
+          { id: 'finished', kills: 100, notes: 'One window', drops: '', ended: '2026-10-06' },
+        ],
+        active: { id: 'motion', kills: 99, notes: '', drops: '' },
+        dropTiles: {},
+      })
+    );
+    const host = window.document.getElementById('window-art');
+    const svg = host.querySelector('svg');
+    const collected = window.document.querySelector('#gallery-items svg');
+    const postcard = window.document.querySelector('#postcard-items svg');
+    click(window, 'record-kill');
+    expect(host.querySelector('svg')).toBe(svg);
+    expect(svg.querySelectorAll('.pane.filled')).toHaveLength(100);
+    expect(svg.querySelectorAll('[data-ornament]')).toHaveLength(4);
+    expect(svg.querySelector('.window-resonance')).not.toBeNull();
+    expect(window.document.querySelector('#gallery-items svg')).toBe(collected);
+    expect(window.document.querySelectorAll('#gallery-items svg')).toHaveLength(2);
+    expect(window.document.querySelector('#postcard-items svg')).toBe(postcard);
+    click(window, 'record-kill');
+    expect(host.querySelector('svg')).not.toBe(svg);
+    expect(host.querySelectorAll('.pane.filled')).toHaveLength(1);
+    expect(window.document.querySelector('#gallery-items svg')).toBe(collected);
+    expect(window.document.querySelector('#postcard-items svg')).toBe(postcard);
+  });
+
+  it('keeps workshop and sanctuary previews running and refreshes style and reduced motion changes', () => {
+    const window = open();
+    begin(window, 0);
+    click(window, 'record-kill');
+    const details = window.document.querySelector('#window-workshop details');
+    details.open = true;
+    window.eval('windowWorkshop.refresh()');
+    const preview = window.document.querySelector('.workshop-preview svg');
+    window.eval("openSanctuary('pnm', 0)");
+    const sanctuary = window.document.querySelector('#room-art svg');
+    const pane = window.document.querySelector('#window-art [data-pane="1"]');
+    pane.focus();
+    click(window, 'record-kill');
+    expect(window.document.querySelector('.workshop-preview svg')).toBe(preview);
+    expect(window.document.querySelector('#room-art svg')).toBe(sanctuary);
+    expect(window.document.activeElement).toBe(pane);
+    expect(sanctuary.querySelector('[data-window-reveal]').children).toHaveLength(2);
+    const main = window.document.querySelector('#window-art svg');
+    window.document.querySelector('#window-workshop [data-shape="ogee"]').click();
+    const reshaped = window.document.querySelector('#window-art svg');
+    expect(reshaped).not.toBe(main);
+    expect(reshaped.dataset.windowShape).toBe('ogee');
+    expect(reshaped.querySelector('[data-window-reveal]').children).toHaveLength(2);
+    window.document.querySelector('#window-workshop [data-frame="amethyst"]').click();
+    const reframed = window.document.querySelector('#window-art svg');
+    expect(reframed).not.toBe(reshaped);
+    expect(reframed.getAttribute('aria-label')).toContain('Amethyst frame');
+    window.matchMedia = () => ({ matches: true });
+    window.dispatchEvent(new window.Event('glass-motionchange'));
+    const reduced = window.document.querySelector('#window-art svg');
+    expect(reduced).not.toBe(reframed);
+    expect(reduced.querySelectorAll('animate, animateMotion, animateTransform')).toHaveLength(0);
+    click(window, 'record-kill');
+    expect(window.document.querySelector('#window-art svg')).toBe(reduced);
+    expect(reduced.querySelector('[data-window-reveal]').children).toHaveLength(3);
+  });
+
   it('dates new drops and screenshot replacements without reordering label edits or removals', () => {
     const window = open();
     begin(window, 100);
@@ -246,6 +508,43 @@ const response = (data, status = 200) => ({ ok: status < 400, status, json: asyn
 const settle = () => new Promise((resolve) => setTimeout(resolve, 0));
 
 describe('account-backed glass journal', () => {
+  it('saves edited session loot to the account without modifying the guest journal', async () => {
+    const data = {
+      ...sample(),
+      sessions: [
+        {
+          id: 'orb-session',
+          kills: 5,
+          notes: 'Finally',
+          drops: 'Forgot loot',
+          ended: '2026-10-07',
+        },
+      ],
+    };
+    const guest = JSON.stringify({ ...sample(), base: 900 });
+    const fetch = vi.fn(async (url, options) => {
+      if (url.endsWith('/me')) return response({ username: 'alice' });
+      if (options.method === 'PUT') return response({ revision: 8 });
+      return response({ journal: data, revision: 7 });
+    });
+    const window = open(guest, false, { account: signedIn, fetch });
+    await settle();
+    window.document.querySelector('[data-edit-session]').click();
+    const form = window.document.querySelector('.postcard-editor');
+    form.elements.namedItem('drops').value = 'Harmonised orb';
+    form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    await window.eval('flushCloud()');
+    const put = fetch.mock.calls.find(([, options]) => options.method === 'PUT');
+    expect(JSON.parse(put[1].body)).toMatchObject({
+      revision: 7,
+      journal: { sessions: [{ ...data.sessions[0], drops: 'Harmonised orb' }] },
+    });
+    expect(window.localStorage.getItem(key)).toBe(guest);
+    expect(window.document.getElementById('cloud-status').textContent).toBe(
+      'Saved on this device and to your account'
+    );
+  });
+
   it('creates an account, opens an empty hunt, and logs out back to the guest journal', async () => {
     const fetch = vi.fn(async (url) => {
       if (url.endsWith('/register')) return response(signedIn, 201);

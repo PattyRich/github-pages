@@ -43,10 +43,10 @@
       shape: 'lancet',
       frame,
     });
-    const sockets = Array.from(empty.content.querySelector('svg').children).filter(
-      (element) => element.localName === 'circle'
-    );
-    const ornaments = Array.from(svg.children)
+    const sockets = Array.from(
+      empty.content.querySelector('[data-window-ornaments]').children
+    ).filter((element) => element.localName === 'circle');
+    const ornaments = Array.from(svg.querySelector('[data-window-ornaments]').children)
       .filter((element) => element.hasAttribute('data-ornament'))
       .map((ornament, index) => {
         const socket = sockets[index].cloneNode(true);

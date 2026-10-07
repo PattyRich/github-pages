@@ -328,6 +328,7 @@ const GLASS_BOSSES = {
       'I live here now. Please forward my mail to the chest.',
       'Another completion. Number go up good.',
       'The red floor and I have reached an understanding.',
+      'Another pane. Still a pain, huh?',
     ],
     postcardLoot: [
       'No drops recorded. The enhanced seed request remains open.',

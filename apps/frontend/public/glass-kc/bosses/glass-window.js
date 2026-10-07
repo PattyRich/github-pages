@@ -1,5 +1,5 @@
 /* Shared 100-pane reveal, accessible drop targets and window frame. */
-/* exported GLASS_RENDERERS, GLASS_WINDOW_SHAPES, GLASS_WINDOW_FRAMES, createGlassWindow */
+/* exported GLASS_RENDERERS, GLASS_WINDOW_SHAPES, GLASS_WINDOW_FRAMES, createGlassWindow, updateGlassWindow */
 const GLASS_RENDERERS = {};
 function glassCurveEdge(y, points) {
   if (y <= points[0][1]) return 180;
@@ -143,6 +143,53 @@ function glassFrame(shape, frame, uid) {
   const sill = `<path d="M${sillLeft} ${552 + width} H${sillRight}" stroke="${edge}" stroke-width="7"/><path d="M${sillLeft + 10} ${558 + width} H${sillRight - 10}" stroke="${base}" stroke-width="2"/>`;
   return `<g data-frame="${uid}">${profile}${detail}${sill}</g>`;
 }
+const glassWindowUpdates = new WeakMap();
+function updateGlassWindow(container, markup) {
+  const current = container.querySelector(':scope > svg');
+  if (current && glassWindowUpdates.get(container) === markup) return;
+  const template = document.createElement('template');
+  template.innerHTML = markup;
+  const next = template.content.firstElementChild;
+  if (!next) return;
+  if (!current || current.dataset.windowKey !== next.dataset.windowKey) {
+    if (current) current.replaceWith(next);
+    else container.prepend(next);
+  } else {
+    // Keep the SVG clock, CSS animations and scene nodes running. Only earned state changes.
+    const patch = (target, source) => {
+      if (target.isEqualNode(source)) return;
+      if (target.nodeType !== source.nodeType || target.nodeName !== source.nodeName) {
+        target.replaceWith(source.cloneNode(true));
+        return;
+      }
+      if (target.nodeType !== Node.ELEMENT_NODE) {
+        target.nodeValue = source.nodeValue;
+        return;
+      }
+      for (const attribute of Array.from(target.attributes)) {
+        if (!source.hasAttribute(attribute.name)) target.removeAttribute(attribute.name);
+      }
+      for (const attribute of source.attributes) {
+        if (target.getAttribute(attribute.name) !== attribute.value)
+          target.setAttribute(attribute.name, attribute.value);
+      }
+      const children = Array.from(target.childNodes);
+      const replacements = Array.from(source.childNodes);
+      for (let i = 0; i < Math.max(children.length, replacements.length); i++) {
+        if (!replacements[i]) children[i].remove();
+        else if (!children[i]) target.append(replacements[i].cloneNode(true));
+        else patch(children[i], replacements[i]);
+      }
+    };
+    current.setAttribute('aria-label', next.getAttribute('aria-label'));
+    for (const region of ['reveal', 'panes', 'ornaments', 'celebration']) {
+      const selector = `[data-window-${region}]`;
+      patch(current.querySelector(selector), next.querySelector(selector));
+    }
+  }
+  glassWindowUpdates.set(container, markup);
+}
+
 function createGlassWindow({ config, esc, getJournal, sceneColors, renderScene, frameOrnaments }) {
   const { titles, sceneDescriptions } = config;
   const sceneNumber = (index) => index % titles.length;
@@ -152,7 +199,10 @@ function createGlassWindow({ config, esc, getJournal, sceneColors, renderScene, 
       ? appearance.shape
       : 'lancet';
     const shape = GLASS_WINDOW_SHAPES[shapeId];
-    const frame = GLASS_WINDOW_FRAMES[appearance.frame] || GLASS_WINDOW_FRAMES.stone;
+    const frameId = Object.hasOwn(GLASS_WINDOW_FRAMES, appearance.frame)
+      ? appearance.frame
+      : 'stone';
+    const frame = GLASS_WINDOW_FRAMES[frameId];
     const path = shape.outline(0);
     let panes = '',
       facets = '',
@@ -234,7 +284,8 @@ function createGlassWindow({ config, esc, getJournal, sceneColors, renderScene, 
       anchors,
       crownY: Math.max(-2, shape.top - frame.width - 1),
     });
-    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" data-window-shape="${shapeId}" role="${interactive ? 'group' : 'img'}" aria-label="${esc(titles[sceneNumber(index)])} — ${esc(sceneDescriptions[sceneNumber(index)])} ${count} of 100 pieces lit, ${Math.floor(count / 25)} of 4 frame ornaments earned. ${shape.label} window, ${frame.label} frame."><defs><clipPath id="clip-${uid}"><path d="${path}"/></clipPath><clipPath id="lit-${uid}">${revealed}</clipPath><linearGradient id="glass-${uid}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e3edcc" stop-opacity=".12"/><stop offset=".45" stop-color="#acbacf" stop-opacity="0"/><stop offset="1" stop-color="#0d1725" stop-opacity=".2"/></linearGradient></defs>${glassFrame(shape, frame, uid)}<g clip-path="url(#clip-${uid})">${sleeping}<g clip-path="url(#lit-${uid})"><g id="scene-${uid}">${sceneMarkup}${facets}<path d="${path}" fill="url(#glass-${uid})"/></g></g>${seams}${memories}</g><path d="${path}" fill="none" stroke="${frame.light}" stroke-width="3" pointer-events="none"/>${ornaments}${celebrate ? `<path class="window-resonance" d="${path}" fill="none" stroke="${colors[3]}" stroke-width="${count === 100 ? 10 : 5}" opacity="0" pointer-events="none"/>` : ''}</svg>`;
+    const windowKey = [config.id, index, uid, shapeId, frameId, reducedMotion].join(':');
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="${viewBox}" data-window-key="${esc(windowKey)}" data-window-shape="${shapeId}" role="${interactive ? 'group' : 'img'}" aria-label="${esc(titles[sceneNumber(index)])} — ${esc(sceneDescriptions[sceneNumber(index)])} ${count} of 100 pieces lit, ${Math.floor(count / 25)} of 4 frame ornaments earned. ${shape.label} window, ${frame.label} frame."><defs><clipPath id="clip-${uid}"><path d="${path}"/></clipPath><clipPath id="lit-${uid}" data-window-reveal>${revealed}</clipPath><linearGradient id="glass-${uid}" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#e3edcc" stop-opacity=".12"/><stop offset=".45" stop-color="#acbacf" stop-opacity="0"/><stop offset="1" stop-color="#0d1725" stop-opacity=".2"/></linearGradient></defs>${glassFrame(shape, frame, uid)}<g clip-path="url(#clip-${uid})">${sleeping}<g clip-path="url(#lit-${uid})"><g id="scene-${uid}">${sceneMarkup}${facets}<path d="${path}" fill="url(#glass-${uid})"/></g></g><g data-window-panes>${seams}${memories}</g></g><path d="${path}" fill="none" stroke="${frame.light}" stroke-width="3" pointer-events="none"/><g data-window-ornaments>${ornaments}</g><g data-window-celebration>${celebrate ? `<path class="window-resonance" d="${path}" fill="none" stroke="${colors[3]}" stroke-width="${count === 100 ? 10 : 5}" opacity="0" pointer-events="none"/>` : ''}</g></svg>`;
   }
   return art;
 }

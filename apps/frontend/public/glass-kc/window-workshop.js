@@ -180,7 +180,7 @@ function createGlassWorkshop(
     container.querySelector('[data-reset-style]').disabled =
       style.shape === 'lancet' && style.frame === 'stone';
     if (details.open && preview)
-      container.querySelector('.workshop-preview div').innerHTML = preview();
+      updateGlassWindow(container.querySelector('.workshop-preview div'), preview());
   }
   details.addEventListener('toggle', refresh);
   if (getWindows) {
