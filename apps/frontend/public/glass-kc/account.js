@@ -225,10 +225,10 @@ function accountUI() {
   document.getElementById('account-save-help').hidden = !account;
   document.getElementById('account-name').textContent = account
     ? `Signed in as ${account.username}`
-    : 'Keep a light here. Find it again anywhere.';
+    : 'Log in to keep your progress across devices.';
   document.getElementById('account-heading').textContent = account
     ? 'Your account'
-    : 'Your hunt, waiting for you.';
+    : 'Save your progress across devices';
   let guestPresent = false;
   try {
     guestPresent = !!localStorage.getItem(KEY);

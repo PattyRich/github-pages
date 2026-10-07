@@ -9,7 +9,7 @@ export default function GlassKcFeature() {
       </h2>
       <div className="glass-feature-layout">
         <div className="glass-feature-copy">
-          <h3>Every kill leaves a little light.</h3>
+          <h3>Dry streak? At least the window fills.</h3>
           <p className="glass-feature-intro">
             Even on a dry streak, your collection grows. Turn your boss grind into animated stained
             glass, one kill at a time.
@@ -20,11 +20,11 @@ export default function GlassKcFeature() {
               <dd>100 recorded kills complete a window for your sanctuary.</dd>
             </div>
             <div>
-              <dt>Keep the moments that matter.</dt>
+              <dt>Remember the KC you got it.</dt>
               <dd>Save rare drops, screenshots and notes inside your glass.</dd>
             </div>
             <div>
-              <dt>Make the collection yours.</dt>
+              <dt>Pick your boss and your frame.</dt>
               <dd>Six boss collections, custom frames and new colour editions to earn.</dd>
             </div>
           </dl>

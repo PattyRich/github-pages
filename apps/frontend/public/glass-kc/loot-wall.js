@@ -87,7 +87,7 @@ function createGlassLootWall(container, { getDrops, onOpenMemory, getScope = () 
     const image = dialog.querySelector('.glass-loot-dialog-image');
     image.innerHTML = drop.image
       ? `<img src="${esc(drop.image)}" alt="Saved screenshot for ${esc(drop.label || 'this drop')}" />`
-      : '<div class="glass-loot-written"><span aria-hidden="true">✧</span><p>A memory kept in glass</p><p>This drop was saved without a screenshot.</p></div>';
+      : '<div class="glass-loot-written"><span aria-hidden="true">✧</span><p>Saved drop</p><p>This drop was saved without a screenshot.</p></div>';
     dialog.showModal();
     closeButton.focus();
   }
@@ -124,7 +124,7 @@ function createGlassLootWall(container, { getDrops, onOpenMemory, getScope = () 
         const title = drop.label || 'Drop memory';
         const preview = drop.image
           ? `<img src="${esc(drop.image)}" alt="" loading="lazy" decoding="async" />`
-          : '<span class="glass-loot-inscription" aria-hidden="true"><span>✧</span><span>Kept in glass</span></span>';
+          : '<span class="glass-loot-inscription" aria-hidden="true"><span>✧</span><span>Saved note</span></span>';
         return `<li class="glass-loot-card${drop.image ? '' : ' glass-loot-card-written'}"><button type="button" class="glass-loot-preview" data-loot-preview="${offset + index}" aria-label="View ${esc(title)} at KC ${number(drop.kc)}, ${esc(drop.bossName)}"><span class="glass-loot-picture">${preview}<span class="glass-loot-kind">${drop.image ? 'Screenshot' : 'Written memory'}</span></span><span class="glass-loot-name">${esc(title)}</span><span class="glass-loot-meta"><span>${esc(drop.bossShortName || drop.bossName)}</span><span>KC ${number(drop.kc)}</span></span></button><button type="button" class="glass-loot-window-link" data-loot-window="${offset + index}" aria-label="View ${esc(title)} in its ${esc(drop.bossName)} window">View in window <span aria-hidden="true">↗</span></button></li>`;
       })
       .join('');
@@ -132,7 +132,7 @@ function createGlassLootWall(container, { getDrops, onOpenMemory, getScope = () 
     empty.hidden = Boolean(count) || loadFailed;
     empty.innerHTML = drops.length
       ? '<h3>No matching memories</h3><p>Try another drop name or hunt.</p><button type="button" data-loot-clear>Clear filters</button>'
-      : '<span aria-hidden="true">✧</span><h3>A place for your first drop</h3><p>Save a drop on a lit pane to start your trophy wall. Screenshots and written memories from your hunts appear here.</p>';
+      : '<span aria-hidden="true">✧</span><h3>Your first drop goes here</h3><p>Save a drop on a lit pane to add it here. Drops, screenshots and notes from all your bosses appear together.</p>';
     pages.hidden = pageCount <= 1;
     pages.querySelector('p').textContent = `Page ${number(page + 1)} of ${number(pageCount)}`;
     pages.querySelector('[data-loot-page="previous"]').disabled = page === 0;

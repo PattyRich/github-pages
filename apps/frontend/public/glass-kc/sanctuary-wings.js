@@ -37,7 +37,7 @@
       <section class="wing-room" aria-labelledby="wing-name-${instance}">
         <div class="wing-heading">
           <div>
-            <p class="wing-eyebrow">Your collected light</p>
+            <p class="wing-eyebrow">Your boss collections</p>
             <h2 id="wing-name-${instance}"></h2>
           </div>
           <p class="wing-summary"></p>
@@ -46,7 +46,7 @@
           <div class="wing-track"></div>
         </div>
         <div class="wing-bottom">
-          <p class="wing-guidance">Choose a window to step closer. Scroll along the wall to explore.</p>
+          <p class="wing-guidance">Choose a window to view it. Scroll along the wall to see more.</p>
           <div class="wing-paging" aria-label="Window pages">
             <button type="button" data-wing-page="previous" aria-label="Previous wall">← Previous wall</button>
             <span class="wing-page-label" aria-live="polite" aria-atomic="true"></span>
@@ -75,7 +75,7 @@
             ? `${number.format(complete)} complete${current ? ' · in progress' : ''}`
             : current
               ? `${current} panes lit`
-              : 'Waiting for light';
+              : 'Not started';
           return `<button type="button" class="wing-choice" data-wing="${esc(collection.id)}" aria-pressed="${collection.id === selectedId}">
             <span>${esc(collection.shortName || collection.name)}</span>
             <small>${detail}</small>
@@ -102,7 +102,7 @@
       heading.textContent = `${collection.name} wing`;
       summary.textContent = count
         ? `${number.format(completed)} completed ${completed === 1 ? 'window' : 'windows'} · ${number.format(collection.total)} panes lit`
-        : 'A quiet place for your next hunt';
+        : 'No panes recorded yet';
       track.classList.toggle('wing-track-empty', count === 0);
       panorama.setAttribute(
         'aria-label',
@@ -119,8 +119,8 @@
             <path d="M15 193H135" stroke="currentColor" stroke-width="8"/>
           </svg>
           <div>
-            <h3>Every window begins in the dark.</h3>
-            <p>Record your first hunt in the journal to place a pane in this wing. Every 100 panes completes a window worth keeping.</p>
+            <h3>Room for your first window.</h3>
+            <p>Record a kill, raid or successful completion in this boss’s journal to add a pane. Every 100 panes completes a window.</p>
           </div>
         </div>`;
         pageLabel.textContent = '';
@@ -144,7 +144,7 @@
             <span class="wing-window-caption">
               <span class="wing-window-number">Window ${number.format(index + 1)}</span>
               <span class="wing-window-title">${esc(title)}</span>
-              <span class="wing-window-state ${pieces === 100 ? 'wing-complete' : ''}">${pieces === 100 ? 'Complete · 100 panes' : `Growing · ${pieces}/100 panes`}</span>
+              <span class="wing-window-state ${pieces === 100 ? 'wing-complete' : ''}">${pieces === 100 ? 'Complete · 100 panes' : `In progress · ${pieces}/100 panes`}</span>
             </span>
           </button>
         </div>`);

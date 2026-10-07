@@ -1078,8 +1078,8 @@
         <section id="account-panel" class="account-panel" aria-labelledby="account-heading">
           <div class="account-header">
             <div class="account-overview">
-              <h2 id="account-heading">Your hunt, waiting for you.</h2>
-              <p id="account-name">Keep a light here. Find it again anywhere.</p>
+              <h2 id="account-heading">Save your progress across devices</h2>
+              <p id="account-name">Log in to keep your progress across devices.</p>
               <p id="cloud-status" role="status" aria-live="polite">
                 Guest journal · saved only in this browser
               </p>
@@ -1205,8 +1205,8 @@
               <p class="eyebrow" id="hunt-heading">Your hunt · a record of showing up</p>
               <h1 id="tracker-heading" tabindex="-1"></h1>
               <p class="lede" id="tracker-lede">
-                One kill. One piece of glass. Build something beautiful while you wait for the next
-                drop.
+                One kill. One pane. Build six windows while the Nightmare decides whether you’re
+                getting an orb.
               </p>
               <form id="journal-setup" class="session" aria-labelledby="setup-heading">
                 <h2 id="setup-heading">Begin your journal</h2>
@@ -1236,7 +1236,7 @@
               </form>
               <div class="counts">
                 <div><strong id="total-kc">0</strong><small>TOTAL KC</small></div>
-                <div><strong id="journal-kills">0</strong><small>PIECES LIT</small></div>
+                <div><strong id="journal-kills">0</strong><small>PANES LIT</small></div>
                 <div><strong id="window-count">0</strong><small>WINDOWS FINISHED</small></div>
               </div>
               <p class="drop-count" aria-live="polite" aria-atomic="true">
@@ -1264,11 +1264,11 @@
               </p>
               <section class="session" aria-labelledby="session-title">
                 <div class="session-head">
-                  <h3 id="session-title">Tonight’s page</h3>
+                  <h3 id="session-title">This session</h3>
                   <small id="session-info">NOT STARTED</small>
                 </div>
                 <div id="session-empty" class="muted">
-                  Record your first kill to start a page. Dry nights count too.
+                  Record your first kill to start a session. No drop needed.
                 </div>
                 <div id="session-body" class="session-body" hidden>
                   <details id="notes-panel">
@@ -1296,7 +1296,7 @@
           <section id="gallery" class="chapter">
             <div class="chapter-head">
               <div>
-                <p class="eyebrow">The light you’ve collected</p>
+                <p class="eyebrow">100 panes per window</p>
                 <h2>Your windows</h2>
               </div>
               <small class="muted" id="collection-count"></small>
@@ -1308,8 +1308,7 @@
             ></div>
             <div id="gallery-items" class="gallery"></div>
             <p id="gallery-empty" class="empty">
-              Six scenes to collect, one piece at a time. Your first completed window will live here
-              at 100 journal kills.
+              Six scenes to collect. Record 100 kills in this journal to complete your first window.
             </p>
           </section>
           <section id="loot" class="chapter" aria-label="Loot trophy wall">
@@ -1319,15 +1318,15 @@
           <section id="postcards" class="chapter">
             <div class="chapter-head">
               <div>
-                <p class="eyebrow">Small chapters of a long hunt</p>
+                <p class="eyebrow">KC, drops and the session recap</p>
                 <h2>Session postcards</h2>
               </div>
               <small id="postcard-count" class="muted"></small>
             </div>
             <div id="postcard-items" class="postcards"></div>
             <p id="postcard-empty" class="empty">
-              Finish a session to make your first postcard. A drop is optional. Having been here is
-              enough.
+              Finish a session to make your first postcard. No drops? You can still save the
+              session.
             </p>
           </section>
           <section class="storage">
@@ -1384,7 +1383,7 @@
       <div class="room-header">
         <div>
           <h2 id="sanctuary-heading">Your sanctuary</h2>
-          <p id="collection-status">A quiet place for the light you’ve earned.</p>
+          <p id="collection-status">Your windows from every boss.</p>
         </div>
         <div class="controls">
           <button id="room-back" type="button" hidden>All sanctuary wings</button>
@@ -1408,7 +1407,7 @@
         <button id="room-next" type="button" aria-label="Next earned window">→</button>
       </div>
     </dialog>
-    <script src="bosses/catalog.js?v=scene-copy-1"></script>
+    <script src="bosses/catalog.js?v=player-copy-2"></script>
     <script src="bosses/glass-window.js?v=approved-motion-1"></script>
     <script src="window-workshop.js?v=style-backups-1"></script>
     <script src="bosses/pnm-art.js?v=approved-motion-1"></script>
@@ -1418,10 +1417,10 @@
     <script src="bosses/cg-art.js?v=motion-refinements-1"></script>
     <script src="bosses/yama-art.js?v=yama-1"></script>
     <script src="collection-journals.js?v=collections-1"></script>
-    <script src="sanctuary-wings.js?v=collections-1"></script>
-    <script src="loot-wall.js?v=collections-1"></script>
+    <script src="sanctuary-wings.js?v=player-copy-2"></script>
+    <script src="loot-wall.js?v=player-copy-2"></script>
     <script src="window-completion.js?v=collections-1"></script>
-    <script src="account.js"></script>
+    <script src="account.js?v=player-copy-2"></script>
     <script>
       'use strict';
       let KEY = GLASS_BOSSES[LEGACY_BOSS_ID].storageKey;
@@ -1643,10 +1642,10 @@
           $('record-kill').textContent = `+ Record a ${boss().countNoun}`;
           $('undo-kill').textContent = `Undo last ${boss().countNoun}`;
           $('session-empty').textContent =
-            `Record your first ${boss().countNoun} to start a page. Dry nights count too.`;
+            `Record your first ${boss().countNoun} to start a session. No drop needed.`;
           $('section-track').setAttribute(
             'aria-label',
-            `Four ${boss().milestoneNoun}s, 25 ${countLabel(25)} to awaken each`
+            `Four ${boss().milestoneNoun}s, 25 ${countLabel(25)} to earn each`
           );
           $('milestone-help').textContent =
             `25 ${countLabel(25)} per ${boss().milestoneNoun} · 100 per window · no streaks, no deadlines`;
@@ -1752,9 +1751,9 @@
         const rewards = boss().rewards;
         $('milestone-title').textContent =
           pieces === 100
-            ? `All four ${boss().milestoneNoun}s awakened`
+            ? `All four ${boss().milestoneNoun}s earned`
             : pieces > 0 && charge === 0
-              ? `${ordinals[completed - 1][0].toUpperCase() + ordinals[completed - 1].slice(1)} ${boss().milestoneNoun} awakened`
+              ? `${ordinals[completed - 1][0].toUpperCase() + ordinals[completed - 1].slice(1)} ${boss().milestoneNoun} earned`
               : `Charging the ${ordinals[completed]} ${boss().milestoneNoun} · ${charge} / 25`;
         $('milestone-detail').textContent =
           pieces === 100
@@ -1762,8 +1761,8 @@
               ? `Collection ${collectionNumber(index)} complete. The next ${boss().countNoun} begins a new color edition.`
               : `Window complete. Next ${boss().countNoun} begins “${titles[sceneNumber(index + 1)]}”.`
             : charge === 0 && pieces > 0
-              ? `${rewards[sceneNumber(index)]} ${4 - completed} light${4 - completed === 1 ? '' : 's'} remain.`
-              : `${25 - charge} ${countLabel(25 - charge)} to its awakening. Each ${boss().countNoun} adds a little light.`;
+              ? `${rewards[sceneNumber(index)]} ${4 - completed} ${boss().milestoneNoun}${4 - completed === 1 ? '' : 's'} to go.`
+              : `${25 - charge} ${countLabel(25 - charge)} until the next ${boss().milestoneNoun}. Each ${boss().countNoun} adds one pane.`;
         $('record-kill').disabled = loadFailed || !configured || journal.base + kills >= MAX_KC;
         $('mark-drop').disabled = loadFailed || kills === 0;
         $('undo-kill').disabled = loadFailed || !journal.active?.kills;
@@ -1804,12 +1803,12 @@
       }
       function renderPostcards() {
         $('postcard-empty').hidden = journal.sessions.length > 0;
-        $('postcard-count').textContent = `${journal.sessions.length} SESSIONS KEPT`;
+        $('postcard-count').textContent = `${journal.sessions.length} SESSIONS SAVED`;
         let previous = 0;
         const cards = journal.sessions.map((s, i) => {
           const from = journal.base + previous;
           previous += s.kills;
-          return `<article class="postcard"><div class="stamp">${art(previous % 100 || 100, Math.floor((previous - 1) / 100), 'card-' + i)}</div><p class="eyebrow">${esc(boss().name)} / ${esc(dateLabel(s.ended))}</p><h3>${s.kills} ${s.kills === 1 ? 'piece' : 'pieces'} of light.</h3><p>${from.toLocaleString()} → ${(journal.base + previous).toLocaleString()} KC</p><p>${esc(s.notes || boss().postcardNotes[0])}</p><p><strong>Loot:</strong> ${esc(s.drops || boss().postcardLoot[0])}</p><footer><span>Chapter ${String(i + 1).padStart(2, '0')}</span><button data-card="${i}" type="button">Save postcard ↓</button></footer></article>`;
+          return `<article class="postcard"><div class="stamp">${art(previous % 100 || 100, Math.floor((previous - 1) / 100), 'card-' + i)}</div><p class="eyebrow">${esc(boss().name)} / ${esc(dateLabel(s.ended))}</p><h3>${s.kills} ${countLabel(s.kills)} recorded.</h3><p>${from.toLocaleString()} → ${(journal.base + previous).toLocaleString()} KC</p><p>${esc(s.notes || boss().postcardNotes[0])}</p><p><strong>Loot:</strong> ${esc(s.drops || boss().postcardLoot[0])}</p><footer><span>Session ${String(i + 1).padStart(2, '0')}</span><button data-card="${i}" type="button">Save postcard ↓</button></footer></article>`;
         });
         $('postcard-items').innerHTML = cards.reverse().join('');
       }
@@ -1904,7 +1903,7 @@
         });
         setFields();
         render();
-        if (saved) notify('Postcard saved. A good place to leave it for tonight.');
+        if (saved) notify('Postcard saved.');
       });
       function download(content, type, name) {
         const url = URL.createObjectURL(new Blob([content], { type }));
@@ -1999,7 +1998,7 @@
           ...wrapText('Loot: ' + (s.drops || boss().postcardLoot[0]), 46),
         ];
         const height = Math.max(600, 320 + lines.length * 25);
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="${height}" viewBox="0 0 960 ${height}"><rect width="960" height="${height}" fill="#201b16"/><rect x="18" y="18" width="924" height="${height - 36}" fill="#d9c6a1" stroke="#bb9e73" stroke-width="8"/><g transform="translate(650 90) scale(.72)">${art((before + s.kills) % 100 || 100, Math.floor((before + s.kills - 1) / 100), 'export').replace('<svg ', '<svg width="360" height="580" ')}</g><g fill="#33271d" font-family="Georgia, serif"><text x="60" y="75" font-size="16">${esc(boss().name.toUpperCase())} / CHAPTER ${i + 1}</text><text x="60" y="145" font-size="43">${s.kills} pieces of light.</text><text x="60" y="185" font-size="19">${journal.base + before} → ${journal.base + before + s.kills} KC</text>${lines.map((line, n) => `<text x="60" y="${245 + n * 25}" font-size="19">${esc(line)}</text>`).join('')}<text x="60" y="${height - 52}" font-size="16">${esc(dateLabel(s.ended))} · Glass KC journal</text></g></svg>`;
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="${height}" viewBox="0 0 960 ${height}"><rect width="960" height="${height}" fill="#201b16"/><rect x="18" y="18" width="924" height="${height - 36}" fill="#d9c6a1" stroke="#bb9e73" stroke-width="8"/><g transform="translate(650 90) scale(.72)">${art((before + s.kills) % 100 || 100, Math.floor((before + s.kills - 1) / 100), 'export').replace('<svg ', '<svg width="360" height="580" ')}</g><g fill="#33271d" font-family="Georgia, serif"><text x="60" y="75" font-size="16">${esc(boss().name.toUpperCase())} / SESSION ${i + 1}</text><text x="60" y="145" font-size="43">${s.kills} ${countLabel(s.kills)} recorded.</text><text x="60" y="185" font-size="19">${journal.base + before} → ${journal.base + before + s.kills} KC</text>${lines.map((line, n) => `<text x="60" y="${245 + n * 25}" font-size="19">${esc(line)}</text>`).join('')}<text x="60" y="${height - 52}" font-size="16">${esc(dateLabel(s.ended))} · Glass KC journal</text></g></svg>`;
       }
       $('postcard-items').addEventListener('click', (event) => {
         const button = event.target.closest('[data-card]');
@@ -2529,7 +2528,7 @@
         $('room-title').textContent =
           `${config.shortName} · ${String(sanctuaryIndex + 1).padStart(2, '0')} · ${config.titles[sanctuaryIndex % config.titles.length]}`;
         $('room-progress').textContent =
-          `${pieces} / 100 pieces of light${drops ? ` · ${drops} drop ${drops === 1 ? 'memory' : 'memories'}` : ''}`;
+          `${pieces} / 100 panes lit${drops ? ` · ${drops} drop ${drops === 1 ? 'memory' : 'memories'}` : ''}`;
         $('room-whisper').textContent =
           pieces === 0
             ? config.whispers.empty
