@@ -33,7 +33,23 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
   }
 
   function scythe() {
-    return `<g data-art-effect="scythe-blood-drips">
+    // Keep animated drops outside the weapon, including its bounds and placement.
+    const drips = [
+      [43, 265],
+      [67, 213],
+      [94, 179],
+    ]
+      .map(([x, y], index) => {
+        const begin = `${index * 0.25}s`;
+        return `<g transform="translate(${x} ${y})"><g opacity="0" data-scythe-drip>
+          <animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 135;0 135;0 0;0 0" keyTimes="0;.24;.6;.7;.9;1" dur="9s" begin="${begin}" repeatCount="indefinite"/>
+          <animate attributeName="opacity" values="0;0;.9;.9;0;0" keyTimes="0;.235;.245;.49;.6;1" dur="9s" begin="${begin}" repeatCount="indefinite"/>
+          <path d="M0 -6 C-1 -2 -4 2 -4 5 C-4 11 4 11 4 5 C4 2 1 -2 0 -6Z" fill="#b43a45" stroke="#702839" stroke-width="1.2"/>
+          <path d="M-1 1 Q-3 5 -1 7" fill="none" stroke="#e27370" stroke-width="1"/>
+        </g></g>`;
+      })
+      .join('');
+    return `<g data-relic="scythe-of-vitur">
       ${path('M192 252 L204 250 L261 494 L257 512 L248 503Z', '#a5a1a4')}
       ${path('M201 256 L205 266 L258 493 L253 504 L249 481Z', '#6c666c', '#6c666c', 1)}
       ${path('M246 486 L262 482 L272 501 L268 519 L250 519 L243 505Z', '#514a50')}
@@ -56,9 +72,8 @@ GLASS_RENDERERS.tob = function createTheatreRenderer(config, { esc, getJournal }
       ${path('M52 201 L56 184 L67 175 L65 183 L59 190 L55 209Z M82 158 L94 151 L97 146 L105 146 L92 157Z', '#c84a50', '#a33440', 0.8)}
       ${path('M42 236 L44 248 L48 258 Q48 268 43 270 Q36 265 39 257 L41 249Z M65 179 L66 195 L71 206 Q73 214 68 216 Q61 213 63 206 L64 194Z M94 154 L94 166 L97 174 Q99 180 94 182 Q89 180 91 173 L93 166Z', '#a72f40', '#5c2635', 1.3)}
       ${line('M42 260 L43 265 M67 207 L68 212 M94 175 V178', '#e27370', 1.3)}
-      <g transform="translate(43 265)"><g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 135;0 135" keyTimes="0;.24;.6;1" dur="9s" begin="0s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;.9;.9;0;0" keyTimes="0;.235;.245;.49;.6;1" dur="9s" begin="0s" repeatCount="indefinite"/><path d="M0 -6 C-1 -2 -4 2 -4 5 C-4 11 4 11 4 5 C4 2 1 -2 0 -6Z" fill="#b43a45" stroke="#702839" stroke-width="1.2"/><path d="M-1 1 Q-3 5 -1 7" fill="none" stroke="#e27370" stroke-width="1"/></g></g><g transform="translate(67 213)"><g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 135;0 135" keyTimes="0;.24;.6;1" dur="9s" begin="0.25s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;.9;.9;0;0" keyTimes="0;.235;.245;.49;.6;1" dur="9s" begin="0.25s" repeatCount="indefinite"/><path d="M0 -6 C-1 -2 -4 2 -4 5 C-4 11 4 11 4 5 C4 2 1 -2 0 -6Z" fill="#b43a45" stroke="#702839" stroke-width="1.2"/><path d="M-1 1 Q-3 5 -1 7" fill="none" stroke="#e27370" stroke-width="1"/></g></g><g transform="translate(94 179)"><g opacity="0"><animateTransform attributeName="transform" type="translate" values="0 0;0 0;0 135;0 135" keyTimes="0;.24;.6;1" dur="9s" begin="0.5s" repeatCount="indefinite"/><animate attributeName="opacity" values="0;0;.9;.9;0;0" keyTimes="0;.235;.245;.49;.6;1" dur="9s" begin="0.5s" repeatCount="indefinite"/><path d="M0 -6 C-1 -2 -4 2 -4 5 C-4 11 4 11 4 5 C4 2 1 -2 0 -6Z" fill="#b43a45" stroke="#702839" stroke-width="1.2"/><path d="M-1 1 Q-3 5 -1 7" fill="none" stroke="#e27370" stroke-width="1"/></g></g>
       ${line('M192 196 L200 206 M185 230 L198 236 M198 262 L208 302', '#c1b6b8', 1.5)}
-    </g>`;
+    </g><g data-art-effect="scythe-blood-drips">${drips}</g>`;
   }
 
   function verzikLegMotion(svg, side, front) {

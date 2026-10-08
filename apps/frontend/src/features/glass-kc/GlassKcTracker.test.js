@@ -67,6 +67,10 @@ function open(saved, blocked = false, cloud = {}) {
 
 function begin(window, base) {
   window.document.getElementById('start-kc').value = String(base);
+  if (!window.document.getElementById('raid-start-kcs').hidden) {
+    window.document.getElementById('start-normal-kc').value = String(base);
+    window.document.getElementById('start-special-kc').value = '0';
+  }
   window.document
     .getElementById('journal-setup')
     .dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
@@ -83,6 +87,145 @@ afterEach(() => {
 });
 
 describe('browser-local glass journal', () => {
+  it.each([
+    ['cox', 'challenge', 'CM'],
+    ['tob', 'hard', 'HM'],
+  ])(
+    'tracks mixed %s sessions, reverses the last mode, and keeps pane animations and mode-specific drop KC',
+    (id, special, shortLabel) => {
+      const window = open(undefined, false, { choose: false });
+      click(window, `choose-${id}`);
+      const document = window.document;
+      document.getElementById('start-normal-kc').value = '324';
+      document.getElementById('start-special-kc').value = '66';
+      document
+        .getElementById('journal-setup')
+        .dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+      const svg = document.querySelector('#window-art svg');
+      click(window, 'record-kill');
+      click(window, 'record-kill');
+      const mode = document.getElementById('record-mode');
+      mode.value = special;
+      mode.dispatchEvent(new window.Event('change', { bubbles: true }));
+      click(window, 'record-kill');
+      click(window, 'record-kill');
+      click(window, 'record-kill');
+      click(window, 'undo-kill');
+      expect(document.querySelector('#window-art svg')).toBe(svg);
+      expect(document.getElementById('raid-mode-totals').textContent).toContain(
+        `${shortLabel}: 68`
+      );
+      expect(document.getElementById('session-modes').textContent).toBe(
+        `2 Normal · 2 ${shortLabel}`
+      );
+      click(window, 'mark-drop');
+      document.getElementById('pane-kc').value = '393';
+      click(window, 'pane-load');
+      expect(document.getElementById('pane-selected').textContent).toContain(
+        `${shortLabel} #67 · KC 393`
+      );
+      document.getElementById('pane-label').value = 'Mode-specific drop';
+      click(window, 'pane-save');
+      click(window, 'finish-session');
+      expect(document.querySelector('.postcard-modes').textContent).toBe(
+        `2 Normal · 2 ${shortLabel}`
+      );
+      expect(window.eval('postcardSVG(0)')).toContain(`2 Normal · 2 ${shortLabel}`);
+      const saved = window.eval('JSON.stringify(journal)');
+      const restored = open(undefined, false, { choose: false });
+      restored.localStorage.setItem(`praynr-glass-kc-${id}-journal-v2`, saved);
+      click(restored, `choose-${id}`);
+      expect(restored.document.getElementById('record-mode').value).toBe(special);
+      expect(restored.document.querySelector('.glass-loot-meta').textContent).toContain(
+        `${shortLabel} #67 · KC 393`
+      );
+      expect(restored.eval('validate(JSON.parse(JSON.stringify(journal))).modeBase')).toEqual({
+        normal: 324,
+        [special]: 66,
+        unspecified: 0,
+      });
+      click(restored, 'change-boss');
+      click(restored, `choose-${id === 'cox' ? 'tob' : 'cox'}`);
+      expect(restored.document.getElementById('start-normal-kc').value).toBe('0');
+      expect(restored.document.getElementById('start-special-kc').value).toBe('0');
+      expect(restored.document.getElementById('record-mode').value).toBe('normal');
+      expect(restored.localStorage.getItem(`praynr-glass-kc-${id}-journal-v2`)).toBe(saved);
+    }
+  );
+
+  it('preserves old raid history and allows ordered mode corrections without moving drops or panes', async () => {
+    const window = open(undefined, false, { choose: false });
+    const data = {
+      version: 2,
+      boss: 'cox',
+      name: 'Chambers',
+      base: 100,
+      sessions: [
+        { id: 'older', kills: 10, notes: 'Old note', drops: 'Old loot', ended: '2026-10-07' },
+      ],
+      active: null,
+      dropTiles: { 5: { label: 'Dust', image: '', savedAt: 1780000000000 } },
+    };
+    window.localStorage.setItem('praynr-glass-kc-cox-journal-v2', JSON.stringify(data));
+    click(window, 'choose-cox');
+    const document = window.document;
+    const svg = document.querySelector('#window-art svg');
+    expect(window.eval('JSON.stringify(journal)')).toBe(JSON.stringify(data));
+    expect(document.getElementById('raid-mode-totals').textContent).toContain('unspecified: 110');
+    const mode = document.getElementById('record-mode');
+    mode.value = 'challenge';
+    mode.dispatchEvent(new window.Event('change', { bubbles: true }));
+    click(window, 'record-kill');
+    expect(window.eval('GLASS_RAID_MODES.kcLabel(journal, 11)')).toBe('CM #1+ · KC 111');
+    document.getElementById('raid-mode-settings').open = true;
+    await new Promise((resolve) => window.setTimeout(resolve, 0));
+    document.getElementById('base-normal-kc').value = '80';
+    document.getElementById('base-special-kc').value = '20';
+    document
+      .getElementById('raid-baseline-form')
+      .dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    document.querySelector('[data-edit-session="older"]').click();
+    document.querySelector('[data-split-mode="0"]').click();
+    let rows = document.querySelectorAll('[data-mode-run]');
+    rows[0].querySelector('input').value = '3';
+    rows[0].querySelector('input').dispatchEvent(new window.Event('input', { bubbles: true }));
+    document
+      .querySelector('.postcard-editor')
+      .dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    expect(document.querySelector('.postcard-edit-error').textContent).toContain('must add up');
+    expect(window.eval('journal.sessions[0]')).toEqual(data.sessions[0]);
+    rows = document.querySelectorAll('[data-mode-run]');
+    rows[0].querySelector('input').value = '5';
+    rows[0].querySelector('input').dispatchEvent(new window.Event('input', { bubbles: true }));
+    for (const [index, mode] of ['normal', 'challenge'].entries()) {
+      rows[index].querySelector('select').value = mode;
+      rows[index]
+        .querySelector('select')
+        .dispatchEvent(new window.Event('input', { bubbles: true }));
+    }
+    document
+      .querySelector('.postcard-editor')
+      .dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    expect(window.eval('GLASS_RAID_MODES.kcLabel(journal, 5)')).toBe('Normal #85 · KC 105');
+    expect(window.eval('GLASS_RAID_MODES.kcLabel(journal, 11)')).toBe('CM #26 · KC 111');
+    expect(window.eval('journal.dropTiles')).toEqual(data.dropTiles);
+    expect(window.eval('journal.sessions[0].ended')).toBe('2026-10-07');
+    expect(document.getElementById('journal-kills').textContent).toBe('11');
+    expect(document.querySelector('#window-art svg')).toBe(svg);
+    const filter = document.getElementById('session-mode-filter');
+    filter.value = 'unspecified';
+    filter.dispatchEvent(new window.Event('change', { bubbles: true }));
+    expect(document.querySelector('.postcard').hidden).toBe(true);
+    expect(document.getElementById('session-mode-empty').hidden).toBe(false);
+    filter.value = 'challenge';
+    filter.dispatchEvent(new window.Event('change', { bubbles: true }));
+    expect(document.querySelector('.postcard').hidden).toBe(false);
+    mode.value = 'normal';
+    mode.dispatchEvent(new window.Event('change', { bubbles: true }));
+    click(window, 'record-kill');
+    click(window, 'undo-kill');
+    expect(window.eval('journal.active.modeRuns')).toEqual([{ mode: 'challenge', kills: 1 }]);
+  });
   it('edits the selected saved session while preserving KC, other sessions and drop memories', () => {
     const data = {
       version: 2,

@@ -15,6 +15,8 @@ MAX_DOCUMENT = 5 * 1024 * 1024
 SESSION_DAYS = 30
 SUPPORTED_BOSSES = frozenset({'pnm', 'cox', 'toa', 'tob', 'cg', 'yama', 'nex'})
 LEGACY_BOSS = 'pnm'
+RAID_MODES = {'cox': ('normal', 'challenge', 'unspecified'),
+              'tob': ('normal', 'hard', 'unspecified')}
 
 
 def integer(value, maximum=MAX_KC):
@@ -38,6 +40,19 @@ def validate_journal(data, boss=None):
     sessions = data.get('sessions')
     if not isinstance(sessions, list) or len(sessions) > 10000:
         raise ValueError('Invalid session collection.')
+    modes = RAID_MODES.get(saved_boss, ())
+    mode_fields = {}
+    if 'recordMode' in data:
+        if data['recordMode'] not in modes[:2]:
+            raise ValueError('Invalid recording mode.')
+        mode_fields['recordMode'] = data['recordMode']
+    if 'modeBase' in data:
+        values = data['modeBase']
+        if (not modes or not isinstance(values, dict) or set(values) != set(modes)
+                or not all(integer(value) for value in values.values())
+                or sum(values.values()) != data['base']):
+            raise ValueError('Starting mode KCs must add up to the starting KC.')
+        mode_fields['modeBase'] = {mode: values[mode] for mode in modes}
     ids = set()
 
     def session(value, complete):
@@ -48,6 +63,15 @@ def validate_journal(data, boss=None):
             raise ValueError('Invalid or duplicate session ID.')
         ids.add(identifier)
         result = {'id': identifier, 'kills': value['kills']}
+        if 'modeRuns' in value:
+            runs = value['modeRuns']
+            if (not modes or not isinstance(runs, list) or len(runs) > 100000
+                    or not all(isinstance(run, dict) and run.get('mode') in modes
+                               and integer(run.get('kills'), 100000) and run['kills'] > 0
+                               for run in runs)
+                    or sum(run['kills'] for run in runs) != value['kills']):
+                raise ValueError('Raid mode counts must add up to recorded raids.')
+            result['modeRuns'] = [{'mode': run['mode'], 'kills': run['kills']} for run in runs]
         for key, limit in [('notes', 600), ('drops', 240)]:
             text = value.get(key)
             if not isinstance(text, str) or len(text) > limit:
@@ -96,7 +120,7 @@ def validate_journal(data, boss=None):
     if image_size > 1500000:
         raise ValueError('Screenshot storage is full. Remove an older screenshot.')
     result = dict(version=2, boss=saved_boss, base=data['base'], name=name.strip(),
-                  sessions=saved, active=active, dropTiles=clean_drops)
+                  sessions=saved, active=active, dropTiles=clean_drops, **mode_fields)
     if len(BSON.encode(result)) > MAX_DOCUMENT:
         raise ValueError('Journal is too large. Export a backup before removing older memories.')
     return result

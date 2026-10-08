@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="sanctuary-wings.css?v=collections-1" />
     <link rel="stylesheet" href="loot-wall.css?v=loot-recency-1" />
     <link rel="stylesheet" href="window-completion.css?v=collections-1" />
+    <link rel="stylesheet" href="raid-modes.css?v=raid-modes-1" />
     <style>
       [hidden] {
         display: none !important;
@@ -1245,17 +1246,42 @@
               <form id="journal-setup" class="session" aria-labelledby="setup-heading">
                 <h2 id="setup-heading">Begin your journal</h2>
                 <p>Enter your current KC. Only KC recorded from here lights the glass.</p>
-                <label for="start-kc">Starting KC</label
-                ><input
-                  id="start-kc"
-                  type="number"
-                  min="0"
-                  max="1000000000"
-                  step="1"
-                  required
-                  inputmode="numeric"
-                  aria-describedby="setup-help"
-                />
+                <div id="single-start-kc">
+                  <label for="start-kc">Starting KC</label
+                  ><input
+                    id="start-kc"
+                    type="number"
+                    min="0"
+                    max="1000000000"
+                    step="1"
+                    required
+                    inputmode="numeric"
+                    aria-describedby="setup-help"
+                  />
+                </div>
+                <div id="raid-start-kcs" class="raid-start-fields" hidden>
+                  <label for="start-normal-kc"
+                    >Starting Normal KC<input
+                      id="start-normal-kc"
+                      type="number"
+                      min="0"
+                      max="1000000000"
+                      step="1"
+                      inputmode="numeric"
+                      value="0"
+                  /></label>
+                  <label for="start-special-kc"
+                    ><span id="start-special-label"></span
+                    ><input
+                      id="start-special-kc"
+                      type="number"
+                      min="0"
+                      max="1000000000"
+                      step="1"
+                      inputmode="numeric"
+                      value="0"
+                  /></label>
+                </div>
                 <p id="setup-help" class="muted">
                   <small
                     >Starting fresh? Enter 0. Your starting KC is saved when you begin. The artwork
@@ -1273,6 +1299,53 @@
                 <div><strong id="journal-kills">0</strong><small>PANES LIT</small></div>
                 <div><strong id="window-count">0</strong><small>WINDOWS FINISHED</small></div>
               </div>
+              <div id="raid-mode-summary" hidden>
+                <div
+                  id="raid-mode-totals"
+                  class="raid-mode-totals"
+                  aria-live="polite"
+                  aria-atomic="true"
+                ></div>
+                <details id="raid-mode-settings" class="raid-mode-settings">
+                  <summary>Assign starting KC by mode</summary>
+                  <form id="raid-baseline-form">
+                    <p id="raid-baseline-help"></p>
+                    <div class="raid-start-fields">
+                      <label for="base-normal-kc"
+                        >Normal<input
+                          id="base-normal-kc"
+                          type="number"
+                          min="0"
+                          max="1000000000"
+                          step="1"
+                          inputmode="numeric"
+                          required
+                      /></label>
+                      <label for="base-special-kc"
+                        ><span id="base-special-label"></span
+                        ><input
+                          id="base-special-kc"
+                          type="number"
+                          min="0"
+                          max="1000000000"
+                          step="1"
+                          inputmode="numeric"
+                          required
+                      /></label>
+                    </div>
+                    <p id="raid-baseline-remainder" class="muted"></p>
+                    <small
+                      >Older session modes can be assigned with Edit on each session card.
+                      Unspecified earlier raids make mode KC a minimum, shown with + on drop
+                      memories.</small
+                    >
+                    <div class="controls">
+                      <button id="save-raid-baseline" type="submit">Save starting modes</button>
+                    </div>
+                    <p id="raid-baseline-error" class="raid-mode-error" role="alert" hidden></p>
+                  </form>
+                </details>
+              </div>
               <p class="drop-count" aria-live="polite" aria-atomic="true">
                 <strong id="kills-since-drop">0</strong
                 ><span id="drop-count-label">KC since journal began</span
@@ -1288,6 +1361,10 @@
                 <span id="milestone-title"></span><span id="milestone-detail"></span>
               </p>
               <div class="controls">
+                <label id="raid-mode-picker" class="raid-mode-picker" for="record-mode" hidden
+                  >Mode
+                  <select id="record-mode"></select
+                ></label>
                 <button id="record-kill" class="primary">+ Record a kill</button
                 ><button id="undo-kill" class="text-button" disabled>Undo last kill</button>
               </div>
@@ -1305,6 +1382,7 @@
                   Record your first kill to start a session. No drop needed.
                 </div>
                 <div id="session-body" class="session-body" hidden>
+                  <p id="session-modes" class="muted" hidden></p>
                   <details id="notes-panel">
                     <summary>Add drops or a note</summary>
                     <label for="drops">Drops, if any</label
@@ -1357,7 +1435,16 @@
               </div>
               <small id="postcard-count" class="muted"></small>
             </div>
+            <label
+              id="session-mode-filter-wrap"
+              class="raid-mode-picker"
+              for="session-mode-filter"
+              hidden
+              >Session mode
+              <select id="session-mode-filter"></select
+            ></label>
             <div id="postcard-items" class="postcards"></div>
+            <p id="session-mode-empty" class="empty" hidden>No sessions match this mode.</p>
             <p id="postcard-empty" class="empty">
               Finish a session to make your first postcard. No drops? You can still save the
               session.
@@ -1441,19 +1528,20 @@
         <button id="room-next" type="button" aria-label="Next earned window">→</button>
       </div>
     </dialog>
-    <script src="bosses/catalog.js?v=nex-1"></script>
-    <script src="bosses/glass-window.js?v=continuous-motion-1"></script>
+    <script src="bosses/catalog.js?v=raid-modes-2"></script>
+    <script src="raid-modes.js?v=raid-modes-1"></script>
+    <script src="bosses/glass-window.js?v=raid-modes-1"></script>
     <script src="window-workshop.js?v=continuous-motion-1"></script>
     <script src="bosses/pnm-art.js?v=approved-motion-1"></script>
     <script src="bosses/cox-art.js?v=bow-motion-2"></script>
     <script src="bosses/toa-art.js?v=approved-motion-1"></script>
-    <script src="bosses/tob-art.js?v=motion-refinements-1"></script>
+    <script src="bosses/tob-art.js?v=scythe-loop-2"></script>
     <script src="bosses/cg-art.js?v=motion-refinements-1"></script>
     <script src="bosses/yama-art.js?v=yama-1"></script>
     <script src="bosses/nex-art.js?v=nex-1"></script>
     <script src="collection-journals.js?v=collections-1"></script>
     <script src="sanctuary-wings.js?v=player-copy-2"></script>
-    <script src="loot-wall.js?v=loot-recency-1"></script>
+    <script src="loot-wall.js?v=raid-modes-1"></script>
     <script src="window-completion.js?v=collections-1"></script>
     <script src="account.js?v=player-copy-2"></script>
     <script>
@@ -1557,6 +1645,7 @@
         // Only the personal version-1 journal needs its historical baseline correction.
         const base = data.version === 1 ? 1394 : data.base;
         if (base + kills > MAX_KC) throw new Error('This journal exceeds the supported KC range.');
+        GLASS_RAID_MODES.validate(data, expectedBossId);
         return {
           ...data,
           version: 2,
@@ -1595,6 +1684,132 @@
       const ordinals = ['first', 'second', 'third', 'fourth'];
       const countLabel = (count) =>
         count === 1 ? boss().countNoun : boss().countPlural || `${boss().countNoun}s`;
+      const raidModes = () => GLASS_RAID_MODES.enabled(bossId);
+      const modeOptions = (unspecified = false) =>
+        [
+          ...GLASS_RAID_MODES.options(bossId),
+          ...(unspecified ? [{ id: 'unspecified', label: 'Mode unspecified' }] : []),
+        ]
+          .map((mode) => `<option value="${mode.id}">${esc(mode.label)}</option>`)
+          .join('');
+      let raidControlBoss = null;
+      let baselineEdit = null;
+      function renderRaidModes() {
+        const enabled = raidModes();
+        $('single-start-kc').hidden = enabled;
+        $('start-kc').disabled = enabled;
+        $('start-kc').required = !enabled;
+        $('raid-start-kcs').hidden = !enabled;
+        for (const id of ['start-normal-kc', 'start-special-kc']) {
+          $(id).disabled = !enabled;
+          $(id).required = enabled;
+        }
+        $('raid-mode-summary').hidden = !enabled || !configured;
+        $('raid-mode-picker').hidden = !enabled;
+        $('session-mode-filter-wrap').hidden = !enabled;
+        $('session-modes').hidden = !enabled || !journal.active;
+        if (raidControlBoss !== bossId) {
+          raidControlBoss = bossId;
+          $('raid-mode-settings').open = false;
+          baselineEdit = null;
+          $('record-mode').innerHTML = modeOptions();
+          $('session-mode-filter').innerHTML =
+            '<option value="">All modes</option>' + modeOptions(true);
+          if (enabled) {
+            const special = GLASS_RAID_MODES.options(bossId)[1];
+            $('start-special-label').textContent = `Starting ${special.shortLabel} KC`;
+            $('base-special-label').textContent = special.label;
+          }
+        }
+        if (!enabled) return;
+        $('record-mode').value = journal.recordMode || 'normal';
+        $('record-mode').disabled = loadFailed || !configured;
+        $('save-raid-baseline').disabled = loadFailed || !configured;
+        $('base-normal-kc').disabled = loadFailed;
+        $('base-special-kc').disabled = loadFailed;
+        const values = GLASS_RAID_MODES.counts(journal, bossId);
+        $('raid-mode-totals').innerHTML = GLASS_RAID_MODES.modes(bossId)
+          .filter((mode) => mode !== 'unspecified' || values[mode])
+          .map(
+            (mode) =>
+              `<span>${mode === 'unspecified' ? 'Previous KC, unspecified' : esc(GLASS_RAID_MODES.label(bossId, mode, true))}: <strong>${values[mode].toLocaleString()}</strong></span>`
+          )
+          .join('');
+        $('raid-baseline-help').textContent =
+          `Split your starting ${journal.base.toLocaleString()} KC between modes. Any remainder stays unspecified. This does not change your panes.`;
+        $('session-modes').textContent = journal.active
+          ? GLASS_RAID_MODES.breakdown(journal.active, bossId)
+          : '';
+        $('record-kill').textContent =
+          `+ Record a ${GLASS_RAID_MODES.label(bossId, journal.recordMode || 'normal', true)} raid`;
+      }
+      function baselineRemainder() {
+        const remaining =
+          journal.base - Number($('base-normal-kc').value) - Number($('base-special-kc').value);
+        $('raid-baseline-remainder').textContent =
+          remaining >= 0
+            ? `${remaining.toLocaleString()} starting KC remains unspecified.`
+            : `These counts exceed your starting KC by ${(-remaining).toLocaleString()}.`;
+      }
+      $('raid-mode-settings').addEventListener('toggle', () => {
+        if (!$('raid-mode-settings').open || !raidModes()) return;
+        const values = GLASS_RAID_MODES.baseline(journal, bossId);
+        baselineEdit = {
+          scope: sessionScope(),
+          original: JSON.stringify([journal.base, journal.modeBase]),
+        };
+        $('base-normal-kc').value = values.normal;
+        $('base-special-kc').value = values[GLASS_RAID_MODES.options(bossId)[1].id];
+        $('raid-baseline-error').hidden = true;
+        baselineRemainder();
+      });
+      for (const id of ['base-normal-kc', 'base-special-kc'])
+        $(id).addEventListener('input', baselineRemainder);
+      $('raid-baseline-form').addEventListener('submit', (event) => {
+        event.preventDefault();
+        try {
+          if (loadFailed || !configured || !raidModes()) return;
+          if (
+            !baselineEdit ||
+            baselineEdit.scope !== sessionScope() ||
+            baselineEdit.original !== JSON.stringify([journal.base, journal.modeBase])
+          )
+            throw new Error(
+              'Starting modes changed while you were editing. Close and reopen this section.'
+            );
+          const normal = Number($('base-normal-kc').value),
+            special = Number($('base-special-kc').value);
+          if (
+            ![$('base-normal-kc'), $('base-special-kc')].every((input) => input.value.trim()) ||
+            ![normal, special].every((value) => Number.isSafeInteger(value) && value >= 0) ||
+            normal + special > journal.base
+          )
+            throw new Error('Enter whole mode KCs that do not exceed your starting KC.');
+          const candidate = {
+            ...journal,
+            modeBase: {
+              normal,
+              [GLASS_RAID_MODES.options(bossId)[1].id]: special,
+              unspecified: journal.base - normal - special,
+            },
+          };
+          validate(candidate);
+          persistJournal(candidate);
+          journal = candidate;
+          $('raid-mode-settings').open = false;
+          render();
+          notify('Starting mode KCs saved.');
+        } catch (error) {
+          $('raid-baseline-error').textContent = error.message || 'Could not save starting modes.';
+          $('raid-baseline-error').hidden = false;
+        }
+      });
+      $('record-mode').addEventListener('change', () => {
+        if (!raidModes() || loadFailed || !configured) return;
+        save({ ...journal, recordMode: $('record-mode').value });
+        render();
+      });
+      $('session-mode-filter').addEventListener('change', renderPostcards);
       let renderer = null;
       let windowWorkshop;
       let collectionReader, sanctuaryWings, lootWall, windowCompletion, completedWindow;
@@ -1752,6 +1967,7 @@
         $('pane-preview').hidden = true;
         $('journal-setup').hidden = configured;
         $('begin-journal').disabled = loadFailed;
+        renderRaidModes();
         $('hunt-heading').textContent = boss().name + ' · a record of showing up';
         $('base-description').textContent = configured
           ? `Journal begins at ${journal.base.toLocaleString()} KC.`
@@ -1785,7 +2001,7 @@
           ? 'KC since last drop'
           : 'KC since journal began';
         $('last-drop-detail').textContent = lastDrop
-          ? `Last marked drop: KC ${(journal.base + lastDrop).toLocaleString()}`
+          ? `Last marked drop: ${GLASS_RAID_MODES.kcLabel(journal, lastDrop, bossId)}`
           : 'No drop panes marked yet.';
         $('section-track').innerHTML = shrineMarkup(pieces, index, celebrate);
         const completed = Math.floor(pieces / 25),
@@ -1858,6 +2074,37 @@
       let postcardScope;
       const sessionScope = () =>
         `${bossId}:${account ? `${authKey}:${account.username}` : 'guest'}`;
+      function renderModeEditor(form) {
+        if (!raidModes()) return;
+        let editor = form.querySelector('.raid-session-editor');
+        if (!editor) {
+          editor = document.createElement('div');
+          editor.className = 'raid-session-editor';
+          form.querySelector('.postcard-edit-actions').before(editor);
+        }
+        const signature = JSON.stringify(sessionEdit.modeRuns);
+        if (editor.dataset.runs !== signature) {
+          editor.dataset.runs = signature;
+          editor.innerHTML = `<p class="raid-run-help">Modes in recording order. Split a group to assign part of an older session. Keep the total at ${sessionEdit.kills.toLocaleString()} raids.</p><div class="raid-run-list">${sessionEdit.modeRuns
+            .map((run, index) => {
+              const prefix = `mode-run-${sessionEdit.id}-${index}`;
+              return `<div class="raid-run" data-mode-run="${index}"><label for="${esc(prefix)}-mode">Group ${index + 1}<select id="${esc(prefix)}-mode" data-run-field="mode">${modeOptions(true)}</select></label><label for="${esc(prefix)}-kills">Raids<input id="${esc(prefix)}-kills" type="number" min="1" max="100000" step="1" data-run-field="kills" required /></label><button type="button" data-split-mode="${index}" ${run.kills < 2 ? 'disabled' : ''}>Split</button>${sessionEdit.modeRuns.length > 1 ? `<button type="button" data-remove-mode="${index}">Remove</button>` : ''}</div>`;
+            })
+            .join('')}</div><p class="raid-run-help raid-run-total"></p>`;
+          for (const row of editor.querySelectorAll('[data-mode-run]')) {
+            const run = sessionEdit.modeRuns[Number(row.dataset.modeRun)];
+            row.querySelector('select').value = run.mode;
+            row.querySelector('input').value = run.kills;
+          }
+        }
+        editor.querySelector('.raid-run-total').textContent =
+          `${sessionEdit.modeRuns.reduce((sum, run) => sum + run.kills, 0).toLocaleString()} / ${sessionEdit.kills.toLocaleString()} raids assigned.`;
+        for (const input of editor.querySelectorAll('input,select,button'))
+          input.disabled = loadFailed;
+        for (const button of editor.querySelectorAll('[data-split-mode]'))
+          button.disabled =
+            loadFailed || sessionEdit.modeRuns[Number(button.dataset.splitMode)].kills < 2;
+      }
       function renderPostcards() {
         $('postcard-empty').hidden = journal.sessions.length > 0;
         $('postcard-count').textContent = `${journal.sessions.length} SESSIONS SAVED`;
@@ -1895,6 +2142,19 @@
           card.querySelector('h3').textContent = `${s.kills} ${countLabel(s.kills)} recorded.`;
           card.querySelector('.postcard-range').textContent =
             `${from.toLocaleString()} → ${(journal.base + previous).toLocaleString()} KC`;
+          let modes = card.querySelector('.postcard-modes');
+          if (!modes) {
+            modes = document.createElement('p');
+            modes.className = 'postcard-modes';
+            card.querySelector('.postcard-range').after(modes);
+          }
+          modes.hidden = !raidModes();
+          modes.textContent = raidModes() ? GLASS_RAID_MODES.breakdown(s, bossId) : '';
+          card.hidden =
+            sessionEdit?.id !== s.id &&
+            raidModes() &&
+            !!$('session-mode-filter').value &&
+            !GLASS_RAID_MODES.runs(s).some((run) => run.mode === $('session-mode-filter').value);
           card.querySelector('.postcard-note').textContent = s.notes || boss().postcardNotes[0];
           card.querySelector('.postcard-loot').textContent = s.drops || boss().postcardLoot[0];
           card.querySelector('footer > span').textContent =
@@ -1922,6 +2182,7 @@
               input.disabled = loadFailed;
             }
             form.querySelector('[type="submit"]').disabled = loadFailed;
+            renderModeEditor(form);
             const error = form.querySelector('.postcard-edit-error');
             error.textContent = sessionEdit.error || '';
             error.hidden = !sessionEdit.error;
@@ -1936,20 +2197,29 @@
           if (container.children[i] !== card)
             container.insertBefore(card, container.children[i] || null);
         });
+        $('session-mode-empty').hidden =
+          !journal.sessions.length || cards.some((card) => !card.hidden);
       }
       function closeSessionEditor() {
         const id = sessionEdit?.id;
         sessionEdit = null;
         renderPostcards();
-        Array.from($('postcard-items').querySelectorAll('[data-edit-session]'))
-          .find((button) => button.dataset.editSession === id)
-          ?.focus();
+        const button = Array.from($('postcard-items').querySelectorAll('[data-edit-session]')).find(
+          (button) => button.dataset.editSession === id
+        );
+        if (button?.closest('.postcard').hidden) $('session-mode-filter').focus();
+        else button?.focus();
       }
       $('journal-setup').addEventListener('submit', (event) => {
         event.preventDefault();
         if (loadFailed || configured) return;
-        const input = $('start-kc').value.trim(),
-          base = Number(input);
+        const enabled = raidModes();
+        const normal = Number($('start-normal-kc').value),
+          special = Number($('start-special-kc').value);
+        const input = enabled
+          ? $('start-normal-kc').value.trim() && $('start-special-kc').value.trim()
+          : $('start-kc').value.trim();
+        const base = enabled ? normal + special : Number(input);
         if (!input || !Number.isSafeInteger(base) || base < 0 || base > MAX_KC) {
           $('setup-error').textContent = 'Enter a whole starting KC from 0 to 1,000,000,000.';
           $('setup-error').hidden = false;
@@ -1961,6 +2231,16 @@
           base,
           // Retain the version-2 name field for compatibility with existing APIs.
           name: boss().name,
+          ...(enabled
+            ? {
+                modeBase: {
+                  normal,
+                  [GLASS_RAID_MODES.options(bossId)[1].id]: special,
+                  unspecified: 0,
+                },
+                recordMode: 'normal',
+              }
+            : {}),
         };
         try {
           validate(candidate);
@@ -1980,6 +2260,12 @@
       function setFields() {
         $('drops').value = journal.active?.drops || '';
         $('notes').value = journal.active?.notes || '';
+        if (!configured) {
+          $('start-normal-kc').value = '0';
+          $('start-special-kc').value = '0';
+        }
+        baselineEdit = null;
+        $('raid-mode-settings').open = false;
       }
       $('record-kill').addEventListener('click', () => {
         if (loadFailed || !configured || journal.base + total() >= MAX_KC) return;
@@ -1989,7 +2275,14 @@
           notes: '',
           drops: '',
         };
-        const saved = save({ ...journal, active: { ...active, kills: active.kills + 1 } });
+        if (active.kills >= 100000) {
+          notify(`Finish this session before recording another ${boss().countNoun}.`);
+          return;
+        }
+        const next = raidModes()
+          ? GLASS_RAID_MODES.add(active, journal.recordMode || 'normal')
+          : { ...active, kills: active.kills + 1 };
+        const saved = save({ ...journal, active: next });
         render(saved && total() % 25 === 0);
         if (saved) {
           windowCompletion?.dismiss();
@@ -2013,7 +2306,12 @@
           );
           return;
         }
-        save({ ...journal, active: { ...journal.active, kills: journal.active.kills - 1 } });
+        save({
+          ...journal,
+          active: raidModes()
+            ? GLASS_RAID_MODES.undo(journal.active)
+            : { ...journal.active, kills: journal.active.kills - 1 },
+        });
         render();
       });
       for (const key of ['notes', 'drops'])
@@ -2126,6 +2424,7 @@
         const s = journal.sessions[i],
           before = journal.sessions.slice(0, i).reduce((n, s) => n + s.kills, 0);
         const lines = [
+          ...(raidModes() ? [...wrapText(GLASS_RAID_MODES.breakdown(s, bossId), 46), ''] : []),
           ...wrapText(s.notes || boss().postcardNotes[0], 46),
           '',
           ...wrapText('Loot: ' + (s.drops || boss().postcardLoot[0]), 46),
@@ -2142,11 +2441,33 @@
             id: session.id,
             scope: sessionScope(),
             original: { notes: session.notes, drops: session.drops },
+            originalModes: JSON.stringify([session.kills, session.modeRuns]),
             notes: session.notes,
             drops: session.drops,
+            kills: session.kills,
+            modeRuns: GLASS_RAID_MODES.runs(session).map((run) => ({ ...run })),
           };
           renderPostcards();
           $('postcard-items').querySelector('.postcard-editor input').focus();
+          return;
+        }
+        const split = event.target.closest('[data-split-mode]');
+        const remove = event.target.closest('[data-remove-mode]');
+        if (sessionEdit && !loadFailed && (split || remove)) {
+          const index = Number(split ? split.dataset.splitMode : remove.dataset.removeMode);
+          const run = sessionEdit.modeRuns[index];
+          if (!run) return;
+          if (split && run.kills >= 2) {
+            const first = Math.floor(run.kills / 2);
+            sessionEdit.modeRuns.splice(
+              index,
+              1,
+              { mode: run.mode, kills: first },
+              { mode: run.mode, kills: run.kills - first }
+            );
+          } else if (remove && sessionEdit.modeRuns.length > 1)
+            sessionEdit.modeRuns.splice(index, 1);
+          renderPostcards();
           return;
         }
         if (event.target.closest('[data-cancel-session]')) {
@@ -2163,6 +2484,21 @@
       });
       $('postcard-items').addEventListener('input', (event) => {
         if (!sessionEdit || !event.target.closest('.postcard-editor')) return;
+        if (event.target.dataset.runField) {
+          const index = Number(event.target.closest('[data-mode-run]').dataset.modeRun);
+          const field = event.target.dataset.runField;
+          sessionEdit.modeRuns[index][field] =
+            field === 'kills' ? Number(event.target.value) : event.target.value;
+          const editor = event.target.closest('.raid-session-editor');
+          editor.dataset.runs = JSON.stringify(sessionEdit.modeRuns);
+          editor.querySelector('.raid-run-total').textContent =
+            `${sessionEdit.modeRuns.reduce((sum, run) => sum + run.kills, 0).toLocaleString()} / ${sessionEdit.kills.toLocaleString()} raids assigned.`;
+          editor.querySelector(`[data-split-mode="${index}"]`).disabled =
+            sessionEdit.modeRuns[index].kills < 2;
+          sessionEdit.error = '';
+          event.target.closest('form').querySelector('.postcard-edit-error').hidden = true;
+          return;
+        }
         if (!['notes', 'drops'].includes(event.target.name)) return;
         sessionEdit[event.target.name] = event.target.value;
         sessionEdit.error = '';
@@ -2188,18 +2524,35 @@
           if (
             !session ||
             session.notes !== sessionEdit.original.notes ||
-            session.drops !== sessionEdit.original.drops
+            session.drops !== sessionEdit.original.drops ||
+            JSON.stringify([session.kills, session.modeRuns]) !== sessionEdit.originalModes
           )
             throw new Error(
               'This session changed while you were editing. Cancel and open Edit again before saving.'
             );
           if (sessionEdit.notes.length > 600 || sessionEdit.drops.length > 240)
             throw new Error('Keep loot within 240 characters and notes within 600 characters.');
+          if (raidModes())
+            GLASS_RAID_MODES.validate(
+              {
+                ...journal,
+                sessions: [{ ...session, modeRuns: sessionEdit.modeRuns }],
+                active: null,
+              },
+              bossId
+            );
           const candidate = {
             ...journal,
             sessions: journal.sessions.map((s) =>
               s.id === sessionEdit.id
-                ? { ...s, notes: sessionEdit.notes.trim(), drops: sessionEdit.drops.trim() }
+                ? {
+                    ...s,
+                    notes: sessionEdit.notes.trim(),
+                    drops: sessionEdit.drops.trim(),
+                    ...(raidModes()
+                      ? { modeRuns: GLASS_RAID_MODES.compact(sessionEdit.modeRuns) }
+                      : {}),
+                  }
                 : s
             ),
           };
@@ -2298,7 +2651,7 @@
         $('pane-kc').max = journal.base + total();
         $('pane-kc').value = journal.base + tile;
         $('pane-selected').textContent =
-          `Window ${Math.floor((tile - 1) / 100) + 1} · pane ${((tile - 1) % 100) + 1} · KC ${(journal.base + tile).toLocaleString()}`;
+          `Window ${Math.floor((tile - 1) / 100) + 1} · pane ${((tile - 1) % 100) + 1} · ${GLASS_RAID_MODES.kcLabel(journal, tile, bossId)}`;
         $('pane-file').value = '';
         $('pane-save').disabled = false;
         $('pane-remove').hidden = !drop;
@@ -2506,7 +2859,7 @@
         previewPane = pane;
         pane.setAttribute('aria-describedby', 'pane-preview');
         $('pane-preview-title').textContent =
-          `KC ${(sourceJournal.base + tile).toLocaleString()} · ${drop.label || 'Drop recorded'}`;
+          `${GLASS_RAID_MODES.kcLabel(sourceJournal, tile, room ? sanctuaryBossId : bossId)} · ${drop.label || 'Drop recorded'}`;
         $('pane-preview-help').textContent = room
           ? 'Esc or tap outside to close.'
           : 'Click the pane to view or edit.';
@@ -2680,6 +3033,9 @@
                 bossShortName: collection.shortName,
                 tile: Number(tile),
                 kc: collection.journal.base + Number(tile),
+                kcLabel: GLASS_RAID_MODES.kcLabel(collection.journal, Number(tile), collection.id),
+                raidMode:
+                  GLASS_RAID_MODES.at(collection.journal, Number(tile), collection.id)?.mode || '',
                 label: drop.label || 'Drop recorded',
                 image: drop.image,
                 savedAt: drop.savedAt,

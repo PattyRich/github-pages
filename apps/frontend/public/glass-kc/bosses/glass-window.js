@@ -1,5 +1,6 @@
 /* Shared 100-pane reveal, accessible drop targets and window frame. */
 /* exported GLASS_RENDERERS, GLASS_WINDOW_SHAPES, GLASS_WINDOW_FRAMES, createGlassWindow, updateGlassWindow */
+/* global GLASS_RAID_MODES */
 const GLASS_RENDERERS = {};
 function glassCurveEdge(y, points) {
   if (y <= points[0][1]) return 180;
@@ -250,7 +251,7 @@ function createGlassWindow({ config, esc, getJournal, sceneColors, renderScene, 
           drop = n < count ? getJournal().dropTiles?.[tile] : null;
         const target =
           interactive && n < count && (!previewOnly || drop)
-            ? ` data-pane="${tile}" tabindex="0" role="button" aria-label="KC ${getJournal().base + tile}${drop ? ', drop: ' + esc(drop.label || 'Drop recorded') : ': mark a drop'}${previewOnly ? ', view drop memory' : ''}"`
+            ? ` data-pane="${tile}" tabindex="0" role="button" aria-label="${esc(typeof GLASS_RAID_MODES === 'undefined' || !GLASS_RAID_MODES.enabled(config.id) ? 'KC ' + (getJournal().base + tile) : GLASS_RAID_MODES.kcLabel(getJournal(), tile, config.id))}${drop ? ', drop: ' + esc(drop.label || 'Drop recorded') : ': mark a drop'}${previewOnly ? ', view drop memory' : ''}"`
             : '';
         sleeping += `<polygon points="${points}" fill="${['#232b2b', '#293032', '#242a30', '#303236'][(row * 3 + col) % 4]}"/><path d="M${x4} ${y4} L${x2} ${y2} L${x3} ${y3}Z" fill="#b9dad1" opacity=".035"/>`;
         seams += `<polygon class="pane ${n < count ? 'filled' : ''}"${target} points="${points}" fill="${drop ? '#d85397' : 'transparent'}" fill-opacity="${drop ? 0.24 : 0}" stroke="${drop ? '#f29dcd' : '#121b20'}" stroke-width="${drop ? 2.5 : n < count ? 0.8 : 1.3}"/>`;

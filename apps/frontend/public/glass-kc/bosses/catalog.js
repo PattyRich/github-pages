@@ -74,6 +74,10 @@ const GLASS_BOSSES = {
   },
   cox: {
     id: 'cox',
+    raidModes: [
+      { id: 'normal', label: 'Normal', shortLabel: 'Normal' },
+      { id: 'challenge', label: 'Challenge Mode', shortLabel: 'CM' },
+    ],
     name: 'Chambers of Xeric',
     shortName: 'CoX',
     dropPlaceholder: 'A Twisted bow, finally…',
@@ -214,6 +218,10 @@ const GLASS_BOSSES = {
   },
   tob: {
     id: 'tob',
+    raidModes: [
+      { id: 'normal', label: 'Normal', shortLabel: 'Normal' },
+      { id: 'hard', label: 'Hard Mode', shortLabel: 'HM' },
+    ],
     name: 'Theatre of Blood',
     shortName: 'ToB',
     dropPlaceholder: 'A Scythe, finally…',

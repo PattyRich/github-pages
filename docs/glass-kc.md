@@ -18,6 +18,18 @@ The wider copy uses the same player voice: dry-streak frustration, supply bills,
 
 Saved session cards have an **Edit** button for correcting **Loot** and **Notes** after a session finishes. The editor opens inside the card with **Save changes** and **Cancel**; Escape also cancels. Edits preserve the session's KC range, completion date, ID and pane/drop memories, and use the existing guest or account save path. Reloads, backups and downloaded postcards include the updated text. Unsubmitted edits remain available during routine tracker updates, and a failed save leaves the editor open with its draft. Switching hunts or accounts clears the editor; a session changed in another tab must be reopened before saving over its text.
 
+## Raid modes
+
+Chambers has **Normal / Challenge Mode (CM)** and Theatre has **Normal / Hard Mode (HM)**. Each raid still lights one pane in the same collection. The compact **Mode** selector beside **Record a raid** remembers the last choice in that hunt's journal. Normal and CM/HM counters include their own starting KC; **Total KC** is the combined count, including any unspecified earlier raids. New journals enter starting Normal and CM/HM KCs separately. Starting KC does not light panes.
+
+Mode changes within a session preserve recording order. The session and its saved/downloaded postcard show a breakdown, such as **6 Normal · 3 CM**. Session cards can be filtered by mode; a mixed session appears under either matching mode. The tiny **Edit** button also corrects mode groups. **Split** divides a group so part of an older session can be assigned, and the group counts must still add up to the session's original total. Saving merges adjacent groups with the same mode. Session IDs, dates, drops, pane order and window progress remain unchanged.
+
+Older journals without mode metadata remain **unspecified**, including both their starting KC and their recorded sessions. **Assign starting KC by mode** optionally divides the fixed starting total; the remainder stays unspecified. Use session **Edit** to assign recorded raids. No migration assumes old raids were Normal. An unspecified active session can continue, with each new raid using the selected mode.
+
+Drop editors, pane accessibility labels, sanctuary hover previews and the loot trophy wall show the mode's KC alongside combined KC, for example **CM #67 · KC 393**. The trophy wall has a raid-mode filter. Where unspecified earlier raids could belong to that mode, its KC is a known minimum, shown as **CM #67+**. Correcting earlier mode groups updates derived drop KCs without modifying the memories or their saved dates.
+
+Optional version-2 journal fields are `modeBase` (Normal, Challenge/Hard, unspecified counts summing to `base`), `recordMode` (Normal or the raid's harder mode), and per-session `modeRuns` (ordered positive mode/count groups summing to `kills`). `raid-modes.js` derives totals and drop mode KCs; both browser and API validation reject invalid sums or modes from another hunt. Existing guest keys, account journal IDs, backups, restore, guest import, offline device copies and revision conflict handling are reused. Other bosses have no mode fields or controls. Deploy the backend validator alongside the frontend so account saves retain the new fields.
+
 ## Window workshop
 
 **Window workshop** beneath the active window offers seven tall silhouettes (Gothic, round arch, rectangle, octagon, ogee arch, Tudor arch and stepped) and seven frames (sandstone, gilded, dark iron, carved oak, amethyst, ivory and bloodstone). Amethyst has a deep purple border with inset crystal facets; ivory has a pale beaded edge, and bloodstone has a carved crimson band. **Window to style** selects the current or an earlier completed window. Each window also has a **Style window** button in the collection. Mix any shape and frame, use the preview to compare styles at the selected window's current progress, or **Reset style** to restore Gothic sandstone for that window. Unfinished windows show only earned panes and ornaments; completed windows show the full scene. Every silhouette still contains 100 panes with the same KC order and drop memories; earned ornaments follow the chosen outline. Subjects are scaled proportionally to fit alternate arches.
@@ -113,6 +125,8 @@ The selection controls both browser keys and API URLs. Opening a different boss 
 
 ## Artwork and motion
 
+Before handing over new or substantially revised windows, complete a second artwork pass after the initial implementation. Revisit the actual **OSRS Wiki model, equipment and environment images** during that pass; text descriptions and remembered designs are not enough. Compare silhouettes, anatomy, equipment proportions, identity colours and scene details at both thumbnail and enlarged sizes, then inspect the subject's motion through a complete cycle. Correct the artwork before presenting it for approval. Keep new collections in an isolated preview until the user approves them for integration.
+
 Subtle animated particles are an approved option for future windows where they suit the subject. Use scene-specific effects such as poison motes, blood droplets, embers, drifting dust or magical sparks to add atmosphere. Keep motion slow, sparse and secondary to the boss silhouette and stained-glass detail. Maiden's blood droplets and Verzik's poison motes are the existing references for this treatment.
 
 Keep effects self-contained in the scene's inline SVG, conceal them behind unlit panes, and respect `prefers-reduced-motion` by leaving particles still. Use each subject's established colours across editions and keep the effects compatible with every window shape and frame.
@@ -134,6 +148,8 @@ All 40 windows now include their approved scene-specific motion:
 | Nex        | Nex casts smoke, shadow, blood and ice; the Frozen Door refracts moving light; Torva changes from the top down; the godsword channels a blood sacrifice; bodyguards cast in turn; and the crossbow fires a dragon bolt.                                                                                                                                     |
 
 The Twisted bow's fixed placement keeps the body and frame steady. Its arrow follows the string's exact draw vector and easing before release, then fades out before the loop resets. A quiet pause separates shots.
+
+The Scythe's falling blood uses a separate group from the fixed weapon. Each drop fades out, returns to its starting position during the quiet pause, and holds there before repeating, so the loop boundary does not change its placement.
 
 The shared renderer places the animated scene directly inside the earned-pane clip, keeping SVG path morphs and motion paths reliable in the tracker, sanctuary, gallery and postcards. CSS effects remain self-contained in each SVG. Reduced-motion rendering removes SVG animation timelines and leaves CSS effects still; changing the preference refreshes the visible artwork without saving or changing any journal.
 

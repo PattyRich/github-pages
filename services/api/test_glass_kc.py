@@ -34,6 +34,53 @@ def api():
 HEADERS = {'Authorization': 'Bearer ' + 'a' * 43}
 
 
+@pytest.mark.parametrize('boss,mode', [('cox', 'challenge'), ('tob', 'hard')])
+def test_raid_modes_round_trip_and_old_journals_remain_unspecified(api, boss, mode):
+    client, db = api
+    data = journal()
+    data.update(boss=boss, base=390, modeBase={'normal': 324, mode: 66, 'unspecified': 0},
+                recordMode=mode)
+    data['active'].update(kills=3, modeRuns=[{'mode': 'normal', 'kills': 2}, {'mode': mode, 'kills': 1}])
+    assert client.put(f'/glass-kc/api/journals/{boss}', json={'revision': 0, 'journal': data}, headers=HEADERS).status_code == 200
+    stored = db['journals'].insert_one.call_args.args[0]
+    assert stored['journal'] == data
+    db['journals'].find_one.return_value = stored
+    assert client.get(f'/glass-kc/api/journals/{boss}', headers=HEADERS).json['journal'] == data
+    old = journal()
+    old['boss'] = boss
+    assert validate_journal(old) == old
+
+
+@pytest.mark.parametrize('field,value', [
+    ('recordMode', 'hard'), ('recordMode', 'unspecified'), ('recordMode', {}),
+    ('modeBase', {'normal': 1394, 'challenge': 1, 'unspecified': 0}),
+    ('modeBase', {'normal': True, 'challenge': 1393, 'unspecified': 0}),
+    ('modeBase', {'normal': 1394, 'challenge': 0}),
+    ('modeBase', {'normal': -1, 'challenge': 1395, 'unspecified': 0}),
+])
+def test_invalid_raid_mode_fields_are_rejected(field, value):
+    data = journal()
+    data['boss'] = 'cox'
+    data[field] = value
+    with pytest.raises(ValueError):
+        validate_journal(data)
+
+
+@pytest.mark.parametrize('runs', [[], [{'mode': 'hard', 'kills': 1}],
+    [{'mode': 'normal', 'kills': 2}], [{'mode': 'normal', 'kills': True}],
+    [{'mode': 'normal', 'kills': 0}, {'mode': 'challenge', 'kills': 1}], None])
+def test_invalid_or_wrong_hunt_mode_runs_are_rejected(runs):
+    data = journal()
+    data['boss'] = 'cox'
+    data['active']['modeRuns'] = runs
+    with pytest.raises(ValueError):
+        validate_journal(data)
+    data = journal()
+    data['active']['modeRuns'] = [{'mode': 'normal', 'kills': 1}]
+    with pytest.raises(ValueError):
+        validate_journal(data)
+
+
 def test_register_hashes_password_and_token(api):
     client, db = api
     response = client.post('/glass-kc/api/register', json={'username': 'Alice', 'password': 'long secret password'})
