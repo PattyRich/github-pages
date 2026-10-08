@@ -225,7 +225,7 @@ describe('browser-local glass journal', () => {
     expect(window.document.querySelector('.postcard-editor')).toBeNull();
   });
 
-  it.each(['pnm', 'cox', 'toa', 'tob', 'cg', 'yama'])(
+  it.each(['pnm', 'cox', 'toa', 'tob', 'cg', 'yama', 'nex'])(
     'keeps every %s scene running while lighting, undoing and marking panes',
     (bossId) => {
       const window = open(undefined, false, { choose: false });
@@ -1077,6 +1077,7 @@ describe('required boss selection and catalog-driven hunts', () => {
     ['tob', 'Theatre'],
     ['cg', 'Corrupted Gauntlet'],
     ['yama', 'Yama'],
+    ['nex', 'Nex'],
   ])('uses %s cloud routes and local backup, and resets only that hunt', async (boss, title) => {
     const fetch = vi.fn(async (url, options) => {
       if (url.endsWith('/me')) return response({ username: 'alice' });
@@ -1123,6 +1124,7 @@ describe('required boss selection and catalog-driven hunts', () => {
     ['tob', 'The Scythe of Vitur', 6, 'THEATRE OF BLOOD'],
     ['cg', 'Hunllef, crystal and crimson', 4, 'CORRUPTED GAUNTLET'],
     ['yama', 'The Master of Pacts', 6, 'YAMA'],
+    ['nex', 'The Fifth General', 6, 'NEX'],
   ])(
     'keeps pane numbering through all %s windows and the next edition',
     (boss, firstTitle, scenes, postcardName) => {
@@ -1191,4 +1193,38 @@ describe('required boss selection and catalog-driven hunts', () => {
       expect(JSON.parse(window.localStorage.getItem(yamaKey))).toEqual(saved);
     }
   );
+  it.each([
+    [0, 0, 0, 'The Fifth General'],
+    [25, 25, 0, 'The Fifth General'],
+    [99, 99, 0, 'The Fifth General'],
+    [100, 100, 1, 'The Fifth General'],
+    [599, 99, 5, 'The Zaryte arsenal'],
+    [600, 100, 6, 'The Zaryte arsenal'],
+    [601, 1, 6, 'The Fifth General'],
+  ])('keeps Nex progress and backups isolated at %i kills', (kills, panes, windows, title) => {
+    const window = open(JSON.stringify(sample()), false, { choose: false });
+    const nexKey = 'praynr-glass-kc-nex-journal-v2';
+    const saved = {
+      ...sample(),
+      boss: 'nex',
+      name: 'Nex',
+      base: 900,
+      active: { id: 'nex-kills', kills: kills, notes: '', drops: '' },
+    };
+    window.localStorage.setItem(nexKey, JSON.stringify(saved));
+    click(window, 'choose-nex');
+    expect(window.document.getElementById('window-title').textContent).toContain(title);
+    expect(window.document.querySelectorAll('#window-art .pane.filled')).toHaveLength(panes);
+    expect(window.document.getElementById('window-count').textContent).toBe(String(windows));
+    expect(window.document.getElementById('milestone-help').textContent).toContain(
+      '25 kills per sigil'
+    );
+    expect(window.document.getElementById('session-info').textContent).toBe(
+      `${kills} ${kills === 1 ? 'KILL' : 'KILLS'}`
+    );
+    expect(() => window.eval(`validate(${JSON.stringify(sample())})`)).toThrow();
+    expect(() => window.eval(`validate(${JSON.stringify(saved)}, 'pnm')`)).toThrow();
+    expect(JSON.parse(window.localStorage.getItem(key))).toEqual(sample());
+    expect(JSON.parse(window.localStorage.getItem(nexKey))).toEqual(saved);
+  });
 });
