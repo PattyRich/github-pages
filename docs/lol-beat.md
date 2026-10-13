@@ -4,7 +4,7 @@ LoL-Beat answers a simple question: **can you trace a chain of wins from your Le
 
 Given any two summoners, it finds the shortest sequence of players where each person has beaten the next in a real ranked game — a "beat chain." The system crawls match history from the Riot API, builds a directed graph of those relationships, and then runs BFS to find the path.
 
-**Live:** [praynr.com/#/lol-beat](https://praynr.com/#/lol-beat)
+**Live:** [praynr.com/lol-beat](https://praynr.com/lol-beat)
 
 ---
 

@@ -283,7 +283,10 @@ function BoardView() {
     async function loadBoard() {
       const params = new URLSearchParams(location.search);
       const pw = params.get('password');
-      const boardName = decodePathSegment(location.pathname.split('/').filter(Boolean).pop() || '');
+      const boardName =
+        location.pathname.replace(/\/$/, '') === '/bingo/board' && params.has('boardName')
+          ? params.get('boardName') || ''
+          : decodePathSegment(location.pathname.split('/').filter(Boolean).pop() || '');
 
       if (pw) {
         addToRecent(boardName, pw, 'general');
@@ -293,14 +296,18 @@ function BoardView() {
           generalPassword: pw,
           boardName: boardName,
         });
-        navigate(location.pathname, {
-          replace: true,
-          state: {
-            privilege: 'general',
-            generalPassword: pw,
-            boardName: boardName,
-          },
-        });
+        params.delete('password');
+        navigate(
+          { pathname: location.pathname, search: params.toString() },
+          {
+            replace: true,
+            state: {
+              privilege: 'general',
+              generalPassword: pw,
+              boardName: boardName,
+            },
+          }
+        );
       } else {
         const currentState = stateRef.current;
         if (boardName && !currentState.boardName) {
@@ -426,11 +433,10 @@ function BoardView() {
   }
 
   function clipboard(): void {
-    void navigator.clipboard
-      .writeText(
-        `${window.location.href}?password=${encodeURIComponent(state.generalPasswordCopy)}`
-      )
-      .catch(() => undefined);
+    const shareUrl = new URL(window.location.href);
+    shareUrl.hash = '';
+    shareUrl.searchParams.set('password', state.generalPasswordCopy);
+    void navigator.clipboard.writeText(shareUrl.href).catch(() => undefined);
     setBoardState({ showToast2: true });
   }
 

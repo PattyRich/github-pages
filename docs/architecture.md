@@ -23,7 +23,7 @@ root/
 
 A single-page React 19 application written in TypeScript and bundled with Vite.
 
-**Routing** — `react-router-dom` manages two primary surfaces: the Bingo board editor/viewer and the LoL-Beat search interface.
+**Routing** — `react-router-dom` uses BrowserRouter for normal tool URLs. `src/routing.ts` converts legacy hash links and old board paths before the router mounts, retaining access parameters. Bingo boards use `/bingo/board/<boardName>` to avoid conflicts with the static `/bingo/` preview and app menu at `/bingo/play`; KC Trackers opens at `/kc-trackers/track`. Nginx serves existing files first and falls back to the app for deep links. The built `404.html` preserves GitHub Pages route destinations, with Recent Boards kept on its original origin for local storage.
 
 **State** — React Hooks (`useState` / `useEffect`) with `localStorage` for lightweight persistence (e.g. active team selection). No global state library — the app's complexity doesn't warrant one.
 

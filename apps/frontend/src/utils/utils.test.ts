@@ -90,7 +90,7 @@ test('pwUrlBuilder encodes path segments safely', () => {
 });
 
 test('board route and auth helpers encode spaces and hash characters', () => {
-  expect(bingoBoardPath('Clan #1 Bingo')).toBe('/bingo/Clan%20%231%20Bingo');
+  expect(bingoBoardPath('Clan #1 Bingo')).toBe('/bingo/board/Clan%20%231%20Bingo');
   expect(authUrlBuilder('Clan Bingo', 'team pw', 'general')).toBe(
     'auth/Clan%20Bingo/team%20pw/general'
   );

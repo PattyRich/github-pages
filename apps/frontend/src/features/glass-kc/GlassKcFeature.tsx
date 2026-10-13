@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import './GlassKcFeature.css';
+import { KC_TRACKER_PATH } from '../../routing';
 
 export default function GlassKcFeature() {
   return (
@@ -29,7 +30,7 @@ export default function GlassKcFeature() {
             </div>
           </dl>
           <div className="glass-feature-actions">
-            <Link className="glass-feature-launch" to="/glass-kc">
+            <Link className="glass-feature-launch" to={KC_TRACKER_PATH}>
               Start your collection <span aria-hidden="true">→</span>
             </Link>
             <a className="glass-feature-demo" href={`${import.meta.env.BASE_URL}kc-trackers/`}>
@@ -40,7 +41,7 @@ export default function GlassKcFeature() {
         </div>
         <figure className="glass-feature-preview">
           <Link
-            to="/glass-kc"
+            to={KC_TRACKER_PATH}
             className="glass-feature-art-link"
             aria-label="Track boss kills and build a collection of stained-glass windows"
           >

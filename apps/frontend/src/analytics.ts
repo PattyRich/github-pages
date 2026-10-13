@@ -19,7 +19,10 @@ export function normalizeAnalyticsUrl(value: string): string {
   const routeWithQuery = hashRoute || url.pathname;
   const route = routeWithQuery.split('?')[0].replace(/^\/github-pages(?=\/|$)/, '') || '/';
 
-  if (/^\/bingo\/(?!create$|join$)[^/]+$/.test(route)) {
+  if (
+    /^\/bingo\/board(?:\/[^/]+)?\/?$/.test(route) ||
+    /^\/bingo\/(?!create$|join$|play$)[^/]+\/?$/.test(route)
+  ) {
     return '/bingo/:boardName';
   }
 

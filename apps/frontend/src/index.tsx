@@ -16,10 +16,12 @@ import HomeButton from './components/HomeButton';
 import NotFound from './pages/NotFound';
 import Recents from './pages/Recents';
 import GlassKcTracker from './features/glass-kc/GlassKcTracker';
-import { HashRouter, Routes, Route } from 'react-router-dom';
+import { BrowserRouter, Navigate, Routes, Route, useLocation } from 'react-router-dom';
 import { initializeAnalytics } from './analytics';
+import { BINGO_PATH, canonicalAppPath, initializeBrowserRoutes, KC_TRACKER_PATH } from './routing';
 
-initializeAnalytics();
+const shouldRender = initializeBrowserRoutes();
+if (shouldRender) initializeAnalytics();
 
 const rootElement = document.getElementById('root');
 
@@ -83,42 +85,44 @@ const BingoJoin = IS_MAINTENANCE ? Maintenance : <Bingo key="join" screenSkip={4
 const BingoBoard = IS_MAINTENANCE ? Maintenance : <BoardView />;
 const LolBeatRoute = IS_MAINTENANCE ? Maintenance : <LolBeat />;
 
-root.render(
-  <HashRouter>
-    <HomeButton />
-    <Routes>
-      <Route path="/" element={<App />} />
-      <Route path="/glass-kc" element={<GlassKcTracker />} />
-      <Route path="/github-pages/glass-kc" element={<GlassKcTracker />} />
-      <Route path="/recents" element={<Recents />} />
-      <Route path="/github-pages/recents" element={<Recents />} />
-      <Route path="/status" element={<Status />} />
-      <Route path="/github-pages/status" element={<Status />} />
-      <Route path="/osrs" element={<Osrs />} />
-      <Route path="/github-pages/osrs" element={<Osrs />} />
-      <Route path="/mage-run" element={<Magerun />} />
-      <Route path="/github-pages/mage-run" element={<Magerun />} />
-      <Route path="/toa-flip" element={<ToaFlip />} />
-      <Route path="/github-pages/toa-flip" element={<ToaFlip />} />
-      <Route path="/bingo/create" element={BingoCreate} />
-      <Route path="/github-pages/bingo/create" element={BingoCreate} />
-      <Route path="/bingo/join" element={BingoJoin} />
-      <Route path="/github-pages/bingo/join" element={BingoJoin} />
-      <Route path="/bingo" element={BingoRoute} />
-      <Route path="/github-pages/bingo" element={BingoRoute} />
-      <Route path="/bingo/:boardName" element={BingoBoard} />
-      <Route path="/github-pages/bingo/:boardName" element={BingoBoard} />
-      <Route path="/bingo-draft" element={<BingoDraft />} />
-      <Route path="/github-pages/bingo-draft" element={<BingoDraft />} />
-      <Route path="/pets" element={<Pets />} />
-      <Route path="/github-pages/pets" element={<Pets />} />
-      <Route path="/all-pets" element={<AllPets />} />
-      <Route path="/github-pages/all-pets" element={<AllPets />} />
-      <Route path="/lol-beat" element={LolBeatRoute} />
-      <Route path="/github-pages/lol-beat" element={LolBeatRoute} />
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  </HashRouter>
-);
+function LegacyRoute() {
+  const location = useLocation();
+  return (
+    <Navigate
+      to={canonicalAppPath(location.pathname) + location.search + location.hash}
+      state={location.state}
+      replace
+    />
+  );
+}
+
+if (shouldRender)
+  root.render(
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <HomeButton />
+      <Routes>
+        <Route path="/" element={<App />} />
+        <Route path={KC_TRACKER_PATH} element={<GlassKcTracker />} />
+        <Route path="/glass-kc" element={<LegacyRoute />} />
+        <Route path="/recents" element={<Recents />} />
+        <Route path="/status" element={<Status />} />
+        <Route path="/osrs" element={<Osrs />} />
+        <Route path="/mage-run" element={<Magerun />} />
+        <Route path="/toa-flip" element={<ToaFlip />} />
+        <Route path="/bingo/create" element={BingoCreate} />
+        <Route path="/bingo/join" element={BingoJoin} />
+        <Route path={BINGO_PATH} element={BingoRoute} />
+        <Route path="/bingo/board/:boardName" element={BingoBoard} />
+        <Route path="/bingo/board" element={BingoBoard} />
+        <Route path="/bingo" element={<LegacyRoute />} />
+        <Route path="/bingo/:boardName" element={<LegacyRoute />} />
+        <Route path="/bingo-draft" element={<BingoDraft />} />
+        <Route path="/pets" element={<Pets />} />
+        <Route path="/all-pets" element={<AllPets />} />
+        <Route path="/lol-beat" element={LolBeatRoute} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
 
 reportWebVitals();

@@ -11,42 +11,6 @@
       name="description"
       content="Create clan Bingo boards, track boss kills and drops with KC Trackers, and explore OSRS tools and simulators."
     />
-    <script>
-      (function () {
-        if (window.location.hostname !== 'pattyrich.github.io') {
-          return;
-        }
-
-        var projectPath = '/github-pages';
-        var pathname = window.location.pathname;
-        var search = window.location.search;
-        var hash = window.location.hash;
-        var routePath = '/';
-
-        if (pathname === projectPath || pathname.indexOf(projectPath + '/') === 0) {
-          routePath = pathname.slice(projectPath.length) || '/';
-        }
-
-        // Don't redirect /recents — let the app render so users can see their saved boards
-        if (routePath === '/recents' || hash === '#/recents') {
-          return;
-        }
-
-        if (hash.indexOf('#/github-pages') === 0) {
-          hash = '#' + hash.slice('#/github-pages'.length);
-          if (hash === '#') {
-            hash = '#/';
-          }
-        }
-
-        if (!hash && routePath !== '/') {
-          hash = '#' + routePath + search;
-          search = '';
-        }
-
-        window.location.replace('https://praynr.com/' + search + hash);
-      })();
-    </script>
 
     <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />

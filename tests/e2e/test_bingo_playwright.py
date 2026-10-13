@@ -94,10 +94,11 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
 
             # Snapshot the empty join page before any board exists
             page.goto(f"{FRONTEND_URL}/#/bingo/join")
+            expect(page).to_have_url(f"{FRONTEND_URL}/bingo/join")
             expect(page.locator(".join-board-shell")).to_be_visible()
             compare_visual_snapshot(page, "join-page-empty", ".join-board-grid")
 
-            page.goto(f"{FRONTEND_URL}/#/bingo/create")
+            page.goto(f"{FRONTEND_URL}/bingo/create")
             compare_visual_snapshot(page, "create-bingo-page", ".create-board-shell")
             fill_input_group(page, "Board Name", board_name)
             fill_input_group(page, "Admin Password", admin_password)
@@ -109,7 +110,7 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
                 lambda: page.get_by_role("button", name="Create Board").click(),
             )
 
-            expect(page).to_have_url(re.compile(r"#/bingo/"))
+            expect(page).to_have_url(re.compile(r"/bingo/board/"))
             expect(page.get_by_role("button", name="Edit Board")).to_be_visible()
 
             # Created boards start with the admin onboarding guide instead of the generic toast
@@ -272,14 +273,14 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             expect(page.get_by_text("Board Successfully Updated!")).to_be_visible()
 
             # Navigate to join page and verify recent board entry appears and can be joined
-            page.goto(f"{FRONTEND_URL}/#/bingo/join")
+            page.goto(f"{FRONTEND_URL}/bingo/join")
             recent_section = page.locator(".recent-board-list")
             expect(recent_section).to_be_visible()
             recent_row = recent_section.locator(".recent-board-row").filter(has_text=board_name).filter(has_text="admin").first
             expect(recent_row).to_be_visible()
             expect(recent_row.locator("strong")).to_have_text(board_name)
             recent_row.get_by_role("button", name="Join").click()
-            expect(page).to_have_url(re.compile(rf"#/bingo/{re.escape(board_name)}"))
+            expect(page).to_have_url(re.compile(rf"/bingo/board/{re.escape(board_name)}"))
             expect(page.get_by_role("button", name="Edit Board")).to_be_visible()
             assert_no_browser_failures(browser_failures)
 
@@ -323,7 +324,7 @@ def test_generic_bingo_board_commons_image_visual_regression():
             page = context.new_page()
             stub_commons_search(page)
 
-            page.goto(f"{FRONTEND_URL}/#/bingo/create")
+            page.goto(f"{FRONTEND_URL}/bingo/create")
             fill_input_group(page, "Board Name", board_name)
             fill_input_group(page, "Admin Password", admin_password)
             fill_input_group(page, "General Password", general_password)
@@ -337,7 +338,7 @@ def test_generic_bingo_board_commons_image_visual_regression():
                 lambda: page.get_by_role("button", name="Create Board").click(),
             )
 
-            expect(page).to_have_url(re.compile(r"#/bingo/"))
+            expect(page).to_have_url(re.compile(r"/bingo/board/"))
             expect(page.get_by_text("Example Tile", exact=True)).not_to_be_visible()
             expect_board_tile_count(page, 25)
 

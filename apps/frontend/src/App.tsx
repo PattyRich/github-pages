@@ -4,6 +4,7 @@ import { Link } from 'react-router-dom';
 import BingoCarousel from './components/BingoCarousel';
 import FeedbackModal from './components/ui/FeedbackModal';
 import GlassKcFeature from './features/glass-kc/GlassKcFeature';
+import { BINGO_PATH, KC_TRACKER_PATH } from './routing';
 
 interface ToolRoute {
   badge?: string;
@@ -16,7 +17,7 @@ interface ToolRoute {
 
 const ROUTES: ToolRoute[] = [
   {
-    path: '/glass-kc',
+    path: KC_TRACKER_PATH,
     name: '🪟 KC Trackers',
     desc: 'Track boss kills and drops, and build stained-glass collections.',
     badge: 'New',
@@ -28,7 +29,7 @@ const ROUTES: ToolRoute[] = [
     premium: true,
   },
   {
-    path: '/bingo',
+    path: BINGO_PATH,
     name: '🎲 OSRS Bingo',
     desc: 'Interactive bingo boards for your clan events.',
     premium: true,
@@ -74,7 +75,7 @@ const ROUTES: ToolRoute[] = [
 
 const BINGO_ROUTES: ToolRoute[] = [
   {
-    path: '/bingo',
+    path: BINGO_PATH,
     name: '🎲 OSRS Bingo',
     desc: 'Interactive bingo boards for your clan events. Track all teams in one place.',
   },

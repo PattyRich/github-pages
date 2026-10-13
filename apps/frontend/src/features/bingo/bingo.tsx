@@ -465,7 +465,7 @@ function Bingo({ screenSkip }: BingoProps) {
                   Looking for old saved boards? Your recent-board data is still on the old GitHub
                   Pages site:{' '}
                   <a
-                    href="https://pattyrich.github.io/github-pages/#/recents"
+                    href="https://pattyrich.github.io/github-pages/recents"
                     target="_blank"
                     rel="noreferrer"
                   >

@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => ({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
+        notFound: resolve(__dirname, '404.html'),
         kcTrackers: resolve(__dirname, 'kc-trackers/index.html'),
         kcTrackersPlayer: resolve(__dirname, 'kc-trackers/player.html'),
         bingo: resolve(__dirname, 'bingo/index.html'),

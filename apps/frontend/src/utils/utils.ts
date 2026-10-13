@@ -1,4 +1,5 @@
 import { apiUrl } from '../config';
+import { boardPath } from '../routing';
 
 type HttpMethod = 'GET' | 'POST' | 'PUT';
 
@@ -106,7 +107,7 @@ export function encodedPath(...segments: unknown[]): string {
 }
 
 export function bingoBoardPath(boardName: unknown): string {
-  return `/bingo/${encodePathSegment(boardName)}`;
+  return boardPath(boardName);
 }
 
 export function authUrlBuilder(boardName: unknown, password: unknown, pwtype: unknown): string {

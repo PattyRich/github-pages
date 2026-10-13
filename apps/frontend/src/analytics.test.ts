@@ -8,6 +8,9 @@ describe('Umami analytics', () => {
     ['https://praynr.com/#/github-pages/lol-beat', '/lol-beat'],
     ['https://praynr.com/#/bingo/create', '/bingo/create'],
     ['https://praynr.com/#/bingo/join', '/bingo/join'],
+    ['https://praynr.com/bingo/create?ref=discord', '/bingo/create'],
+    ['https://praynr.com/bingo/play', '/bingo/play'],
+    ['https://praynr.com/kc-trackers/track', '/kc-trackers/track'],
   ])('normalizes %s to %s', (input, expected) => {
     expect(normalizeAnalyticsUrl(input)).toBe(expected);
   });
@@ -28,5 +31,13 @@ describe('Umami analytics', () => {
       website: 'website-id',
       url: '/pets',
     });
+  });
+
+  test.each([
+    'https://praynr.com/bingo/board/private-board?password=secret',
+    'https://praynr.com/bingo/board?boardName=..&password=secret',
+    'https://praynr.com/github-pages/bingo/board/private-board/?password=secret',
+  ])('redacts board identity and access parameters from %s', (url) => {
+    expect(normalizeAnalyticsUrl(url)).toBe('/bingo/:boardName');
   });
 });
