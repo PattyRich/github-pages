@@ -461,18 +461,6 @@ function Bingo({ screenSkip }: BingoProps) {
                     <strong>Admin password</strong> only if you are managing the board.
                   </li>
                 </ul>
-                <p className="join-old-recents">
-                  Looking for old saved boards? Your recent-board data is still on the old GitHub
-                  Pages site:{' '}
-                  <a
-                    href="https://pattyrich.github.io/github-pages/recents"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    view old recents
-                  </a>
-                  .
-                </p>
               </Surface>
             </div>
 
