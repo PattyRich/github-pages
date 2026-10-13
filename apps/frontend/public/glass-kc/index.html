@@ -173,6 +173,45 @@
         margin-top: auto;
         width: 100%;
       }
+      .boss-suggestion {
+        max-width: 680px;
+        margin-top: 32px;
+        padding-top: 24px;
+        border-top: 2px solid var(--osrs-border-dark, #1d1813);
+      }
+      .boss-suggestion h2 {
+        color: var(--gold);
+        font-size: 1.4rem;
+        margin-bottom: 8px;
+      }
+      .boss-suggestion p {
+        margin-bottom: 12px;
+      }
+      .boss-suggestion label {
+        margin-bottom: 6px;
+      }
+      .boss-suggestion-controls {
+        display: flex;
+        gap: 10px;
+        align-items: stretch;
+      }
+      .boss-suggestion-controls input {
+        min-width: 0;
+        flex: 1;
+      }
+      .boss-suggestion-controls button {
+        white-space: nowrap;
+      }
+      #boss-suggestion-status {
+        margin: 10px 0 0;
+        font:
+          0.9rem/1.5 system-ui,
+          sans-serif;
+        color: var(--osrs-text-success, #9fc77c);
+      }
+      #boss-suggestion-status[data-state='error'] {
+        color: var(--osrs-text-danger, #d99890);
+      }
       .hunt-toolbar {
         display: flex;
         align-items: center;
@@ -190,6 +229,9 @@
         }
         .boss-choice-preview svg {
           max-width: 180px;
+        }
+        .boss-suggestion-controls {
+          flex-direction: column;
         }
       }
       * {
@@ -1110,7 +1152,26 @@
             Choose a boss to open your journal. Your saved progress will be waiting.
           </p>
           <div id="boss-choices" class="boss-choices"></div>
-          <p class="muted"><small>More bosses will join the collection.</small></p>
+          <section class="boss-suggestion" aria-labelledby="boss-suggestion-title">
+            <h2 id="boss-suggestion-title">Missing a boss?</h2>
+            <p class="muted">Tell us which boss or raid you want to track next.</p>
+            <form id="boss-suggestion-form">
+              <label for="boss-suggestion-name">Boss or raid name</label>
+              <div class="boss-suggestion-controls">
+                <input
+                  id="boss-suggestion-name"
+                  name="boss"
+                  type="text"
+                  autocomplete="off"
+                  maxlength="80"
+                  placeholder="Enter a name"
+                  required
+                />
+                <button type="submit">Send suggestion</button>
+              </div>
+              <p id="boss-suggestion-status" role="status" aria-live="polite" hidden></p>
+            </form>
+          </section>
         </section>
         <section id="account-panel" class="account-panel" aria-labelledby="account-heading">
           <div class="account-header">
@@ -1937,6 +1998,50 @@
           render();
           accountUI();
           $('boss-selection-title').focus();
+        });
+      }
+      function initBossSuggestion() {
+        const form = $('boss-suggestion-form');
+        const input = $('boss-suggestion-name');
+        const status = $('boss-suggestion-status');
+        const submit = form.querySelector('button[type="submit"]');
+        input.addEventListener('input', () => (status.hidden = true));
+        form.addEventListener('submit', async (event) => {
+          event.preventDefault();
+          if (submit.disabled) return;
+          const name = input.value.trim().replace(/\s+/g, ' ');
+          if (!name) {
+            status.dataset.state = 'error';
+            status.textContent = 'Enter a boss or raid name.';
+            status.hidden = false;
+            input.focus();
+            return;
+          }
+          const controller = new AbortController();
+          const timeout = setTimeout(() => controller.abort(), 15000);
+          submit.disabled = true;
+          submit.textContent = 'Sending…';
+          status.hidden = true;
+          try {
+            const response = await fetch(`${apiBase}/feedback`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ message: `KC Trackers boss suggestion: ${name}` }),
+              signal: controller.signal,
+            });
+            if (!response.ok) throw new Error('Feedback request failed.');
+            input.value = '';
+            status.dataset.state = 'success';
+            status.textContent = 'Thanks — your suggestion was sent.';
+          } catch {
+            status.dataset.state = 'error';
+            status.textContent = 'Couldn’t send your suggestion. Try again later.';
+          } finally {
+            clearTimeout(timeout);
+            submit.disabled = false;
+            submit.textContent = 'Send suggestion';
+            status.hidden = false;
+          }
         });
       }
       function postcardDate() {
@@ -3221,6 +3326,7 @@
         refreshBossPreviews();
       });
       initBossPicker();
+      initBossSuggestion();
       void initAccount();
     </script>
   </body>

@@ -1152,6 +1152,53 @@ describe('hard reset', () => {
 });
 
 describe('required boss selection and catalog-driven hunts', () => {
+  it('sends a named boss suggestion through the shared feedback endpoint', async () => {
+    const fetch = vi.fn(async () => response({ success: true }));
+    const window = open(undefined, false, { choose: false, fetch });
+    const form = window.document.getElementById('boss-suggestion-form');
+    const input = window.document.getElementById('boss-suggestion-name');
+    const status = window.document.getElementById('boss-suggestion-status');
+
+    input.value = '  Vardorvis  ';
+    form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    await settle();
+
+    expect(fetch).toHaveBeenCalledOnce();
+    expect(fetch.mock.calls[0][0]).toBe('https://praynr.com/feedback');
+    expect(fetch.mock.calls[0][1]).toMatchObject({
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ message: 'KC Trackers boss suggestion: Vardorvis' }),
+    });
+    expect(input.value).toBe('');
+    expect(status.textContent).toContain('suggestion was sent');
+    expect(status.hidden).toBe(false);
+  });
+
+  it('keeps an unsent boss suggestion available to retry', async () => {
+    const fetch = vi
+      .fn()
+      .mockResolvedValueOnce(response({}, 400))
+      .mockResolvedValueOnce(response({ success: true }));
+    const window = open(undefined, false, { choose: false, fetch });
+    const form = window.document.getElementById('boss-suggestion-form');
+    const input = window.document.getElementById('boss-suggestion-name');
+    const status = window.document.getElementById('boss-suggestion-status');
+
+    input.value = 'The Whisperer';
+    form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    await settle();
+    expect(input.value).toBe('The Whisperer');
+    expect(status.dataset.state).toBe('error');
+    expect(form.querySelector('button[type="submit"]').disabled).toBe(false);
+
+    form.dispatchEvent(new window.Event('submit', { bubbles: true, cancelable: true }));
+    await settle();
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(input.value).toBe('');
+    expect(status.dataset.state).toBe('success');
+  });
+
   it('requires an explicit choice even with a saved journal', () => {
     const window = open(JSON.stringify(sample()), false, { choose: false });
     expect(window.document.getElementById('boss-selection').hidden).toBe(false);
