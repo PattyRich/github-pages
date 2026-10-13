@@ -83,6 +83,23 @@
   font-size: 0.78rem;
 }
 
+.glass-feature-demo {
+  padding: 8px 0;
+  color: var(--osrs-text-normal);
+  font-size: 0.85rem;
+  text-underline-offset: 4px;
+}
+
+.glass-feature-demo:hover,
+.glass-feature-demo:focus-visible {
+  color: var(--osrs-text-gold);
+}
+
+.glass-feature-demo:focus-visible {
+  outline: 2px solid var(--osrs-text-gold);
+  outline-offset: 4px;
+}
+
 .glass-feature-preview {
   min-width: 0;
   margin: 0;

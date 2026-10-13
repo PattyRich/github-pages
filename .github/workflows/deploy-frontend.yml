@@ -12,6 +12,8 @@ on:
       - 'apps/frontend/src/**'
       - 'apps/frontend/public/**'
       - 'apps/frontend/index.html'
+      - 'apps/frontend/kc-trackers/**'
+      - 'apps/frontend/bingo/**'
       - 'apps/frontend/eslint.config.mjs'
       - 'apps/frontend/package.json'
       - 'apps/frontend/package-lock.json'

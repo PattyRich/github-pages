@@ -17,8 +17,8 @@ interface ToolRoute {
 const ROUTES: ToolRoute[] = [
   {
     path: '/glass-kc',
-    name: '🪟 Glass KC Tracker',
-    desc: 'Turn boss kills into stained-glass windows.',
+    name: '🪟 KC Trackers',
+    desc: 'Track boss kills and drops, and build stained-glass collections.',
     badge: 'New',
   },
   {
@@ -129,6 +129,9 @@ export default function App() {
                       <div className="section-header">
                         <h2 className="section-title">Featured: Bingo Tools</h2>
                         <p>The complete toolkit for Old School RuneScape clan bingo events.</p>
+                        <a className="bingo-share-link" href={`${import.meta.env.BASE_URL}bingo/`}>
+                          Explore the OSRS Bingo generator
+                        </a>
                       </div>
                       <div className="bingo-cards">
                         {BINGO_ROUTES.map((route, idx) => (

@@ -177,6 +177,24 @@
   flex: 1;
 }
 
+.bingo-share-link {
+  display: inline-block;
+  margin-top: 8px;
+  color: var(--osrs-text-normal);
+  font-size: 0.85rem;
+  text-underline-offset: 4px;
+}
+
+.bingo-share-link:hover,
+.bingo-share-link:focus-visible {
+  color: var(--osrs-text-gold);
+}
+
+.bingo-share-link:focus-visible {
+  outline: 2px solid var(--osrs-text-gold);
+  outline-offset: 4px;
+}
+
 .section-header p {
   color: var(--osrs-text-normal);
   font-size: 0.95rem;

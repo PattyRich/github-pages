@@ -7,8 +7,8 @@ export default function GlassKcTracker() {
   return (
     <iframe
       className="glass-kc-tracker"
-      title="Glass KC Tracker"
-      src={`${import.meta.env.BASE_URL}glass-kc/index.html?v=raid-modes-2&api=${encodeURIComponent(API_BASE_URL)}`}
+      title="KC Trackers"
+      src={`${import.meta.env.BASE_URL}glass-kc/index.html?v=kc-trackers-1&api=${encodeURIComponent(API_BASE_URL)}`}
       onLoad={(event) => {
         const root = event.currentTarget.contentDocument?.documentElement;
         if (!root) return;

@@ -1,6 +1,7 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "Praynr",
+  "name": "Praynr — OSRS Community Tools",
+  "description": "OSRS Bingo boards and KC Trackers: track boss kills, save drop memories, and light stained-glass windows.",
   "icons": [
     {
       "src": "favicon.ico",
@@ -15,11 +16,12 @@
     {
       "src": "logo512.png",
       "type": "image/png",
-      "sizes": "512x512"
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
-  "background_color": "#ffffff"
+  "theme_color": "#2b261e",
+  "background_color": "#2b261e"
 }

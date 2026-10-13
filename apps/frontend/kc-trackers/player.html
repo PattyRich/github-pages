@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#2b261e" />
+    <meta name="robots" content="noindex, follow" />
+    <title>KC Trackers demo player | Praynr</title>
+    <meta
+      name="description"
+      content="Play an 18-second silent demonstration of the real KC Trackers interface: record kills, save drops and complete a stained-glass window."
+    />
+    <link rel="canonical" href="https://praynr.com/kc-trackers/player.html" />
+    <link rel="icon" href="%BASE_URL%favicon.ico" />
+    <link rel="stylesheet" href="../src/share-pages.css" />
+  </head>
+  <body class="share-page share-player">
+    <main class="share-player-main">
+      <h1 class="share-visually-hidden">KC Trackers demo</h1>
+      <video
+        controls
+        playsinline
+        preload="metadata"
+        width="1280"
+        height="720"
+        poster="%BASE_URL%media/kc-trackers-poster-v1.jpg"
+        aria-label="KC Trackers interface demonstration"
+        aria-describedby="player-description"
+      >
+        <source src="%BASE_URL%media/kc-trackers-demo-v1.mp4" type="video/mp4" />
+        <p>
+          Your browser cannot play this video.
+          <a href="%BASE_URL%media/kc-trackers-demo-v1.mp4">Download the KC Trackers demo</a>
+          or <a href="../kc-trackers/">open the demo page</a>.
+        </p>
+      </video>
+      <p class="share-visually-hidden" id="player-description">
+        An 18-second silent demo of the real tracker UI. A recorded kill lights a pane, a drop
+        memory is saved and a completed stained-glass window is revealed. Use the video controls to
+        play, pause or replay.
+      </p>
+    </main>
+  </body>
+</html>

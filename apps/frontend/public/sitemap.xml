@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:video="http://www.google.com/schemas/sitemap-video/1.1">
+  <url>
+    <loc>https://praynr.com/</loc>
+  </url>
+  <url>
+    <loc>https://praynr.com/kc-trackers/</loc>
+    <video:video>
+      <video:thumbnail_loc>https://praynr.com/media/kc-trackers-poster-v1.jpg</video:thumbnail_loc>
+      <video:title>KC Trackers: record kills, save drops and complete a window</video:title>
+      <video:description>A silent demonstration of the real KC Trackers interface using a sample hunt: record raids, save a drop memory and complete a stained-glass window.</video:description>
+      <video:content_loc>https://praynr.com/media/kc-trackers-demo-v1.mp4</video:content_loc>
+      <video:player_loc>https://praynr.com/kc-trackers/player.html</video:player_loc>
+      <video:duration>18</video:duration>
+    </video:video>
+  </url>
+  <url>
+    <loc>https://praynr.com/bingo/</loc>
+  </url>
+</urlset>

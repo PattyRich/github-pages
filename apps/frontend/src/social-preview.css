@@ -51,8 +51,8 @@ body,
 
 .social-preview-board {
   display: grid;
-  grid-template-columns: repeat(5, 90px);
-  width: 450px;
+  grid-template-columns: repeat(5, var(--preview-tile-size, 90px));
+  width: calc(var(--preview-tile-size, 90px) * 5);
   padding: 10px;
   background: var(--osrs-surface-raised);
   border: 2px solid var(--osrs-border-dark);
@@ -116,4 +116,83 @@ body,
 .social-preview-light--mint {
   right: -2%;
   background: radial-gradient(ellipse, var(--osrs-text-success), transparent 68%);
+}
+
+/* Feature cards keep the rendered product large enough to read in a link unfurl. */
+.social-preview--feature {
+  display: grid;
+  align-items: center;
+  gap: 40px;
+  padding: 42px;
+}
+
+.social-preview--kc-trackers {
+  grid-template-columns: 390px 1fr;
+}
+
+.social-preview--bingo {
+  grid-template-columns: 1fr 524px;
+}
+
+.social-preview-copy {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+
+.social-preview-kicker {
+  margin: 0 0 22px;
+  font-family: 'osrsFont', sans-serif;
+  font-size: 25px;
+  line-height: 1;
+  color: var(--osrs-text-normal);
+}
+
+.social-preview-copy h1 {
+  margin: 0;
+  font-family: 'osrsFont', sans-serif;
+  font-size: 66px;
+  line-height: 1;
+  color: var(--osrs-text-gold);
+  text-shadow: 3px 3px 0 var(--osrs-border-dark);
+}
+
+.social-preview-tagline {
+  margin: 30px 0 20px;
+  font-family: 'osrsFont', sans-serif;
+  font-size: 49px;
+  line-height: 1.15;
+  color: var(--osrs-text-beige);
+  text-shadow: 2px 2px 0 var(--osrs-border-dark);
+}
+
+.social-preview-purpose {
+  max-width: 365px;
+  margin: 0;
+  font-size: 23px;
+  line-height: 1.5;
+  color: var(--osrs-text-normal);
+}
+
+.social-preview-brand {
+  margin: 50px 0 0;
+  font-family: 'osrsFont', sans-serif;
+  font-size: 28px;
+  line-height: 1;
+  color: var(--osrs-text-normal);
+}
+
+.social-preview-feature-art {
+  min-width: 0;
+}
+
+.social-preview--feature .social-preview-windows {
+  height: 540px;
+  gap: 14px;
+}
+
+.social-preview--feature .social-preview-light {
+  bottom: -12px;
+  height: 90px;
 }

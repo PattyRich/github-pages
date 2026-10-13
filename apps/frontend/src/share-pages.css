@@ -1,0 +1,324 @@
+@import './index.css';
+
+.share-page *,
+.share-page *::before,
+.share-page *::after {
+  box-sizing: border-box;
+}
+
+.share-page {
+  min-width: 280px;
+  line-height: 1.5;
+}
+
+.share-page a {
+  color: var(--osrs-text-beige);
+  text-underline-offset: 0.2em;
+}
+
+.share-page a:hover {
+  color: var(--osrs-text-gold);
+}
+
+.share-page a:focus-visible,
+.share-page video:focus-visible {
+  outline: 2px solid var(--osrs-text-gold);
+  outline-offset: 4px;
+}
+
+.share-skip {
+  position: absolute;
+  left: 16px;
+  top: 8px;
+  padding: 8px 12px;
+  background: var(--osrs-surface-raised);
+  border: 2px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius);
+  transform: translateY(-160%);
+  z-index: 1;
+}
+
+.share-skip:focus {
+  transform: translateY(0);
+}
+
+.share-masthead,
+.share-main,
+.share-footer {
+  width: min(1080px, calc(100% - 48px));
+  margin-inline: auto;
+}
+
+.share-masthead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  min-height: 74px;
+  border-bottom: 1px solid var(--osrs-border-light);
+}
+
+.share-brand {
+  font-family: 'osrsFont', sans-serif;
+  font-size: 1.6rem;
+  text-decoration: none;
+  text-shadow: 1px 1px 0 var(--osrs-border-dark);
+}
+
+.share-masthead nav {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 0.88rem;
+}
+
+.share-masthead [aria-current='page'] {
+  color: var(--osrs-text-gold);
+  text-decoration: none;
+}
+
+.share-main {
+  padding-block: 30px 24px;
+}
+
+.share-intro {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 24px;
+  margin-bottom: 22px;
+}
+
+.share-eyebrow {
+  margin: 0 0 4px;
+  font-size: 0.85rem;
+}
+
+.share-intro h1 {
+  margin: 0 0 8px;
+  color: var(--osrs-text-gold);
+  font-family: 'osrsFont', sans-serif;
+  font-size: clamp(2.2rem, 5vw, 3rem);
+  text-shadow: 1px 1px 0 var(--osrs-border-dark);
+}
+
+.share-lead {
+  margin: 0;
+  max-width: 64ch;
+  color: var(--osrs-text-beige);
+  font-size: 1rem;
+}
+
+.share-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 44px;
+  padding: 8px 20px;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.share-action:hover,
+.share-action:focus-visible {
+  background-color: var(--osrs-button-hover) !important;
+}
+
+.share-action:active {
+  background-color: var(--osrs-button-active) !important;
+}
+
+.share-media {
+  overflow: hidden;
+  margin: 0;
+  border: 2px solid var(--osrs-border-dark);
+  border-radius: var(--osrs-radius-lg);
+  background: var(--osrs-page-bg);
+  box-shadow:
+    inset 0 0 0 1px var(--osrs-border-light),
+    var(--osrs-glass-shadow);
+}
+
+.share-media video,
+.share-media img {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.share-media video {
+  aspect-ratio: 16 / 9;
+}
+
+.share-media figcaption {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 20px;
+  padding: 10px 16px;
+  border-top: 1px solid var(--osrs-border-light);
+  background: var(--osrs-surface-raised);
+  font-size: 0.85rem;
+}
+
+.share-details {
+  margin-top: 26px;
+}
+
+.share-details h2 {
+  margin: 0 0 14px;
+  color: var(--osrs-text-gold);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 1.4rem;
+  text-shadow: 1px 1px 0 var(--osrs-border-dark);
+}
+
+.share-features {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.share-features li {
+  padding-top: 12px;
+  border-top: 1px solid var(--osrs-border-light);
+}
+
+.share-features h3 {
+  margin: 0 0 6px;
+  color: var(--osrs-text-beige);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 1.15rem;
+}
+
+.share-features p,
+.share-demo-description {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.share-demo-description {
+  margin-top: 16px;
+  max-width: 78ch;
+}
+
+.share-guide {
+  max-width: 75ch;
+}
+
+.share-guide p,
+.share-steps {
+  font-size: 0.95rem;
+}
+
+.share-guide p {
+  margin: 0 0 16px;
+}
+
+.share-steps {
+  margin: 0 0 16px;
+  padding-left: 24px;
+}
+
+.share-steps li + li {
+  margin-top: 10px;
+}
+
+.share-steps li::marker {
+  color: var(--osrs-text-gold);
+}
+
+.share-answer + .share-answer {
+  margin-top: 20px;
+}
+
+.share-answer h3 {
+  margin: 0 0 6px;
+  color: var(--osrs-text-beige);
+  font-family: 'osrsFont', sans-serif;
+  font-size: 1.15rem;
+  font-weight: 500;
+}
+
+.share-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px 20px;
+  padding-block: 20px 28px;
+  border-top: 1px solid var(--osrs-border-light);
+  font-size: 0.85rem;
+}
+
+.share-footer p {
+  margin: 0;
+}
+
+.share-player {
+  background: var(--osrs-page-bg);
+}
+
+.share-player-main {
+  width: 100%;
+  height: 100dvh;
+}
+
+.share-player-main video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.share-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+@media (max-width: 640px) {
+  .share-masthead,
+  .share-main,
+  .share-footer {
+    width: calc(100% - 32px);
+  }
+
+  .share-masthead {
+    min-height: 64px;
+  }
+
+  .share-masthead nav {
+    gap: 14px;
+    font-size: 0.8rem;
+  }
+
+  .share-main {
+    padding-top: 24px;
+  }
+
+  .share-intro {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .share-features {
+    grid-template-columns: 1fr;
+  }
+
+  .share-media figcaption {
+    padding-inline: 12px;
+  }
+}

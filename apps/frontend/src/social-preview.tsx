@@ -1,4 +1,5 @@
-// Development-only artwork source. Reuses the production tiles, theme and Glass KC renderers.
+// Development-only artwork source. Reuses the production tiles, theme and KC Trackers renderers.
+import type { CSSProperties } from 'react';
 import ReactDOM from 'react-dom/client';
 import BoardTile from './features/bingo/BoardTile';
 import './index.css';
@@ -69,50 +70,115 @@ const tiles = [
   ['Zammy spear', 'Zamorakian spear', 1, 1],
 ] as const;
 
+function PreviewBoard({ size = 90 }: { size?: number }) {
+  return (
+    <div
+      className="social-preview-board"
+      style={{ '--preview-tile-size': `${size}px` } as CSSProperties}
+    >
+      {tiles.map(([title, image, points, progress], index) => (
+        <BoardTile
+          key={title}
+          dem={size}
+          cord={[Math.floor(index / 5), index % 5]}
+          privilege="general"
+          info={{
+            title,
+            points,
+            image: { url: images[`./assets/${image}.png`], opacity: 100, usePixel: true },
+          }}
+          teamInfo={{ checked: progress === points, currPoints: progress }}
+        />
+      ))}
+    </div>
+  );
+}
+
+function PreviewWindows() {
+  return (
+    <div className="social-preview-windows">
+      <div className="social-preview-light social-preview-light--gold" />
+      <div className="social-preview-light social-preview-light--mint" />
+      <div
+        className="social-preview-window"
+        dangerouslySetInnerHTML={{ __html: windowArtwork('toa', 0, 'gilded') }}
+      />
+      <div
+        className="social-preview-window"
+        dangerouslySetInnerHTML={{ __html: windowArtwork('cg', 2, 'ivory') }}
+      />
+    </div>
+  );
+}
+
+function DefaultPreview() {
+  return (
+    <main className="social-preview" data-preview-feature="all">
+      <header className="social-preview-heading">
+        <h1>Praynr</h1>
+        <p>OSRS community tools</p>
+      </header>
+      <div className="social-preview-features">
+        <section className="social-preview-bingo" aria-labelledby="preview-bingo-title">
+          <PreviewBoard />
+          <h2 id="preview-bingo-title">OSRS Bingo</h2>
+        </section>
+        <section className="social-preview-glass" aria-labelledby="preview-glass-title">
+          <PreviewWindows />
+          <h2 id="preview-glass-title">KC Trackers</h2>
+        </section>
+      </div>
+    </main>
+  );
+}
+
+function FeaturePreview({ feature }: { feature: 'kc-trackers' | 'bingo' }) {
+  const isTracker = feature === 'kc-trackers';
+  return (
+    <main
+      className={`social-preview social-preview--feature social-preview--${feature}`}
+      data-preview-feature={feature}
+    >
+      <header className="social-preview-copy">
+        <p className="social-preview-kicker">OSRS community tools</p>
+        <h1>{isTracker ? 'KC Trackers' : 'OSRS Bingo'}</h1>
+        <p className="social-preview-tagline">
+          {isTracker ? (
+            <>
+              A record of
+              <br />
+              showing up.
+            </>
+          ) : (
+            <>
+              Build a board.
+              <br />
+              Rally your clan.
+            </>
+          )}
+        </p>
+        <p className="social-preview-purpose">
+          {isTracker
+            ? 'Track boss kills, save drop memories, and complete your collection.'
+            : 'Custom tiles, team progress, and every drop worth chasing.'}
+        </p>
+        <p className="social-preview-brand">Praynr</p>
+      </header>
+      <div className="social-preview-feature-art">
+        {isTracker ? <PreviewWindows /> : <PreviewBoard size={100} />}
+      </div>
+    </main>
+  );
+}
+
 const rootElement = document.getElementById('root');
 if (!rootElement) throw new Error('Social preview root missing');
+const feature = new URLSearchParams(window.location.search).get('feature');
 
 ReactDOM.createRoot(rootElement).render(
-  <main className="social-preview">
-    <header className="social-preview-heading">
-      <h1>Praynr</h1>
-      <p>OSRS community tools</p>
-    </header>
-    <div className="social-preview-features">
-      <section className="social-preview-bingo" aria-labelledby="preview-bingo-title">
-        <div className="social-preview-board">
-          {tiles.map(([title, image, points, progress], index) => (
-            <BoardTile
-              key={title}
-              dem={90}
-              cord={[Math.floor(index / 5), index % 5]}
-              privilege="general"
-              info={{
-                title,
-                points,
-                image: { url: images[`./assets/${image}.png`], opacity: 100, usePixel: true },
-              }}
-              teamInfo={{ checked: progress === points, currPoints: progress }}
-            />
-          ))}
-        </div>
-        <h2 id="preview-bingo-title">OSRS Bingo</h2>
-      </section>
-      <section className="social-preview-glass" aria-labelledby="preview-glass-title">
-        <div className="social-preview-windows">
-          <div className="social-preview-light social-preview-light--gold" />
-          <div className="social-preview-light social-preview-light--mint" />
-          <div
-            className="social-preview-window"
-            dangerouslySetInnerHTML={{ __html: windowArtwork('toa', 0, 'gilded') }}
-          />
-          <div
-            className="social-preview-window"
-            dangerouslySetInnerHTML={{ __html: windowArtwork('cg', 2, 'ivory') }}
-          />
-        </div>
-        <h2 id="preview-glass-title">Glass KC Tracker</h2>
-      </section>
-    </div>
-  </main>
+  feature === 'kc-trackers' || feature === 'bingo' ? (
+    <FeaturePreview feature={feature} />
+  ) : (
+    <DefaultPreview />
+  )
 );

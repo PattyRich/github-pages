@@ -5,7 +5,7 @@ export default function GlassKcFeature() {
   return (
     <section className="home-feature glass-kc-feature" aria-labelledby="glass-feature-title">
       <h2 className="section-title" id="glass-feature-title">
-        Featured: Glass KC Tracker
+        Featured: KC Trackers
       </h2>
       <div className="glass-feature-layout">
         <div className="glass-feature-copy">
@@ -25,13 +25,16 @@ export default function GlassKcFeature() {
             </div>
             <div>
               <dt>Pick your boss and your frame.</dt>
-              <dd>Six boss collections, custom frames and new colour editions to earn.</dd>
+              <dd>Seven boss collections, custom frames and new colour editions to earn.</dd>
             </div>
           </dl>
           <div className="glass-feature-actions">
             <Link className="glass-feature-launch" to="/glass-kc">
               Start your collection <span aria-hidden="true">→</span>
             </Link>
+            <a className="glass-feature-demo" href={`${import.meta.env.BASE_URL}kc-trackers/`}>
+              Watch the OSRS boss kill tracker demo
+            </a>
             <p>No account needed to start.</p>
           </div>
         </div>
@@ -39,10 +42,10 @@ export default function GlassKcFeature() {
           <Link
             to="/glass-kc"
             className="glass-feature-art-link"
-            aria-label="Start a Glass KC collection like these animated stained-glass windows"
+            aria-label="Track boss kills and build a collection of stained-glass windows"
           >
             <iframe
-              src={`${import.meta.env.BASE_URL}glass-kc/featured.html?v=featured-4`}
+              src={`${import.meta.env.BASE_URL}glass-kc/featured.html?v=featured-5`}
               title="Animated stained-glass collection: Shadow, Prifddinas, Olm, Zebak and Sleepwalkers"
               loading="lazy"
               tabIndex={-1}

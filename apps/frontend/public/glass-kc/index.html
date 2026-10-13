@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Glass KC Tracker</title>
+    <title>KC Trackers</title>
     <link rel="stylesheet" href="window-workshop.css?v=frames-2" />
     <link rel="stylesheet" href="sanctuary-wings.css?v=collections-1" />
     <link rel="stylesheet" href="loot-wall.css?v=loot-recency-1" />
@@ -1092,7 +1092,9 @@
   <body>
     <div class="wrap">
       <header>
-        <div class="brand">Glass KC <span class="muted">/ Your hunt, one pane at a time</span></div>
+        <div class="brand">
+          KC Trackers <span class="muted">/ Your hunt, one pane at a time</span>
+        </div>
         <nav>
           <a id="nav-windows" href="#gallery" hidden>Windows</a
           ><a id="nav-loot" href="#loot" hidden>Loot wall</a
@@ -1609,7 +1611,7 @@
           !data.sessions.every((s) => validSession(s, true)) ||
           (data.active !== null && !validSession(data.active, false))
         )
-          throw new Error('That file is not a supported glass KC journal backup.');
+          throw new Error('That file is not a supported KC tracker journal backup.');
         const ids = data.sessions.map((s) => s.id);
         if (data.active) ids.push(data.active.id);
         if (new Set(ids).size !== ids.length)
@@ -2356,7 +2358,7 @@
             2
           ),
           'application/json',
-          `glass-kc-journal-${new Date().toISOString().slice(0, 10)}.json`
+          `kc-tracker-journal-${new Date().toISOString().slice(0, 10)}.json`
         );
       });
       $('import-journal').addEventListener('click', () => $('import-file').click());
@@ -2430,7 +2432,7 @@
           ...wrapText('Loot: ' + (s.drops || boss().postcardLoot[0]), 46),
         ];
         const height = Math.max(600, 320 + lines.length * 25);
-        return `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="${height}" viewBox="0 0 960 ${height}"><rect width="960" height="${height}" fill="#201b16"/><rect x="18" y="18" width="924" height="${height - 36}" fill="#d9c6a1" stroke="#bb9e73" stroke-width="8"/><g transform="translate(650 90) scale(.72)">${art((before + s.kills) % 100 || 100, Math.floor((before + s.kills - 1) / 100), 'export').replace('<svg ', '<svg width="360" height="580" ')}</g><g fill="#33271d" font-family="Georgia, serif"><text x="60" y="75" font-size="16">${esc(boss().name.toUpperCase())} / SESSION ${i + 1}</text><text x="60" y="145" font-size="43">${s.kills} ${countLabel(s.kills)} recorded.</text><text x="60" y="185" font-size="19">${journal.base + before} → ${journal.base + before + s.kills} KC</text>${lines.map((line, n) => `<text x="60" y="${245 + n * 25}" font-size="19">${esc(line)}</text>`).join('')}<text x="60" y="${height - 52}" font-size="16">${esc(dateLabel(s.ended))} · Glass KC journal</text></g></svg>`;
+        return `<svg xmlns="http://www.w3.org/2000/svg" width="960" height="${height}" viewBox="0 0 960 ${height}"><rect width="960" height="${height}" fill="#201b16"/><rect x="18" y="18" width="924" height="${height - 36}" fill="#d9c6a1" stroke="#bb9e73" stroke-width="8"/><g transform="translate(650 90) scale(.72)">${art((before + s.kills) % 100 || 100, Math.floor((before + s.kills - 1) / 100), 'export').replace('<svg ', '<svg width="360" height="580" ')}</g><g fill="#33271d" font-family="Georgia, serif"><text x="60" y="75" font-size="16">${esc(boss().name.toUpperCase())} / SESSION ${i + 1}</text><text x="60" y="145" font-size="43">${s.kills} ${countLabel(s.kills)} recorded.</text><text x="60" y="185" font-size="19">${journal.base + before} → ${journal.base + before + s.kills} KC</text>${lines.map((line, n) => `<text x="60" y="${245 + n * 25}" font-size="19">${esc(line)}</text>`).join('')}<text x="60" y="${height - 52}" font-size="16">${esc(dateLabel(s.ended))} · KC Trackers journal</text></g></svg>`;
       }
       $('postcard-items').addEventListener('click', (event) => {
         const edit = event.target.closest('[data-edit-session]');
@@ -2479,7 +2481,7 @@
           download(
             postcardSVG(Number(button.dataset.card)),
             'image/svg+xml',
-            `glass-kc-postcard-${Number(button.dataset.card) + 1}.svg`
+            `kc-tracker-postcard-${Number(button.dataset.card) + 1}.svg`
           );
       });
       $('postcard-items').addEventListener('input', (event) => {
