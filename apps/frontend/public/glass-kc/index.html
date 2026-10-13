@@ -173,34 +173,19 @@
         margin-top: auto;
         width: 100%;
       }
-      .boss-suggestion {
-        max-width: 680px;
-        margin-top: 32px;
-        padding-top: 24px;
-        border-top: 2px solid var(--osrs-border-dark, #1d1813);
+      .boss-suggestion-card .boss-choice-copy form {
+        margin-top: auto;
       }
-      .boss-suggestion h2 {
-        color: var(--gold);
-        font-size: 1.4rem;
-        margin-bottom: 8px;
+      .boss-suggestion-card label {
+        margin: 0 0 6px;
       }
-      .boss-suggestion p {
-        margin-bottom: 12px;
+      .boss-suggestion-card input {
+        font:
+          0.95rem/1.4 system-ui,
+          sans-serif;
       }
-      .boss-suggestion label {
-        margin-bottom: 6px;
-      }
-      .boss-suggestion-controls {
-        display: flex;
-        gap: 10px;
-        align-items: stretch;
-      }
-      .boss-suggestion-controls input {
-        min-width: 0;
-        flex: 1;
-      }
-      .boss-suggestion-controls button {
-        white-space: nowrap;
+      .boss-suggestion-card button[type='submit'] {
+        margin-top: 12px;
       }
       #boss-suggestion-status {
         margin: 10px 0 0;
@@ -229,9 +214,6 @@
         }
         .boss-choice-preview svg {
           max-width: 180px;
-        }
-        .boss-suggestion-controls {
-          flex-direction: column;
         }
       }
       * {
@@ -1152,26 +1134,37 @@
             Choose a boss to open your journal. Your saved progress will be waiting.
           </p>
           <div id="boss-choices" class="boss-choices"></div>
-          <section class="boss-suggestion" aria-labelledby="boss-suggestion-title">
-            <h2 id="boss-suggestion-title">Missing a boss?</h2>
-            <p class="muted">Tell us which boss or raid you want to track next.</p>
-            <form id="boss-suggestion-form">
-              <label for="boss-suggestion-name">Boss or raid name</label>
-              <div class="boss-suggestion-controls">
-                <input
-                  id="boss-suggestion-name"
-                  name="boss"
-                  type="text"
-                  autocomplete="off"
-                  maxlength="80"
-                  placeholder="Enter a name"
-                  required
-                />
-                <button type="submit">Send suggestion</button>
+          <template id="boss-suggestion-template">
+            <article
+              class="boss-choice boss-suggestion-card"
+              aria-labelledby="boss-suggestion-title"
+            >
+              <div
+                id="boss-suggestion-preview"
+                class="boss-choice-preview"
+                aria-hidden="true"
+              ></div>
+              <div class="boss-choice-copy">
+                <p class="eyebrow">Your pick · next collection</p>
+                <h2 id="boss-suggestion-title">Missing a boss?</h2>
+                <p>Tell us which boss or raid you want to track next.</p>
+                <form id="boss-suggestion-form">
+                  <label for="boss-suggestion-name">Boss or raid name</label>
+                  <input
+                    id="boss-suggestion-name"
+                    name="boss"
+                    type="text"
+                    autocomplete="off"
+                    maxlength="80"
+                    placeholder="Enter a name"
+                    required
+                  />
+                  <button type="submit">Send suggestion</button>
+                  <p id="boss-suggestion-status" role="status" aria-live="polite" hidden></p>
+                </form>
               </div>
-              <p id="boss-suggestion-status" role="status" aria-live="polite" hidden></p>
-            </form>
-          </section>
+            </article>
+          </template>
         </section>
         <section id="account-panel" class="account-panel" aria-labelledby="account-heading">
           <div class="account-header">
@@ -1930,6 +1923,20 @@
             return `<article class="boss-choice"><div class="boss-choice-preview" aria-hidden="true">${preview.art(100, config.previewScene, 'preview-' + config.id, false, GLASS_APPEARANCE.get(config.id, config.previewScene))}</div><div class="boss-choice-copy"><p class="eyebrow">${esc(config.shortName)} · ${esc(config.collectionLabel)}</p><h2>${esc(config.name)}</h2><p>${esc(config.description)}</p><button id="choose-${esc(config.id)}" type="button" data-choose-boss="${esc(config.id)}">Track ${esc(config.name)} →</button></div></article>`;
           })
           .join('');
+        $('boss-choices').append($('boss-suggestion-template').content.cloneNode(true));
+        const emptyWindow = createGlassWindow({
+          config: {
+            id: 'suggestion',
+            titles: ['Unclaimed window'],
+            sceneDescriptions: ['An empty window waiting for a boss suggestion.'],
+          },
+          esc,
+          getJournal: () => ({ base: 0, dropTiles: {} }),
+          sceneColors: () => GLASS_BOSSES[LEGACY_BOSS_ID].palettes[0],
+          renderScene: () => '',
+          frameOrnaments: () => '',
+        });
+        $('boss-suggestion-preview').innerHTML = emptyWindow(0, 0, 'suggestion-preview');
         $('boss-choices').addEventListener('click', async (event) => {
           const button = event.target.closest('[data-choose-boss]');
           if (!button || cloudBusy || cloudLoading || accountBusy) return;
@@ -3276,8 +3283,9 @@
         }
       });
       function refreshBossPreviews() {
-        document.querySelectorAll('.boss-choice').forEach((slide, index) => {
-          const config = GLASS_BOSSES[slide.querySelector('[data-choose-boss]').dataset.chooseBoss];
+        document.querySelectorAll('#boss-choices [data-choose-boss]').forEach((button, index) => {
+          const slide = button.closest('.boss-choice');
+          const config = GLASS_BOSSES[button.dataset.chooseBoss];
           const preview = GLASS_RENDERERS[config.id](config, {
             esc,
             getJournal: () => ({ base: 0, dropTiles: {} }),

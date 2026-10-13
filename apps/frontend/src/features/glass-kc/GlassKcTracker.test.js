@@ -1205,6 +1205,11 @@ describe('required boss selection and catalog-driven hunts', () => {
     expect(window.document.getElementById('tracker-content').hidden).toBe(true);
     expect(window.document.getElementById('window-art').innerHTML).toBe('');
     expect(window.document.querySelector('.boss-choice-preview svg')).not.toBeNull();
+    expect(window.document.querySelectorAll('#boss-choices .boss-choice')).toHaveLength(8);
+    expect(window.document.querySelectorAll('#boss-suggestion-preview .pane')).toHaveLength(100);
+    expect(
+      window.document.getElementById('boss-suggestion-form').closest('.boss-choice')
+    ).not.toBeNull();
     expect(window.document.getElementById('nav-windows').hidden).toBe(true);
     click(window, 'choose-pnm');
     expect(window.document.getElementById('tracker-content').hidden).toBe(false);
