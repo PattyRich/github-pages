@@ -4,9 +4,9 @@
   "description": "OSRS Bingo boards and KC Trackers: track boss kills, save drop memories, and light stained-glass windows.",
   "icons": [
     {
-      "src": "favicon.ico",
-      "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
+      "src": "favicon.png",
+      "sizes": "96x96",
+      "type": "image/png"
     },
     {
       "src": "logo192.png",

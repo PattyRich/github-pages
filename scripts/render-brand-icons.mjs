@@ -1,24 +1,13 @@
-// Render Praynr's install and browser icons from the site's actual OSRS font.
-// Run with Playwright and sharp available locally or in PRAYNR_PREVIEW_RUNTIME
-// (a node_modules directory). PRAYNR_PREVIEW_BROWSER selects installed Chromium.
-// Example: node scripts/render-brand-icons.mjs
-import { createRequire } from 'node:module';
+// Render Praynr's giraffe as crisp OSRS-style browser and install icons.
 import { readFile, writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
+import { deflateSync } from 'node:zlib';
 import path from 'node:path';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const frontend = path.join(root, 'apps/frontend');
 const output = path.join(frontend, 'public');
-const runtimeRequire = createRequire(
-  process.env.PRAYNR_PREVIEW_RUNTIME
-    ? path.join(process.env.PRAYNR_PREVIEW_RUNTIME, '../package.json')
-    : path.join(frontend, 'package.json')
-);
-const { chromium } = runtimeRequire('playwright');
-const sharp = runtimeRequire('sharp');
 const css = await readFile(path.join(frontend, 'src/index.css'), 'utf8');
-const font = await readFile(path.join(frontend, 'src/assets/fonts/osrs.ttf'));
 
 function token(name) {
   const match = css.match(new RegExp(`${name}:\\s*(#[a-f\\d]{6})`, 'i'));
@@ -30,94 +19,105 @@ const colors = {
   background: token('--osrs-bg-brown-dark'),
   surface: token('--osrs-bg-brown'),
   border: token('--osrs-border-dark'),
-  bevel: token('--osrs-border-light'),
   gold: token('--osrs-text-gold'),
+  beige: token('--osrs-text-beige'),
 };
 
-// The font is already pixel art. Extract its native 16px bitmap, then enlarge
-// pixels at integer scale so every size remains sharp rather than interpolated.
-const browser = await chromium.launch({
-  headless: true,
-  ...(process.env.PRAYNR_PREVIEW_BROWSER
-    ? { executablePath: process.env.PRAYNR_PREVIEW_BROWSER }
-    : {}),
-});
-let glyph;
-try {
-  const page = await browser.newPage();
-  glyph = await page.evaluate(async (base64Font) => {
-    const face = new FontFace(
-      'osrsFont',
-      `url(data:font/ttf;base64,${base64Font})`
-    );
-    await face.load();
-    document.fonts.add(face);
-    const canvas = document.createElement('canvas');
-    canvas.width = canvas.height = 32;
-    const context = canvas.getContext('2d');
-    context.font = '16px osrsFont';
-    context.fillText('P', 0, 16);
-    const pixels = context.getImageData(0, 0, 32, 32).data;
-    const points = [];
-    for (let y = 0; y < 32; y++) {
-      for (let x = 0; x < 32; x++) {
-        if (pixels[(y * 32 + x) * 4 + 3] > 127) points.push([x, y]);
-      }
-    }
-    if (!points.length) throw new Error('The OSRS font did not render a P.');
-    const minX = Math.min(...points.map(([x]) => x));
-    const minY = Math.min(...points.map(([, y]) => y));
-    return {
-      width: Math.max(...points.map(([x]) => x)) - minX + 1,
-      height: Math.max(...points.map(([, y]) => y)) - minY + 1,
-      points: points.map(([x, y]) => [x - minX, y - minY]),
-    };
-  }, font.toString('base64'));
-} finally {
-  await browser.close();
-}
+// A 16-pixel giraffe head and spotted neck stays legible beside search results.
+// Rectangles use the same palette as the site's OSRS interface.
+const pixels = [
+  ['border', 5, 1, 2, 4], ['border', 9, 1, 2, 4],
+  ['border', 2, 4, 4, 3], ['border', 10, 4, 4, 3],
+  ['border', 4, 3, 8, 7], ['border', 10, 6, 5, 4],
+  ['border', 5, 9, 6, 7],
+  ['gold', 5, 1, 1, 3], ['gold', 9, 1, 1, 3],
+  ['gold', 3, 5, 2, 1], ['gold', 11, 5, 2, 1],
+  ['gold', 5, 4, 6, 5], ['gold', 11, 7, 3, 2],
+  ['gold', 6, 9, 4, 7],
+  ['beige', 12, 7, 2, 1], ['beige', 7, 6, 2, 2],
+  ['surface', 10, 5, 1, 1], ['surface', 13, 8, 1, 1],
+  ['surface', 7, 10, 2, 1], ['surface', 6, 12, 1, 2],
+  ['surface', 8, 13, 2, 1], ['surface', 7, 15, 1, 1],
+];
 
 function iconSvg(size) {
-  const scale = Math.max(1, Math.floor((size * 0.64) / (glyph.height + 1)));
-  const originX = Math.floor((size - (glyph.width + 1) * scale) / 2);
-  const originY = Math.floor((size - (glyph.height + 1) * scale) / 2);
-  const edge = Math.max(1, Math.round(size / 32));
-  const radius = Math.round(size * 0.09375);
-  const points = glyph.points
-    .map(
-      ([x, y]) =>
-        `<rect x="${x * scale}" y="${y * scale}" width="${scale}" height="${scale}"/>`
+  const art = pixels
+    .map(([color, x, y, width, height]) =>
+      `<rect x="${x}" y="${y}" width="${width}" height="${height}" fill="${colors[color]}"/>`
     )
     .join('');
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
-    <rect width="${size}" height="${size}" fill="${colors.background}"/>
-    <rect x="${edge}" y="${edge}" width="${size - edge * 2}" height="${size - edge * 2}" rx="${radius}" fill="${colors.border}"/>
-    <rect x="${edge * 2}" y="${edge * 2}" width="${size - edge * 4}" height="${size - edge * 4}" rx="${Math.max(0, radius - edge)}" fill="${colors.bevel}"/>
-    <rect x="${edge * 3}" y="${edge * 3}" width="${size - edge * 6}" height="${size - edge * 6}" rx="${Math.max(0, radius - edge * 2)}" fill="${colors.surface}"/>
-    <g shape-rendering="crispEdges" fill="${colors.border}" transform="translate(${originX + scale} ${originY + scale})">${points}</g>
-    <g shape-rendering="crispEdges" fill="${colors.gold}" transform="translate(${originX} ${originY})">${points}</g>
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 16 16" shape-rendering="crispEdges">
+    <rect width="16" height="16" fill="${colors.background}"/>
+    ${art}
   </svg>`;
 }
 
-async function png(size) {
-  return sharp(Buffer.from(iconSvg(size))).png().toBuffer();
+function pngChunk(type, data) {
+  const label = Buffer.from(type);
+  const payload = Buffer.concat([label, data]);
+  let crc = 0xffffffff;
+  for (const byte of payload) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit++) {
+      crc = (crc >>> 1) ^ (crc & 1 ? 0xedb88320 : 0);
+    }
+  }
+  const length = Buffer.alloc(4);
+  length.writeUInt32BE(data.length);
+  const checksum = Buffer.alloc(4);
+  checksum.writeUInt32BE((crc ^ 0xffffffff) >>> 0);
+  return Buffer.concat([length, payload, checksum]);
 }
 
-// All meaningful artwork in the 512px icon is within the maskable safe circle
-// (40% of width around the center). The full-bleed brown and bevel can crop.
-for (const size of [192, 512]) {
-  await writeFile(path.join(output, `logo${size}.png`), await png(size));
+function png(size) {
+  const grid = Array.from({ length: 16 * 16 }, () => colors.background);
+  for (const [color, x, y, width, height] of pixels) {
+    for (let row = y; row < y + height; row++) {
+      for (let column = x; column < x + width; column++) {
+        grid[row * 16 + column] = colors[color];
+      }
+    }
+  }
+  const raw = Buffer.alloc(size * (size * 4 + 1));
+  for (let y = 0; y < size; y++) {
+    const row = y * (size * 4 + 1);
+    for (let x = 0; x < size; x++) {
+      const hex = grid[Math.floor(y * 16 / size) * 16 + Math.floor(x * 16 / size)];
+      const offset = row + 1 + x * 4;
+      raw[offset] = Number.parseInt(hex.slice(1, 3), 16);
+      raw[offset + 1] = Number.parseInt(hex.slice(3, 5), 16);
+      raw[offset + 2] = Number.parseInt(hex.slice(5, 7), 16);
+      raw[offset + 3] = 255;
+    }
+  }
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(size, 0);
+  header.writeUInt32BE(size, 4);
+  header[8] = 8; // RGBA, 8 bits per channel.
+  header[9] = 6;
+  return Buffer.concat([
+    Buffer.from('89504e470d0a1a0a', 'hex'),
+    pngChunk('IHDR', header),
+    pngChunk('IDAT', deflateSync(raw)),
+    pngChunk('IEND', Buffer.alloc(0)),
+  ]);
 }
 
-const sizes = [16, 24, 32, 64];
-const frames = await Promise.all(sizes.map(png));
+for (const size of [96, 192, 512]) {
+  const name = size === 96 ? 'favicon.png' : `logo${size}.png`;
+  await writeFile(path.join(output, name), png(size));
+}
+
+const sizes = [16, 32, 48, 64];
+const frames = sizes.map(png);
 const header = Buffer.alloc(6 + frames.length * 16);
 header.writeUInt16LE(1, 2);
 header.writeUInt16LE(frames.length, 4);
 let offset = header.length;
 frames.forEach((frame, index) => {
   const entry = 6 + index * 16;
-  header[entry] = header[entry + 1] = sizes[index];
+  header[entry] = sizes[index];
+  header[entry + 1] = sizes[index];
   header.writeUInt16LE(1, entry + 4);
   header.writeUInt16LE(32, entry + 6);
   header.writeUInt32LE(frame.length, entry + 8);
@@ -125,4 +125,5 @@ frames.forEach((frame, index) => {
   offset += frame.length;
 });
 await writeFile(path.join(output, 'favicon.ico'), Buffer.concat([header, ...frames]));
-console.log(`Saved Praynr OSRS-font icons: ${sizes.join(', ')}px ICO, 192px and 512px PNG.`);
+await writeFile(path.join(frontend, 'src/logo.svg'), iconSvg(512));
+console.log(`Saved Praynr giraffe icons: ${sizes.join(', ')}px ICO, 96px favicon and install PNGs.`);
