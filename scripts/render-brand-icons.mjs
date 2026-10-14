@@ -108,6 +108,8 @@ function png(size) {
 
 for (const size of [96, 192, 512]) {
   const name = size === 96 ? 'favicon.png' : `logo${size}.png`;
-  await writeFile(path.join(output, name), png(size));
+  const image = png(size);
+  await writeFile(path.join(output, name), image);
+  if (size === 96) await writeFile(path.join(output, 'giraffe-favicon.png'), image);
 }
 console.log('Restored the original giraffe to the favicon and install PNGs.');
