@@ -100,7 +100,7 @@ allowedAuthTypes = ['admin', 'general']
 allowedBoardTypes = ['osrs', 'generic']
 adminTileKeys = ['description', 'image', 'points', 'title', 'rowBingo', 'colBingo']
 generalTileKeys = ['proof', 'checked', 'currPoints', 'proofImages']
-boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'rows', 'columns', 'visibleRows', 'boardType']
+boardCreationKeys = ['adminPassword', 'generalPassword', 'boardName', 'boardData', 'teams', 'teamNames', 'rows', 'columns', 'visibleRows', 'boardType']
 disallowedRouteChars = ['?', '#', '/', '\\']
 testBoardPrefix = os.environ.get("PLAYWRIGHT_E2E_BOARD_PREFIX", os.environ.get("SELENIUM_E2E_BOARD_PREFIX", "__playwright_e2e__"))
 maxProofImages = int(os.environ.get("MAX_PROOF_IMAGES_PER_TILE", 10))
@@ -308,6 +308,17 @@ def validate_board_creation(data):
 
   data['boardType'] = normalize_board_type(data.get('boardType'))
 
+  if 'teamNames' in data:
+    team_names = data['teamNames']
+    if not isinstance(team_names, list) or len(team_names) != data.get('teams'):
+      return 'Please provide one name for each team.'
+    if any(not isinstance(name, str) or not name.strip() or len(name.strip()) > 64 for name in team_names):
+      return 'Team names must contain between 1 and 64 characters.'
+    team_names = [name.strip() for name in team_names]
+    if len({name.casefold() for name in team_names}) != len(team_names):
+      return 'Each team must have a different name.'
+    data['teamNames'] = team_names
+
   return None
 
 def bingo_board_url(board_name, password):
@@ -485,12 +496,13 @@ def createBoard():
         boardData[i][0]['image'] = {'url': 'https://oldschool.runescape.wiki/images/thumb/Twisted_bow_detail.png/180px-Twisted_bow_detail.png'}
   
   data['boardData'] = boardData
+  team_names = data.pop('teamNames', None)
 
   for i in range(data['teams']):
     team = 'team-' + str(i)
     teamData = initEmptyTeamData(len(data['boardData']), len(data['boardData'][0]))
     data[team] = {
-      'name': team,
+      'name': team_names[i] if team_names is not None else team,
       'teamData': teamData
     }
 

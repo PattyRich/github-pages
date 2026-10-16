@@ -27,4 +27,25 @@
 
 .draft-team {
   width: 100%;
+  min-width: 0;
+}
+
+.draft-team-name-editor {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--osrs-gap);
+  width: 100%;
+  padding: 0 10px;
+  margin-bottom: 12px;
+}
+
+.draft-team-name-editor .editable-input {
+  flex: 1 1 180px;
+  min-width: 0;
+  margin-bottom: 0;
+}
+
+.draft-team-name-editor .osrs-btn {
+  flex-shrink: 0;
 }

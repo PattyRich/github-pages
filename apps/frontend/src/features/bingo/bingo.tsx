@@ -7,6 +7,7 @@ import EditableInput from '../../components/ui/EditableInput';
 import Button from '../../components/ui/Button';
 import Surface from '../../components/ui/Surface';
 import { DEFAULT_BOARD_TYPE, type BoardType } from '../../types';
+import { generateTeamNames } from '../../utils/teamNames';
 
 import {
   fetchGet,
@@ -159,7 +160,10 @@ function Bingo({ screenSkip }: BingoProps) {
     }
 
     showAlert('loading');
-    const [data, err] = await fetchPost('createBoard', { ...trimmedState });
+    const [data, err] = await fetchPost('createBoard', {
+      ...trimmedState,
+      teamNames: generateTeamNames(trimmedState.teams, trimmedState.boardType),
+    });
     if (data) {
       addToRecent(trimmedState.boardName, trimmedState.adminPassword, 'admin');
       navigate(bingoBoardPath(trimmedState.boardName), {

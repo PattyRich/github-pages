@@ -1,4 +1,3 @@
-import { useState } from 'react';
 //import { Link } from "react-router-dom";
 import { getStoredBool } from '../../utils/utils';
 import Tabs from '../../components/ui/Tabs';
@@ -11,17 +10,15 @@ interface TeamsProps {
 }
 
 const Teams = (props: TeamsProps) => {
-  const [key, setKey] = useState(props.activeTeam.data.name);
   const showTeamPoints = getStoredBool('showTeamPoints');
 
-  function selectTeam(teamName: string) {
+  function selectTeam(teamKey: string) {
     const teamId = props.teams?.find((team) => {
-      return team.data.name === teamName;
+      return String(team.team) === teamKey;
     })?.team;
     if (teamId === undefined) return;
     localStorage.setItem('activeTeam', String(teamId));
     props.changeTeam(Number(teamId));
-    setKey(teamName);
   }
 
   const items =
@@ -29,7 +26,7 @@ const Teams = (props: TeamsProps) => {
       const pointTotal = (team as { pointTotal?: number | string }).pointTotal;
       const showPoints = !showTeamPoints && Number(pointTotal) !== 0;
       return {
-        key: team.data.name,
+        key: String(team.team),
         label: `${team.data.name}${showPoints ? ': (' + String(pointTotal) + ')' : ''}`,
       };
     }) || [];
@@ -38,7 +35,7 @@ const Teams = (props: TeamsProps) => {
     <Tabs
       className="team-tabs"
       items={items}
-      activeKey={key}
+      activeKey={String(props.activeTeam.team)}
       onSelect={selectTeam}
       ariaLabel="Teams"
     />

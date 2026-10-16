@@ -5,6 +5,8 @@ import EditableInput from './EditableInput';
 import { RangeField, SelectField, SwitchField } from './FormControls';
 import { ModalButton, ModalShell } from './ModalShell';
 import Tabs from './Tabs';
+import { DEFAULT_BOARD_TYPE, type BoardType } from '../../types';
+import { suggestTeamName } from '../../utils/teamNames';
 import './EditTeams.css';
 
 const boardSizeOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
@@ -36,6 +38,7 @@ export interface TeamInfo {
 }
 
 interface EditTeamsProps {
+  boardType?: BoardType;
   columns: number;
   handleClose: () => void;
   handleSave: (
@@ -63,6 +66,7 @@ interface EditTeamsState {
 }
 
 function EditTeams({
+  boardType = DEFAULT_BOARD_TYPE,
   show,
   handleClose,
   handleSave,
@@ -140,6 +144,19 @@ function EditTeams({
     }));
   }
 
+  function suggestName(index: number) {
+    const name = suggestTeamName(
+      state.teams.map((team) => team.data.name),
+      boardType
+    );
+    setState((currentState) => ({
+      ...currentState,
+      teams: currentState.teams.map((team, teamIndex) =>
+        teamIndex === index ? { ...team, data: { ...team.data, name } } : team
+      ),
+    }));
+  }
+
   function save() {
     if (reductionChanges.length > 0 && !confirmingReductions) {
       setConfirmingReductions(true);
@@ -167,9 +184,14 @@ function EditTeams({
   }
 
   function addTeam() {
+    const name = suggestTeamName(
+      state.teams.map((team) => team.data.name),
+      boardType
+    );
     setState((currentState) => {
       const newTeam = JSON.parse(JSON.stringify(currentState.teams[0])) as TeamInfo;
-      newTeam.data.name = `team-${currentState.teams.length}`;
+      newTeam.team = currentState.teams.length;
+      newTeam.data.name = name;
       return {
         ...currentState,
         teams: [...currentState.teams, newTeam],
@@ -341,12 +363,21 @@ function EditTeams({
                 </ModalButton>
               </div>
               {state.teams.map((team, i) => (
-                <EditableInput
-                  key={i}
-                  title={`Team ${i + 1}`}
-                  change={(e) => editName(e, i)}
-                  value={team.data.name}
-                />
+                <div className="edit-team-name" key={i}>
+                  <EditableInput
+                    title={`Team ${i + 1}`}
+                    change={(e) => editName(e, i)}
+                    value={team.data.name}
+                  />
+                  <ModalButton
+                    variant="secondary"
+                    size="small"
+                    onClick={() => suggestName(i)}
+                    aria-label={`Suggest name for Team ${i + 1}`}
+                  >
+                    Suggest name
+                  </ModalButton>
+                </div>
               ))}
             </div>
           )}

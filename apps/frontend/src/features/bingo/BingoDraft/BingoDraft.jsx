@@ -9,6 +9,7 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { Dustbin } from './Dustbin';
 import { Box } from './Box';
 import Toast from '../../../components/ui/Toast';
+import { generateTeamNames, suggestTeamName } from '../../../utils/teamNames';
 
 class BingoDraft extends React.Component {
   constructor(props) {
@@ -21,6 +22,7 @@ class BingoDraft extends React.Component {
       };
     }
     this.editName = this.editName.bind(this);
+    this.suggestName = this.suggestName.bind(this);
     this.shuffle = this.shuffle.bind(this);
     this.changeTeamCount = this.changeTeamCount.bind(this);
     this.inputState = this.inputState.bind(this);
@@ -126,6 +128,18 @@ class BingoDraft extends React.Component {
     this.setState({ teams: x }, this.persistDraft);
   }
 
+  suggestName(index) {
+    const name = suggestTeamName(this.state.teams.map((team) => team.name));
+    this.setState(
+      (currentState) => ({
+        teams: currentState.teams.map((team, teamIndex) =>
+          teamIndex === index ? { ...team, name } : team
+        ),
+      }),
+      this.persistDraft
+    );
+  }
+
   shuffle() {
     let x = [...this.state.teams];
     shuffle(x);
@@ -135,7 +149,7 @@ class BingoDraft extends React.Component {
   changeTeamCount(addTeam) {
     let x = [...this.state.teams];
     if (addTeam) {
-      x.push({ name: 'team-' + x.length, members: [] });
+      x.push({ name: suggestTeamName(x.map((team) => team.name)), members: [] });
     } else {
       x.pop();
     }
@@ -202,8 +216,10 @@ class BingoDraft extends React.Component {
                   dropped={this.movePlayer}
                   editMode={this.state.editMode}
                   editName={(e) => this.editName(e, i)}
-                  key={i + team.name}
+                  suggestName={() => this.suggestName(i)}
+                  key={i}
                   team={team}
+                  teamNumber={i + 1}
                 />
               );
             })}
@@ -285,13 +301,7 @@ class BingoDraft extends React.Component {
 export default BingoDraft;
 
 function getDefaultState() {
-  let teams = [];
-  for (let i = 0; i < 4; i++) {
-    teams.push({
-      name: 'team-' + i,
-      members: [],
-    });
-  }
+  const teams = generateTeamNames(4).map((name) => ({ name, members: [] }));
 
   return {
     editMode: true,

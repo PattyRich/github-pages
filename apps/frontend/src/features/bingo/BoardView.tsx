@@ -630,6 +630,7 @@ function BoardView() {
       {state.showEditTeams && state.teamData && (
         <EditTeams
           show={true}
+          boardType={state.boardType}
           handleClose={toggleTeamEdit}
           teams={state.teamData}
           handleSave={updateTeams}

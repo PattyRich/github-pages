@@ -1,16 +1,20 @@
 import { useDrop } from 'react-dnd';
+import Button from '../../../components/ui/Button';
 import EditableInput from '../../../components/ui/EditableInput';
 import { Box } from './Box';
 
 export const Dustbin = (props) => {
-  const [{ canDrop, isOver }, drop] = useDrop(() => ({
-    accept: 'any',
-    drop: () => ({ name: props.team.name }),
-    collect: (monitor) => ({
-      isOver: monitor.isOver(),
-      canDrop: monitor.canDrop(),
+  const [{ canDrop, isOver }, drop] = useDrop(
+    () => ({
+      accept: 'any',
+      drop: () => ({ name: props.team.name }),
+      collect: (monitor) => ({
+        isOver: monitor.isOver(),
+        canDrop: monitor.canDrop(),
+      }),
     }),
-  }));
+    [props.team.name]
+  );
   const isActive = canDrop && isOver;
   let backgroundColor = 'var(--osrs-bg-brown-dark)';
   let border = '2px solid var(--osrs-border-dark)';
@@ -27,7 +31,20 @@ export const Dustbin = (props) => {
     >
       <div className="flex-center" style={{ paddingTop: '10px' }}>
         {props.editMode ? (
-          <EditableInput change={props.editName} value={props.team.name} width={'auto'} title="" />
+          <div className="draft-team-name-editor">
+            <EditableInput
+              change={props.editName}
+              value={props.team.name}
+              title={`Team ${props.teamNumber}`}
+            />
+            <Button
+              click={props.suggestName}
+              size="small"
+              aria-label={`Suggest name for team ${props.teamNumber}`}
+            >
+              Suggest name
+            </Button>
+          </div>
         ) : (
           <span>
             {props.team.name} : ({props.team.members.length})
