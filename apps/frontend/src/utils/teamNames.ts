@@ -86,7 +86,19 @@ export function suggestTeamName(
   existingNames: readonly string[] = [],
   boardType: BoardType = DEFAULT_BOARD_TYPE
 ): string {
-  const usedNames = new Set(existingNames.map((name) => name.trim().toLowerCase()));
+  const nameParts = existingNames.map((name) => name.trim().toLowerCase().split(/\s+/));
+  const usedNames = new Set(nameParts.map((parts) => parts.join(' ')));
+  const usedAdjectives = new Set(nameParts.map((parts) => parts[0]));
+  const usedNouns = new Set(nameParts.map((parts) => parts.slice(1).join(' ')));
+  const availableAdjectives = adjectives.filter((word) => !usedAdjectives.has(word.toLowerCase()));
+  const availableNouns = nouns[boardType].filter((word) => !usedNouns.has(word.toLowerCase()));
+  if (availableAdjectives.length > 0 && availableNouns.length > 0) {
+    const adjective = availableAdjectives[Math.floor(Math.random() * availableAdjectives.length)];
+    const noun = availableNouns[Math.floor(Math.random() * availableNouns.length)];
+    return `${adjective} ${noun}`;
+  }
+
+  // Once a word pool runs out, larger drafts can reuse parts but keep full names unique.
   const candidates = combinations[boardType];
   const available = candidates.filter((name) => !usedNames.has(name.toLowerCase()));
   if (available.length > 0) {
