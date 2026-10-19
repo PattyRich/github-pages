@@ -1610,6 +1610,24 @@
       const MAX_KC = 1000000000;
       const $ = (id) => document.getElementById(id);
 
+      function trackUsage(name, kills) {
+        if (window.parent === window) return;
+        try {
+          window.parent.postMessage(
+            {
+              type: 'praynr:kc-analytics',
+              name,
+              boss: bossId,
+              storage: account ? 'account' : 'guest',
+              ...(kills === undefined ? {} : { kills }),
+            },
+            location.origin
+          );
+        } catch {
+          // Analytics must never interrupt a journal action.
+        }
+      }
+
       const sceneNumber = (index) => index % titles.length;
       const collectionNumber = (index) => Math.floor(index / titles.length) + 1;
 
@@ -1954,6 +1972,7 @@
           }
           bossId = next;
           bossChosen = true;
+          trackUsage('kc_boss_selected');
           KEY = boss().storageKey;
           ({ titles, sceneDescriptions, postcardNotes, postcardLoot } = boss());
           renderer = GLASS_RENDERERS[bossId](boss(), { esc, getJournal: () => journal });
@@ -2399,6 +2418,7 @@
         const saved = save({ ...journal, active: next });
         render(saved && total() % 25 === 0);
         if (saved) {
+          trackUsage('kc_kill_recorded');
           windowCompletion?.dismiss();
           if (total() % 100 === 0) {
             const index = total() / 100 - 1;
@@ -2448,7 +2468,10 @@
         });
         setFields();
         render();
-        if (saved) notify('Postcard saved.');
+        if (saved) {
+          trackUsage('kc_session_finished', page.kills);
+          notify('Postcard saved.');
+        }
       });
       function download(content, type, name) {
         const url = URL.createObjectURL(new Blob([content], { type }));
