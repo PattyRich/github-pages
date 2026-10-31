@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="robots" content="noindex, nofollow" />
+    <title>Vardorvis &amp; The Fractured Archive · Artwork preview</title>
+    <link rel="stylesheet" href="../../gallery.css" />
+    <link rel="stylesheet" href="preview.css" />
+    <script src="../../bosses/glass-window.js" defer></script>
+    <script src="preview-catalog.js" defer></script>
+    <script src="preview-renderers.js" defer></script>
+    <script src="scenes/vardorvis.js" defer></script>
+    <script src="scenes/axe-head.js" defer></script>
+    <script src="scenes/stranglewood.js" defer></script>
+    <script src="scenes/ultor-ring.js" defer></script>
+    <script src="scenes/obligator.js" defer></script>
+    <script src="scenes/archive-guardian.js" defer></script>
+    <script src="scenes/ezekiel.js" defer></script>
+    <script src="scenes/bork-smorks.js" defer></script>
+    <script src="scenes/ocellus.js" defer></script>
+    <script src="scenes/cosmic-loot.js" defer></script>
+    <script src="preview.js" defer></script>
+  </head>
+  <body>
+    <main class="gallery-shell">
+      <header class="gallery-heading">
+        <p class="eyebrow">KC Trackers · Artwork workshop</p>
+        <h1>Two more hunts. Ten more windows.</h1>
+        <p class="intro">Vardorvis and The Fractured Archive. Choose a window for a closer look.</p>
+        <p id="pass-status" class="muted">
+          Feedback revision · A brief green pulse during the Obligator reveal
+        </p>
+      </header>
+      <div class="gallery-toolbar">
+        <nav aria-label="Collections">
+          <a href="#vardorvis">Vardorvis</a><a href="#tfa">The Fractured Archive</a>
+        </nav>
+        <div class="preview-controls">
+          <label
+            >Shape
+            <select id="shape"></select
+          ></label>
+          <label
+            >Frame
+            <select id="frame"></select
+          ></label>
+          <label
+            >Edition
+            <select id="edition">
+              <option value="0">1</option>
+              <option value="1">2</option>
+              <option value="2">3</option>
+              <option value="3">4</option>
+            </select></label
+          >
+          <label
+            >Panes <input id="panes" type="range" min="0" max="100" step="1" value="100" /><output
+              id="pane-count"
+              for="panes"
+              >100</output
+            ></label
+          >
+          <label class="motion-control"><input id="still" type="checkbox" /> Still artwork</label>
+        </div>
+      </div>
+      <div id="collections"></div>
+      <footer class="preview-footer">
+        <p>Artwork preview · 100 panes per window · 25 completions per ornament</p>
+        <p>Vardorvis: one kill per pane. The Archive: one completed raid per pane.</p>
+      </footer>
+      <noscript>Enable JavaScript to view the artwork.</noscript>
+    </main>
+    <dialog id="window-viewer" aria-labelledby="viewer-title" aria-describedby="viewer-description">
+      <header class="viewer-heading">
+        <div>
+          <p id="viewer-collection" class="muted"></p>
+          <h2 id="viewer-title"></h2>
+        </div>
+        <div class="viewer-actions">
+          <button id="viewer-zoom" type="button" aria-pressed="false">Zoom in</button
+          ><button id="viewer-close" type="button" autofocus>Close ✕</button>
+        </div>
+      </header>
+      <div id="viewer-art"></div>
+      <p id="viewer-description"></p>
+      <footer class="viewer-controls">
+        <button id="viewer-previous" type="button">← Previous</button
+        ><span id="viewer-position" class="muted" aria-live="polite"></span
+        ><button id="viewer-next" type="button">Next →</button>
+      </footer>
+    </dialog>
+  </body>
+</html>

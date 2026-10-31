@@ -1,0 +1,135 @@
+@font-face {
+  font-family: osrsFont;
+  src: url('../../../../src/assets/fonts/osrs.ttf') format('truetype');
+}
+.gallery-heading h1 {
+  margin-bottom: 14px;
+}
+.intro {
+  max-width: 65ch;
+  margin-bottom: 8px;
+}
+.gallery-shell {
+  max-width: 1460px;
+}
+.preview-controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  flex-wrap: wrap;
+}
+.preview-controls label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+}
+select,
+input,
+button {
+  accent-color: var(--gold);
+}
+select {
+  max-width: 150px;
+  background: var(--panel);
+  color: var(--bright);
+  border: 1px solid var(--line);
+  padding: 6px;
+  border-radius: var(--osrs-radius, 0.375rem);
+}
+input[type='range'] {
+  width: 90px;
+}
+output {
+  min-width: 3ch;
+  font-variant-numeric: tabular-nums;
+}
+.collection .windows {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 24px 16px;
+}
+.collection[data-boss='tfa'] .windows {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+.window-art {
+  width: 100%;
+}
+.window-art svg {
+  display: block;
+  width: 100%;
+}
+.window-description {
+  font-size: 0.86rem;
+  margin: 8px auto 0;
+  max-width: 36ch;
+}
+.scene-number {
+  color: var(--gold);
+  margin-right: 7px;
+}
+.sources {
+  margin-top: 20px;
+  color: var(--ink);
+  font-size: 0.83rem;
+}
+.sources summary {
+  cursor: pointer;
+  width: fit-content;
+}
+.source-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 12px 0;
+}
+.source-links a {
+  color: var(--bright);
+  text-underline-offset: 3px;
+}
+.preview-footer {
+  padding-top: 28px;
+  border-top: 1px solid var(--line);
+  font-size: 0.85rem;
+}
+.preview-footer p + p {
+  margin-top: 5px;
+}
+#viewer-art svg {
+  display: block;
+  margin: auto;
+}
+#viewer-description {
+  max-width: 65ch;
+}
+button:focus-visible,
+a:focus-visible,
+select:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 4px;
+}
+@media (max-width: 760px) {
+  .gallery-shell {
+    padding: 24px 14px 40px;
+  }
+  .gallery-toolbar {
+    position: static;
+  }
+  .collection .windows,
+  .collection[data-boss='tfa'] .windows {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 22px 6px;
+  }
+  .preview-controls {
+    gap: 10px;
+  }
+  .window-description {
+    padding: 0 8px;
+  }
+}
+@media (max-width: 410px) {
+  .collection .windows,
+  .collection[data-boss='tfa'] .windows {
+    grid-template-columns: 1fr;
+  }
+}

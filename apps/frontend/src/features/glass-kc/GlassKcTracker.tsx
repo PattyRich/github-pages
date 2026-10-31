@@ -4,7 +4,7 @@ import { API_BASE_URL } from '../../config';
 import { trackAnalyticsEvent } from '../../analytics';
 
 const usageEvents = new Set(['kc_boss_selected', 'kc_kill_recorded', 'kc_session_finished']);
-const bossIds = new Set(['pnm', 'cox', 'toa', 'tob', 'cg', 'yama', 'nex']);
+const bossIds = new Set(['pnm', 'cox', 'toa', 'tob', 'cg', 'yama', 'nex', 'vardorvis', 'tfa']);
 
 // Keep the standalone journal's SVG, dialogs and styles isolated from other tools.
 // The shell supplies API config, theme tokens and the production analytics bridge.
@@ -46,7 +46,7 @@ export default function GlassKcTracker() {
       ref={frame}
       className="glass-kc-tracker"
       title="KC Trackers"
-      src={`${import.meta.env.BASE_URL}glass-kc/index.html?v=kc-trackers-4&api=${encodeURIComponent(API_BASE_URL)}`}
+      src={`${import.meta.env.BASE_URL}glass-kc/index.html?v=kc-trackers-5&api=${encodeURIComponent(API_BASE_URL)}`}
       onLoad={(event) => {
         const root = event.currentTarget.contentDocument?.documentElement;
         if (!root) return;

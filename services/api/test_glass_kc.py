@@ -230,7 +230,7 @@ def test_reset_marker_survives_and_prevents_old_first_writes(api):
     assert client.put('/glass-kc/api/journals/pnm', json={'revision': 0, 'journal': journal()}, headers=HEADERS).status_code == 409
 
 
-@pytest.mark.parametrize('boss', ['cox', 'toa', 'tob', 'cg', 'yama', 'nex'])
+@pytest.mark.parametrize('boss', ['cox', 'toa', 'tob', 'cg', 'yama', 'nex', 'vardorvis', 'tfa'])
 def test_boss_routes_are_isolated_and_reject_mismatched_backups(api, boss):
     client, db = api
     payload = {'revision': 0, 'journal': journal()}

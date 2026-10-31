@@ -368,7 +368,7 @@ describe('browser-local glass journal', () => {
     expect(window.document.querySelector('.postcard-editor')).toBeNull();
   });
 
-  it.each(['pnm', 'cox', 'toa', 'tob', 'cg', 'yama', 'nex'])(
+  it.each(['pnm', 'cox', 'toa', 'tob', 'cg', 'yama', 'nex', 'vardorvis', 'tfa'])(
     'keeps every %s scene running while lighting, undoing and marking panes',
     (bossId) => {
       const window = open(undefined, false, { choose: false });
@@ -1205,7 +1205,7 @@ describe('required boss selection and catalog-driven hunts', () => {
     expect(window.document.getElementById('tracker-content').hidden).toBe(true);
     expect(window.document.getElementById('window-art').innerHTML).toBe('');
     expect(window.document.querySelector('.boss-choice-preview svg')).not.toBeNull();
-    expect(window.document.querySelectorAll('#boss-choices .boss-choice')).toHaveLength(8);
+    expect(window.document.querySelectorAll('#boss-choices .boss-choice')).toHaveLength(10);
     expect(window.document.querySelectorAll('#boss-suggestion-preview .pane')).toHaveLength(100);
     expect(
       window.document.getElementById('boss-suggestion-form').closest('.boss-choice')
@@ -1273,6 +1273,8 @@ describe('required boss selection and catalog-driven hunts', () => {
     ['cg', 'Corrupted Gauntlet'],
     ['yama', 'Yama'],
     ['nex', 'Nex'],
+    ['vardorvis', 'Vardorvis'],
+    ['tfa', 'The Fractured Archive'],
   ])('uses %s cloud routes and local backup, and resets only that hunt', async (boss, title) => {
     const fetch = vi.fn(async (url, options) => {
       if (url.endsWith('/me')) return response({ username: 'alice' });
@@ -1320,6 +1322,8 @@ describe('required boss selection and catalog-driven hunts', () => {
     ['cg', 'Hunllef, crystal and crimson', 4, 'CORRUPTED GAUNTLET'],
     ['yama', 'The Master of Pacts', 6, 'YAMA'],
     ['nex', 'The Fifth General', 6, 'NEX'],
+    ['vardorvis', 'Vardorvis', 4, 'VARDORVIS'],
+    ['tfa', 'The Obligator', 6, 'THE FRACTURED ARCHIVE'],
   ])(
     'keeps pane numbering through all %s windows and the next edition',
     (boss, firstTitle, scenes, postcardName) => {
