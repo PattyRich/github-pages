@@ -11,9 +11,21 @@ import './EditTeams.css';
 
 const boardSizeOptions = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const tabs = [
-  { key: 'board', label: 'Board' },
-  { key: 'teams', label: 'Teams' },
-  { key: 'access', label: 'Access' },
+  {
+    key: 'board',
+    label: 'Board',
+    help: 'Set the number of rows and columns. Turn on Layered board to reveal rows in stages. The General view preview shows which rows teams can see.',
+  },
+  {
+    key: 'teams',
+    label: 'Teams',
+    help: 'Type a new team name in its field, or choose Suggest name for an idea. Use + to add a team or − to remove the last team.',
+  },
+  {
+    key: 'access',
+    label: 'Access',
+    help: 'Turn on team passwords to set a separate password for each team. Players will need their team’s password to update tiles or submit proof.',
+  },
 ] as const;
 
 type ActiveTab = (typeof tabs)[number]['key'];
@@ -48,6 +60,7 @@ interface EditTeamsProps {
     columns: number,
     visibleRows: number
   ) => void;
+  onSkipTutorial?: () => void;
   passwordRequired?: boolean;
   rows: number;
   show?: boolean;
@@ -70,6 +83,7 @@ function EditTeams({
   show,
   handleClose,
   handleSave,
+  onSkipTutorial,
   teams,
   passwordRequired,
   rows,
@@ -77,7 +91,7 @@ function EditTeams({
   visibleRows,
 }: EditTeamsProps) {
   const [confirmingReductions, setConfirmingReductions] = useState(false);
-  const [state, setState] = useState<EditTeamsState>(() => {
+  const [initialSettings] = useState<EditTeamsState>(() => {
     const rowCount = Number(rows);
     const columnCount = Number(columns);
     const visibleRowCount = clampVisibleRows(visibleRows, columnCount);
@@ -91,6 +105,17 @@ function EditTeams({
       activeTab: 'board',
     };
   });
+  const [state, setState] = useState(initialSettings);
+  const tabIndex = tabs.findIndex((tab) => tab.key === state.activeTab);
+  const activeTab = tabs[tabIndex];
+  const nextTab = tabs[tabIndex + 1];
+  const hasEdits =
+    state.columns !== initialSettings.columns ||
+    state.rows !== initialSettings.rows ||
+    state.layeredBoard !== initialSettings.layeredBoard ||
+    state.visibleRows !== initialSettings.visibleRows ||
+    state.passwordRequired !== initialSettings.passwordRequired ||
+    state.teams !== initialSettings.teams;
   const reductionChanges = getReductionChanges(state, {
     boardColumns: Number(rows),
     boardRows: Number(columns),
@@ -273,6 +298,34 @@ function EditTeams({
             ariaLabel="Edit board sections"
             idPrefix="edit-teams"
           />
+
+          {onSkipTutorial && (
+            <div className="et-guide">
+              <div role="status" aria-label="Edit Board tutorial">
+                <h3 className="osrs-header">
+                  {activeTab.label} · {tabIndex + 1} of {tabs.length}
+                </h3>
+                <p>{activeTab.help}</p>
+                {!nextTab && hasEdits && (
+                  <p>Choose Save to keep your changes or Close to discard them and continue.</p>
+                )}
+              </div>
+              <div className="et-guide-actions">
+                {(nextTab || !hasEdits) && (
+                  <ModalButton
+                    variant="success"
+                    size="small"
+                    onClick={nextTab ? () => setActiveTab(nextTab.key) : handleClose}
+                  >
+                    {nextTab ? `Next: ${nextTab.label}` : 'Next: modes'}
+                  </ModalButton>
+                )}
+                <ModalButton variant="secondary" size="small" onClick={onSkipTutorial}>
+                  Skip tutorial
+                </ModalButton>
+              </div>
+            </div>
+          )}
 
           {state.activeTab === 'board' && (
             <div

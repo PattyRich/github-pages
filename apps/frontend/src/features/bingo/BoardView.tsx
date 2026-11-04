@@ -72,7 +72,7 @@ type BoardStateChange = Partial<BoardState>;
 type BoardStateUpdater = BoardStateChange | ((previousState: BoardState) => BoardStateChange);
 type PasswordPromptResolver = (value: string | null) => void;
 type BoardUpdateInfo = Partial<TileModalState> & { teamId?: number };
-type BoardGuideStep = 'mode' | 'tile' | null;
+type BoardGuideStep = 'editor' | 'mode' | 'tile' | null;
 
 const initialBoardState = {
   privilege: 'general',
@@ -106,7 +106,13 @@ function BoardView() {
   const sseDisconnectedRef = useRef(false);
   const passwordResolveRef = useRef<PasswordPromptResolver | null>(null);
   const [passwordPrompt, setPasswordPrompt] = useState<string | null>(null);
-  const [boardGuideStep, setBoardGuideStep] = useState<BoardGuideStep>(null);
+  const [boardGuideStep, setBoardGuideStep] = useState<BoardGuideStep>(() =>
+    state.cameFromCreate &&
+    state.privilege === 'admin' &&
+    !new URLSearchParams(location.search).get('password')
+      ? 'editor'
+      : null
+  );
   const rowsRef = useRef<number | null>(null);
   const columnsRef = useRef<number | null>(null);
 
@@ -317,12 +323,9 @@ function BoardView() {
         }
       }
 
-      const shouldShowCreatedBoardGuide =
-        stateRef.current.cameFromCreate && stateRef.current.privilege === 'admin';
       const tileHint = localStorage.getItem('tile-hint');
-      if (shouldShowCreatedBoardGuide) {
+      if (boardGuideStep) {
         localStorage.setItem('tile-hint', 'true');
-        setBoardGuideStep('mode');
       } else if (!tileHint) {
         localStorage.setItem('tile-hint', 'true');
         setBoardState({ showToast: true });
@@ -355,9 +358,14 @@ function BoardView() {
     };
   }, []);
 
-  function toggleTeamEdit(): void {
-    setBoardState({ showEditTeams: !stateRef.current.showEditTeams });
+  function openBoardEditor(): void {
+    setBoardState({ showEditTeams: true });
   }
+
+  const closeBoardEditor = useCallback(() => {
+    setBoardState({ showEditTeams: false });
+    setBoardGuideStep((step) => (step === 'editor' ? 'mode' : step));
+  }, [setBoardState]);
 
   async function changeBoardTileInfo(
     row: number,
@@ -411,23 +419,12 @@ function BoardView() {
     }
   }
 
-  async function handlePrivilegeButtonClick(): Promise<void> {
-    if (boardGuideStep === 'mode') {
-      setBoardGuideStep('tile');
-    }
-    await switchPrivilege();
-  }
-
-  function advanceBoardGuideToTile(): void {
-    setBoardGuideStep('tile');
-  }
-
   function dismissBoardGuide(): void {
     setBoardGuideStep(null);
   }
 
   function handleTileOpen(): void {
-    if (boardGuideStep) {
+    if (boardGuideStep === 'tile') {
       setBoardGuideStep(null);
     }
   }
@@ -533,41 +530,57 @@ function BoardView() {
               <>
                 {state.privilege === 'admin' && (
                   <>
-                    <Button click={toggleTeamEdit} text="Edit Board" variant="primary" />
+                    <Button
+                      click={openBoardEditor}
+                      text="Edit Board"
+                      variant="primary"
+                      disabled={!state.teamData}
+                      className={
+                        boardGuideStep === 'editor' && !state.showEditTeams && state.teamData
+                          ? 'board-guide-button-target'
+                          : ''
+                      }
+                    />
                     <Button click={clipboard} variant="warning" text={'Auto Signin Link 📋'} />
                   </>
                 )}
-                {state.privilege === 'admin' ? (
-                  <Button
-                    click={() => void handlePrivilegeButtonClick()}
-                    text="Admin Mode"
-                    variant="warning"
-                    className={boardGuideStep === 'mode' ? 'board-guide-mode-target' : ''}
-                  />
-                ) : (
-                  <Button
-                    click={() => void handlePrivilegeButtonClick()}
-                    text="General Mode"
-                    variant="primary"
-                    className={boardGuideStep === 'mode' ? 'board-guide-mode-target' : ''}
-                  />
-                )}
+                <Button
+                  click={() => void switchPrivilege()}
+                  text={state.privilege === 'admin' ? 'Admin Mode' : 'General Mode'}
+                  variant={state.privilege === 'admin' ? 'warning' : 'primary'}
+                  disabled={boardGuideStep !== null}
+                />
               </>
             )}
           </div>
-          {boardGuideStep === 'mode' && (
+          {(boardGuideStep === 'editor' || boardGuideStep === 'mode') && !state.showEditTeams && (
             <div className="board-guide-popover" role="status" aria-live="polite">
-              <span className="board-guide-kicker">First stop</span>
-              <h3 className="osrs-header">Admin and General Mode</h3>
-              <p>
-                You are in Admin Mode now, where you can edit tiles, teams, points, images, and
-                reveal settings. Use this button later to swap into General Mode and see what teams
-                will use during the event.
-              </p>
+              {boardGuideStep === 'editor' ? (
+                <>
+                  <span className="board-guide-kicker">First stop</span>
+                  <h3 className="osrs-header">Explore Edit Board</h3>
+                  <p>
+                    Set up your board here. You can edit team names in the <strong>Teams</strong>{' '}
+                    tab.
+                  </p>
+                </>
+              ) : (
+                <>
+                  <span className="board-guide-kicker">Next</span>
+                  <h3 className="osrs-header">Admin and General Mode</h3>
+                  <p>
+                    In Admin Mode, you set up tiles, points, and teams. After the tutorial, use the
+                    mode button to open General Mode and see how teams submit progress and proof.
+                  </p>
+                </>
+              )}
               <div className="board-guide-actions">
                 <Button
-                  click={advanceBoardGuideToTile}
-                  text="Next: tile"
+                  click={
+                    boardGuideStep === 'editor' ? openBoardEditor : () => setBoardGuideStep('tile')
+                  }
+                  text={boardGuideStep === 'editor' ? 'Tour the editor' : 'Next: tile'}
+                  disabled={boardGuideStep === 'editor' && !state.teamData}
                   variant="success"
                   size="small"
                 />
@@ -631,7 +644,8 @@ function BoardView() {
         <EditTeams
           show={true}
           boardType={state.boardType}
-          handleClose={toggleTeamEdit}
+          handleClose={closeBoardEditor}
+          onSkipTutorial={boardGuideStep === 'editor' ? dismissBoardGuide : undefined}
           teams={state.teamData}
           handleSave={updateTeams}
           passwordRequired={state.teamPasswordsRequired}

@@ -111,23 +111,42 @@ def test_bingo_board_create_edit_images_layers_and_cleanup():
             )
 
             expect(page).to_have_url(re.compile(r"/bingo/board/"))
-            expect(page.get_by_role("button", name="Edit Board")).to_be_visible()
+            # Walk through the live editor before introducing mode switching and tiles.
+            guide = page.locator(".board-guide-popover")
+            admin_mode = page.get_by_role("button", name="Admin Mode", exact=True)
+            expect(guide.get_by_role("heading", name="Explore Edit Board")).to_be_visible()
+            expect(admin_mode).to_be_disabled()
+            expect(page.locator(".board-guide-button-target")).to_have_accessible_name("Edit Board")
+            edit_board(page)
 
-            # Created boards start with the admin onboarding guide instead of the generic toast
-            mode_guide = page.locator(".board-guide-popover")
-            expect(mode_guide).to_be_visible()
-            expect(mode_guide).to_contain_text("Admin and General Mode")
-            expect(page.locator(".board-guide-mode-target")).to_be_visible()
-            mode_guide.get_by_role("button", name="Next: tile").click()
+            editor = page.get_by_role("dialog", name="Edit Board")
+            editor_guide = editor.get_by_role("status", name="Edit Board tutorial")
+            for tab, topic, next_step in (
+                ("Board", "rows", "Next: Teams"),
+                ("Teams", "name", "Next: Access"),
+                ("Access", "password", "Next: modes"),
+            ):
+                expect(editor.get_by_role("tabpanel", name=tab, exact=True)).to_be_visible()
+                expect(editor_guide).to_contain_text(re.compile(topic, re.IGNORECASE))
+                expect(admin_mode).to_be_disabled()
+                editor.get_by_role("button", name=next_step, exact=True).click()
+
+            expect(editor).not_to_be_visible()
+            expect(guide).to_contain_text("Admin and General Mode")
+            expect(admin_mode).to_be_disabled()
+            expect(page.locator(".board-guide-button-target")).to_have_count(0)
+            guide.get_by_role("button", name="Next: tile").click()
 
             tile_guide = page.locator(".board-guide-banner")
             expect(tile_guide).to_be_visible()
             expect(tile_guide).to_contain_text("Click a bingo tile")
             expect(page.locator(".center-board.board-guide-tile-step")).to_be_visible()
+            expect(admin_mode).to_be_disabled()
             open_tile_by_index(page, 0)
             expect(tile_guide).not_to_be_visible()
             close_modal(page)
             expect(page.get_by_role("dialog")).not_to_be_visible()
+            expect(admin_mode).to_be_enabled()
 
             # Settings: toggle a setting, close and reopen — verify it persists
             page.get_by_role("button", name="Settings").click()
@@ -343,6 +362,10 @@ def test_generic_bingo_board_commons_image_visual_regression():
             expect(page.get_by_text("Example Tile", exact=True)).not_to_be_visible()
             expect_board_tile_count(page, 25)
 
+            admin_mode = page.get_by_role("button", name="Admin Mode", exact=True)
+            expect(admin_mode).to_be_disabled()
+            page.locator(".board-guide-popover").get_by_role("button", name="Skip").click()
+            expect(admin_mode).to_be_enabled()
             open_tile_by_index(page, 0)
             fill_input_group(page, "Title", "Generic Commons Tile")
             page.get_by_role("button", name="Set Tile Background Image").click()

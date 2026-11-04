@@ -2,6 +2,32 @@
   margin-bottom: 16px;
 }
 
+.et-guide {
+  margin-bottom: 16px;
+  padding-inline-start: 12px;
+  border-inline-start: 2px solid var(--osrs-text-gold);
+}
+
+.et-guide h3 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.et-guide p {
+  max-width: 70ch;
+  margin: 4px 0 0;
+  color: var(--osrs-text-beige);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.et-guide-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .et-reduction-confirmation {
   margin-bottom: 16px;
 }
