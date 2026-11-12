@@ -2,7 +2,6 @@ import React from 'react';
 //import { Link } from "react-router-dom";
 import './osrs.css';
 import { loot } from './looter/looter';
-import { getTfaRates } from './looter/tfa';
 import { totalLooter } from './looter/totalLooter';
 import TotalLoot from './TotalLoot';
 import { assetUrl } from '../../utils/assetUrl';
@@ -36,6 +35,7 @@ function getPlotly() {
 }
 
 export const cluesLvl = ['beginner', 'easy', 'medium', 'hard', 'elite', 'master'];
+const teamSizeLimits = { tob: 5, tfa: 8, nex: 60 };
 let failedImages = [];
 const cluesData = {};
 cluesLvl.forEach((lvl) => (cluesData[lvl] = null));
@@ -133,16 +133,23 @@ class Osrs extends React.Component {
   };
 
   async onChangeValue(event) {
-    console.log(event.target.value)
-    this.setState({
-      mode: event.target.value,
-      lastSimulation: null,
-      simulationPlot: null,
-      progress: 0,
-      bestRewards: null,
-      worstRewards: null,
-    });
-    this.completion(event.target.value);
+    const mode = event.target.value;
+    const teamSize = Math.min(
+      teamSizeLimits[mode] ?? Infinity,
+      Math.max(1, Math.floor(Number(this.state.teamSize) || 1))
+    );
+    this.setState(
+      {
+        mode,
+        teamSize,
+        lastSimulation: null,
+        simulationPlot: null,
+        progress: 0,
+        bestRewards: null,
+        worstRewards: null,
+      },
+      () => this.completion(mode)
+    );
   }
 
   hoverHandler(bool) {
@@ -543,7 +550,7 @@ class Osrs extends React.Component {
       { value: 'create', label: 'Create Your Own Boss' },
       { value: 'clues', label: 'Clues' },
     ];
-    const tfaRates = getTfaRates(this.state.teamSize);
+    const maxTeamSize = teamSizeLimits[this.state.mode];
 
     return (
       <div className="route-dark-bg" style={{ padding: '20px' }}>
@@ -669,59 +676,21 @@ class Osrs extends React.Component {
             value={this.state.rolls}
             onChange={(e) => this.onChangeValueInput('rolls', e)}
           />
-          {['nex', 'tob'].includes(this.state.mode) && (
-            <span>
-              &nbsp; <label>Team size</label>
-              <input
-                type="text"
+          {maxTeamSize && (
+            <span className="osrs-team-size-control">
+              <label htmlFor="osrs-team-size">Team size</label>
+              <select
+                id="osrs-team-size"
                 value={this.state.teamSize}
                 onChange={(e) => this.onChangeValueInput('teamSize', e)}
-              />
+              >
+                {Array.from({ length: maxTeamSize }, (_, i) => i + 1).map((size) => (
+                  <option key={size} value={size}>
+                    {size} {size === 1 ? 'player' : 'players'}
+                  </option>
+                ))}
+              </select>
             </span>
-          )}
-          {this.state.mode === 'tfa' && (
-            <>
-              <div className="osrs-controls">
-                <div className="osrs-field">
-                  <label htmlFor="tfa-team-size">Team size</label>
-                  <select
-                    id="tfa-team-size"
-                    value={tfaRates.teamSize}
-                    onChange={(e) => this.onChangeValueInput('teamSize', e)}
-                    aria-describedby="tfa-rate-details"
-                  >
-                    {Array.from({ length: 8 }, (_, i) => i + 1).map((size) => (
-                      <option key={size} value={size}>
-                        {size} {size === 1 ? 'player' : 'players'}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              <div id="tfa-rate-details" className="osrs-completion-text">
-                The Fractured Archive assumes no deaths and equal contribution. Team purple: 1 in{' '}
-                {formatNumber(1 / tfaRates.teamPurpleChance)} raids. Purple in your name: 1 in{' '}
-                {formatNumber(1 / tfaRates.personalPurpleChance)} raids.
-                <br />
-                Uses the{' '}
-                <a
-                  href="https://secure.runescape.com/m=news/quest-month-week-two--tfa-changes?oldschool=1"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  November 11, 2026 purple rates
-                </a>{' '}
-                and{' '}
-                <a
-                  href="https://oldschool.runescape.wiki/w/Chest_(The_Fractured_Archive)"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  chest item weights
-                </a>
-                .
-              </div>
-            </>
           )}
           {this.state.mode !== 'clues' && (
             <>

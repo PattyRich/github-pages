@@ -62,6 +62,14 @@
 
 /* ── Controls row (rolls, team size, etc.) ───────────────────────────────── */
 
+.osrs-team-size-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: 10px;
+  vertical-align: middle;
+}
+
 .osrs-controls {
   display: flex;
   flex-wrap: wrap;
