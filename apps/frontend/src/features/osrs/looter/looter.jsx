@@ -88,6 +88,10 @@ export function loot(
         if (data.name === 'nex') data.pet.rate *= options.teamSize;
       }
 
+      if (data.name === 'tfa') {
+        data.chance = datax.getTfaRates(options.teamSize).personalPurpleChance * 100;
+      }
+
       //chance is the odds that you get a unique drop.
       //this can be useful to preset, for stuff like raids since it varys and somtimes 1/1000 for stuff like tbow just seems weird
       //in those cases the weight doesn't have to equal a 1/blah fraction

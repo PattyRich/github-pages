@@ -2,6 +2,7 @@ import React from 'react';
 //import { Link } from "react-router-dom";
 import './osrs.css';
 import { loot } from './looter/looter';
+import { getTfaRates } from './looter/tfa';
 import { totalLooter } from './looter/totalLooter';
 import TotalLoot from './TotalLoot';
 import { assetUrl } from '../../utils/assetUrl';
@@ -522,6 +523,7 @@ class Osrs extends React.Component {
       { value: 'cox-cm', label: 'Cox CM' },
       { value: 'tob', label: 'ToB' },
       { value: 'toa', label: 'ToA' },
+      { value: 'tfa', label: 'TFA' },
       { value: 'cg', label: 'Corrupted Gauntlet' },
       { value: 'corp', label: 'Corp' },
       { value: 'pnm', label: "Phosani's Nightmare" },
@@ -541,6 +543,7 @@ class Osrs extends React.Component {
       { value: 'create', label: 'Create Your Own Boss' },
       { value: 'clues', label: 'Clues' },
     ];
+    const tfaRates = getTfaRates(this.state.teamSize);
 
     return (
       <div className="route-dark-bg" style={{ padding: '20px' }}>
@@ -675,6 +678,50 @@ class Osrs extends React.Component {
                 onChange={(e) => this.onChangeValueInput('teamSize', e)}
               />
             </span>
+          )}
+          {this.state.mode === 'tfa' && (
+            <>
+              <div className="osrs-controls">
+                <div className="osrs-field">
+                  <label htmlFor="tfa-team-size">Team size</label>
+                  <select
+                    id="tfa-team-size"
+                    value={tfaRates.teamSize}
+                    onChange={(e) => this.onChangeValueInput('teamSize', e)}
+                    aria-describedby="tfa-rate-details"
+                  >
+                    {Array.from({ length: 8 }, (_, i) => i + 1).map((size) => (
+                      <option key={size} value={size}>
+                        {size} {size === 1 ? 'player' : 'players'}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div id="tfa-rate-details" className="osrs-completion-text">
+                The Fractured Archive assumes no deaths and equal contribution. Team purple: 1 in{' '}
+                {formatNumber(1 / tfaRates.teamPurpleChance)} raids. Purple in your name: 1 in{' '}
+                {formatNumber(1 / tfaRates.personalPurpleChance)} raids.
+                <br />
+                Uses the{' '}
+                <a
+                  href="https://secure.runescape.com/m=news/quest-month-week-two--tfa-changes?oldschool=1"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  November 11, 2026 purple rates
+                </a>{' '}
+                and{' '}
+                <a
+                  href="https://oldschool.runescape.wiki/w/Chest_(The_Fractured_Archive)"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  chest item weights
+                </a>
+                .
+              </div>
+            </>
           )}
           {this.state.mode !== 'clues' && (
             <>
